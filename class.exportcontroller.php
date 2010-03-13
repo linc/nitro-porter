@@ -18,7 +18,7 @@ abstract class ExportController {
    public function __construct() {
       $this->ExportModel = new ExportModel;
       $this->View = new ExportViews;
-      $this->doExport();
+      $this->DoExport();
    }
 
    /** Forum-specific data integrity check */
@@ -30,7 +30,7 @@ abstract class ExportController {
    /** 
     * Logic for export process 
     */
-   public function doExport() {
+   public function DoExport() {
       $this->HandleInfoForm();
       
       if($this->TestConnection()) {
