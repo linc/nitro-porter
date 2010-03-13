@@ -6,7 +6,10 @@
  */
 
 /** Generic controller */
-class ExportController {
+abstract class ExportController {
+
+   /** @var array Supported forum packages */
+   public $supported = array('vBulletin');
 
    /** Forum-specific data integrity check */
    abstract protected function VerifyStructure();

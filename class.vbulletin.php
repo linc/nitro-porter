@@ -18,7 +18,7 @@ class Vbulletin extends ExportController {
    
    
    public function ForumExport() {
-      $Ex = $this->export;
+      $Ex = $this->ExportModel;
       $Ex->PDO(Gdn::Database()->Connection());
       $Ex->Prefix = Gdn::Database()->DatabasePrefix;
       $Ex->UseCompression = TRUE;
