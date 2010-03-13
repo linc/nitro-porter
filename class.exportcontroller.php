@@ -27,7 +27,9 @@ abstract class ExportController {
    /** Forum-specific export routine */
    abstract protected function ForumExport();
    
-   /** Logic for export process */
+   /** 
+    * Logic for export process 
+    */
    public function doExport() {
       $this->HandleInfoForm();
       
@@ -41,7 +43,9 @@ abstract class ExportController {
       }
    }
    
-   /** User submitted db connection info */
+   /** 
+    * User submitted db connection info 
+    */
    public function HandleInfoForm() {
       $this->dbinfo = array(
          'dbserv'=>$_POST['dbserv'],
@@ -51,7 +55,9 @@ abstract class ExportController {
          'prefix'=>preg_replace('/[^A-Za-z0-9_-]/','',$_POST['prefix']));
    }
    
-   /** Test database connection info */
+   /** 
+    * Test database connection info 
+    */
    public function TestConnection() {
       
    }      

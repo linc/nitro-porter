@@ -10,7 +10,7 @@
 class ExportViews {
    
    /**
-    *
+    * HTML header
     */
    public function PageHeader() {
       ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -26,7 +26,7 @@ class ExportViews {
    }
    
    /**
-    *
+    * HTML footer
     */
    public function PageFooter() {
    
@@ -37,7 +37,7 @@ class ExportViews {
    }
    
    /**
-    *
+    * Message: Write permission fail
     */
    public function NoPermission() {
       $this->PageHeader(); ?>
@@ -48,7 +48,7 @@ class ExportViews {
    }
    
    /**
-    *
+    * Form: Database connection info
     */
    public function InfoForm($forums) {
       $this->PageHeader(); ?>
@@ -78,7 +78,7 @@ class ExportViews {
    }
    
    /**
-    *
+    * Message: Result of export
     */
    public function ExportResult() {
       $this->PageHeader(); ?>
