@@ -5,11 +5,21 @@
  * @package VanillaPorter
  */
 
-/** Generic controller */
-abstract class ExportController {
-
-   /** @var array Supported forum packages */
-   public $supported = array('vBulletin');
+/** Generic controller implemented by forum-specific ones */
+abstract class ExportController {  
+   
+   /** @var array Database connection info */
+   protected $dbinfo = array();
+   
+   /** 
+    * Instantation of descendant means form has been submitted
+    * Setup model & views and go! 
+    */
+   public function __construct() {
+      $this->ExportModel = new ExportModel;
+      $this->View = new ExportViews;
+      $this->doExport();
+   }
 
    /** Forum-specific data integrity check */
    abstract protected function VerifyStructure();
@@ -17,29 +27,23 @@ abstract class ExportController {
    /** Forum-specific export routine */
    abstract protected function ForumExport();
    
-   /** Setup model & views */
-   public __construct() {
-      $this->ExportModel = new ExportModel;
-      $this->View = new ExportViews;
-      $this->GetStep();
-   }
-   
-   /** Kludgy logic method */
-   public GetStep() {
-      if(isset($_POST['step'])) {
-         switch($_POST['step']) {
-            case 'info': 
-               $this->HandleInfoForm(); 
-               break;
-         }
+   /** Logic for export process */
+   public function doExport() {
+      $this->HandleInfoForm();
+      
+      if($this->TestConnection()) {
+         //  Good connection - Proceed
+         
       }
-      else 
-         $this->View->InfoForm();
+      else {
+         // Back to form with error
+         
+      }
    }
    
    /** User submitted db connection info */
-   public HandleInfoForm() {
-      $_SESSION['exportforum'] = array(
+   public function HandleInfoForm() {
+      $this->dbinfo = array(
          'dbserv'=>$_POST['dbserv'],
          'dbuser'=>$_POST['dbuser'], 
          'dbpass'=>$_POST['dbpass'], 
@@ -47,13 +51,9 @@ abstract class ExportController {
          'prefix'=>preg_replace('/[^A-Za-z0-9_-]/','',$_POST['prefix']));
    }
    
-   public TestConnection() {
+   /** Test database connection info */
+   public function TestConnection() {
       
-   }
-   
-   public TestWrite() {
-      
-   }
-      
+   }      
    
 }

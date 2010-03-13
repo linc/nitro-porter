@@ -8,19 +8,21 @@
  */
  
 class Vbulletin extends ExportController {
-
-   public $default_prefix = 'vb_';
       
-   /** Make sure all the required vBulletin tables are present */
+   /** 
+    * Make sure all the required vBulletin tables are present 
+    */
    public function VerifyStructure() {
       
    }
    
-   
+   /**
+    * 
+    */
    public function ForumExport() {
       $Ex = $this->ExportModel;
-      $Ex->PDO(Gdn::Database()->Connection());
-      $Ex->Prefix = Gdn::Database()->DatabasePrefix;
+      $Ex->PDO(    );
+      $Ex->Prefix = '';
       $Ex->UseCompression = TRUE;
       $Ex->BeginExport(PATH_ROOT.DS.'uploads'.DS.'export '.date('Y-m-d His').'.txt.gz', 'Vanilla 2.0');
       $Ex->ExportTable('User', 'select * from :_User'); // ":_" will be replace by database prefix
