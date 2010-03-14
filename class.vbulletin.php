@@ -17,11 +17,9 @@ class Vbulletin extends ExportController {
    }
    
    /**
-    * 
+    * Forum-specific export format
     */
    public function ForumExport() {
-
-      
       $Ex->BeginExport(PATH_ROOT.DS.'uploads'.DS.'export '.date('Y-m-d His').'.txt.gz', 'Vanilla 2.0');
       $Ex->ExportTable('User', 'select * from :_User'); // ":_" will be replace by database prefix
       $Ex->ExportTable('Role', 'select * from :_Role');

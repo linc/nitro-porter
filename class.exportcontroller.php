@@ -19,7 +19,6 @@ abstract class ExportController {
     * Setup model & views and go! 
     */
    public function __construct() {
-      //$this->View = new ExportViews;
       $this->DoExport();
    }
 

@@ -12,7 +12,6 @@
  * HTML header
  */
 function PageHeader() {
-
    ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
@@ -21,7 +20,9 @@ function PageHeader() {
    
    </style>
 </head>
-<body><?php
+<body>
+<h1>Vanilla 2 forum export tool</h1>
+   <?php
 
 }
 
@@ -30,7 +31,6 @@ function PageHeader() {
  * HTML footer
  */
 function PageFooter() {
-
    ?>
 </body>
 </html><?php
@@ -41,10 +41,10 @@ function PageFooter() {
 /**
  * Message: Write permission fail
  */
-function NoPermission() {
+function ViewNoPermission($msg) {
    PageHeader(); ?>
    
-   
+   <p id="message"><?php echo $msg; ?></p>
    
    <?php PageFooter();
 }
@@ -53,10 +53,15 @@ function NoPermission() {
 /**
  * Form: Database connection info
  */
-function InfoForm($forums) {
+function ViewForm($forums, $msg='') {
    PageHeader(); ?>
-      
-   <h1>Vanilla 2 forum export tool</h1>   
+   
+   <?php if($msg!='') : ?>
+   
+   <p id="message"><?php echo $msg; ?></p>
+   
+   <?php endif; ?>   
+   
    <fieldset>
    <input type="hidden" name="step" value="info" />
    <ul>
@@ -84,7 +89,7 @@ function InfoForm($forums) {
 /**
  * Message: Result of export
  */
-public function ExportResult() {
+function ViewExportResult($msg='') {
    PageHeader(); ?>
    
    

@@ -25,7 +25,7 @@ function TestWrite() {
 
 // Files
 include('class.exportmodel.php');
-include('class.exportviews.php');
+include('views.php');
 include('class.exportcontroller.php');
 foreach($supported as $file => $info) {
    include('class.'.$file.'.php');
@@ -39,9 +39,8 @@ if(isset($_POST['type']) && array_key_exists($_POST['type'], $supported)) {
 }
 else {
    // View form or error
-   $View = new ExportViews;
    if(TestWrite())
-      $View->InfoForm($supported);
+      ViewForm($supported);
    else
-      $View->NoPermission();
+      ViewNoPermission();
 }
