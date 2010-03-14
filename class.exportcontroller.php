@@ -36,7 +36,7 @@ abstract class ExportController {
          $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          // Test src tables' existence structure
-         $Msg = $Ex->VerifySource($this->SourceTables);
+         $Msg = $Ex->VerifySource($this->_SourceTables);
          if($Msg===true) {
             // Good src tables - Start dump
             $Ex->UseCompression = TRUE;

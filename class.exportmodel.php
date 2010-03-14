@@ -219,7 +219,8 @@ class ExportModel {
          'DateInserted' => 'datetime',
          'DateUpdated' => 'datetime',
          'CountDiscussions' => 'int',
-         'ImportSalt' => 'varchar(8)'),
+         'ImportSalt' => 'varchar(8)',
+         'PhotoFile' => 'varchar(255)'),
 		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
 		);
 	/**

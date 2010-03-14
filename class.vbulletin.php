@@ -10,15 +10,17 @@
 class Vbulletin extends ExportController {
    
    /** @var array Required tables => columns for vBulletin import */  
-   protected $SourceTables = array(
+   protected $_SourceTables = array(
       'user'=> array()
       );
    
    /**
     * Forum-specific export format
+    * @todo Project file size / export time and possibly break into multiple files
     */
    protected function ForumExport($Ex) {
       // Begin
+      PageHeader();
       $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');   
       
       // Users
@@ -51,6 +53,8 @@ class Vbulletin extends ExportController {
       
       // End
       $Ex->EndExport();
+      
+      PageFooter();
    }
    
 }
