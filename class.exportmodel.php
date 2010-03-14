@@ -224,4 +224,41 @@ class ExportModel {
 	public function Version() {
 		return '1.0';
 	}
+	
+	/**
+	 * Checks all required source table are present
+	 */
+	public function VerifySource($structure) {
+      $missing_tables = false;
+      $missing_columns = array();
+      foreach($structure as $table => $cols) {
+         $r = $this->PDO()->query("describe $table");
+         if($r===false) {
+            // Table doesn't exist
+            if($missing_tables!==false)
+               $missing_tables .= ', '.$table;
+            else
+               $missing_tables = $table;
+         }
+         else {
+            // Check columns
+            $fields = array();
+            while($a = mysql_fetch_array($r)) {
+                $fields[] = $a['Field'];
+            }
+            
+            
+         }
+      }
+      if($missing_tables===false) {
+         if(count($missing_columns) > 0) {
+            
+            
+            
+         }
+         else return true; // Nothing missing!
+      }
+      else return 'Missing required database tables: '.$missing_tables;
+   }
+   
 }

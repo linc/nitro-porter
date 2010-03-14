@@ -14,6 +14,9 @@ abstract class ExportController {
    /** @var object PDO database connection instance */
    public $db;
    
+   /** Forum-specific export routine */
+   abstract protected function ForumExport();
+   
    /** 
     * Instantation of descendant means form has been submitted
     * Setup model & views and go! 
@@ -21,30 +24,25 @@ abstract class ExportController {
    public function __construct() {
       $this->DoExport();
    }
-
-   /** Forum-specific data integrity check */
-   abstract protected function VerifyStructure();
-   
-   /** Forum-specific export routine */
-   abstract protected function ForumExport();
    
    /** 
     * Logic for export process 
     */
    public function DoExport() {
       $this->HandleInfoForm();
-      $db = $this->TestConnection();
-      if($db===true) {
+      $msg = $this->TestDatabase();
+      if($msg===true) {
          //  Good connection info - Proceed
          $Ex = new ExportModel;
          $dsn = 'mysql:dbname='.$this->dbinfo['dbname'].';host='.$this->dbinfo['host'];
          $Ex->PDO($dsn, $this->dbinfo['dbuser'], $this->dbinfo['dbpass']);
          $Ex->Prefix = $this->dbinfo['prefix'];
          $Ex->UseCompression = TRUE;
+         set_time_limit(60*2);
+         $this->ForumExport();
       }
-      else {
-         // Back to form with error
-         
+      else { // Back to form with error
+         ViewForm($msg);
       }
    }
    
@@ -61,15 +59,23 @@ abstract class ExportController {
    }
    
    /** 
-    * Test database connection info 
+    * Test database connection info & integrity of forum data
     */
-   public function TestConnection() {
-      if($c = mysql_connect($this->dbinfo['host'], $this->dbinfo['dbuser'], $this->dbinfo['dbpass'])) {
-         mysql_close($c);
-         return true;
+   public function TestDatabase() {
+      // Connection
+      if($c = mysql_connect($this->dbinfo['host'], $this->dbinfo['dbuser'], $this->dbinfo['dbpass'])) { 
+         // Database
+         if(mysql_select_db($this->dbinfo['dbname'], $c)) { // Tables exist
+            mysql_close($c);
+            return true;
+         }
+         else {
+            mysql_close($c);
+            return 'Could not find database &ldquo;'.$this->dbinfo['dbname'].'&rdquo;.';
+         }
       }
-      else return 'Could not connect';
+      else 
+         return 'Could not connect to '.$this->dbinfo['host'].' as '.$this->dbinfo['dbuser'].' with given password.';
    }
- 
    
 }

@@ -11,7 +11,9 @@
 $supported = array(
    'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_');
 
-/** Test filesystem permissions */  
+/** 
+ * Test filesystem permissions 
+ */  
 function TestWrite() {
    // Create file
    $file = 'vanilla2test.txt';

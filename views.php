@@ -21,7 +21,7 @@ function PageHeader() {
    </style>
 </head>
 <body>
-<h1>Vanilla 2 forum export tool</h1>
+   <h1>Vanilla 2 forum export tool</h1>
    <?php
 
 }

@@ -8,13 +8,11 @@
  */
  
 class Vbulletin extends ExportController {
-      
-   /** 
-    * Make sure all the required vBulletin tables are present 
-    */
-   public function VerifyStructure() {
-      
-   }
+   
+   /** @var array Required tables => columns for vBulletin import */  
+   protected $tables = array(
+      'user'=> array()
+   );
    
    /**
     * Forum-specific export format
