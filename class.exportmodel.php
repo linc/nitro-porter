@@ -128,7 +128,7 @@ class ExportModel {
 			$Data = $Query;
 		}
 		
-		print_r($this->PDO()->errorInfo());
+		#print_r($this->PDO()->errorInfo());
 		
 		// Set the search and replace to escape strings.
 		$EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first

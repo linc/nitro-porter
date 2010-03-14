@@ -12,7 +12,32 @@ class Vbulletin extends ExportController {
    /** @var array Required tables => columns for vBulletin import */  
    protected $SourceTables = array(
       'user'=> array()
-   );
+      );
+   
+   /** @var array Destinaton structure (what fields will we be importing?) */
+   protected $_Structures = array(
+		'Category' => array('CategoryID' => 'int', 'Name' => 'varchar(30)', 'Description' => 'varchar(250)', 'ParentCategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int'),
+		'Comment' => array('CommentID' => 'int', 'DiscussionID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Format' => 'varchar(20)', 'Body' => 'text', 'Score' => 'float'),
+		'Discussion' => array('DiscussionID' => 'int', 'Name' => 'varchar(100)', 'CategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Score' => 'float', 'Closed' => 'tinyint', 'Announce' => 'tinyint'),
+		'Role' => array('RoleID' => 'int', 'Name' => 'varchar(100)', 'Description' => 'varchar(200)'),
+		'User' => array(
+		    'UserID' => 'int', 
+		    'Name' => 'varchar(20)', 
+		    'Email' => 'varchar(200)', 
+		    'Password' => 'varbinary(34)',
+		    'InviteUserID' => 'int',
+		    'HourOffset' => 'int',
+		    'CountComments' => 'int',
+		    'DateOfBirth' => 'datetime',
+		    'DateFirstVisit' => 'datetime',
+		    'DateLastActive' => 'datetime',
+		    'DateInserted' => 'datetime',
+		    'DateUpdated' => 'datetime',
+		    'CountDiscussions' => 'int',
+		    'VbulletinSalt' => 'varchar(8)'
+		    ),
+		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
+		);
    
    /**
     * Forum-specific export format
@@ -27,11 +52,10 @@ class Vbulletin extends ExportController {
          'Name'=>'username',
          'Password'=>'password',
          'Email'=>'email',
-         'ShowEmail'=>'userid',
          'InviteUserID'=>'referrerid',
-         'DateOfBirth'=>'userid',
          'HourOffset'=>'timezoneoffset',
-         'CountComments'=>'posts');
+         'CountComments'=>'posts'
+         );
       $Ex->ExportTable('User', "select *,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
@@ -40,7 +64,8 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastactivity) as DateUpdated,
             (SELECT COUNT(*) FROM ".$Ex->Prefix."thread WHERE postuserid=userid) as CountDiscussions,
             salt as VbulletinSalt
-         from :_user", $User_Map);  // ":_" will be replace by database prefix
+         from :_user", 
+         $User_Map);  // ":_" will be replace by database prefix
       
       
       //$Ex->ExportTable('Role', 'select * from :_Role');
