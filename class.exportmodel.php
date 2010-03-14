@@ -229,6 +229,11 @@ class ExportModel {
 	 * Checks all required source table are present
 	 */
 	public function VerifySource($structure) {
+	
+	   // HACK FOR NOW
+	   return true;
+	   // HACK FOR NOW  
+	
       $missing_tables = false;
       $missing_columns = array();
       foreach($structure as $table => $cols) {
