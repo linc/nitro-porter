@@ -36,7 +36,7 @@ abstract class ExportController {
          $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          // Test src tables' existence structure
-         $Msg = $Ex->VerifyStructure($this->SourceTables);
+         $Msg = $Ex->VerifySource($this->SourceTables);
          if($Msg===true) {
             // Good src tables - Start dump
             $Ex->UseCompression = TRUE;
@@ -67,7 +67,7 @@ abstract class ExportController {
     */
    public function TestDatabase() {
       // Connection
-      if($C = mysql_connect($this->DbInfo['host'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) { 
+      if($C = mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) { 
          // Database
          if(mysql_select_db($this->DbInfo['dbname'], $C)) { 
             mysql_close($C);
@@ -79,7 +79,7 @@ abstract class ExportController {
          }
       }
       else 
-         return 'Could not connect to '.$this->DbInfo['host'].' as '.$this->DbInfo['dbuser'].' with given password.';
+         return 'Could not connect to '.$this->DbInfo['dbhost'].' as '.$this->DbInfo['dbuser'].' with given password.';
    }
    
 }
