@@ -203,7 +203,23 @@ class ExportModel {
 		'Comment' => array('CommentID' => 'int', 'DiscussionID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Format' => 'varchar(20)', 'Body' => 'text', 'Score' => 'float'),
 		'Discussion' => array('DiscussionID' => 'int', 'Name' => 'varchar(100)', 'CategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Score' => 'float', 'Closed' => 'tinyint', 'Announce' => 'tinyint'),
 		'Role' => array('RoleID' => 'int', 'Name' => 'varchar(100)', 'Description' => 'varchar(200)'),
-		'User' => array('UserID' => 'int', 'Name' => 'varchar(20)', 'Email' => 'varchar(200)', 'Password' => 'varbinary(34)', 'Gender' => array('m', 'f'), 'Score' => 'float'),
+		'User' => array(
+         'UserID' => 'int', 
+         'Name' => 'varchar(20)', 
+         'Email' => 'varchar(200)', 
+         'Password' => 'varbinary(34)', 
+         'Gender' => array('m', 'f'), 
+         'Score' => 'float'),
+         'InviteUserID' => 'int',
+         'HourOffset' => 'int',
+         'CountComments' => 'int',
+         'DateOfBirth' => 'datetime',
+         'DateFirstVisit' => 'datetime',
+         'DateLastActive' => 'datetime',
+         'DateInserted' => 'datetime',
+         'DateUpdated' => 'datetime',
+         'CountDiscussions' => 'int',
+         'ImportSalt' => 'varchar(8)'
 		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
 		);
 	/**
