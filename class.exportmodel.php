@@ -1,4 +1,4 @@
-<?php if (!defined('APPLICATION')) exit();
+<?php
 /**
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2

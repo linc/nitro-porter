@@ -39,7 +39,7 @@ abstract class ExportController {
          $Ex->Prefix = $this->dbinfo['prefix'];
          $Ex->UseCompression = TRUE;
          set_time_limit(60*2);
-         $this->ForumExport();
+         $Ex->ForumExport();
       }
       else { // Back to form with error
          ViewForm($msg);
