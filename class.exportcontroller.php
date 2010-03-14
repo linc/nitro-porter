@@ -11,13 +11,15 @@ abstract class ExportController {
    /** @var array Database connection info */
    protected $dbinfo = array();
    
+   /** @var object PDO database connection instance */
+   public $db;
+   
    /** 
     * Instantation of descendant means form has been submitted
     * Setup model & views and go! 
     */
    public function __construct() {
-      $this->ExportModel = new ExportModel;
-      $this->View = new ExportViews;
+      //$this->View = new ExportViews;
       $this->DoExport();
    }
 
@@ -32,10 +34,14 @@ abstract class ExportController {
     */
    public function DoExport() {
       $this->HandleInfoForm();
-      
-      if($this->TestConnection()) {
-         //  Good connection - Proceed
-         
+      $db = $this->TestConnection();
+      if($db===true) {
+         //  Good connection info - Proceed
+         $Ex = new ExportModel;
+         $dsn = 'mysql:dbname='.$this->dbinfo['dbname'].';host='.$this->dbinfo['host'];
+         $Ex->PDO($dsn, $this->dbinfo['dbuser'], $this->dbinfo['dbpass']);
+         $Ex->Prefix = $this->dbinfo['prefix'];
+         $Ex->UseCompression = TRUE;
       }
       else {
          // Back to form with error
@@ -48,7 +54,7 @@ abstract class ExportController {
     */
    public function HandleInfoForm() {
       $this->dbinfo = array(
-         'dbserv'=>$_POST['dbserv'],
+         'dbhost'=>$_POST['dbhost'],
          'dbuser'=>$_POST['dbuser'], 
          'dbpass'=>$_POST['dbpass'], 
          'dbname'=>$_POST['dbname'],
@@ -59,7 +65,12 @@ abstract class ExportController {
     * Test database connection info 
     */
    public function TestConnection() {
-      
-   }      
+      if($c = mysql_connect($this->dbinfo['host'], $this->dbinfo['dbuser'], $this->dbinfo['dbpass'])) {
+         mysql_close($c);
+         return true;
+      }
+      else return 'Could not connect';
+   }
+ 
    
 }

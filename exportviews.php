@@ -7,13 +7,13 @@
  * @package VanillaPorter
  */
  
-class ExportViews {
    
-   /**
-    * HTML header
-    */
-   public function PageHeader() {
-      ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+/**
+ * HTML header
+ */
+function PageHeader() {
+
+   ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
    <title>Vanilla 2 forum export tool</title>
@@ -23,35 +23,38 @@ class ExportViews {
 </head>
 <body><?php
 
-   }
+}
+
    
-   /**
-    * HTML footer
-    */
-   public function PageFooter() {
-   
-      ?>
+/**
+ * HTML footer
+ */
+function PageFooter() {
+
+   ?>
 </body>
 </html><?php
 
-   }
+}
+
    
-   /**
-    * Message: Write permission fail
-    */
-   public function NoPermission() {
-      $this->PageHeader(); ?>
-      
-      
-      
-      <?php $this->PageFooter();
-   }
+/**
+ * Message: Write permission fail
+ */
+function NoPermission() {
+   PageHeader(); ?>
    
-   /**
-    * Form: Database connection info
-    */
-   public function InfoForm($forums) {
-      $this->PageHeader(); ?>
+   
+   
+   <?php PageFooter();
+}
+
+   
+/**
+ * Form: Database connection info
+ */
+function InfoForm($forums) {
+   PageHeader(); ?>
       
    <h1>Vanilla 2 forum export tool</h1>   
    <fieldset>
@@ -65,7 +68,7 @@ class ExportViews {
          </select>
       </li>
       <li><label>Database prefix</label><input type="text" name="prefix" value="<?php echo $forumInfo['prefix']; ?>" /> Leave blank if none.</li>
-      <li><label>Database server</label><input type="text" name="dbserv" value="localhost" /> Usually &ldquo;localhost&rdquo; if you&rsquo;re not sure.</li>
+      <li><label>Database host</label><input type="text" name="dbhost" value="localhost" /> Usually &ldquo;localhost&rdquo; if you&rsquo;re not sure.</li>
       <li><label>Database name</label><input type="text" name="dbname" value="" /></li>
       <li><label>Database username</label><input type="text" name="dbuser" value="" /></li>
       <li><label>Database password</label><input type="password" name="dbpass" /></li>
@@ -73,20 +76,20 @@ class ExportViews {
    <input class="button" type="submit" value="Begin Export" />
    </fieldset>
    </form>
-   
-      <?php $this->PageFooter();
-   }
-   
-   /**
-    * Message: Result of export
-    */
-   public function ExportResult() {
-      $this->PageHeader(); ?>
-      
-      
-      
-      <?php $this->PageFooter();
-   }
-   
-   
+
+   <?php PageFooter();
 }
+
+
+/**
+ * Message: Result of export
+ */
+public function ExportResult() {
+   PageHeader(); ?>
+   
+   
+   
+   <?php PageFooter();
+}
+   
+   
