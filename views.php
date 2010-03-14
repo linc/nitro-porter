@@ -68,7 +68,7 @@ function ViewForm($forums, $msg='') {
       <li><label>Forum type</label>
          <select name="type">
          <?php foreach($forums as $forumClass => $forumInfo) : ?>
-            <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['display']; ?></option>
+            <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
          <?php endforeach; ?>
          </select>
       </li>

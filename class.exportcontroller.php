@@ -12,7 +12,7 @@ abstract class ExportController {
    protected $DbInfo = array();
 
    /** Forum-specific export routine */
-   abstract protected function ForumExport();
+   abstract protected function ForumExport($Ex);
    
    /** 
     * Instantation of descendant means form has been submitted

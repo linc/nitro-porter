@@ -17,7 +17,7 @@ class Vbulletin extends ExportController {
    /**
     * Forum-specific export format
     */
-   public function ForumExport($Ex) {
+   protected function ForumExport($Ex) {
       // Begin
       $Ex->BeginExport(PATH_ROOT.DS.'uploads'.DS.'export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');
       

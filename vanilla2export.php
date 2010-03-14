@@ -9,7 +9,8 @@
 
 /** @var array Supported forum packages: classname => DisplayName */
 $supported = array(
-   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_');
+   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
+);
 
 /** 
  * Test filesystem permissions 
