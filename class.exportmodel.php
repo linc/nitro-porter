@@ -255,6 +255,8 @@ class ExportModel {
             
          }
       }
+      
+      // Return results
       if($missing_tables===false) {
          if(count($missing_columns) > 0) {
             
