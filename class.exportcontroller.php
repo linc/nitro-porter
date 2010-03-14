@@ -28,16 +28,16 @@ abstract class ExportController {
    public function DoExport() {
       $this->HandleInfoForm();
       // Test connection
-      $msg = $this->TestDatabase();
-      if($msg===true) {
+      $Msg = $this->TestDatabase();
+      if($Msg===true) {
          // Good connection
          $Ex = new ExportModel;
-         $dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['host'];
-         $Ex->PDO($dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
+         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['host'];
+         $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          // Test src tables' existence structure
-         $msg = $Ex->VerifyStructure($this->SourceTables);
-         if($msg===true) {
+         $Msg = $Ex->VerifyStructure($this->SourceTables);
+         if($Msg===true) {
             // Good src tables
             $Ex->UseCompression = TRUE;
             set_time_limit(60*2);
@@ -45,7 +45,7 @@ abstract class ExportController {
          }
       }
       else { // Back to form with error
-         ViewForm($msg);
+         ViewForm($Msg);
       }
    }
    
@@ -66,14 +66,14 @@ abstract class ExportController {
     */
    public function TestDatabase() {
       // Connection
-      if($c = mysql_connect($this->DbInfo['host'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) { 
+      if($C = mysql_connect($this->DbInfo['host'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) { 
          // Database
-         if(mysql_select_db($this->DbInfo['dbname'], $c)) { 
-            mysql_close($c);
+         if(mysql_select_db($this->DbInfo['dbname'], $C)) { 
+            mysql_close($C);
             return true;
          }
          else {
-            mysql_close($c);
+            mysql_close($C);
             return 'Could not find database &ldquo;'.$this->DbInfo['dbname'].'&rdquo;.';
          }
       }
