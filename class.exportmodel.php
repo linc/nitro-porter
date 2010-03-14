@@ -228,28 +228,28 @@ class ExportModel {
 	/**
 	 * Checks all required source table are present
 	 */
-	public function VerifySource($structure) {
+	public function VerifySource($Tables) {
 	
 	   // HACK FOR NOW
 	   return true;
 	   // HACK FOR NOW  
 	
-      $missing_tables = false;
-      $missing_columns = array();
-      foreach($structure as $table => $cols) {
+      $MissingTables = false;
+      $MissingColumns = array();
+      foreach($Tables as $Table => $Cols) {
          $r = $this->PDO()->query("describe $table");
          if($r===false) {
             // Table doesn't exist
-            if($missing_tables!==false)
-               $missing_tables .= ', '.$table;
+            if($MissingTables!==false)
+               $MissingTables .= ', '.$Table;
             else
-               $missing_tables = $table;
+               $MissingTables = $Table;
          }
          else {
             // Check columns
-            $fields = array();
+            $Fields = array();
             while($a = mysql_fetch_array($r)) {
-                $fields[] = $a['Field'];
+                $Fields[] = $a['Field'];
             }
             
             
@@ -257,15 +257,15 @@ class ExportModel {
       }
       
       // Return results
-      if($missing_tables===false) {
-         if(count($missing_columns) > 0) {
+      if($MissingTables===false) {
+         if(count($MissingColumns) > 0) {
             
             
             
          }
          else return true; // Nothing missing!
       }
-      else return 'Missing required database tables: '.$missing_tables;
+      else return 'Missing required database tables: '.$MissingTables;
    }
    
 }

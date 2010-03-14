@@ -10,7 +10,7 @@
 class Vbulletin extends ExportController {
    
    /** @var array Required tables => columns for vBulletin import */  
-   protected $tables = array(
+   protected $SourceTables = array(
       'user'=> array()
    );
    
