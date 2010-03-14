@@ -62,6 +62,7 @@ function ViewForm($forums, $msg='') {
    
    <?php endif; ?>   
    
+   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
    <fieldset>
    <input type="hidden" name="step" value="info" />
    <ul>
