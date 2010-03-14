@@ -14,39 +14,39 @@ class Vbulletin extends ExportController {
       'user'=> array()
       );
    
-   /** @var array Destinaton structure (what fields will we be importing?) */
-   protected $_Structures = array(
-		'Category' => array('CategoryID' => 'int', 'Name' => 'varchar(30)', 'Description' => 'varchar(250)', 'ParentCategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int'),
-		'Comment' => array('CommentID' => 'int', 'DiscussionID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Format' => 'varchar(20)', 'Body' => 'text', 'Score' => 'float'),
-		'Discussion' => array('DiscussionID' => 'int', 'Name' => 'varchar(100)', 'CategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Score' => 'float', 'Closed' => 'tinyint', 'Announce' => 'tinyint'),
-		'Role' => array('RoleID' => 'int', 'Name' => 'varchar(100)', 'Description' => 'varchar(200)'),
-		'User' => array(
-		    'UserID' => 'int', 
-		    'Name' => 'varchar(20)', 
-		    'Email' => 'varchar(200)', 
-		    'Password' => 'varbinary(34)',
-		    'InviteUserID' => 'int',
-		    'HourOffset' => 'int',
-		    'CountComments' => 'int',
-		    'DateOfBirth' => 'datetime',
-		    'DateFirstVisit' => 'datetime',
-		    'DateLastActive' => 'datetime',
-		    'DateInserted' => 'datetime',
-		    'DateUpdated' => 'datetime',
-		    'CountDiscussions' => 'int',
-		    'VbulletinSalt' => 'varchar(8)'
-		    ),
-		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
-		);
-   
    /**
     * Forum-specific export format
     */
    protected function ForumExport($Ex) {
-      // Begin
-      $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');
       
-      // Users
+      // Vanilla fields that will be populated by vBulletin
+      $Ex->_Structures = array(
+   		'Category' => array('CategoryID' => 'int', 'Name' => 'varchar(30)', 'Description' => 'varchar(250)', 'ParentCategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int'),
+   		'Comment' => array('CommentID' => 'int', 'DiscussionID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Format' => 'varchar(20)', 'Body' => 'text', 'Score' => 'float'),
+   		'Discussion' => array('DiscussionID' => 'int', 'Name' => 'varchar(100)', 'CategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Score' => 'float', 'Closed' => 'tinyint', 'Announce' => 'tinyint'),
+   		'Role' => array('RoleID' => 'int', 'Name' => 'varchar(100)', 'Description' => 'varchar(200)'),
+   		'User' => array(
+            'UserID' => 'int', 
+            'Name' => 'varchar(20)', 
+            'Email' => 'varchar(200)', 
+            'Password' => 'varbinary(34)',
+            'InviteUserID' => 'int',
+            'HourOffset' => 'int',
+            'CountComments' => 'int',
+            'DateOfBirth' => 'datetime',
+            'DateFirstVisit' => 'datetime',
+            'DateLastActive' => 'datetime',
+            'DateInserted' => 'datetime',
+            'DateUpdated' => 'datetime',
+            'CountDiscussions' => 'int',
+            'VbulletinSalt' => 'varchar(8)'
+            ),
+		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
+		);
+      
+      
+      
+      // Direct field mapping
       $User_Map = array(
          'UserID'=>'userid',
          'Name'=>'username',
@@ -56,6 +56,12 @@ class Vbulletin extends ExportController {
          'HourOffset'=>'timezoneoffset',
          'CountComments'=>'posts'
          );
+         
+         
+      // Begin
+      $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');   
+      
+      // Users   
       $Ex->ExportTable('User', "select *,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
