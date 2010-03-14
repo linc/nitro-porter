@@ -65,7 +65,7 @@ abstract class ExportController {
       // Connection
       if($c = mysql_connect($this->dbinfo['host'], $this->dbinfo['dbuser'], $this->dbinfo['dbpass'])) { 
          // Database
-         if(mysql_select_db($this->dbinfo['dbname'], $c)) { // Tables exist
+         if(mysql_select_db($this->dbinfo['dbname'], $c)) { 
             mysql_close($c);
             return true;
          }
