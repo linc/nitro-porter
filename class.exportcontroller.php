@@ -19,6 +19,7 @@ abstract class ExportController {
     * Setup model & views and go! 
     */
    public function __construct() {
+      $this->HandleInfoForm();
       $this->DoExport();
    }
    
@@ -26,11 +27,10 @@ abstract class ExportController {
     * Logic for export process 
     */
    public function DoExport() {
-      $this->HandleInfoForm();
       // Test connection
       $Msg = $this->TestDatabase();
       if($Msg===true) {
-         // Good connection
+         // Create db object
          $Ex = new ExportModel;
          $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['host'];
          $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
@@ -38,15 +38,16 @@ abstract class ExportController {
          // Test src tables' existence structure
          $Msg = $Ex->VerifyStructure($this->SourceTables);
          if($Msg===true) {
-            // Good src tables
+            // Good src tables - Start dump
             $Ex->UseCompression = TRUE;
             set_time_limit(60*2);
-            $Ex->ForumExport();
+            $this->ForumExport($Ex);
          }
+         else 
+            ViewForm($Msg); // Back to form with error
       }
-      else { // Back to form with error
-         ViewForm($Msg);
-      }
+      else 
+         ViewForm($Msg); // Back to form with error
    }
    
    /** 
