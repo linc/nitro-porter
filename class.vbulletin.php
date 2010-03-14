@@ -40,7 +40,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastactivity) as DateUpdated,
             (SELECT COUNT(*) FROM ".$Ex->Prefix."thread WHERE postuserid=userid) as CountDiscussions,
             salt as VbulletinSalt
-         from :_User", $User_Map);  // ":_" will be replace by database prefix
+         from :_user", $User_Map);  // ":_" will be replace by database prefix
       
       
       //$Ex->ExportTable('Role', 'select * from :_Role');
