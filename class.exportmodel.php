@@ -209,7 +209,7 @@ class ExportModel {
          'Email' => 'varchar(200)', 
          'Password' => 'varbinary(34)', 
          'Gender' => array('m', 'f'), 
-         'Score' => 'float'),
+         'Score' => 'float',
          'InviteUserID' => 'int',
          'HourOffset' => 'int',
          'CountComments' => 'int',
@@ -219,7 +219,7 @@ class ExportModel {
          'DateInserted' => 'datetime',
          'DateUpdated' => 'datetime',
          'CountDiscussions' => 'int',
-         'ImportSalt' => 'varchar(8)'
+         'ImportSalt' => 'varchar(8)'),
 		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
 		);
 	/**
