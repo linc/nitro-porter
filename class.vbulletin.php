@@ -29,7 +29,8 @@ class Vbulletin extends ExportController {
          'Email'=>'email',
          'InviteUserID'=>'referrerid',
          'HourOffset'=>'timezoneoffset',
-         'CountComments'=>'posts'
+         'CountComments'=>'posts',
+         'ImportSalt'=>'salt'
          );   
       $Ex->ExportTable('User', "select *,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
@@ -37,8 +38,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated,
-            (SELECT COUNT(*) FROM ".$Ex->Prefix."thread WHERE postuserid=userid) as CountDiscussions,
-            salt as VbulletinSalt
+            (SELECT COUNT(*) FROM ".$Ex->Prefix."thread WHERE postuserid=userid) as CountDiscussions
          from :_user", 
          $User_Map);  // ":_" will be replace by database prefix
       
