@@ -32,7 +32,7 @@ abstract class ExportController {
       if($Msg===true) {
          // Create db object
          $Ex = new ExportModel;
-         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['host'];
+         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
          $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          // Test src tables' existence structure

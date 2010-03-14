@@ -19,7 +19,7 @@ class Vbulletin extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport(PATH_ROOT.DS.'uploads'.DS.'export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');
+      $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');
       
       // Users
       $User_Map = array(
