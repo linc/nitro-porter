@@ -208,8 +208,8 @@ class ExportModel {
          'Name' => 'varchar(20)', 
          'Email' => 'varchar(200)', 
          'Password' => 'varbinary(34)', 
-         'Gender' => array('m', 'f'), 
-         'Score' => 'float',
+         //'Gender' => array('m', 'f'), 
+         //'Score' => 'float',
          'InviteUserID' => 'int',
          'HourOffset' => 'int',
          'CountComments' => 'int',
@@ -221,6 +221,7 @@ class ExportModel {
          'CountDiscussions' => 'int',
          'ImportSalt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
+      //UserMeta
 		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
 		);
 	/**

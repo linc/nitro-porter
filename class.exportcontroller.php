@@ -63,7 +63,7 @@ abstract class ExportController {
    }
    
    /** 
-    * Test database connection info & integrity of forum data
+    * Test database connection info
     */
    public function TestDatabase() {
       // Connection
