@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
 
-/** @var array Supported forum packages: classname => DisplayName */
+/** @var array Supported forum packages: classname => array(name, prefix) */
 $supported = array(
    'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
 );

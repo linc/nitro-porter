@@ -199,10 +199,45 @@ class ExportModel {
 	 * @var array Destination table structure
 	 */
 	protected $_Structures = array(
-		'Category' => array('CategoryID' => 'int', 'Name' => 'varchar(30)', 'Description' => 'varchar(250)', 'ParentCategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int'),
-		'Comment' => array('CommentID' => 'int', 'DiscussionID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Format' => 'varchar(20)', 'Body' => 'text', 'Score' => 'float'),
-		'Discussion' => array('DiscussionID' => 'int', 'Name' => 'varchar(100)', 'CategoryID' => 'int', 'DateInserted' => 'datetime', 'InsertUserID' => 'int', 'DateUpdated' => 'datetime', 'UpdateUserID' => 'int', 'Score' => 'float', 'Closed' => 'tinyint', 'Announce' => 'tinyint'),
-		'Role' => array('RoleID' => 'int', 'Name' => 'varchar(100)', 'Description' => 'varchar(200)'),
+		
+		'Category' => array(
+         'CategoryID' => 'int', 
+         'Name' => 'varchar(30)', 
+         'Description' => 'varchar(250)', 
+         'ParentCategoryID' => 'int', 
+         'DateInserted' => 'datetime', 
+         'InsertUserID' => 'int', 
+         'DateUpdated' => 'datetime', 
+         'UpdateUserID' => 'int'),
+		
+		'Comment' => array(
+         'CommentID' => 'int', 
+         'DiscussionID' => 'int', 
+         'DateInserted' => 'datetime', 
+         'InsertUserID' => 'int', 
+         'DateUpdated' => 'datetime', 
+         'UpdateUserID' => 'int', 
+         'Format' => 'varchar(20)', 
+         'Body' => 'text', 
+         'Score' => 'float'),
+		
+		'Discussion' => array(
+         'DiscussionID' => 'int', 
+         'Name' => 'varchar(100)', 
+         'CategoryID' => 'int', 
+         'DateInserted' => 'datetime', 
+         'InsertUserID' => 'int', 
+         'DateUpdated' => 'datetime', 
+         'UpdateUserID' => 'int', 
+         'Score' => 'float', 
+         'Closed' => 'tinyint', 
+         'Announce' => 'tinyint'),
+		
+		'Role' => array(
+         'RoleID' => 'int', 
+         'Name' => 'varchar(100)', 
+         'Description' => 'varchar(200)'),
+		
 		'User' => array(
          'UserID' => 'int', 
          'Name' => 'varchar(20)', 
@@ -221,8 +256,13 @@ class ExportModel {
          'CountDiscussions' => 'int',
          'ImportSalt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
+      
       //UserMeta
-		'UserRole' => array('UserID' => 'int', 'RoleID' => 'int')
+		
+		'UserRole' => array(
+         'UserID' => 'int', 
+         'RoleID' => 'int')
+         
 		);
 	/**
 	 * Returns an array of all the expected export tables and expected columns in the exports.
