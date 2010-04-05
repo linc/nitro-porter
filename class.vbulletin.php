@@ -53,31 +53,29 @@ class Vbulletin extends ExportController {
          'Description'=>'description'
       );   
       $Ex->ExportTable('Role', 'select * from :_usergroup');
-      
-      
-      // UserRoles (primary)
+  
+  
+      // UserRoles
       $UserRole_Map = array(
          'UserID' => 'userid', 
          'RoleID'=> 'usergroupid'
       );
-      $Ex->ExportTable('UserRole', 'select userid, usergroupid from :_user', $UserRole_Map);
-      
-
-      // UserRoles (secondary)
-      $Ex->Query("CREATE TEMPORARY TABLE VbulletinSecondaryRoles (userid INT UNSIGNED NOT NULL, usergroupid INT UNSIGNED NOT NULL)");
+      $Ex->Query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED NOT NULL, usergroupid INT UNSIGNED NOT NULL)");
+      # Put primary groups into tmp table
+      $Ex->Query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
       # Put stupid CSV column into tmp table
       $SecondaryRoles = $Ex->Query("select userid, membergroupids from :_user");
       foreach($SecondaryRoles as $Row) {
          if($Row['membergroupids']!='') {
             $Groups = explode(',',$Row['membergroupids']);
             foreach($Groups as $GroupID) {                  
-               $Ex->Query("insert into VbulletinSecondaryRoles (userid, usergroupid) values(".$Row['userid'].",".$GroupID."");
+               $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values(".$Row['userid'].",".$GroupID."");
             }
          }
       }
       # Export from our tmp table and drop
-      $Ex->ExportTable('UserRole', 'select userid, usergroupid from VbulletinSecondaryRoles', $UserRole_Map);
-      $Ex->Query("DROP TABLE VbulletinSecondaryRoles");
+      $Ex->ExportTable('UserRole', 'select userid, usergroupid from VbulletinRoles', $UserRole_Map);
+      $Ex->Query("DROP TABLE VbulletinRoles");
 
       
       // Categories
