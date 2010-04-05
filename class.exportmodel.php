@@ -95,6 +95,11 @@ class ExportModel {
 		return $this->_PDO;
 	}
 	
+	public function Query($Query) {
+	  $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
+	  return $this->PDO()->query($Query, PDO::FETCH_ASSOC);
+	}
+	
 	/**
 	 * Export a table to the export file.
 	 * @param string $TableName the name of the table to export. This must correspond to one of the accepted vanilla tables.
