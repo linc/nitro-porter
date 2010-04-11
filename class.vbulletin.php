@@ -80,14 +80,9 @@ class Vbulletin extends ExportController {
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
       # Standard vB user data
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'usertitle', usertitle from :_user WHERE usertitle!=''"); # Title
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'homepage', homepage from :_user WHERE homepage!=''"); # Homepage
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'aim', aim from :_user WHERE aim!=''"); # AIM
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'icq', icq from :_user WHERE icq!=''"); # ICQ
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'yahoo', yahoo from :_user WHERE yahoo!=''"); # Yahoo
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'msn', msn from :_user WHERE msn!=''"); # MSN
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'skype', skype from :_user WHERE skype!=''"); # Skype
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'styleid', styleid from :_user WHERE styleid!=0"); # Forum Skin
+      $UserFields = array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid');
+      foreach($UserFields as $UF)
+         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '".$UF."', ".$UF." from :_user where ".$UF."!=''");
       # Dynamic vB user data (userfield)
       $Fields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
       foreach ($Fields as $Field) {
