@@ -257,7 +257,7 @@ class ExportModel {
          'ImportSalt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
       'UserMeta' => array(
-         'UMetaKey' => 'int', 
+         //'UMetaKey' => 'int', 
          'UserID' => 'int', 
          'MetaKey' => 'varchar(64)',
          'MetaValue' => 'varchar(255)'),

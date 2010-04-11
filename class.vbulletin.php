@@ -42,8 +42,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated,
             (SELECT COUNT(*) FROM :_thread WHERE postuserid=userid) as CountDiscussions
-         from :_user", 
-         $User_Map);  // ":_" will be replace by database prefix
+         from :_user", $User_Map);  // ":_" will be replace by database prefix
       
       
       // Roles
@@ -52,7 +51,7 @@ class Vbulletin extends ExportController {
          'Name'=>'title',
          'Description'=>'description'
       );   
-      $Ex->ExportTable('Role', 'select * from :_usergroup');
+      $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
   
   
       // UserRoles
@@ -95,7 +94,7 @@ class Vbulletin extends ExportController {
          $VbulletinField = str_replace('_title','',$Field['varname']);
          $MetaKey = preg_replace('/[^0-9a-z_-]/','',strtolower($Field['text']));
          $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) 
-            select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield");
+            select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
       }
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey, MetaValue from VbulletinUserMeta');
