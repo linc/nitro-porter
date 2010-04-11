@@ -127,7 +127,20 @@ class Vbulletin extends ExportController {
 
       
       // Comments
-      //$Ex->ExportTable('Comment', 'select * from :_Comment');
+      $Comment_Map = array(
+         'CommentID' => 'postid', 
+         'DiscussionID'=> 'threadid', 
+         'Body'=> 'pagetext'
+      );
+      $Ex->ExportTable('Comment', "select *,
+            p.userid as InsertUserID,
+            p.userid as UpdateUserID,
+            FROM_UNIXTIME(p.dateline) as DateInserted,
+            FROM_UNIXTIME(p.dateline) as DateUpdated
+         from :_post p
+            left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
+         where d.primaryid IS NULL", $Comment_Map);
+            
       
       // Activity
       //$Ex->ExportTable('Activity', 'select * from :_Activity');
