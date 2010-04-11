@@ -204,7 +204,6 @@ class ExportModel {
 	 * @var array Destination table structure
 	 */
 	protected $_Structures = array(
-		
 		'Category' => array(
          'CategoryID' => 'int', 
          'Name' => 'varchar(30)', 
@@ -214,7 +213,6 @@ class ExportModel {
          'InsertUserID' => 'int', 
          'DateUpdated' => 'datetime', 
          'UpdateUserID' => 'int'),
-		
 		'Comment' => array(
          'CommentID' => 'int', 
          'DiscussionID' => 'int', 
@@ -225,7 +223,6 @@ class ExportModel {
          'Format' => 'varchar(20)', 
          'Body' => 'text', 
          'Score' => 'float'),
-		
 		'Discussion' => array(
          'DiscussionID' => 'int', 
          'Name' => 'varchar(100)', 
@@ -237,12 +234,10 @@ class ExportModel {
          'Score' => 'float', 
          'Closed' => 'tinyint', 
          'Announce' => 'tinyint'),
-		
 		'Role' => array(
          'RoleID' => 'int', 
          'Name' => 'varchar(100)', 
          'Description' => 'varchar(200)'),
-		
 		'User' => array(
          'UserID' => 'int', 
          'Name' => 'varchar(20)', 
@@ -261,14 +256,16 @@ class ExportModel {
          'CountDiscussions' => 'int',
          'ImportSalt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
-      
-      //UserMeta
-		
+      'UserMeta' => array(
+         'UMetaKey' => 'int', 
+         'UserID' => 'int', 
+         'MetaKey' => 'varchar(64)',
+         'MetaValue' => 'varchar(255)'),
 		'UserRole' => array(
          'UserID' => 'int', 
          'RoleID' => 'int')
-         
-		);
+	);
+	
 	/**
 	 * Returns an array of all the expected export tables and expected columns in the exports.
 	 * When exporting tables using ExportTable() all of the columns in this structure will always be exported in the order here, regardless of how their order in the query.

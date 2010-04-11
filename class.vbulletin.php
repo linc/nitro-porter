@@ -78,6 +78,9 @@ class Vbulletin extends ExportController {
       $Ex->Query("DROP TABLE VbulletinRoles");
 
       
+      // UserMeta
+      
+      
       // Categories
       //$Ex->ExportTable('Category', 'select * from :_Category');
       
