@@ -81,11 +81,11 @@ class Vbulletin extends ExportController {
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
       # Standard vB user data
       $UserFields = array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid');
-      foreach($UserFields as $UF)
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '".$UF."', ".$UF." from :_user where ".$UF."!=''");
+      foreach($UserFields as $Field)
+         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '".$Field."', ".$Field." from :_user where ".$Field."!=''");
       # Dynamic vB user data (userfield)
-      $Fields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
-      foreach ($Fields as $Field) {
+      $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
+      foreach ($ProfileFields as $Field) {
          $VbulletinField = str_replace('_title','',$Field['varname']);
          $MetaKey = preg_replace('/[^0-9a-z_-]/','',strtolower($Field['text']));
          $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) 
@@ -97,10 +97,34 @@ class Vbulletin extends ExportController {
 
       
       // Categories
-      //$Ex->ExportTable('Category', 'select * from :_Category');
+      $Category_Map = array(
+         'CategoryID' => 'forumid', 
+         'Description'=> 'description', 
+         'Sort'=> 'displayorder'
+      );
+      $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
+         from :_forum where threadcount > 0", $Category_Map);
+
       
       // Discussions
-      //$Ex->ExportTable('Discussion', 'select * from :_Discussion');
+      $Discussion_Map = array(
+         'DiscussionID' => 'threadid', 
+         'CategoryID'=> 'forumid', 
+         'InsertUserID'=> 'postuserid', 
+         'UpdateUserID'=> 'postuserid', 
+         'Name'=> 'title'
+      );
+      $Ex->ExportTable('Discussion', "select *, 
+            replycount+1 as CountComments, 
+            convert(ABS(open-1),char(1)) as Closed, 
+            convert(sticky,char(1)) as Announce,
+            FROM_UNIXTIME(t.dateline) as DateInserted,
+            FROM_UNIXTIME(lastpost) as DateUpdated,
+            FROM_UNIXTIME(lastpost) as DateLastComment
+         from :_thread t
+            left join :_deletionlog d ON (d.type='thread' AND d.primaryid=t.threadid)
+         where d.primaryid IS NULL", $Discussion_Map);
+
       
       // Comments
       //$Ex->ExportTable('Comment', 'select * from :_Comment');
