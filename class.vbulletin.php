@@ -33,7 +33,7 @@ class Vbulletin extends ExportController {
          'InviteUserID'=>'referrerid',
          'HourOffset'=>'timezoneoffset',
          'CountComments'=>'posts',
-         'ImportSalt'=>'salt'
+         'Salt'=>'salt'
       );   
       $Ex->ExportTable('User', "select *,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,

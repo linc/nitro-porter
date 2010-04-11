@@ -254,7 +254,7 @@ class ExportModel {
          'DateInserted' => 'datetime',
          'DateUpdated' => 'datetime',
          'CountDiscussions' => 'int',
-         'ImportSalt' => 'varchar(8)',
+         'Salt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
       'UserMeta' => array(
          //'UMetaKey' => 'int', 
