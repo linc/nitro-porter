@@ -259,7 +259,7 @@ class ExportModel {
          'DateLastActive' => 'datetime',
          'DateInserted' => 'datetime',
          'DateUpdated' => 'datetime',
-         'CountDiscussions' => 'int',
+         //'CountDiscussions' => 'int',
          'Salt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
       'UserDiscussion' => array(

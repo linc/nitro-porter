@@ -8,7 +8,7 @@
  * @todo importer: html_entity_decode Category names and Discussion titles
  * @todo importer: count bookmarks, bookmark comment count
  * @todo importer: update Discussions with first & last comment ids
- * @todo importer: update the CountDiscussions column on the category table
+ * @todo importer: update CountDiscussions column on the Category, User tables
  * @todo importer: don't make ALL discussions "new" after import
  */
  
@@ -45,8 +45,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
-            FROM_UNIXTIME(lastactivity) as DateUpdated,
-            (SELECT COUNT(*) FROM :_thread WHERE postuserid=userid) as CountDiscussions
+            FROM_UNIXTIME(lastactivity) as DateUpdated
          from :_user", $User_Map);  // ":_" will be replace by database prefix
       
       
