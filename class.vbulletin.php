@@ -5,6 +5,11 @@
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
+ * @todo importer: html_entity_decode Category names and Discussion titles
+ * @todo importer: count bookmarks, bookmark comment count
+ * @todo importer: update Discussions with first & last comment ids
+ * @todo importer: update the CountDiscussions column on the category table
+ * @todo importer: don't make ALL discussions "new" after import
  */
  
 class Vbulletin extends ExportController {
@@ -140,10 +145,27 @@ class Vbulletin extends ExportController {
          from :_post p
             left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
          where d.primaryid IS NULL", $Comment_Map);
-            
       
-      // Activity
-      //$Ex->ExportTable('Activity', 'select * from :_Activity');
+      
+      // UserDiscussion
+      $Ex->ExportTable('UserDiscussion', "select userid as UserID, threadid as DiscussionID from :_subscribethread");
+
+      
+      // Activity (3.8+)
+      $Activity_Map = array(
+         'ActivityUserID' => 'postuserid', 
+         'RegardingUserID'=> 'userid', 
+         'Story'=> 'pagetext',
+         'InsertUserID'=> 'postuserid'
+      );
+		$Tables = $Ex->Query("show tables like ':_visitormessage'");
+      if (count($Tables) > 0) { # Table is present
+			$Ex->ExportTable('Activity', "select *, 
+			   FROM_UNIXTIME(dateline) as DateInserted
+			from :_visitormessage
+			where state='visible'", $Activity_Map);
+      }
+
       
       // End
       $Ex->EndExport();
