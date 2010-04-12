@@ -132,7 +132,7 @@ class Vbulletin extends ExportController {
 
       
       // Comments
-      $Comment_Map = array(
+      /*$Comment_Map = array(
          'CommentID' => 'postid', 
          'DiscussionID'=> 'threadid', 
          'Body'=> 'pagetext'
@@ -145,7 +145,7 @@ class Vbulletin extends ExportController {
          from :_post p
             left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
          where d.primaryid IS NULL", $Comment_Map);
-      
+      */
       
       // UserDiscussion
       $Ex->ExportTable('UserDiscussion', "select userid as UserID, threadid as DiscussionID from :_subscribethread");

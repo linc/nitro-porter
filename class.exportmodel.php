@@ -204,6 +204,12 @@ class ExportModel {
 	 * @var array Destination table structure
 	 */
 	protected $_Structures = array(
+		'Activity' => array(
+         'ActivityUserID' => 'int', 
+         'RegardingUserID' => 'int', 
+         'Story' => 'text', 
+         'InsertUserID' => 'int', 
+         'DateInserted' => 'datetime'),
 		'Category' => array(
          'CategoryID' => 'int', 
          'Name' => 'varchar(30)', 
@@ -256,6 +262,9 @@ class ExportModel {
          'CountDiscussions' => 'int',
          'Salt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
+      'UserDiscussion' => array(
+         'UserID' => 'int', 
+         'DiscussionID' => 'int'),
       'UserMeta' => array(
          //'UMetaKey' => 'int', 
          'UserID' => 'int', 
