@@ -54,7 +54,14 @@ class Vbulletin extends ExportController {
          'RoleID'=>'usergroupid',
          'Name'=>'title',
          'Description'=>'description'
-      );   
+      ); 
+      # Check number of roles (V2 has 32-role limit)
+      $NumRoles = $Ex->Query("select COUNT(usergroupid) as TotalRoles from :_usergroup");
+      foreach($NumRoles as $Row) {
+         $TotalRoles = $Row['TotalRoles'];
+      }
+      if($TotalRoles > 32)
+         $Ex->Comment('WARNING: Only 32 usergroups may be used in Vanilla 2. Some of your roles will be lost.');
       $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
   
   
