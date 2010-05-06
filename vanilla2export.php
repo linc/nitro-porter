@@ -45,5 +45,5 @@ else {
    if(TestWrite())
       ViewForm($supported);
    else
-      ViewNoPermission();
+      ViewNoPermission('You do not have permission to write the export file to the filesystem.');
 }

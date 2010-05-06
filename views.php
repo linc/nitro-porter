@@ -15,15 +15,19 @@ function PageHeader() {
    ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-   <title>Vanilla 2 forum export tool</title>
-   <style>
-   
-   </style>
+   <title>Vanilla 2 Forum Export Tool</title>
+   <link rel="stylesheet" type="text/css" href="./design/style.css" media="screen" />
 </head>
 <body>
-   <h1>Vanilla 2 forum export tool</h1>
+<div id="Frame">
+	<div id="Content">
+      <div class="Title">
+         <h1>
+            <img src="./design/vanilla_logo.png" alt="Vanilla" />
+            <p>Forum Export Tool</p>
+         </h1>
+      </div>
    <?php
-
 }
 
    
@@ -32,6 +36,8 @@ function PageHeader() {
  */
 function PageFooter() {
    ?>
+   </div>
+</div>
 </body>
 </html><?php
 
@@ -43,8 +49,11 @@ function PageFooter() {
  */
 function ViewNoPermission($msg) {
    PageHeader(); ?>
-   
-   <p id="message"><?php echo $msg; ?></p>
+   <div class="Messages Errors">
+      <ul>
+         <li><?php echo $msg; ?></li>
+      </ul>
+   </div>
    
    <?php PageFooter();
 }
@@ -55,32 +64,50 @@ function ViewNoPermission($msg) {
  */
 function ViewForm($forums, $msg='') {
    PageHeader(); ?>
-   
-   <?php if($msg!='') : ?>
-   
-   <p id="message"><?php echo $msg; ?></p>
-   
-   <?php endif; ?>   
-   
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
-   <fieldset>
-   <input type="hidden" name="step" value="info" />
-   <ul>
-      <li><label>Forum type</label>
-         <select name="type">
-         <?php foreach($forums as $forumClass => $forumInfo) : ?>
-            <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
-         <?php endforeach; ?>
-         </select>
-      </li>
-      <li><label>Database prefix</label><input type="text" name="prefix" value="<?php echo $forumInfo['prefix']; ?>" /> Leave blank if none.</li>
-      <li><label>Database host</label><input type="text" name="dbhost" value="localhost" /> Usually &ldquo;localhost&rdquo; if you&rsquo;re not sure.</li>
-      <li><label>Database name</label><input type="text" name="dbname" value="" /></li>
-      <li><label>Database username</label><input type="text" name="dbuser" value="" /></li>
-      <li><label>Database password</label><input type="password" name="dbpass" /></li>
-   </ul>
-   <input class="button" type="submit" value="Begin Export" />
-   </fieldset>
+      <input type="hidden" name="step" value="info" />
+      <div class="Form">
+         <?php if($msg!='') : ?>
+         <div class="Messages Errors">
+            <ul>
+               <li><?php echo $msg; ?></li>
+            </ul>
+         </div>
+         <?php endif; ?>   
+         <ul>
+            <li>
+               <label>Source Forum Type</label>
+               <select name="type">
+               <?php foreach($forums as $forumClass => $forumInfo) : ?>
+                  <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
+               <?php endforeach; ?>
+               </select>
+            </li>
+            <li>
+               <label>Table Prefix <span>Table prefix is not required</span></label>
+               <input class="InputBox" type="text" name="prefix" value="<?php echo $forumInfo['prefix']; ?>" />
+            </li>
+            <li>
+               <label>Database Host <span>Database host is usually "localhost"</span></label>
+               <input class="InputBox" type="text" name="dbhost" value="localhost" />
+            </li>
+            <li>
+               <label>Database Name</label>
+               <input class="InputBox" type="text" name="dbname" value="" />
+            </li>
+            <li>
+               <label>Database Username</label>
+               <input class="InputBox" type="text" name="dbuser" value="" />
+            </li>
+            <li>
+               <label>Database Password</label>
+               <input class="InputBox" type="password" name="dbpass" />
+            </li>
+         </ul>
+         <div class="Button">
+            <input class="Button" type="submit" value="Begin Export" />
+         </div>
+      </div>
    </form>
 
    <?php PageFooter();
