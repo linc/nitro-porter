@@ -1,3 +1,4 @@
+
 <?php
 /**
  * @copyright Vanilla Forums Inc. 2010
@@ -83,7 +84,7 @@ class ExportModel {
 	 *  @return PDO The current database connection.
 	 */
 	public function PDO($DsnOrPDO = NULL, $Username = NULL, $Password = NULL) {
-		if(!is_null($DsnOrPDO)) {
+		if (!is_null($DsnOrPDO)) {
 			if($DsnOrPDO instanceof PDO)
 				$this->_PDO = $DsnOrPDO;
 			else {
@@ -97,7 +98,8 @@ class ExportModel {
 	
 	public function Query($Query) {
 	  $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
-	  return $this->PDO()->query($Query, PDO::FETCH_ASSOC);
+	  $Result = $this->PDO()->query($Query, PDO::FETCH_ASSOC);
+	  return $Result;
 	}
 	
 	/**
@@ -127,13 +129,12 @@ class ExportModel {
 		
 		// Get the data for the query.
 		if(is_string($Query)) {
-			$Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
-			$Data = $this->PDO()->query($Query, PDO::FETCH_ASSOC);
+			$Data = $this->Query($Query);
 		} elseif($Query instanceof PDOStatement) {
 			$Data = $Query;
 		}
 		
-		#print_r($this->PDO()->errorInfo());
+		// print_r($this->PDO()->errorInfo());
 		
 		// Set the search and replace to escape strings.
 		$EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
@@ -143,8 +144,8 @@ class ExportModel {
 		fwrite($fp, implode(self::DELIM, array_keys($Structure)).self::NEWLINE);
 		
 		// Loop through the data and write it to the file.
-		foreach($Data as $Row) {
-			$Row = (array)$Row;
+		while ($Data && $Data->rowCount() && $Row = $Data->fetch(PDO::FETCH_ASSOC)) {
+			$Row = (array)$Row; // export%202010-05-06%20210937.txt
 			$First = TRUE;
 			
 			// Loop through the columns in the export structure and grab their values from the row.
@@ -229,6 +230,19 @@ class ExportModel {
          'Format' => 'varchar(20)', 
          'Body' => 'text', 
          'Score' => 'float'),
+      'Conversation' => array(
+         'ConversationID' => 'int', 
+         'FirstMessageID' => 'int', 
+         'DateInserted' => 'datetime', 
+         'InsertUserID' => 'int', 
+         'DateUpdated' => 'datetime', 
+         'UpdateUserID' => 'int'),
+		'ConversationMessage' => array(
+         'MessageID' => 'int', 
+         'ConversationID' => 'int', 
+         'Body' => 'text', 
+         'InsertUserID' => 'int', 
+         'DateInserted' => 'datetime'),
 		'Discussion' => array(
          'DiscussionID' => 'int', 
          'Name' => 'varchar(100)', 
@@ -262,6 +276,10 @@ class ExportModel {
          //'CountDiscussions' => 'int',
          'Salt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
+      'UserConversation' => array(
+         'UserID' => 'int', 
+         'ConversationID' => 'int', 
+         'LastMessageID' => 'int'),
       'UserDiscussion' => array(
          'UserID' => 'int', 
          'DiscussionID' => 'int'),

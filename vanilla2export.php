@@ -9,7 +9,8 @@
 
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $supported = array(
-   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
+   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
+   'vanilla' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_')
 );
 
 /** 
@@ -45,5 +46,5 @@ else {
    if(TestWrite())
       ViewForm($supported);
    else
-      ViewNoPermission('You do not have permission to write the export file to the filesystem.');
+      ViewNoPermission("This script has detected that it does not have permission to create files in the current directory. Please rectify this and retry.");
 }
