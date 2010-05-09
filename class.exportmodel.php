@@ -318,32 +318,34 @@ class ExportModel {
 	}
 	
 	/**
-	 * Checks all required source table are present
+	 * Checks all required source tables are present
 	 */
-	public function VerifySource($Tables) {
-	
-	   // HACK FOR NOW
-	   return true;
-	   // HACK FOR NOW  
-	
+	public function VerifySource($RequiredTables) {
       $MissingTables = false;
+      $CountMissingTables = 0;
       $MissingColumns = array();
-      foreach($Tables as $Table => $Cols) {
-         $r = $this->PDO()->query("describe $table");
-         if($r===false) {
-            // Table doesn't exist
-            if($MissingTables!==false)
-               $MissingTables .= ', '.$Table;
+      
+      foreach($RequiredTables as $ReqTable => $ReqColumns) {
+         $TableDescriptions = $this->PDO()->query("describe $ReqTable");
+         
+         if($TableDescriptions === false) { // Table doesn't exist
+            $CountMissingTables++;
+            if($MissingTables !== false)
+               $MissingTables .= ', '.$ReqTable;
             else
-               $MissingTables = $Table;
+               $MissingTables = $ReqTable;
          }
          else {
-            // Check columns
-            $Fields = array();
-            while($a = mysql_fetch_array($r)) {
-                $Fields[] = $a['Field'];
+            // Build array of columns in this table
+            $PresentColumns = array();
+            while($TD = mysql_fetch_array($TableDescriptions)) {
+                $PresentColumns[] = $TD['Field'];
             }
-            
+            // Compare with required columns
+            foreach($ReqColumns as $ReqCol) {
+               if(!in_array($ReqCol, $PresentColumns))
+                  $MissingColumns[$ReqTable][] = $ReqCol;
+            }
             
          }
       }
@@ -351,13 +353,23 @@ class ExportModel {
       // Return results
       if($MissingTables===false) {
          if(count($MissingColumns) > 0) {
-            
-            
-            
+            $Error = '';
+            foreach($MissingColumns as $T) {
+               $Error .= '<br />Missing required columns from table &laquo;'.$T.'&raquo;:';
+               foreach($T as $MissingCol) {
+                  $Error .= ' '.$MissingCol;
+               }
+            }
+            return $Error;            
          }
          else return true; // Nothing missing!
       }
-      else return 'Missing required database tables: '.$MissingTables;
+      elseif($CountMissingTables == count($RequiredTables)) {
+         return 'Required tables not present. Check database name and prefix and try again.';
+      }
+      else {
+         return 'Missing required database tables: '.$MissingTables;
+      }
    }
    
 }

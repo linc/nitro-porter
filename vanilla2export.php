@@ -6,9 +6,11 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+ 
+global $Supported;
 
 /** @var array Supported forum packages: classname => array(name, prefix) */
-$supported = array(
+$Supported = array(
    'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
    'vanilla' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_')
 );
@@ -31,12 +33,12 @@ function TestWrite() {
 include('class.exportmodel.php');
 include('views.php');
 include('class.exportcontroller.php');
-foreach($supported as $file => $info) {
+foreach($Supported as $file => $info) {
    include('class.'.$file.'.php');
 }
 
 // Logic
-if(isset($_POST['type']) && array_key_exists($_POST['type'], $supported)) {
+if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
    // Mini-Factory
    $class = ucwords($_POST['type']);
    new $class;
@@ -44,7 +46,7 @@ if(isset($_POST['type']) && array_key_exists($_POST['type'], $supported)) {
 else {
    // View form or error
    if(TestWrite())
-      ViewForm($supported);
+      ViewForm($Supported);
    else
       ViewNoPermission("This script has detected that it does not have permission to create files in the current directory. Please rectify this and retry.");
 }

@@ -6,10 +6,13 @@
  */
 
 /** Generic controller implemented by forum-specific ones */
-abstract class ExportController {  
+abstract class ExportController {
    
    /** @var array Database connection info */
    protected $DbInfo = array();
+   
+   /** @var array Required tables, columns set per exporter */
+   protected $SourceTables = array();
 
    /** Forum-specific export routine */
    abstract protected function ForumExport($Ex);
@@ -27,6 +30,8 @@ abstract class ExportController {
     * Logic for export process 
     */
    public function DoExport() {
+      global $Supported;
+      
       // Test connection
       $Msg = $this->TestDatabase();
       if($Msg===true) {
@@ -36,7 +41,7 @@ abstract class ExportController {
          $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          // Test src tables' existence structure
-         $Msg = $Ex->VerifySource($this->_SourceTables);
+         $Msg = $Ex->VerifySource($this->SourceTables);
          if($Msg===true) {
             // Good src tables - Start dump
             $Ex->UseCompression = TRUE;
@@ -44,7 +49,7 @@ abstract class ExportController {
             $this->ForumExport($Ex);
          }
          else 
-            ViewForm($Msg); // Back to form with error
+            ViewForm($Supported, $Msg); // Back to form with error
       }
       else 
          ViewForm($Msg); // Back to form with error
