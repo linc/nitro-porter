@@ -14,11 +14,18 @@
  
 class Vbulletin extends ExportController {
    
-   /** @var array Required tables => columns for vBulletin import */  
+   /** @var array Required tables => columns for vBulletin import */
    protected $SourceTables = array(
-      'user' => array(),
-      'usergroup'=> array()
-      );
+      'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
+         'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid'),
+      'usergroup'=> array('usergroupid','title','description'),
+      'userfield' => array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid'),
+      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost')
+      'deletionlog' => array('thread','primaryid'),
+      'post' => array('postid','threadid','pagetext','userid','dateline'),
+      'forum' => array('forumid','description','displayorder','title','description','displayorder'),
+      'subscribethread' => array('userid','threadid')
+   );
    
    /**
     * Forum-specific export format
@@ -139,7 +146,7 @@ class Vbulletin extends ExportController {
 
       
       // Comments
-      /*$Comment_Map = array(
+      $Comment_Map = array(
          'CommentID' => 'postid', 
          'DiscussionID'=> 'threadid', 
          'Body'=> 'pagetext'
@@ -152,7 +159,7 @@ class Vbulletin extends ExportController {
          from :_post p
             left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
          where d.primaryid IS NULL", $Comment_Map);
-      */
+      
       
       // UserDiscussion
       $Ex->ExportTable('UserDiscussion', "select userid as UserID, threadid as DiscussionID from :_subscribethread");
