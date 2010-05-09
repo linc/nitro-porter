@@ -62,9 +62,9 @@ function ViewNoPermission($msg) {
 /**
  * Form: Database connection info
  */
-function ViewForm($Forums, $Msg='', $Info = '') {
+function ViewForm($Supported, $Msg='', $Info = '') {
    PageHeader(); ?>
-   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="dbinfo">
       <input type="hidden" name="step" value="info" />
       <div class="Form">
          <?php if($Msg != '') : ?>
@@ -77,8 +77,8 @@ function ViewForm($Forums, $Msg='', $Info = '') {
          <ul>
             <li>
                <label>Source Forum Type</label>
-               <select name="type">
-               <?php foreach($Forums as $forumClass => $forumInfo) : ?>
+               <select name="type" onchange="updatePrefix();" id="forumType">
+               <?php foreach($Supported as $forumClass => $forumInfo) : ?>
                   <option value="<?php echo $forumClass; ?>"<?php 
                      if(is_array($Info) && $Info['type']==$forumClass) 
                         echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
@@ -87,7 +87,7 @@ function ViewForm($Forums, $Msg='', $Info = '') {
             </li>
             <li>
                <label>Table Prefix <span>Table prefix is not required</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo (is_array($Info)) ? $Info['prefix'] : $forumInfo['prefix']; ?>" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo (is_array($Info)) ? $Info['prefix'] : $Supported['vanilla']['prefix']; ?>" id="forumPrefix" />
             </li>
             <li>
                <label>Database Host <span>Database host is usually "localhost"</span></label>
@@ -111,6 +111,18 @@ function ViewForm($Forums, $Msg='', $Info = '') {
          </div>
       </div>
    </form>
+   <script type="text/javascript">
+   //<![CDATA[
+      function updatePrefix() {
+         var type = document.getElementById('forumType').value;
+         switch(type) {
+            <?php foreach($Forums as $forumClass => $forumInfo) : ?>
+            case '<?php echo $forumClass; ?>': document.getElementById('forumPrefix').value = '<?php echo $forumInfo['prefix']; ?>'; break;
+            <?php endforeach; ?>
+         }
+      }
+   //]]>
+   </script> 
 
    <?php PageFooter();
 }
