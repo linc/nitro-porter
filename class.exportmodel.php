@@ -35,7 +35,7 @@ class ExportModel {
 		if($Source)
 			fwrite($fp, self::DELIM.' Source: '.$Source);
 		fwrite($fp, self::NEWLINE.self::NEWLINE);
-		$this->Comment('Exported Started: '.date('Y-m-d H:i:s'));
+		$this->Comment('<ul id="Progress"><li>Exported Started: '.date('Y-m-d H:i:s').'</li>');
 	}
 	
 	/**
@@ -58,7 +58,7 @@ class ExportModel {
 		$m = floor($this->TotalTime / 60);
 		$s = $this->TotalTime - $m * 60;
 		
-		$this->Comment('Exported Completed: '.date('Y-m-d H:i:s').sprintf(', Elapsed Time: %02d:%02.2f', $m, $s));
+		$this->Comment('<li>Exported Completed: '.date('Y-m-d H:i:s').sprintf('</li><li>Elapsed Time: %02d:%02.2f', $m, $s).'</li></ul>');
 		
 		if($this->UseCompression && function_exists('gzopen'))
 			gzclose($this->_File);
