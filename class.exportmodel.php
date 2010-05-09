@@ -1,4 +1,3 @@
-
 <?php
 /**
  * @copyright Vanilla Forums Inc. 2010
@@ -326,8 +325,8 @@ class ExportModel {
       $MissingColumns = array();
       
       foreach($RequiredTables as $ReqTable => $ReqColumns) {
-         $TableDescriptions = $this->PDO()->query("describe $ReqTable");
-         
+         $TableDescriptions = $this->Query('describe :_'.$ReqTable);
+         //echo 'describe '.$Prefix.$ReqTable;
          if($TableDescriptions === false) { // Table doesn't exist
             $CountMissingTables++;
             if($MissingTables !== false)
@@ -338,7 +337,7 @@ class ExportModel {
          else {
             // Build array of columns in this table
             $PresentColumns = array();
-            while($TD = mysql_fetch_array($TableDescriptions)) {
+            foreach($TableDescriptions as $TD) {
                 $PresentColumns[] = $TD['Field'];
             }
             // Compare with required columns
@@ -365,7 +364,7 @@ class ExportModel {
          else return true; // Nothing missing!
       }
       elseif($CountMissingTables == count($RequiredTables)) {
-         return 'Required tables not present. Check database name and prefix and try again.';
+         return 'Required tables not present. Check Database Name and Table Prefix and try again.';
       }
       else {
          return 'Missing required database tables: '.$MissingTables;

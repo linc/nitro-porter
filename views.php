@@ -62,15 +62,15 @@ function ViewNoPermission($msg) {
 /**
  * Form: Database connection info
  */
-function ViewForm($forums, $msg='') {
+function ViewForm($Forums, $Msg='', $Info = '') {
    PageHeader(); ?>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
       <div class="Form">
-         <?php if($msg!='') : ?>
+         <?php if($Msg != '') : ?>
          <div class="Messages Errors">
             <ul>
-               <li><?php echo $msg; ?></li>
+               <li><?php echo $Msg; ?></li>
             </ul>
          </div>
          <?php endif; ?>   
@@ -78,26 +78,28 @@ function ViewForm($forums, $msg='') {
             <li>
                <label>Source Forum Type</label>
                <select name="type">
-               <?php foreach($forums as $forumClass => $forumInfo) : ?>
-                  <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
+               <?php foreach($Forums as $forumClass => $forumInfo) : ?>
+                  <option value="<?php echo $forumClass; ?>"<?php 
+                     if(is_array($Info) && $Info['type']==$forumClass) 
+                        echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
                <?php endforeach; ?>
                </select>
             </li>
             <li>
                <label>Table Prefix <span>Table prefix is not required</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo $forumInfo['prefix']; ?>" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo (is_array($Info)) ? $Info['prefix'] : $forumInfo['prefix']; ?>" />
             </li>
             <li>
                <label>Database Host <span>Database host is usually "localhost"</span></label>
-               <input class="InputBox" type="text" name="dbhost" value="localhost" />
+               <input class="InputBox" type="text" name="dbhost" value="<?php echo (is_array($Info)) ? $Info['dbhost'] :'localhost'; ?>" />
             </li>
             <li>
                <label>Database Name</label>
-               <input class="InputBox" type="text" name="dbname" value="" />
+               <input class="InputBox" type="text" name="dbname" value="<?php if(is_array($Info)) echo $Info['dbname']; ?>" />
             </li>
             <li>
                <label>Database Username</label>
-               <input class="InputBox" type="text" name="dbuser" value="" />
+               <input class="InputBox" type="text" name="dbuser" value="<?php if(is_array($Info)) echo $Info['dbuser']; ?>" />
             </li>
             <li>
                <label>Database Password</label>

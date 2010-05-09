@@ -34,7 +34,7 @@ abstract class ExportController {
       
       // Test connection
       $Msg = $this->TestDatabase();
-      if($Msg===true) {
+      if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
          $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
@@ -42,17 +42,17 @@ abstract class ExportController {
          $Ex->Prefix = $this->DbInfo['prefix'];
          // Test src tables' existence structure
          $Msg = $Ex->VerifySource($this->SourceTables);
-         if($Msg===true) {
+         if($Msg === true) {
             // Good src tables - Start dump
             $Ex->UseCompression = TRUE;
             set_time_limit(60*2);
             $this->ForumExport($Ex);
          }
          else 
-            ViewForm($Supported, $Msg); // Back to form with error
+            ViewForm($Supported, $Msg, $this->DbInfo); // Back to form with error
       }
       else 
-         ViewForm($Msg); // Back to form with error
+         ViewForm($Supported, $Msg, $this->DbInfo); // Back to form with error
    }
    
    /** 
@@ -60,11 +60,12 @@ abstract class ExportController {
     */
    public function HandleInfoForm() {
       $this->DbInfo = array(
-         'dbhost'=>$_POST['dbhost'],
-         'dbuser'=>$_POST['dbuser'], 
-         'dbpass'=>$_POST['dbpass'], 
-         'dbname'=>$_POST['dbname'],
-         'prefix'=>preg_replace('/[^A-Za-z0-9_-]/','',$_POST['prefix']));
+         'dbhost' => $_POST['dbhost'],
+         'dbuser' => $_POST['dbuser'], 
+         'dbpass' => $_POST['dbpass'], 
+         'dbname' => $_POST['dbname'],
+         'type'   => $_POST['type'],
+         'prefix' => preg_replace('/[^A-Za-z0-9_-]/','',$_POST['prefix']));
    }
    
    /** 
