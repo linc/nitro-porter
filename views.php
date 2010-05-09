@@ -116,7 +116,7 @@ function ViewForm($Supported, $Msg='', $Info = '') {
       function updatePrefix() {
          var type = document.getElementById('forumType').value;
          switch(type) {
-            <?php foreach($Forums as $forumClass => $forumInfo) : ?>
+            <?php foreach($Supported as $forumClass => $forumInfo) : ?>
             case '<?php echo $forumClass; ?>': document.getElementById('forumPrefix').value = '<?php echo $forumInfo['prefix']; ?>'; break;
             <?php endforeach; ?>
          }
