@@ -285,8 +285,8 @@ class ExportModel {
       'UserMeta' => array(
          //'UMetaKey' => 'int', 
          'UserID' => 'int', 
-         'MetaKey' => 'varchar(64)',
-         'MetaValue' => 'varchar(255)'),
+         'MetaKey' => 'varchar(255)',
+         'MetaValue' => 'text'),
 		'UserRole' => array(
          'UserID' => 'int', 
          'RoleID' => 'int')
