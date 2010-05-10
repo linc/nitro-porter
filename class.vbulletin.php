@@ -17,11 +17,13 @@ class Vbulletin extends ExportController {
    /** @var array Required tables => columns for vBulletin import */
    protected $SourceTables = array(
       'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
-         'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid'),
+         'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid',
+         'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid'),
       'usergroup'=> array('usergroupid','title','description'),
-      'userfield' => array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid'),
-      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost')
-      'deletionlog' => array('thread','primaryid'),
+      'userfield' => array('userid'),
+      'phrase' => array('varname','text','product','fieldname','varname'),
+      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost'),
+      'deletionlog' => array('type','primaryid'),
       'post' => array('postid','threadid','pagetext','userid','dateline'),
       'forum' => array('forumid','description','displayorder','title','description','displayorder'),
       'subscribethread' => array('userid','threadid')

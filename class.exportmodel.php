@@ -353,8 +353,8 @@ class ExportModel {
       if($MissingTables===false) {
          if(count($MissingColumns) > 0) {
             $Error = '';
-            foreach($MissingColumns as $T) {
-               $Error .= '<br />Missing required columns from table &laquo;'.$T.'&raquo;:';
+            foreach($MissingColumns as $TableName => $T) {
+               $Error .= '<br />&raquo; Missing required columns from table &ldquo;'.$TableName.'&rdquo;:';
                foreach($T as $MissingCol) {
                   $Error .= ' '.$MissingCol;
                }
