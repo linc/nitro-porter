@@ -91,10 +91,10 @@ class Vanilla extends ExportController {
          'Name' => 'Name',
          'CategoryID'=> 'CategoryID', 
          'Body'=> 'Body',
-         'DateInserted'=>'DateCreated',
-         'InsertUserID'=> 'AuthUserID',
-         'DateUpdated'=>'DateLastActive',
-         'UpdateUserID'=> 'LastUserID', 
+         'DateCreated'=>'DateInserted',
+         'AuthUserID'=>'InsertUserID',
+         'DateLastActive'=>'DateUpdated',
+         'LastUserID'=>'UpdateUserID',
          'Closed'=>'Closed',
       );
       $Ex->ExportTable('Discussion', "
@@ -115,12 +115,12 @@ class Vanilla extends ExportController {
 		 */
       $Comment_Map = array(
          'CommentID' => 'CommentID',
-         'DiscussionID'=> 'DiscussionID',
-         'InsertUserID'=> 'AuthUserID',
-         'DateInserted'=> 'DateCreated',
-         'UpdateUserID'=> 'EditUserID',
-         'DateUpdated'=> 'DateEdited',
-         'Body'=> 'Body'
+         'DiscussionID' => 'DiscussionID',
+         'AuthUserID' => 'InsertUserID',
+         'DateCreated' => 'DateInserted',
+         'EditUserID' => 'UpdateUserID',
+         'DateEdited' => 'DateUpdated',
+         'Body' => 'Body'
       );
       $Ex->ExportTable('Comment', "
          SELECT * FROM :_Comment c
@@ -136,11 +136,11 @@ class Vanilla extends ExportController {
           'UpdateUserID' => 'int'
       */
       $Conversation_Map = array(
-         'ConversationID' => 'DiscussionID', 
-         'InsertUserID'=> 'AuthUserID', 
-         'DateInserted'=> 'DateCreated',
-         'UpdateUserID'=> 'EditUserID',
-         'DateUpdated'=> 'DateEdited'
+         'DiscussionID' => 'ConversationID',
+         'AuthUserID' => 'InsertUserID',
+         'DateCreated' => 'DateInserted',
+         'EditUserID' => 'UpdateUserID',
+         'DateEdited' => 'DateUpdated'
       );
       $Ex->ExportTable('Conversation', "SELECT DISTINCT DiscussionID, AuthUserID, DateCreated, EditUserID, DateEdited 
          FROM :_Comment c
@@ -156,11 +156,11 @@ class Vanilla extends ExportController {
          'DateInserted' => 'datetime'
       */
       $ConversationMessage_Map = array(
-         'MessageID'=> 'CommentID',
-         'ConversationID'=> 'DiscussionID',
-         'Body'=>'Body',
-         'InsertUserID'=> 'AuthUserID',
-         'DateInserted'=> 'DateCreated'
+         'CommentID' => 'MessageID',
+         'DiscussionID' => 'ConversationID',
+         'Body' => 'Body',
+         'AuthUserID' => 'InsertUserID',
+         'DateCreated' => 'DateInserted'
       );
       $Ex->ExportTable('ConversationMessage', "
          SELECT CommentID, DiscussionID, AuthUserID, DateCreated, Body FROM :_Comment c
