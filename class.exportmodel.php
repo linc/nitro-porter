@@ -109,7 +109,10 @@ class ExportModel {
 	 *  - <b>String</b>: Represents a string of sql to execute.
 	 *  - <b>PDOStatement</b>: Represents an already executed query resultset.
 	 *  - <b>Array</b>: Represents an array of associative arrays or objects containing the data in the export.
-	 *  @param array $Mappings Specifies mappings, if any, between the source and the export where the keys represent the export columns and the values represent the source columns.
+	 *  @param array $Mappings Specifies mappings, if any, between the source and the export where the keys represent the source columns and the values represent Vanilla columns.
+	 *	  - If you specify a Vanilla column then it must be in the export structure contained in this class.
+	 *   - If you specify a MySQL type then the column will be added.
+	 *   - If you specify an array you can have the following keys: Column, and Type where Column represents the new column name and Type represents the MySQL type.
 	 *  For a list of the export tables and columns see $this->Structure().
 	 */
 	public function ExportTable($TableName, $Query, $Mappings = array()) {
@@ -139,9 +142,24 @@ class ExportModel {
 		// Set the search and replace to escape strings.
 		$EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
 		$EscapeReplace = array(self::ESCAPE.self::ESCAPE, self::ESCAPE.self::DELIM, self::ESCAPE.self::NEWLINE, self::ESCAPE.self::QUOTE);
-		
-		// Write the column header.
-		fwrite($fp, implode(self::DELIM, array_keys($Structure)).self::NEWLINE);
+
+		// Get the export structure.
+		$ExportStructure = $this->GetExportStructure($Structure, $Mappings);
+
+		// Build and write the table header.
+		$TableHeader = '';
+		foreach($ExportStructure as $Column => $Type) {
+			if(strlen($TableHeader) > 0)
+				$TableHeader .= self::DELIM;
+			if(array_key_exists($Column, $Structure)) {
+				$TableHeader .= $Column;
+			} else {
+				$TableHeader .= $Column.':'.$Type;
+			}
+		}
+		fwrite($fp, $TableHeader.self::NEWLINE);
+
+		$Mappings = array_flip($Mappings);
 		
 		// Loop through the data and write it to the file.
 		while ($Data && $Data->rowCount() && $Row = $Data->fetch(PDO::FETCH_ASSOC)) {
@@ -150,7 +168,7 @@ class ExportModel {
 			
 			// Loop through the columns in the export structure and grab their values from the row.
 			$ExRow = array();
-			foreach($Structure as $Field => $Type) {
+			foreach($ExportStructure as $Field => $Type) {
 				// Get the value of the export.
 				if(array_key_exists($Field, $Row)) {
 					// The column has an exact match in the export.
@@ -193,6 +211,37 @@ class ExportModel {
 		
 		if($Data instanceof PDOStatement)
 			$Data->closeCursor();
+	}
+
+	public function GetExportStructure($Structure, &$Mappings) {
+		if(!$Mappings)
+			return $Structure;
+
+		$ExportStructure = $Structure;
+
+		// See what columns to add to the end of the structure.
+		foreach($Mappings as $Column => $Value) {
+			if(is_string($Value)) {
+				if(array_key_exists($Value, $Structure)) {
+					$DestColumn = $Value;
+					$DestType = $Structure[$DestColumn];
+				} else {
+					$DestColumn = $Column;
+					$DestType = $Value;
+				}
+			} elseif(is_array($Value)) {
+				$DestColumn = $Value['Column'];
+				$DestType = $Value['Type'];
+				$Mappings[$Column] = $DestColumn;
+			}
+
+			// Check to see if we have to add the column to the export structure.
+			if(!array_key_exists($DestColumn, $ExportStructure)) {
+				// TODO: Make sure $DestType is a valid MySQL type.
+				$ExportStructure[$DestColumn] = $DestType;
+			}
+		}
+		return $ExportStructure;
 	}
 	
 	/**
@@ -274,7 +323,7 @@ class ExportModel {
          'DateInserted' => 'datetime',
          'DateUpdated' => 'datetime',
          //'CountDiscussions' => 'int',
-         'Salt' => 'varchar(8)',
+         //'Salt' => 'varchar(8)',
          'PhotoFile' => 'varchar(255)'),
       'UserConversation' => array(
          'UserID' => 'int', 
