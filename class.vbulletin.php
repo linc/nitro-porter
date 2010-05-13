@@ -26,21 +26,21 @@ class Vbulletin extends ExportController {
    protected function ForumExport($Ex) {
       // Begin
       PageHeader();
-      $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');   
-      
+      $Ex->BeginExport('export '.date('Y-m-d His').'.txt'.($Ex->UseCompression ? '.gz' : ''), 'vBulletin 3+');
       
       // Users
       $User_Map = array(
-         'UserID'=>'userid',
-         'Name'=>'username',
-         'Password'=>'password',
-         'Email'=>'email',
-         'InviteUserID'=>'referrerid',
-         'HourOffset'=>'timezoneoffset',
-         'CountComments'=>'posts',
-         'Salt'=>'salt'
-      );   
+         'userid'=>'UserID',
+         'username'=>'Name',
+         'password2'=>'Password',
+         'email'=>'Email',
+         'referrerid'=>'InviteUserID',
+         'timezoneoffset'=>'HourOffset',
+         //'posts'=>'CountComments',
+         'salt'=>'char(3)'
+      );
       $Ex->ExportTable('User', "select *,
+				concat(`password`, salt) as password2,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -51,17 +51,17 @@ class Vbulletin extends ExportController {
       
       // Roles
       $Role_Map = array(
-         'RoleID'=>'usergroupid',
-         'Name'=>'title',
-         'Description'=>'description'
+         'usergroupid'=>'RoleID',
+         'title'=>'Name',
+         'description'=>'Description'
       );   
       $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
   
   
       // UserRoles
       $UserRole_Map = array(
-         'UserID' => 'userid', 
-         'RoleID'=> 'usergroupid'
+         'userid'=>'UserID',
+         'usergroupid'=>'RoleID'
       );
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED NOT NULL, usergroupid INT UNSIGNED NOT NULL)");
       # Put primary groups into tmp table
@@ -102,9 +102,9 @@ class Vbulletin extends ExportController {
       
       // Categories
       $Category_Map = array(
-         'CategoryID' => 'forumid', 
-         'Description'=> 'description', 
-         'Sort'=> 'displayorder'
+         'forumid'=>'CategoryID',
+         'description'=>'Description',
+         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int')
       );
       $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
          from :_forum where threadcount > 0", $Category_Map);
@@ -112,11 +112,11 @@ class Vbulletin extends ExportController {
       
       // Discussions
       $Discussion_Map = array(
-         'DiscussionID' => 'threadid', 
-         'CategoryID'=> 'forumid', 
-         'InsertUserID'=> 'postuserid', 
-         'UpdateUserID'=> 'postuserid', 
-         'Name'=> 'title'
+         'threadid'=>'DiscussionID',
+         'forumid'=>'CategoryID',
+         'postuserid'=>'InsertUserID',
+         'postuserid'=>'UpdateUserID',
+         'title'=>'Name'
       );
       $Ex->ExportTable('Discussion', "select *, 
             replycount+1 as CountComments, 
@@ -152,10 +152,10 @@ class Vbulletin extends ExportController {
       
       // Activity (3.8+)
       $Activity_Map = array(
-         'ActivityUserID' => 'postuserid', 
-         'RegardingUserID'=> 'userid', 
-         'Story'=> 'pagetext',
-         'InsertUserID'=> 'postuserid'
+         'postuserid'=>'ActivityUserID',
+         'userid'=>'RegardingUserID',
+         'pagetext'=>'Story',
+         'postuserid'=>'InsertUserID'
       );
 		$Tables = $Ex->Query("show tables like ':_visitormessage'");
       if (count($Tables) > 0) { # Table is present
@@ -164,7 +164,6 @@ class Vbulletin extends ExportController {
 			from :_visitormessage
 			where state='visible'", $Activity_Map);
       }
-
       
       // End
       $Ex->EndExport();
