@@ -294,7 +294,8 @@ class ExportModel {
          'DateInserted' => 'datetime'),
 		'Discussion' => array(
          'DiscussionID' => 'int', 
-         'Name' => 'varchar(100)', 
+         'Name' => 'varchar(100)',
+			'Body' => 'text',
          'CategoryID' => 'int', 
          'DateInserted' => 'datetime', 
          'InsertUserID' => 'int', 
@@ -306,7 +307,8 @@ class ExportModel {
 		'Role' => array(
          'RoleID' => 'int', 
          'Name' => 'varchar(100)', 
-         'Description' => 'varchar(200)'),
+         'Description' => 'varchar(200)',
+			'CanSession' => 'tinyint'),
 		'User' => array(
          'UserID' => 'int', 
          'Name' => 'varchar(20)', 
@@ -321,10 +323,10 @@ class ExportModel {
          'DateFirstVisit' => 'datetime',
          'DateLastActive' => 'datetime',
          'DateInserted' => 'datetime',
-         'DateUpdated' => 'datetime',
+         'DateUpdated' => 'datetime'),
          //'CountDiscussions' => 'int',
          //'Salt' => 'varchar(8)',
-         'PhotoFile' => 'varchar(255)'),
+         //'PhotoFile' => 'varchar(255)'),
       'UserConversation' => array(
          'UserID' => 'int', 
          'ConversationID' => 'int', 
@@ -399,14 +401,10 @@ class ExportModel {
       
       // Return results
       if($MissingTables===false) {
-         if(count($MissingColumns) > 0) {
-            
-            
-            
+         if(count($MissingColumns) > 0) {          
          }
          else return true; // Nothing missing!
       }
       else return 'Missing required database tables: '.$MissingTables;
    }
-   
 }
