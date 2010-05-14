@@ -116,9 +116,12 @@ class Vbulletin extends ExportController {
          'forumid'=>'CategoryID',
          'postuserid'=>'InsertUserID',
          'postuserid'=>'UpdateUserID',
-         'title'=>'Name'
+         'title'=>'Name',
+			'Format'=>'Format'
       );
-      $Ex->ExportTable('Discussion', "select *, 
+      $Ex->ExportTable('Discussion', "select t.*,
+				p.pagetext as Body,
+				'BBCode' as Format,
             replycount+1 as CountComments, 
             convert(ABS(open-1),char(1)) as Closed, 
             convert(sticky,char(1)) as Announce,
@@ -127,24 +130,27 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastpost) as DateLastComment
          from :_thread t
             left join :_deletionlog d ON (d.type='thread' AND d.primaryid=t.threadid)
+				left join :_post p ON p.postid = t.firstpostid
          where d.primaryid IS NULL", $Discussion_Map);
 
       
       // Comments
-      /*$Comment_Map = array(
-         'CommentID' => 'postid', 
-         'DiscussionID'=> 'threadid', 
-         'Body'=> 'pagetext'
+      $Comment_Map = array(
+         'postid' => 'CommentID',
+         'threadid' => 'DiscussionID',
+         'pagetext' => 'Body',
+			'Format' => 'Format'
       );
-      $Ex->ExportTable('Comment', "select *,
+      $Ex->ExportTable('Comment', "select p.*,
+				'BBCode' as Format,
             p.userid as InsertUserID,
             p.userid as UpdateUserID,
             FROM_UNIXTIME(p.dateline) as DateInserted,
             FROM_UNIXTIME(p.dateline) as DateUpdated
          from :_post p
+				inner join :_thread t ON p.threadid = t.threadid
             left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
-         where d.primaryid IS NULL", $Comment_Map);
-      */
+         where p.postid <> t.firstpostid and d.primaryid IS NULL", $Comment_Map);
       
       // UserDiscussion
       $Ex->ExportTable('UserDiscussion', "select userid as UserID, threadid as DiscussionID from :_subscribethread");
