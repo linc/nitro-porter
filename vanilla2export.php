@@ -10,9 +10,9 @@
 global $Supported;
 
 /** @var array Supported forum packages: classname => array(name, prefix) */
-$Supported = array(
-   'vanilla' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
-   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
+$supported = array(
+   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
+   'vanilla' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_')
 );
 
 /** 

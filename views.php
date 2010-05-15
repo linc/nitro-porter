@@ -64,42 +64,40 @@ function ViewNoPermission($msg) {
  */
 function ViewForm($Supported, $Msg='', $Info = '') {
    PageHeader(); ?>
-   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name="dbinfo">
+   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
       <div class="Form">
-         <?php if($Msg != '') : ?>
+         <?php if($msg!='') : ?>
          <div class="Messages Errors">
             <ul>
-               <li><?php echo $Msg; ?></li>
+               <li><?php echo $msg; ?></li>
             </ul>
          </div>
          <?php endif; ?>   
          <ul>
             <li>
                <label>Source Forum Type</label>
-               <select name="type" onchange="updatePrefix();" id="forumType">
-               <?php foreach($Supported as $forumClass => $forumInfo) : ?>
-                  <option value="<?php echo $forumClass; ?>"<?php 
-                     if(is_array($Info) && $Info['type']==$forumClass) 
-                        echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
+               <select name="type">
+               <?php foreach($forums as $forumClass => $forumInfo) : ?>
+                  <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
                <?php endforeach; ?>
                </select>
             </li>
             <li>
                <label>Table Prefix <span>Table prefix is not required</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo (is_array($Info)) ? $Info['prefix'] : $Supported['vanilla']['prefix']; ?>" id="forumPrefix" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo $forumInfo['prefix']; ?>" />
             </li>
             <li>
                <label>Database Host <span>Database host is usually "localhost"</span></label>
-               <input class="InputBox" type="text" name="dbhost" value="<?php echo (is_array($Info)) ? $Info['dbhost'] :'localhost'; ?>" />
+               <input class="InputBox" type="text" name="dbhost" value="localhost" />
             </li>
             <li>
                <label>Database Name</label>
-               <input class="InputBox" type="text" name="dbname" value="<?php if(is_array($Info)) echo $Info['dbname']; ?>" />
+               <input class="InputBox" type="text" name="dbname" value="" />
             </li>
             <li>
                <label>Database Username</label>
-               <input class="InputBox" type="text" name="dbuser" value="<?php if(is_array($Info)) echo $Info['dbuser']; ?>" />
+               <input class="InputBox" type="text" name="dbuser" value="" />
             </li>
             <li>
                <label>Database Password</label>

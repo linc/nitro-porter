@@ -36,21 +36,21 @@ class Vbulletin extends ExportController {
    protected function ForumExport($Ex) {
       // Begin
       PageHeader();
-      $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'vBulletin 3+');   
-      
+      $Ex->BeginExport('export '.date('Y-m-d His').'.txt'.($Ex->UseCompression ? '.gz' : ''), 'vBulletin 3+');
       
       // Users
       $User_Map = array(
-         'UserID'=>'userid',
-         'Name'=>'username',
-         'Password'=>'password',
-         'Email'=>'email',
-         'InviteUserID'=>'referrerid',
-         'HourOffset'=>'timezoneoffset',
-         'CountComments'=>'posts',
-         'Salt'=>'salt'
-      );   
+         'userid'=>'UserID',
+         'username'=>'Name',
+         'password2'=>'Password',
+         'email'=>'Email',
+         'referrerid'=>'InviteUserID',
+         'timezoneoffset'=>'HourOffset',
+         //'posts'=>'CountComments',
+         'salt'=>'char(3)'
+      );
       $Ex->ExportTable('User', "select *,
+				concat(`password`, salt) as password2,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -61,24 +61,17 @@ class Vbulletin extends ExportController {
       
       // Roles
       $Role_Map = array(
-         'RoleID'=>'usergroupid',
-         'Name'=>'title',
-         'Description'=>'description'
-      ); 
-      # Check number of roles (V2 has 32-role limit)
-      $NumRoles = $Ex->Query("select COUNT(usergroupid) as TotalRoles from :_usergroup");
-      foreach($NumRoles as $Row) {
-         $TotalRoles = $Row['TotalRoles'];
-      }
-      if($TotalRoles > 32)
-         $Ex->Comment('WARNING: Only 32 usergroups may be used in Vanilla 2. Some of your roles will be lost.');
+         'usergroupid'=>'RoleID',
+         'title'=>'Name',
+         'description'=>'Description'
+      );   
       $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
   
   
       // UserRoles
       $UserRole_Map = array(
-         'UserID' => 'userid', 
-         'RoleID'=> 'usergroupid'
+         'userid'=>'UserID',
+         'usergroupid'=>'RoleID'
       );
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED NOT NULL, usergroupid INT UNSIGNED NOT NULL)");
       # Put primary groups into tmp table
@@ -119,9 +112,9 @@ class Vbulletin extends ExportController {
       
       // Categories
       $Category_Map = array(
-         'CategoryID' => 'forumid', 
-         'Description'=> 'description', 
-         'Sort'=> 'displayorder'
+         'forumid'=>'CategoryID',
+         'description'=>'Description',
+         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int')
       );
       $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
          from :_forum where threadcount > 0", $Category_Map);
@@ -129,13 +122,16 @@ class Vbulletin extends ExportController {
       
       // Discussions
       $Discussion_Map = array(
-         'DiscussionID' => 'threadid', 
-         'CategoryID'=> 'forumid', 
-         'InsertUserID'=> 'postuserid', 
-         'UpdateUserID'=> 'postuserid', 
-         'Name'=> 'title'
+         'threadid'=>'DiscussionID',
+         'forumid'=>'CategoryID',
+         'postuserid'=>'InsertUserID',
+         'postuserid'=>'UpdateUserID',
+         'title'=>'Name',
+			'Format'=>'Format'
       );
-      $Ex->ExportTable('Discussion', "select *, 
+      $Ex->ExportTable('Discussion', "select t.*,
+				p.pagetext as Body,
+				'BBCode' as Format,
             replycount+1 as CountComments, 
             convert(ABS(open-1),char(1)) as Closed, 
             convert(sticky,char(1)) as Announce,
@@ -144,43 +140,44 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastpost) as DateLastComment
          from :_thread t
             left join :_deletionlog d ON (d.type='thread' AND d.primaryid=t.threadid)
+				left join :_post p ON p.postid = t.firstpostid
          where d.primaryid IS NULL", $Discussion_Map);
       
       // Comments
       $Comment_Map = array(
-         'CommentID' => 'postid', 
-         'DiscussionID'=> 'threadid', 
-         'Body'=> 'pagetext'
+         'postid' => 'CommentID',
+         'threadid' => 'DiscussionID',
+         'pagetext' => 'Body',
+			'Format' => 'Format'
       );
-      $Ex->ExportTable('Comment', "select *,
+      $Ex->ExportTable('Comment', "select p.*,
+				'BBCode' as Format,
             p.userid as InsertUserID,
             p.userid as UpdateUserID,
             FROM_UNIXTIME(p.dateline) as DateInserted,
             FROM_UNIXTIME(p.dateline) as DateUpdated
          from :_post p
+				inner join :_thread t ON p.threadid = t.threadid
             left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
-         where d.primaryid IS NULL", $Comment_Map);
-      
+         where p.postid <> t.firstpostid and d.primaryid IS NULL", $Comment_Map);
       
       // UserDiscussion
 		$UserDiscussion_Map = array(
 			'DateLastViewed' =>  'datetime');
       $Ex->ExportTable('UserDiscussion', "select
-  tr.userid as UserID,
-  tr.threadid as DiscussionID,
-  FROM_UNIXTIME(tr.readtime) as DateLastViewed,
-  case when st.threadid is not null then 1 else 0 end as Bookmarked
-from nb_threadread tr
-left join nb_subscribethread st
-  on tr.userid = st.userid
-   and tr.threadid = st.threadid");
+           tr.userid as UserID,
+           tr.threadid as DiscussionID,
+           FROM_UNIXTIME(tr.readtime) as DateLastViewed,
+           case when st.threadid is not null then 1 else 0 end as Bookmarked
+         from nb_threadread tr
+         left join nb_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
       
       // Activity (3.8+)
       $Activity_Map = array(
-         'ActivityUserID' => 'postuserid', 
-         'RegardingUserID'=> 'userid', 
-         'Story'=> 'pagetext',
-         'InsertUserID'=> 'postuserid'
+         'postuserid'=>'ActivityUserID',
+         'userid'=>'RegardingUserID',
+         'pagetext'=>'Story',
+         'postuserid'=>'InsertUserID'
       );
 		$Tables = $Ex->Query("show tables like ':_visitormessage'");
       if (count($Tables) > 0) { # Table is present
@@ -189,7 +186,6 @@ left join nb_subscribethread st
 			from :_visitormessage
 			where state='visible'", $Activity_Map);
       }
-
       
       // End
       $Ex->EndExport();

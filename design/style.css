@@ -247,11 +247,4 @@ div.Info li {
 	margin: 0;
 	text-shadow: none;
 }
-/* progress */
-#Progress {
-   text-align: left;
-   width: 600px;
-   margin: 0 auto;
-   list-style: none; }
-#Progress li {
-   padding: 5px 0; }
+
