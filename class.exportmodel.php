@@ -142,28 +142,24 @@ class ExportModel {
 		// Set the search and replace to escape strings.
 		$EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
 		$EscapeReplace = array(self::ESCAPE.self::ESCAPE, self::ESCAPE.self::DELIM, self::ESCAPE.self::NEWLINE, self::ESCAPE.self::QUOTE);
-
-		// Get the export structure.
-		$ExportStructure = $this->GetExportStructure($Structure, $Mappings);
-
-		// Build and write the table header.
-		$TableHeader = '';
-		foreach($ExportStructure as $Column => $Type) {
-			if(strlen($TableHeader) > 0)
-				$TableHeader .= self::DELIM;
-			if(array_key_exists($Column, $Structure)) {
-				$TableHeader .= $Column;
-			} else {
-				$TableHeader .= $Column.':'.$Type;
-			}
-		}
-		fwrite($fp, $TableHeader.self::NEWLINE);
-
-		$Mappings = array_flip($Mappings);
 		
 		// Loop through the data and write it to the file.
+		$FirstRow = TRUE;
 		while ($Data && $Data->rowCount() && $Row = $Data->fetch(PDO::FETCH_ASSOC)) {
 			$Row = (array)$Row; // export%202010-05-06%20210937.txt
+			if($FirstRow) {
+				// Get the export structure.
+				$ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+
+				// Build and write the table header.
+				$TableHeader = $this->_GetTableHeader($ExportStructure, $Structure);
+
+				fwrite($fp, $TableHeader.self::NEWLINE);
+
+				$Mappings = array_flip($Mappings);
+				$FirstRow = FALSE;
+			}
+
 			$First = TRUE;
 			
 			// Loop through the columns in the export structure and grab their values from the row.
@@ -207,41 +203,66 @@ class ExportModel {
 		}
 		
 		// Write an empty line to signify the end of the table.
-		fwrite($fp, self::NEWLINE);
+		if(!$FirstRow)
+			fwrite($fp, self::NEWLINE);
 		
 		if($Data instanceof PDOStatement)
 			$Data->closeCursor();
 	}
 
-	public function GetExportStructure($Structure, &$Mappings) {
-		if(!$Mappings)
-			return $Structure;
-
-		$ExportStructure = $Structure;
+	public function GetExportStructure($Row, $Structure, &$Mappings) {
+		$ExportStructure = array();
+		// See what columns from the structure are in
 
 		// See what columns to add to the end of the structure.
-		foreach($Mappings as $Column => $Value) {
-			if(is_string($Value)) {
-				if(array_key_exists($Value, $Structure)) {
-					$DestColumn = $Value;
-					$DestType = $Structure[$DestColumn];
-				} else {
-					$DestColumn = $Column;
-					$DestType = $Value;
+		foreach($Row as $Column => $X) {
+			if(array_key_exists($Column, $Mappings)) {
+				$Mapping = $Mappings[$Column];
+				if(is_string($Mapping)) {
+					if(array_key_exists($Mapping, $Structure)) {
+						// This an existing column.
+						$DestColumn = $Mapping;
+						$DestType = $Structure[$DestColumn];
+					} else {
+						// This is a created column.
+						$DestColumn = $Column;
+						$DestType = $Mapping;
+					}
+				} elseif(is_array($Mapping)) {
+					$DestColumn = $Mapping['Column'];
+					$DestType = $Mapping['Type'];
+					$Mappings[$Column] = $DestColumn;
 				}
-			} elseif(is_array($Value)) {
-				$DestColumn = $Value['Column'];
-				$DestType = $Value['Type'];
-				$Mappings[$Column] = $DestColumn;
+			} elseif(array_key_exists($Column, $Structure)) {
+				$DestColumn = $Column;
+				$DestType = $Structure[$Column];
+			} else {
+				$DestColumn = '';
+				$DestType = '';
 			}
 
 			// Check to see if we have to add the column to the export structure.
-			if(!array_key_exists($DestColumn, $ExportStructure)) {
+			if($DestColumn && !array_key_exists($DestColumn, $ExportStructure)) {
 				// TODO: Make sure $DestType is a valid MySQL type.
 				$ExportStructure[$DestColumn] = $DestType;
 			}
 		}
 		return $ExportStructure;
+	}
+
+	protected function _GetTableHeader($Structure, $GlobalStructure) {
+		$TableHeader = '';
+
+		foreach($Structure as $Column => $Type) {
+			if(strlen($TableHeader) > 0)
+				$TableHeader .= self::DELIM;
+			if(array_key_exists($Column, $GlobalStructure)) {
+				$TableHeader .= $Column;
+			} else {
+				$TableHeader .= $Column.':'.$Type;
+			}
+		}
+		return $TableHeader;
 	}
 	
 	/**
@@ -264,7 +285,7 @@ class ExportModel {
          'CategoryID' => 'int', 
          'Name' => 'varchar(30)', 
          'Description' => 'varchar(250)', 
-         //'ParentCategoryID' => 'int', 
+         'ParentCategoryID' => 'int', 
          'DateInserted' => 'datetime', 
          'InsertUserID' => 'int', 
          'DateUpdated' => 'datetime', 
@@ -315,25 +336,27 @@ class ExportModel {
          'Email' => 'varchar(200)', 
          'Password' => 'varbinary(34)', 
          //'Gender' => array('m', 'f'), 
-         //'Score' => 'float',
+         'Score' => 'float',
          'InviteUserID' => 'int',
          'HourOffset' => 'int',
+			'CountDiscussions' => 'int',
          'CountComments' => 'int',
+			'PhotoPath' => 'varchar(255)',
          'DateOfBirth' => 'datetime',
          'DateFirstVisit' => 'datetime',
          'DateLastActive' => 'datetime',
          'DateInserted' => 'datetime',
          'DateUpdated' => 'datetime'),
-         //'CountDiscussions' => 'int',
-         //'Salt' => 'varchar(8)',
-         //'PhotoFile' => 'varchar(255)'),
       'UserConversation' => array(
          'UserID' => 'int', 
          'ConversationID' => 'int', 
          'LastMessageID' => 'int'),
       'UserDiscussion' => array(
          'UserID' => 'int', 
-         'DiscussionID' => 'int'),
+         'DiscussionID' => 'int',
+			'Bookmarked' => 'tinyint',
+			'DateLastViewed' => 'datetime',
+			'CountComments' => 'int'),
       'UserMeta' => array(
          //'UMetaKey' => 'int', 
          'UserID' => 'int', 
