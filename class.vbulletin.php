@@ -132,7 +132,6 @@ class Vbulletin extends ExportController {
             left join :_deletionlog d ON (d.type='thread' AND d.primaryid=t.threadid)
 				left join :_post p ON p.postid = t.firstpostid
          where d.primaryid IS NULL", $Discussion_Map);
-
       
       // Comments
       $Comment_Map = array(
@@ -153,8 +152,17 @@ class Vbulletin extends ExportController {
          where p.postid <> t.firstpostid and d.primaryid IS NULL", $Comment_Map);
       
       // UserDiscussion
-      $Ex->ExportTable('UserDiscussion', "select userid as UserID, threadid as DiscussionID from :_subscribethread");
-
+		$UserDiscussion_Map = array(
+			'DateLastViewed' =>  'datetime');
+      $Ex->ExportTable('UserDiscussion', "select
+  tr.userid as UserID,
+  tr.threadid as DiscussionID,
+  FROM_UNIXTIME(tr.readtime) as DateLastViewed,
+  case when st.threadid is not null then 1 else 0 end as Bookmarked
+from nb_threadread tr
+left join nb_subscribethread st
+  on tr.userid = st.userid
+   and tr.threadid = st.threadid");
       
       // Activity (3.8+)
       $Activity_Map = array(
