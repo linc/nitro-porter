@@ -23,6 +23,7 @@ function PageHeader() {
 	<div id="Content">
       <div class="Title">
          <h1>
+            <!-- TODO: Mark, link this to an external vanillaforums.com image -->
             <img src="./design/vanilla_logo.png" alt="Vanilla" />
             <p>Forum Export Tool</p>
          </h1>
@@ -62,7 +63,7 @@ function ViewNoPermission($msg) {
 /**
  * Form: Database connection info
  */
-function ViewForm($Supported, $Msg='', $Info = '') {
+function ViewForm($forums, $msg='', $Info = '') {
    PageHeader(); ?>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
@@ -73,7 +74,7 @@ function ViewForm($Supported, $Msg='', $Info = '') {
                <li><?php echo $msg; ?></li>
             </ul>
          </div>
-         <?php endif; ?>   
+         <?php endif; ?>
          <ul>
             <li>
                <label>Source Forum Type</label>
@@ -85,19 +86,19 @@ function ViewForm($Supported, $Msg='', $Info = '') {
             </li>
             <li>
                <label>Table Prefix <span>Table prefix is not required</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo $forumInfo['prefix']; ?>" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) ?>" />
             </li>
             <li>
                <label>Database Host <span>Database host is usually "localhost"</span></label>
-               <input class="InputBox" type="text" name="dbhost" value="localhost" />
+               <input class="InputBox" type="text" name="dbhost" value="<?php echo urlencode(GetValue('dbhost', '', 'localhost')) ?>" />
             </li>
             <li>
                <label>Database Name</label>
-               <input class="InputBox" type="text" name="dbname" value="" />
+               <input class="InputBox" type="text" name="dbname" value="<?php echo urlencode(GetValue('dbname')) ?>" />
             </li>
             <li>
                <label>Database Username</label>
-               <input class="InputBox" type="text" name="dbuser" value="" />
+               <input class="InputBox" type="text" name="dbuser" value="<?php echo urlencode(GetValue('dbuser')) ?>" />
             </li>
             <li>
                <label>Database Password</label>
@@ -114,7 +115,7 @@ function ViewForm($Supported, $Msg='', $Info = '') {
       function updatePrefix() {
          var type = document.getElementById('forumType').value;
          switch(type) {
-            <?php foreach($Supported as $forumClass => $forumInfo) : ?>
+            <?php foreach($forums as $forumClass => $forumInfo) : ?>
             case '<?php echo $forumClass; ?>': document.getElementById('forumPrefix').value = '<?php echo $forumInfo['prefix']; ?>'; break;
             <?php endforeach; ?>
          }
@@ -129,12 +130,24 @@ function ViewForm($Supported, $Msg='', $Info = '') {
 /**
  * Message: Result of export
  */
-function ViewExportResult($msg='') {
-   PageHeader(); ?>
-   
-   
-   
-   <?php PageFooter();
+function ViewExportResult($Msgs = '', $Class = 'Info') {
+   PageHeader();
+   if($Msgs) {
+      // TODO: Style this a bit better.
+      echo "<div class=\"$Class\">";
+      foreach($Msgs as $Msg) {
+         echo "<p>$Msg</p>\n";
+      }
+      echo "</div>";
+   }
+   PageFooter();
 }
-   
-   
+
+function GetValue($Key, $Collection = NULL, $Default = '') {
+   if(!$Collection)
+      $Collection = $_POST;
+   if(array_key_exists($Key, $Collection))
+      return $Collection[$Key];
+   return $Default;
+}
+?>

@@ -14,7 +14,6 @@ class Vanilla extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      PageHeader();
       $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'Vanilla 1.x');   
       
       // Users
@@ -191,7 +190,7 @@ class Vanilla extends ExportController {
          
       // End
       $Ex->EndExport();
-      PageFooter();
    }
 
 }
+?>

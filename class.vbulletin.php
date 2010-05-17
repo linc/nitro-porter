@@ -35,7 +35,6 @@ class Vbulletin extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      PageHeader();
       $Ex->BeginExport('export '.date('Y-m-d His').'.txt'.($Ex->UseCompression ? '.gz' : ''), 'vBulletin 3+');
       
       // Users
@@ -189,8 +188,7 @@ class Vbulletin extends ExportController {
       
       // End
       $Ex->EndExport();
-      
-      PageFooter();
    }
    
 }
+?>

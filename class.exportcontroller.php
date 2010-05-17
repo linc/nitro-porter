@@ -18,12 +18,10 @@ abstract class ExportController {
    abstract protected function ForumExport($Ex);
    
    /** 
-    * Instantation of descendant means form has been submitted
-    * Setup model & views and go! 
+    * Construct and set the controller's properties from the posted form.
     */
    public function __construct() {
       $this->HandleInfoForm();
-      $this->DoExport();
    }
    
    /** 
@@ -47,6 +45,9 @@ abstract class ExportController {
             $Ex->UseCompression = TRUE;
             set_time_limit(60*2);
             $this->ForumExport($Ex);
+
+            // Write the results.
+            ViewExportResult($Ex->Comments);
          }
          else 
             ViewForm($Supported, $Msg, $this->DbInfo); // Back to form with error
@@ -73,7 +74,7 @@ abstract class ExportController {
     */
    public function TestDatabase() {
       // Connection
-      if($C = mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) { 
+      if($C = mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], '')) { // $this->DbInfo['dbpass'])) {
          // Database
          if(mysql_select_db($this->DbInfo['dbname'], $C)) { 
             mysql_close($C);
@@ -87,5 +88,5 @@ abstract class ExportController {
       else 
          return 'Could not connect to '.$this->DbInfo['dbhost'].' as '.$this->DbInfo['dbuser'].' with given password.';
    }
-   
 }
+?>

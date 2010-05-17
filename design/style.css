@@ -1,5 +1,6 @@
 body {
 	font-family: 'lucida grande','Lucida Sans Unicode', tahoma, sans-serif;
+   /* TODO: Mark, link this to a vanilaforums.com url */
    background: url('slicesplash.jpg') top center no-repeat #C7E6FB;
    margin: 0px;
    padding: 0px;
@@ -96,6 +97,7 @@ div.Errors {
 }
 .ImportProgress {
    padding-left: 40px;
+   /* TODO: Mark, link this to a vanilaforums.com url */
    background: url('progress.gif') left center no-repeat;
 }
 .ImportProgress strong {
@@ -108,10 +110,12 @@ div.Errors {
 }
 .Loading {
    height: 100px;
+   /* TODO: Mark, link this to a vanilaforums.com url */
    background: url('progress.gif') center center no-repeat;
 }
 .Progress {
    padding: 10px 40px 10px 0px;
+   /* TODO: Mark, link this to a vanilaforums.com url */
    background: url('progress.gif') center center no-repeat;
 }
 .Hidden {
@@ -202,6 +206,7 @@ input.Button {
 	text-shadow: 0 1px 0 #fff;
    margin: 0;
    padding: 3px 10px;
+   /* TODO: Mark, link this to a vanilaforums.com url */
    background: url('buttonbg.png') repeat-x center left #f8f8f8;
    border: 1px solid #999;
    -moz-border-radius: 3px;
@@ -247,4 +252,3 @@ div.Info li {
 	margin: 0;
 	text-shadow: none;
 }
-

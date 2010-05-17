@@ -1,4 +1,3 @@
-
 <?php
 /**
  * @copyright Vanilla Forums Inc. 2010
@@ -23,6 +22,7 @@ class ExportModel {
 	 * @param string $Source The source program that created the export. This may be used by the import routine to do additional processing.
 	 */
 	public function BeginExport($Path, $Source = '') {
+      $this->Comments = array();
 		$this->BeginTime = microtime(TRUE);
 		$TimeStart = list($sm, $ss) = explode(' ', microtime());
 		
@@ -36,8 +36,10 @@ class ExportModel {
 		if($Source)
 			fwrite($fp, self::DELIM.' Source: '.$Source);
 		fwrite($fp, self::NEWLINE.self::NEWLINE);
-		$this->Comment('<ul id="Progress"><li>Exported Started: '.date('Y-m-d H:i:s').'</li>');
+		$this->Comment('Export Started: '.date('Y-m-d H:i:s'));
 	}
+
+   public $Comments = array();
 	
 	/**
 	 * Write a comment to the export file.
@@ -46,8 +48,8 @@ class ExportModel {
 	 */
 	public function Comment($Message, $Echo = TRUE) {
 		fwrite($this->_File, self::COMMENT.' '.str_replace(self::NEWLINE, self::NEWLINE.self::COMMENT.' ', $Message).self::NEWLINE);
-		if($Echo)
-			echo $Message, "\n";
+      if($Echo)
+         $this->Comments[] = $Message;
 	}
 	
 	/**
@@ -56,16 +58,28 @@ class ExportModel {
 	public function EndExport() {
 		$this->EndTime = microtime(TRUE);
 		$this->TotalTime = $this->EndTime - $this->BeginTime;
-		$m = floor($this->TotalTime / 60);
-		$s = $this->TotalTime - $m * 60;
 		
-		$this->Comment('<li>Exported Completed: '.date('Y-m-d H:i:s').sprintf('</li><li>Elapsed Time: %02d:%02.2f', $m, $s).'</li></ul>');
+		$this->Comment('Export Completed: '.date('Y-m-d H:i:s'));
+      $this->Comment(sprintf('Elapsed Time: %s', self::FormatElapsed($this->TotalTime)));
 		
 		if($this->UseCompression && function_exists('gzopen'))
 			gzclose($this->_File);
 		else
 			fclose($this->_File);
 	}
+
+   static function FormatElapsed($Start, $End = NULL) {
+      if($End === NULL)
+         $Elapsed = $Start;
+      else
+         $Elapsed = $End - $Start;
+
+      $m = floor($Elapsed / 60);
+		$s = $Elapsed - $m * 60;
+      $Result = sprintf('%02d:%05.2f', $m, $s);
+
+      return $Result;
+   }
 	
 	/** @var object File pointer */
 	protected $_File = NULL;
@@ -116,7 +130,8 @@ class ExportModel {
 	 *  For a list of the export tables and columns see $this->Structure().
 	 */
 	public function ExportTable($TableName, $Query, $Mappings = array()) {
-		$fp = $this->_File;
+		$BeginTime = microtime(TRUE);
+      $fp = $this->_File;
 		
 		// Make sure the table is valid for export.
 		if(!array_key_exists($TableName, $this->_Structures)) {
@@ -144,10 +159,11 @@ class ExportModel {
 		$EscapeReplace = array(self::ESCAPE.self::ESCAPE, self::ESCAPE.self::DELIM, self::ESCAPE.self::NEWLINE, self::ESCAPE.self::QUOTE);
 		
 		// Loop through the data and write it to the file.
-		$FirstRow = TRUE;
+      $RowCount = 0;
 		while ($Data && $Data->rowCount() && $Row = $Data->fetch(PDO::FETCH_ASSOC)) {
 			$Row = (array)$Row; // export%202010-05-06%20210937.txt
-			if($FirstRow) {
+         $RowCount++;
+			if($RowCount == 1) {
 				// Get the export structure.
 				$ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
 
@@ -157,7 +173,6 @@ class ExportModel {
 				fwrite($fp, $TableHeader.self::NEWLINE);
 
 				$Mappings = array_flip($Mappings);
-				$FirstRow = FALSE;
 			}
 
 			$First = TRUE;
@@ -208,6 +223,10 @@ class ExportModel {
 		
 		if($Data instanceof PDOStatement)
 			$Data->closeCursor();
+
+      $EndTime = microtime(TRUE);
+      $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
+      $this->Comment("Exported table: $TableName ($RowCount rows, $Elapsed)");
 	}
 
 	public function GetExportStructure($Row, $Structure, &$Mappings) {
@@ -438,3 +457,4 @@ class ExportModel {
       }
    }
 }
+?>
