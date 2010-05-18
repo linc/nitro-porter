@@ -148,22 +148,22 @@ form ul li.Warning div {
 	text-shadow: none;
    padding: 16px 0 8px;
 }
-form ul li label {
+form label {
    font-family: Arial, Helvetica, Verdana;
    font-weight: bold;
    display: block;
    padding: 8px 0 0;
    font-size: 110%;
 	color: #02455B;
-   }
-form ul li label span {
+}
+form label span {
 	font-size: 13px;
 	color: #555;
 	font-weight: normal;
 	text-shadow: none;
 	padding: 0 0 0 10px;
 }
-form ul li select {
+form select {
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    font-size: 110%;
@@ -172,7 +172,7 @@ form ul li select {
    border: 1px solid #ccc;
    color: #555;
 }
-form ul li input.InputBox {
+form input.InputBox {
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    font-size: 110%;
@@ -181,12 +181,12 @@ form ul li input.InputBox {
    border: 1px solid #ccc;
    color: #555;
 }
-form ul li input.InputBox:focus {
+form input.InputBox:focus {
    color: #000;
    background: #FFFEDE;
    border: 1px solid #aaa;
 }
-form ul li.Last {
+form li.Last {
    padding: 12px 0 2px;
    border-bottom: 0;
 }

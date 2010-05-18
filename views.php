@@ -63,7 +63,14 @@ function ViewNoPermission($msg) {
 /**
  * Form: Database connection info
  */
-function ViewForm($forums, $msg='', $Info = '') {
+function ViewForm($Data) {
+   $forums = GetValue('Supported', $Data, array());
+   $msg = GetValue('Msg', $Data, '');
+   $Info = GetValue('Info', $Data, '');
+   $CanWrite = GetValue('CanWrite', $Data, NULL);
+   if($CanWrite === NULL)
+      $CanWrite = TestWrite();
+
    PageHeader(); ?>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
@@ -102,8 +109,16 @@ function ViewForm($forums, $msg='', $Info = '') {
             </li>
             <li>
                <label>Database Password</label>
-               <input class="InputBox" type="password" name="dbpass" />
+               <input class="InputBox" type="password" name="dbpass" value="<?php echo urlencode(GetValue('dbpass')) ?>" />
             </li>
+            <?php if($CanWrite): ?>
+            <li>
+               <label>
+                  <input class="CheckBox" type="checkbox" id="savefile" name="savefile" value="savefile" <?php if(GetValue('savefile')) echo 'checked="checked"'; ?> />
+                  Save the export file to the server
+               </label>
+            </li>
+            <?php endif; ?>
          </ul>
          <div class="Button">
             <input class="Button" type="submit" value="Begin Export" />
@@ -130,7 +145,7 @@ function ViewForm($forums, $msg='', $Info = '') {
 /**
  * Message: Result of export
  */
-function ViewExportResult($Msgs = '', $Class = 'Info') {
+function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
    PageHeader();
    if($Msgs) {
       // TODO: Style this a bit better.
@@ -139,6 +154,8 @@ function ViewExportResult($Msgs = '', $Class = 'Info') {
          echo "<p>$Msg</p>\n";
       }
       echo "</div>";
+      if($Path)
+         echo "<a href=\"$Path\"><b>Download $Path</b></a>";
    }
    PageFooter();
 }

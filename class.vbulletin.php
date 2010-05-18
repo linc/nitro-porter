@@ -35,7 +35,7 @@ class Vbulletin extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('export '.date('Y-m-d His').'.txt'.($Ex->UseCompression ? '.gz' : ''), 'vBulletin 3+');
+      $Ex->BeginExport('', 'vBulletin 3+');
       
       // Users
       $User_Map = array(

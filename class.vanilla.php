@@ -14,7 +14,7 @@ class Vanilla extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('export '.date('Y-m-d His').'.txt.gz', 'Vanilla 1.x');   
+      $Ex->BeginExport('', 'Vanilla 1.x');
       
       // Users
       $User_Map = array(
@@ -24,7 +24,7 @@ class Vanilla extends ExportController {
          'Email'=>'Email',
          'CountComments'=>'CountComments'
       );   
-      $Ex->ExportTable('User', "SELECT * FROM :_User", $User_Map  );  // ":_" will be replaced by database prefix
+      $Ex->ExportTable('User', "SELECT * FROM :_User", $User_Map);  // ":_" will be replaced by database prefix
       
       // Roles
       /*
