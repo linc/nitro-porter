@@ -16,7 +16,7 @@ function PageHeader() {
 <html>
 <head>
    <title>Vanilla 2 Forum Export Tool</title>
-   <link rel="stylesheet" type="text/css" href="./design/style.css" media="screen" />
+   <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 </head>
 <body>
 <div id="Frame">
@@ -24,7 +24,7 @@ function PageHeader() {
       <div class="Title">
          <h1>
             <!-- TODO: Mark, link this to an external vanillaforums.com image -->
-            <img src="./design/vanilla_logo.png" alt="Vanilla" />
+            <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
             <p>Forum Export Tool</p>
          </h1>
       </div>

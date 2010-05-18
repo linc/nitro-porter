@@ -572,12 +572,11 @@ function PageHeader() {
 <html>
 <head>
    <title>Vanilla 2 Forum Export Tool</title>
-   <!-- Contents included from ./design/style.css -->
+   <!-- Contents included from style.css -->
 <style>
 body {
 	font-family: 'lucida grande','Lucida Sans Unicode', tahoma, sans-serif;
-   /* TODO: Mark, link this to a vanilaforums.com url */
-   background: url('slicesplash.jpg') top center no-repeat #C7E6FB;
+   background: url('http://vanillaforums.com/porter/slicesplash.jpg') top center no-repeat #C7E6FB;
    margin: 0px;
    padding: 0px;
    text-align: center;
@@ -671,29 +670,6 @@ div.Errors {
    color: #ff0 !important;
 	text-decoration: none;
 }
-.ImportProgress {
-   padding-left: 40px;
-   /* TODO: Mark, link this to a vanilaforums.com url */
-   background: url('progress.gif') left center no-repeat;
-}
-.ImportProgress strong {
-   background: #ff9;
-   color: #000;
-   padding: 3px 6px;
-   margin: 0 4px;
-   -moz-border-radius: 2px;
-   -webkit-border-radius: 2px;
-}
-.Loading {
-   height: 100px;
-   /* TODO: Mark, link this to a vanilaforums.com url */
-   background: url('progress.gif') center center no-repeat;
-}
-.Progress {
-   padding: 10px 40px 10px 0px;
-   /* TODO: Mark, link this to a vanilaforums.com url */
-   background: url('progress.gif') center center no-repeat;
-}
 .Hidden {
    display: none;
 }
@@ -782,8 +758,7 @@ input.Button {
 	text-shadow: 0 1px 0 #fff;
    margin: 0;
    padding: 3px 10px;
-   /* TODO: Mark, link this to a vanilaforums.com url */
-   background: url('buttonbg.png') repeat-x center left #f8f8f8;
+   background: url('http://vanillaforums.com/porter/buttonbg.png') repeat-x center left #f8f8f8;
    border: 1px solid #999;
    -moz-border-radius: 3px;
    -webkit-border-radius: 3px;
@@ -837,7 +812,7 @@ div.Info li {
       <div class="Title">
          <h1>
             <!-- TODO: Mark, link this to an external vanillaforums.com image -->
-            <img src="./design/vanilla_logo.png" alt="Vanilla" />
+            <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
             <p>Forum Export Tool</p>
          </h1>
       </div>
