@@ -189,7 +189,7 @@ class ExportModel {
       if($this->UseStreaming) {
          //ob_flush();
       } else {
-         if($this->UseCompression && function_exists('gzopen'))
+         if($this->UseCompression() && function_exists('gzopen'))
             gzclose($this->_File);
          else
             fclose($this->_File);

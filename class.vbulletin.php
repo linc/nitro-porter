@@ -76,17 +76,17 @@ class Vbulletin extends ExportController {
       # Put primary groups into tmp table
       $Ex->Query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
       # Put stupid CSV column into tmp table
-      $SecondaryRoles = $Ex->Query("select userid, membergroupids from :_user");
+      $SecondaryRoles = $Ex->Query("select userid, usergroupid, membergroupids from :_user");
       foreach($SecondaryRoles as $Row) {
          if($Row['membergroupids']!='') {
             $Groups = explode(',',$Row['membergroupids']);
-            foreach($Groups as $GroupID) {                  
-               $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values(".$Row['userid'].",".$GroupID."");
+            foreach($Groups as $GroupID) {
+               $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})");
             }
          }
       }
       # Export from our tmp table and drop
-      $Ex->ExportTable('UserRole', 'select userid, usergroupid from VbulletinRoles', $UserRole_Map);
+      $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
       $Ex->Query("DROP TABLE VbulletinRoles");
 
       
@@ -95,7 +95,7 @@ class Vbulletin extends ExportController {
       # Standard vB user data
       $UserFields = array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid');
       foreach($UserFields as $Field)
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '".$Field."', ".$Field." from :_user where ".$Field."!=''");
+         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '$Field.', $Field from :_user where $Field !=''");
       # Dynamic vB user data (userfield)
       $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
       foreach ($ProfileFields as $Field) {
