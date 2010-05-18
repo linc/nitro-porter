@@ -122,10 +122,9 @@ class ExportModel {
             'DateLastViewed' => 'datetime',
             'CountComments' => 'int'),
       'UserMeta' => array(
-      //'UMetaKey' => 'int',
             'UserID' => 'int',
-            'MetaKey' => 'varchar(255)',
-            'MetaValue' => 'text'),
+            'Name' => 'varchar(255)',
+            'Value' => 'text'),
       'UserRole' => array(
             'UserID' => 'int',
             'RoleID' => 'int')

@@ -105,7 +105,7 @@ class Vbulletin extends ExportController {
             select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
       }
       # Export from our tmp table and drop
-      $Ex->ExportTable('UserMeta', 'select UserID, MetaKey, MetaValue from VbulletinUserMeta');
+      $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
       $Ex->Query("DROP TABLE VbulletinUserMeta");
 
       
