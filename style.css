@@ -207,7 +207,7 @@ input.Button:focus {
 div.Info {
 	text-align: left;
 	width: 568px;
-	margin: 0 auto 70px;
+	margin: 0 auto 0px;
 	font-size: 80%;
 	line-height: 1.6;
 }

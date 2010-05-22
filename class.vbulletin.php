@@ -124,12 +124,13 @@ class Vbulletin extends ExportController {
          'threadid'=>'DiscussionID',
          'forumid'=>'CategoryID',
          'postuserid'=>'InsertUserID',
-         'postuserid'=>'UpdateUserID',
+         'postuserid2'=>'UpdateUserID',
          'title'=>'Name',
 			'Format'=>'Format'
       );
       $Ex->ExportTable('Discussion', "select t.*,
-				p.pagetext as Body,
+				t.postuserid as postuserid2,
+            p.pagetext as Body,
 				'BBCode' as Format,
             replycount+1 as CountComments, 
             convert(ABS(open-1),char(1)) as Closed, 

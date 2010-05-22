@@ -23,6 +23,9 @@ class ExportModel {
    /** @var object File pointer */
    protected $_File = NULL;
 
+   /** @var string A prefix to put into an automatically generated filename. */
+   public $FilenamePrefix = '';
+
    /** @var object PDO instance */
    protected $_PDO = NULL;
 
@@ -86,9 +89,12 @@ class ExportModel {
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
+            'DateLastComment' => 'datetime',
+            'CountComments' => 'int',
             'Score' => 'float',
             'Closed' => 'tinyint',
-            'Announce' => 'tinyint'),
+            'Announce' => 'tinyint',
+            'Sink' => 'tinyint'),
       'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
@@ -154,7 +160,7 @@ class ExportModel {
       if($Path)
          $this->Path = $Path;
       if(!$this->Path)
-         $this->Path = 'export '.date('Y-m-d His').'.txt'.($this->UseCompression() ? '.gz' : '');
+         $this->Path = 'export '.($this->FilenamePrefix ? $this->FilenamePrefix.' ' : '').date('Y-m-d His').'.txt'.($this->UseCompression() ? '.gz' : '');
 
       $fp = $this->_OpenFile();
 
@@ -222,9 +228,6 @@ class ExportModel {
       }
       $Structure = $this->_Structures[$TableName];
 
-      // Start with the table name.
-      fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
-
       // Get the data for the query.
       if(is_string($Query)) {
          $Data = $this->Query($Query);
@@ -244,6 +247,9 @@ class ExportModel {
          $Row = (array)$Row; // export%202010-05-06%20210937.txt
          $RowCount++;
          if($RowCount == 1) {
+            // Start with the table name.
+            fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
+
             // Get the export structure.
             $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
 
@@ -298,8 +304,7 @@ class ExportModel {
       }
 
       // Write an empty line to signify the end of the table.
-      if($RowCount > 0)
-         fwrite($fp, self::NEWLINE);
+      fwrite($fp, self::NEWLINE);
 
       if($Data instanceof PDOStatement)
          $Data->closeCursor();
@@ -307,6 +312,7 @@ class ExportModel {
       $EndTime = microtime(TRUE);
       $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
       $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
+      fwrite($fp, self::NEWLINE);
    }
 
    static function FormatElapsed($Start, $End = NULL) {
@@ -399,6 +405,7 @@ class ExportModel {
          header('Pragma: private');
          header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
       } else {
+         $this->Path = str_replace(' ', '_', $this->Path);
          if($this->UseCompression())
             $fp = gzopen($this->Path, 'wb');
          else

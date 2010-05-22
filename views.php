@@ -15,7 +15,7 @@ function PageHeader() {
    ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-   <title>Vanilla 2 Forum Export Tool</title>
+   <title>Vanilla Porter - Forum Export Tool</title>
    <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 </head>
 <body>
@@ -23,9 +23,8 @@ function PageHeader() {
 	<div id="Content">
       <div class="Title">
          <h1>
-            <!-- TODO: Mark, link this to an external vanillaforums.com image -->
             <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
-            <p>Forum Export Tool</p>
+            <p>Vanilla Porter</p>
          </h1>
       </div>
    <?php
@@ -72,6 +71,12 @@ function ViewForm($Data) {
       $CanWrite = TestWrite();
 
    PageHeader(); ?>
+   <div class="Info">
+      Welcome to the Vanilla Porter.
+      This application will export your existing forum data to the Vanilla 2 import format.
+      If you want more information on how to use this application go to
+      <a href="http://vanillaforums.org/page/porter">http://vanillaforums.org/page/porter</a>.
+   </div>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
       <div class="Form">

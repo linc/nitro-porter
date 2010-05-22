@@ -91,13 +91,21 @@ class Vanilla extends ExportController {
          'CategoryID'=> 'CategoryID', 
          'Body'=> 'Body',
          'DateCreated'=>'DateInserted',
+         'DateCreated2'=>'DateUpdated',
          'AuthUserID'=>'InsertUserID',
-         'DateLastActive'=>'DateUpdated',
-         'LastUserID'=>'UpdateUserID',
+         'DateLastActive'=>'DateLastComment',
+         'AuthUserID2'=>'UpdateUserID',
          'Closed'=>'Closed',
+         'Sticky'=>'Announce',
+         'CountComments'=>'CountComments',
+         'Sink'=>'Sink',
+         'LastCommentUserID'=>'int'
       );
       $Ex->ExportTable('Discussion', "
-         SELECT d.*,c.Body FROM :_Discussion d
+         SELECT d.*,
+         d.LastUserID as LastCommentUserID,
+         d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2,
+         c.Body FROM :_Discussion d
          LEFT JOIN :_Comment c ON (c.CommentID = d.FirstCommentID)", $Discussion_Map);
       
       // Comments
@@ -124,6 +132,17 @@ class Vanilla extends ExportController {
       $Ex->ExportTable('Comment', "
          SELECT * FROM :_Comment c
          WHERE c.WhisperUserID = 0", $Comment_Map);
+
+      $Ex->ExportTable('UserDiscussion', "
+         SELECT
+            w.UserID,
+            w.DiscussionID,
+            w.CountComments,
+            w.LastViewed as DateLastViewed,
+            case when b.UserID is not null then 1 else 0 end AS Bookmarked
+         FROM :_UserDiscussionWatch w
+         LEFT JOIN :_UserBookmark b
+            ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID");
       
       // Conversations
       /*
@@ -169,12 +188,12 @@ class Vanilla extends ExportController {
       $Ex->Query("CREATE TEMPORARY TABLE VanillaExportUserConversations (`UserID` INT NOT NULL ,`ConversationID` INT NOT NULL)");
       $Ex->Query("
             INSERT INTO VanillaExportUserConversations (ConversationID, UserID) 
-            SELECT DISTINCT DiscussionID AS ConversationID, AuthUserID AS UserID FROM :_Comment 
+            SELECT DiscussionID AS ConversationID, AuthUserID AS UserID FROM :_Comment
             WHERE WhisperUserID > 0
             GROUP BY DiscussionID");
       $Ex->Query("
             INSERT INTO VanillaExportUserConversations (ConversationID, UserID) 
-            SELECT DISTINCT DiscussionID AS ConversationID, WhisperUserID AS UserID FROM :_Comment
+            SELECT DiscussionID AS ConversationID, WhisperUserID AS UserID FROM :_Comment
             WHERE WhisperUserID > 0
             GROUP BY DiscussionID");
       /*
@@ -186,7 +205,7 @@ class Vanilla extends ExportController {
          'UserID' => 'UserID',
          'ConversationID' => 'ConversationID'
       );
-      $Ex->ExportTable('UserConversation', "SELECT ConversationID, UserID FROM VanillaExportUserConversations", $UserConversation_Map);
+      $Ex->ExportTable('UserConversation', "SELECT DISTINCT ConversationID, UserID FROM VanillaExportUserConversations", $UserConversation_Map);
          
       // End
       $Ex->EndExport();
