@@ -2,9 +2,18 @@
 
 class Vanilla extends ExportController {
 
-   /** @var array Required tables => columns for vBulletin import */  
+   /** @var array Required tables => columns for Vanilla 1 import */  
    protected $_SourceTables = array(
-      'user'=> array()
+      'Users'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
+      'Roles'=> array('RoleID', 'Name', 'Description'),
+      'UserRoles'=> array('UserID', 'RoleID'),
+      'Categories'=> array('CategoryID', 'Name', 'Description'),
+      'Discussions'=> array('DiscussionID', 'Name', 'CategoryID', 'Body', 'DateCreated', 'AuthUserID', 
+         'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastCommentUserID'),
+      'Comments'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body'),
+      'Conversations'=> array('DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited'),
+      'ConversationMessage'=> array('CommentID', 'DiscussionID', 'Body', 'AuthUserID', 'DateCreated'),
+      'UserConversation'=> array('UserID', 'ConversationID')
       );
    
    /**
@@ -39,7 +48,6 @@ class Vanilla extends ExportController {
       );   
       $Ex->ExportTable('Role', 'select * from :_Role', $Role_Map);
   
-
       // UserRoles
       /*
 		    'UserID' => 'int', 
@@ -68,7 +76,6 @@ class Vanilla extends ExportController {
          'Description'=> 'Description'
       );
       $Ex->ExportTable('Category', "select CategoryID, Name, Description from :_Category", $Category_Map);
-
       
       // Discussions
       /*
