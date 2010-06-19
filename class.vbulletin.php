@@ -18,7 +18,7 @@ class Vbulletin extends ExportController {
    protected $SourceTables = array(
       'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
          'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid',
-         'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid'),
+         'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid', 'avatarid'),
       'usergroup'=> array('usergroupid','title','description'),
       'userfield' => array('userid'),
       'phrase' => array('varname','text','product','fieldname','varname'),
@@ -46,17 +46,18 @@ class Vbulletin extends ExportController {
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
          //'posts'=>'CountComments',
-         'salt'=>'char(3)'
+         'salt'=>'char(3)',
+         'photopath'=>'char(32)'
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
+				concat('avatar', userid, '_', avatarid, '.gif') as photopath,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated
          from :_user", $User_Map);  // ":_" will be replace by database prefix
-      
       
       // Roles
       $Role_Map = array(
@@ -65,8 +66,7 @@ class Vbulletin extends ExportController {
          'description'=>'Description'
       );   
       $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
-  
-  
+    
       // UserRoles
       $UserRole_Map = array(
          'userid'=>'UserID',
@@ -88,7 +88,6 @@ class Vbulletin extends ExportController {
       # Export from our tmp table and drop
       $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
       $Ex->Query("DROP TABLE VbulletinRoles");
-
       
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
@@ -107,7 +106,6 @@ class Vbulletin extends ExportController {
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
       $Ex->Query("DROP TABLE VbulletinUserMeta");
-
       
       // Categories
       $Category_Map = array(
@@ -117,7 +115,6 @@ class Vbulletin extends ExportController {
       );
       $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
          from :_forum where threadcount > 0", $Category_Map);
-
       
       // Discussions
       $Discussion_Map = array(
