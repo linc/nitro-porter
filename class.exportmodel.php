@@ -235,7 +235,7 @@ class ExportModel {
          $Data = $Query;
       }
 
-      // print_r($this->PDO()->errorInfo());
+      print_r($this->PDO()->errorInfo());
 
       // Set the search and replace to escape strings.
       $EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
@@ -284,7 +284,7 @@ class ExportModel {
             } elseif(is_string($Value)) {
                //if(mb_detect_encoding($Value) != 'UTF-8')
                //   $Value = utf8_encode($Value);
-               $Value = HTMLDecoder($TableName, $Field, $Value);
+               $Value = $this->HTMLDecoder($TableName, $Field, $Value);
                $Value = self::QUOTE
                   .str_replace($EscapeSearch, $EscapeReplace, $Value)
                   .self::QUOTE;
