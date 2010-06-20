@@ -284,7 +284,7 @@ class ExportModel {
             } elseif(is_string($Value)) {
                //if(mb_detect_encoding($Value) != 'UTF-8')
                //   $Value = utf8_encode($Value);
-
+               $Value = HTMLDecoder($TableName, $Field, $Value);
                $Value = self::QUOTE
                   .str_replace($EscapeSearch, $EscapeReplace, $Value)
                   .self::QUOTE;
@@ -381,6 +381,16 @@ class ExportModel {
          }
       }
       return $TableHeader;
+   }
+   
+   /**
+    * vBulletin needs some fields decoded and it won't hurt the others.
+    */
+   public function HTMLDecoder($Table, $Field, $Value) {
+      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name') 
+         return html_entity_decode($Value);
+      else
+         return $Value;
    }
 
 
