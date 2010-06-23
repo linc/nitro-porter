@@ -88,8 +88,7 @@ class Vanilla extends ExportController {
       $Discussion_Map = array(
          'DiscussionID' => 'DiscussionID', 
          'Name' => 'Name',
-         'CategoryID'=> 'CategoryID', 
-         'Body'=> 'Body',
+         'CategoryID'=> 'CategoryID',
          'DateCreated'=>'DateInserted',
          'DateCreated2'=>'DateUpdated',
          'AuthUserID'=>'InsertUserID',
@@ -99,14 +98,13 @@ class Vanilla extends ExportController {
          'Sticky'=>'Announce',
          'CountComments'=>'CountComments',
          'Sink'=>'Sink',
-         'LastCommentUserID'=>'int'
+         'LastUserID'=>'LastCommentUserID'
       );
       $Ex->ExportTable('Discussion', "
          SELECT d.*,
-         d.LastUserID as LastCommentUserID,
-         d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2,
-         c.Body FROM :_Discussion d
-         LEFT JOIN :_Comment c ON (c.CommentID = d.FirstCommentID)", $Discussion_Map);
+            d.LastUserID as LastCommentUserID,
+            d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
+         FROM :_Discussion d", $Discussion_Map);
       
       // Comments
       /*
@@ -127,11 +125,14 @@ class Vanilla extends ExportController {
          'DateCreated' => 'DateInserted',
          'EditUserID' => 'UpdateUserID',
          'DateEdited' => 'DateUpdated',
-         'Body' => 'Body'
+         'Body' => 'Body',
+         'FormatType' => 'Format'
       );
       $Ex->ExportTable('Comment', "
-         SELECT * FROM :_Comment c
-         WHERE c.WhisperUserID = 0", $Comment_Map);
+         SELECT 
+            c.*
+         FROM :_Comment c
+         WHERE coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
 
       $Ex->ExportTable('UserDiscussion', "
          SELECT
@@ -185,17 +186,6 @@ class Vanilla extends ExportController {
          WHERE c.WhisperUserID > 0", $ConversationMessage_Map);
       
       // UserConversation
-      $Ex->Query("CREATE TEMPORARY TABLE VanillaExportUserConversations (`UserID` INT NOT NULL ,`ConversationID` INT NOT NULL)");
-      $Ex->Query("
-            INSERT INTO VanillaExportUserConversations (ConversationID, UserID) 
-            SELECT DiscussionID AS ConversationID, AuthUserID AS UserID FROM :_Comment
-            WHERE WhisperUserID > 0
-            GROUP BY DiscussionID");
-      $Ex->Query("
-            INSERT INTO VanillaExportUserConversations (ConversationID, UserID) 
-            SELECT DiscussionID AS ConversationID, WhisperUserID AS UserID FROM :_Comment
-            WHERE WhisperUserID > 0
-            GROUP BY DiscussionID");
       /*
          'UserID' => 'int', 
          'ConversationID' => 'int', 
@@ -205,7 +195,21 @@ class Vanilla extends ExportController {
          'UserID' => 'UserID',
          'ConversationID' => 'ConversationID'
       );
-      $Ex->ExportTable('UserConversation', "SELECT DISTINCT ConversationID, UserID FROM VanillaExportUserConversations", $UserConversation_Map);
+      $Ex->ExportTable('UserConversation', 
+         "select distinct *
+            from (
+            select
+            c.DiscussionID as ConversationID,
+            c.AuthUserID as UserID
+            from LUM_Comment c
+            where c.WhisperUserID > 0
+            union all
+            select
+            c.DiscussionID,
+            c.WhisperUserID
+            from :_Comment c
+            where c.WhisperUserID > 0)
+            w;", $UserConversation_Map);
          
       // End
       $Ex->EndExport();
