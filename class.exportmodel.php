@@ -84,6 +84,7 @@ class ExportModel {
             'DiscussionID' => 'int',
             'Name' => 'varchar(100)',
             'Body' => 'text',
+            'Format' => 'varchar(20)',
             'CategoryID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
