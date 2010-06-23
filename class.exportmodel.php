@@ -205,10 +205,10 @@ class ExportModel {
 
    /**
     * Export a table to the export file.
-    * @param string $TableName the name of the table to export. This must correspond to one of the accepted vanilla tables.
+    * @param string $TableName the name of the table to export. This must correspond to one of the accepted Vanilla tables.
     * @param mixed $Query The query that will fetch the data for the export this can be one of the following:
-    *  - <b>String</b>: Represents a string of sql to execute.
-    *  - <b>PDOStatement</b>: Represents an already executed query resultset.
+    *  - <b>String</b>: Represents a string of SQL to execute.
+    *  - <b>PDOStatement</b>: Represents an already executed query result set.
     *  - <b>Array</b>: Represents an array of associative arrays or objects containing the data in the export.
     *  @param array $Mappings Specifies mappings, if any, between the source and the export where the keys represent the source columns and the values represent Vanilla columns.
     *	  - If you specify a Vanilla column then it must be in the export structure contained in this class.
@@ -236,7 +236,7 @@ class ExportModel {
          $Data = $Query;
       }
 
-      // print_r($this->PDO()->errorInfo());
+      //print_r($this->PDO()->errorInfo());
 
       // Set the search and replace to escape strings.
       $EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
@@ -285,7 +285,7 @@ class ExportModel {
             } elseif(is_string($Value)) {
                //if(mb_detect_encoding($Value) != 'UTF-8')
                //   $Value = utf8_encode($Value);
-
+               $Value = $this->HTMLDecoder($TableName, $Field, $Value);
                $Value = self::QUOTE
                   .str_replace($EscapeSearch, $EscapeReplace, $Value)
                   .self::QUOTE;
@@ -382,6 +382,16 @@ class ExportModel {
          }
       }
       return $TableHeader;
+   }
+   
+   /**
+    * vBulletin needs some fields decoded and it won't hurt the others.
+    */
+   public function HTMLDecoder($Table, $Field, $Value) {
+      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name') 
+         return html_entity_decode($Value);
+      else
+         return $Value;
    }
 
 

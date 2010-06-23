@@ -92,7 +92,8 @@ function ViewForm($Data) {
                <label>Source Forum Type</label>
                <select name="type">
                <?php foreach($forums as $forumClass => $forumInfo) : ?>
-                  <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
+                  <option value="<?php echo $forumClass; ?>"<?php 
+                     if(GetValue('type') == $forumClass) echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
                <?php endforeach; ?>
                </select>
             </li>
@@ -114,7 +115,7 @@ function ViewForm($Data) {
             </li>
             <li>
                <label>Database Password</label>
-               <input class="InputBox" type="password" name="dbpass" value="<?php echo urlencode(GetValue('dbpass')) ?>" />
+               <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>" />
             </li>
             <?php if($CanWrite): ?>
             <li>

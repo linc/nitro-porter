@@ -1,6 +1,7 @@
 <html>
+<head>
    <title>Make</title>
-</html>
+</head>
 <body>
    <pre><?php
    /** Make the final vanilla2export.php file from the other sources.
@@ -20,6 +21,7 @@
 
    ?></pre>
 </body>
+</html>
 <?php
 /// Functions ///
 function AddFile($fp, $Filename) {
