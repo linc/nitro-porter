@@ -26,8 +26,14 @@ class ExportModel {
    /** @var string A prefix to put into an automatically generated filename. */
    public $FilenamePrefix = '';
 
+   protected $_Host;
+
+   protected $_Limit = 20000;
+
    /** @var object PDO instance */
    protected $_PDO = NULL;
+
+   protected $_Password;
 
    /** @var string The path to the export file. */
    public $Path = '';
@@ -112,7 +118,7 @@ class ExportModel {
             'HourOffset' => 'int',
             'CountDiscussions' => 'int',
             'CountComments' => 'int',
-            'PhotoPath' => 'varchar(255)',
+            'Photo' => 'varchar(255)',
             'DateOfBirth' => 'datetime',
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
@@ -141,6 +147,8 @@ class ExportModel {
     * @var bool Whether or not to use compression when creating the file.
     */
    protected $_UseCompression = TRUE;
+
+   protected $_Username;
 
    /**
     *
@@ -218,10 +226,20 @@ class ExportModel {
     */
    public function ExportTable($TableName, $Query, $Mappings = array()) {
       $BeginTime = microtime(TRUE);
+
+      $RowCount = $this->_ExportTable($TableName, $Query, $Mappings);
+
+      $EndTime = microtime(TRUE);
+      $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
+      $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
+      fwrite($this->_File, self::NEWLINE);
+   }
+
+   protected function _ExportTable($TableName, $Query, $Mappings = array()) {
       $fp = $this->_File;
 
       // Make sure the table is valid for export.
-      if(!array_key_exists($TableName, $this->_Structures)) {
+      if (!array_key_exists($TableName, $this->_Structures)) {
          $this->Comment("Error: $TableName is not a valid export."
             ." The valid tables for export are ". implode(", ", array_keys($this->_Structures)));
          fwrite($fp, self::NEWLINE);
@@ -229,91 +247,90 @@ class ExportModel {
       }
       $Structure = $this->_Structures[$TableName];
 
-      // Get the data for the query.
-      if(is_string($Query)) {
-         $Data = $this->Query($Query);
-      } elseif($Query instanceof PDOStatement) {
-         $Data = $Query;
-      }
-
-      //print_r($this->PDO()->errorInfo());
-
       // Set the search and replace to escape strings.
       $EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
       $EscapeReplace = array(self::ESCAPE.self::ESCAPE, self::ESCAPE.self::DELIM, self::ESCAPE.self::NEWLINE, self::ESCAPE.self::QUOTE);
 
+      $LastID = 0;
+      $IDName = 'NOTSET';
+      $FirstQuery = TRUE;
+
+      $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
+
       // Loop through the data and write it to the file.
       $RowCount = 0;
-      while ($Data && $Data->rowCount() && $Row = $Data->fetch(PDO::FETCH_ASSOC)) {
-         $Row = (array)$Row; // export%202010-05-06%20210937.txt
-         $RowCount++;
-         if($RowCount == 1) {
-            // Start with the table name.
-            fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
+      if ($Data !== FALSE) {
+         while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
+            $Row = (array)$Row; // export%202010-05-06%20210937.txt
+            $RowCount++;
+            if($FirstQuery) {
+               // Start with the table name.
+               fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
 
-            // Get the export structure.
-            $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+               // Get the export structure.
+               $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
 
-            // Build and write the table header.
-            $TableHeader = $this->_GetTableHeader($ExportStructure, $Structure);
+               // Build and write the table header.
+               $TableHeader = $this->_GetTableHeader($ExportStructure, $Structure);
 
-            fwrite($fp, $TableHeader.self::NEWLINE);
+               fwrite($fp, $TableHeader.self::NEWLINE);
 
-            $Mappings = array_flip($Mappings);
-         }
+               $Mappings = array_flip($Mappings);
 
-         $First = TRUE;
-
-         // Loop through the columns in the export structure and grab their values from the row.
-         $ExRow = array();
-         foreach($ExportStructure as $Field => $Type) {
-            // Get the value of the export.
-            if(array_key_exists($Field, $Row)) {
-               // The column has an exact match in the export.
-               $Value = $Row[$Field];
-            } elseif(array_key_exists($Field, $Mappings)) {
-               // The column is mapped.
-               $Value = $Row[$Mappings[$Field]];
-            } else {
-               $Value = NULL;
-            }
-            // Format the value for writing.
-            if(is_null($Value)) {
-               $Value = self::NULL;
-            } elseif(is_numeric($Value)) {
-               // Do nothing, formats as is.
-            } elseif(is_string($Value)) {
-               //if(mb_detect_encoding($Value) != 'UTF-8')
-               //   $Value = utf8_encode($Value);
-               $Value = $this->HTMLDecoder($TableName, $Field, $Value);
-               $Value = self::QUOTE
-                  .str_replace($EscapeSearch, $EscapeReplace, $Value)
-                  .self::QUOTE;
-            } elseif(is_bool($Value)) {
-               $Value = $Value ? 1 : 0;
-            } else {
-               // Unknown format.
-               $Value = self::NULL;
+               $FirstQuery = FALSE;
             }
 
-            $ExRow[] = $Value;
+            $First = TRUE;
+
+            // Loop through the columns in the export structure and grab their values from the row.
+            $ExRow = array();
+            foreach ($ExportStructure as $Field => $Type) {
+               // Get the value of the export.
+               if (array_key_exists($Field, $Row)) {
+                  // The column has an exact match in the export.
+                  $Value = $Row[$Field];
+               } elseif (array_key_exists($Field, $Mappings)) {
+                  // The column is mapped.
+                  $Value = $Row[$Mappings[$Field]];
+               } else {
+                  $Value = NULL;
+               }
+               // Format the value for writing.
+               if (is_null($Value)) {
+                  $Value = self::NULL;
+               } elseif (is_numeric($Value)) {
+                  // Do nothing, formats as is.
+               } elseif (is_string($Value)) {
+                  //if(mb_detect_encoding($Value) != 'UTF-8')
+                  //   $Value = utf8_encode($Value);
+                  $Value = $this->HTMLDecoder($TableName, $Field, $Value);
+                  $Value = self::QUOTE
+                     .str_replace($EscapeSearch, $EscapeReplace, $Value)
+                     .self::QUOTE;
+               } elseif (is_bool($Value)) {
+                  $Value = $Value ? 1 : 0;
+               } else {
+                  // Unknown format.
+                  $Value = self::NULL;
+               }
+
+               $ExRow[] = $Value;
+            }
+            // Write the data.
+            fwrite($fp, implode(self::DELIM, $ExRow));
+            // End the record.
+            fwrite($fp, self::NEWLINE);
          }
-         // Write the data.
-         fwrite($fp, implode(self::DELIM, $ExRow));
-         // End the record.
-         fwrite($fp, self::NEWLINE);
       }
+      if($Data !== FALSE)
+         mysql_free_result($Data);
+      unset($Data);
 
       // Write an empty line to signify the end of the table.
       fwrite($fp, self::NEWLINE);
+      mysql_close();
 
-      if($Data instanceof PDOStatement)
-         $Data->closeCursor();
-
-      $EndTime = microtime(TRUE);
-      $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
-      $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
-      fwrite($fp, self::NEWLINE);
+      return $RowCount;
    }
 
    static function FormatElapsed($Start, $End = NULL) {
@@ -426,38 +443,27 @@ class ExportModel {
       return $fp;
    }
 
-   /**
-    * Gets or sets the PDO connection to the database.
-    * @param mixed $DsnOrPDO One of the following:
-    *  - <b>String</b>: The dsn to the database.
-    *  - <b>PDO</b>: An existing connection to the database.
-    *  - <b>Null</b>: The PDO connection will not be set.
-    *  @param string $Username The username for the database if a dsn is specified.
-    *  @param string $Password The password for the database if a dsn is specified.
-    *  @return PDO The current database connection.
-    */
-   public function PDO($DsnOrPDO = NULL, $Username = NULL, $Password = NULL) {
-      if (!is_null($DsnOrPDO)) {
-         if($DsnOrPDO instanceof PDO)
-            $this->_PDO = $DsnOrPDO;
-         else {
-            $this->_PDO = new PDO($DsnOrPDO, $Username, $Password);
-            if(strncasecmp($DsnOrPDO, 'mysql', 5) == 0)
-               $this->_PDO->exec('set names utf8');
-         }
-      }
-      return $this->_PDO;
-   }
-
    /** Execute a SQL query on the current connection.
     *
-    * @param <type> $Query
-    * @return mixed The PDO result of the query.
+    * @param string $Query The sql to execute.
+    * @return resource The query cursor.
     */
    public function Query($Query) {
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
-      $Result = $this->PDO()->query($Query, PDO::FETCH_ASSOC);
+
+      $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
+      mysql_select_db($this->_DbName);
+      mysql_query('set names utf8');
+      $Result = mysql_unbuffered_query($Query, $Connection);
+      
       return $Result;
+   }
+   
+   public function SetConnection($Host = NULL, $Username = NULL, $Password = NULL, $DbName = NULL) {
+      $this->_Host = $Host;
+      $this->_Username = $Username;
+      $this->_Password = $Password;
+      $this->_DbName = $DbName;
    }
 
    /**

@@ -1,6 +1,6 @@
 <?php
 
-class Vanilla extends ExportController {
+class Vanilla1 extends ExportController {
 
    /** @var array Required tables => columns for Vanilla 1 import */  
    protected $_SourceTables = array(
@@ -31,6 +31,7 @@ class Vanilla extends ExportController {
          'Name'=>'Name',
          'Password'=>'Password',
          'Email'=>'Email',
+         'Icon'=>'Photo',
          'CountComments'=>'CountComments'
       );   
       $Ex->ExportTable('User', "SELECT * FROM :_User", $User_Map);  // ":_" will be replaced by database prefix

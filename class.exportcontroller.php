@@ -37,8 +37,8 @@ abstract class ExportController {
       if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
-         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
-         $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
+//         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
+         $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          $Ex->UseStreaming = $this->UseStreaming;
          // Test src tables' existence structure
@@ -47,7 +47,7 @@ abstract class ExportController {
             // Good src tables - Start dump
             $Ex->UseCompression(TRUE);
             $Ex->FilenamePrefix = $this->DbInfo['dbname'];
-            set_time_limit(60*2);
+            set_time_limit(60*60);
             $this->ForumExport($Ex);
 
             // Write the results.

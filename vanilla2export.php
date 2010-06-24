@@ -16,13 +16,17 @@
  *
  * @package VanillaPorter
  */
+
+error_reporting(E_ALL);
+ini_set('display_errors', 'on');
+ini_set('track_errors', 1);
  
 global $Supported;
 
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
-   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
-   'vanilla' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_')
+   'vanilla1' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
+   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
 );
 
 // Support Files
@@ -53,8 +57,17 @@ class ExportModel {
    /** @var object File pointer */
    protected $_File = NULL;
 
+   /** @var string A prefix to put into an automatically generated filename. */
+   public $FilenamePrefix = '';
+
+   protected $_Host;
+
+   protected $_Limit = 20000;
+
    /** @var object PDO instance */
    protected $_PDO = NULL;
+
+   protected $_Password;
 
    /** @var string The path to the export file. */
    public $Path = '';
@@ -111,14 +124,18 @@ class ExportModel {
             'DiscussionID' => 'int',
             'Name' => 'varchar(100)',
             'Body' => 'text',
+            'Format' => 'varchar(20)',
             'CategoryID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
+            'DateLastComment' => 'datetime',
+            'CountComments' => 'int',
             'Score' => 'float',
             'Closed' => 'tinyint',
-            'Announce' => 'tinyint'),
+            'Announce' => 'tinyint',
+            'Sink' => 'tinyint'),
       'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
@@ -135,7 +152,7 @@ class ExportModel {
             'HourOffset' => 'int',
             'CountDiscussions' => 'int',
             'CountComments' => 'int',
-            'PhotoPath' => 'varchar(255)',
+            'Photo' => 'varchar(255)',
             'DateOfBirth' => 'datetime',
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
@@ -165,6 +182,8 @@ class ExportModel {
     */
    protected $_UseCompression = TRUE;
 
+   protected $_Username;
+
    /**
     *
     * @var bool Whether or not to stream the export the the output rather than save a file.
@@ -184,7 +203,7 @@ class ExportModel {
       if($Path)
          $this->Path = $Path;
       if(!$this->Path)
-         $this->Path = 'export '.date('Y-m-d His').'.txt'.($this->UseCompression() ? '.gz' : '');
+         $this->Path = 'export '.($this->FilenamePrefix ? $this->FilenamePrefix.' ' : '').date('Y-m-d His').'.txt'.($this->UseCompression() ? '.gz' : '');
 
       $fp = $this->_OpenFile();
 
@@ -228,10 +247,10 @@ class ExportModel {
 
    /**
     * Export a table to the export file.
-    * @param string $TableName the name of the table to export. This must correspond to one of the accepted vanilla tables.
+    * @param string $TableName the name of the table to export. This must correspond to one of the accepted Vanilla tables.
     * @param mixed $Query The query that will fetch the data for the export this can be one of the following:
-    *  - <b>String</b>: Represents a string of sql to execute.
-    *  - <b>PDOStatement</b>: Represents an already executed query resultset.
+    *  - <b>String</b>: Represents a string of SQL to execute.
+    *  - <b>PDOStatement</b>: Represents an already executed query result set.
     *  - <b>Array</b>: Represents an array of associative arrays or objects containing the data in the export.
     *  @param array $Mappings Specifies mappings, if any, between the source and the export where the keys represent the source columns and the values represent Vanilla columns.
     *	  - If you specify a Vanilla column then it must be in the export structure contained in this class.
@@ -241,10 +260,20 @@ class ExportModel {
     */
    public function ExportTable($TableName, $Query, $Mappings = array()) {
       $BeginTime = microtime(TRUE);
+
+      $RowCount = $this->_ExportTable($TableName, $Query, $Mappings);
+
+      $EndTime = microtime(TRUE);
+      $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
+      $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
+      fwrite($this->_File, self::NEWLINE);
+   }
+
+   protected function _ExportTable($TableName, $Query, $Mappings = array()) {
       $fp = $this->_File;
 
       // Make sure the table is valid for export.
-      if(!array_key_exists($TableName, $this->_Structures)) {
+      if (!array_key_exists($TableName, $this->_Structures)) {
          $this->Comment("Error: $TableName is not a valid export."
             ." The valid tables for export are ". implode(", ", array_keys($this->_Structures)));
          fwrite($fp, self::NEWLINE);
@@ -252,91 +281,90 @@ class ExportModel {
       }
       $Structure = $this->_Structures[$TableName];
 
-      // Start with the table name.
-      fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
-
-      // Get the data for the query.
-      if(is_string($Query)) {
-         $Data = $this->Query($Query);
-      } elseif($Query instanceof PDOStatement) {
-         $Data = $Query;
-      }
-
-      // print_r($this->PDO()->errorInfo());
-
       // Set the search and replace to escape strings.
       $EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
       $EscapeReplace = array(self::ESCAPE.self::ESCAPE, self::ESCAPE.self::DELIM, self::ESCAPE.self::NEWLINE, self::ESCAPE.self::QUOTE);
 
+      $LastID = 0;
+      $IDName = 'NOTSET';
+      $FirstQuery = TRUE;
+
+      $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
+
       // Loop through the data and write it to the file.
       $RowCount = 0;
-      while ($Data && $Data->rowCount() && $Row = $Data->fetch(PDO::FETCH_ASSOC)) {
-         $Row = (array)$Row; // export%202010-05-06%20210937.txt
-         $RowCount++;
-         if($RowCount == 1) {
-            // Get the export structure.
-            $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+      if ($Data !== FALSE) {
+         while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
+            $Row = (array)$Row; // export%202010-05-06%20210937.txt
+            $RowCount++;
+            if($FirstQuery) {
+               // Start with the table name.
+               fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
 
-            // Build and write the table header.
-            $TableHeader = $this->_GetTableHeader($ExportStructure, $Structure);
+               // Get the export structure.
+               $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
 
-            fwrite($fp, $TableHeader.self::NEWLINE);
+               // Build and write the table header.
+               $TableHeader = $this->_GetTableHeader($ExportStructure, $Structure);
 
-            $Mappings = array_flip($Mappings);
-         }
+               fwrite($fp, $TableHeader.self::NEWLINE);
 
-         $First = TRUE;
+               $Mappings = array_flip($Mappings);
 
-         // Loop through the columns in the export structure and grab their values from the row.
-         $ExRow = array();
-         foreach($ExportStructure as $Field => $Type) {
-            // Get the value of the export.
-            if(array_key_exists($Field, $Row)) {
-               // The column has an exact match in the export.
-               $Value = $Row[$Field];
-            } elseif(array_key_exists($Field, $Mappings)) {
-               // The column is mapped.
-               $Value = $Row[$Mappings[$Field]];
-            } else {
-               $Value = NULL;
-            }
-            // Format the value for writing.
-            if(is_null($Value)) {
-               $Value = self::NULL;
-            } elseif(is_numeric($Value)) {
-               // Do nothing, formats as is.
-            } elseif(is_string($Value)) {
-               //if(mb_detect_encoding($Value) != 'UTF-8')
-               //   $Value = utf8_encode($Value);
-
-               $Value = self::QUOTE
-                  .str_replace($EscapeSearch, $EscapeReplace, $Value)
-                  .self::QUOTE;
-            } elseif(is_bool($Value)) {
-               $Value = $Value ? 1 : 0;
-            } else {
-               // Unknown format.
-               $Value = self::NULL;
+               $FirstQuery = FALSE;
             }
 
-            $ExRow[] = $Value;
+            $First = TRUE;
+
+            // Loop through the columns in the export structure and grab their values from the row.
+            $ExRow = array();
+            foreach ($ExportStructure as $Field => $Type) {
+               // Get the value of the export.
+               if (array_key_exists($Field, $Row)) {
+                  // The column has an exact match in the export.
+                  $Value = $Row[$Field];
+               } elseif (array_key_exists($Field, $Mappings)) {
+                  // The column is mapped.
+                  $Value = $Row[$Mappings[$Field]];
+               } else {
+                  $Value = NULL;
+               }
+               // Format the value for writing.
+               if (is_null($Value)) {
+                  $Value = self::NULL;
+               } elseif (is_numeric($Value)) {
+                  // Do nothing, formats as is.
+               } elseif (is_string($Value)) {
+                  //if(mb_detect_encoding($Value) != 'UTF-8')
+                  //   $Value = utf8_encode($Value);
+                  $Value = $this->HTMLDecoder($TableName, $Field, $Value);
+                  $Value = self::QUOTE
+                     .str_replace($EscapeSearch, $EscapeReplace, $Value)
+                     .self::QUOTE;
+               } elseif (is_bool($Value)) {
+                  $Value = $Value ? 1 : 0;
+               } else {
+                  // Unknown format.
+                  $Value = self::NULL;
+               }
+
+               $ExRow[] = $Value;
+            }
+            // Write the data.
+            fwrite($fp, implode(self::DELIM, $ExRow));
+            // End the record.
+            fwrite($fp, self::NEWLINE);
          }
-         // Write the data.
-         fwrite($fp, implode(self::DELIM, $ExRow));
-         // End the record.
-         fwrite($fp, self::NEWLINE);
       }
+      if($Data !== FALSE)
+         mysql_free_result($Data);
+      unset($Data);
 
       // Write an empty line to signify the end of the table.
-      if($RowCount > 0)
-         fwrite($fp, self::NEWLINE);
+      fwrite($fp, self::NEWLINE);
+      mysql_close();
 
-      if($Data instanceof PDOStatement)
-         $Data->closeCursor();
-
-      $EndTime = microtime(TRUE);
-      $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
-      $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
+      return $RowCount;
    }
 
    static function FormatElapsed($Start, $End = NULL) {
@@ -406,6 +434,16 @@ class ExportModel {
       }
       return $TableHeader;
    }
+   
+   /**
+    * vBulletin needs some fields decoded and it won't hurt the others.
+    */
+   public function HTMLDecoder($Table, $Field, $Value) {
+      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name') 
+         return html_entity_decode($Value);
+      else
+         return $Value;
+   }
 
 
    protected function _OpenFile() {
@@ -429,6 +467,7 @@ class ExportModel {
          header('Pragma: private');
          header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
       } else {
+         $this->Path = str_replace(' ', '_', $this->Path);
          if($this->UseCompression())
             $fp = gzopen($this->Path, 'wb');
          else
@@ -438,38 +477,27 @@ class ExportModel {
       return $fp;
    }
 
-   /**
-    * Gets or sets the PDO connection to the database.
-    * @param mixed $DsnOrPDO One of the following:
-    *  - <b>String</b>: The dsn to the database.
-    *  - <b>PDO</b>: An existing connection to the database.
-    *  - <b>Null</b>: The PDO connection will not be set.
-    *  @param string $Username The username for the database if a dsn is specified.
-    *  @param string $Password The password for the database if a dsn is specified.
-    *  @return PDO The current database connection.
-    */
-   public function PDO($DsnOrPDO = NULL, $Username = NULL, $Password = NULL) {
-      if (!is_null($DsnOrPDO)) {
-         if($DsnOrPDO instanceof PDO)
-            $this->_PDO = $DsnOrPDO;
-         else {
-            $this->_PDO = new PDO($DsnOrPDO, $Username, $Password);
-            if(strncasecmp($DsnOrPDO, 'mysql', 5) == 0)
-               $this->_PDO->exec('set names utf8');
-         }
-      }
-      return $this->_PDO;
-   }
-
    /** Execute a SQL query on the current connection.
     *
-    * @param <type> $Query
-    * @return mixed The PDO result of the query.
+    * @param string $Query The sql to execute.
+    * @return resource The query cursor.
     */
    public function Query($Query) {
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
-      $Result = $this->PDO()->query($Query, PDO::FETCH_ASSOC);
+
+      $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
+      mysql_select_db($this->_DbName);
+      mysql_query('set names utf8');
+      $Result = mysql_unbuffered_query($Query, $Connection);
+      
       return $Result;
+   }
+   
+   public function SetConnection($Host = NULL, $Username = NULL, $Password = NULL, $DbName = NULL) {
+      $this->_Host = $Host;
+      $this->_Username = $Username;
+      $this->_Password = $Password;
+      $this->_DbName = $DbName;
    }
 
    /**
@@ -571,7 +599,7 @@ function PageHeader() {
    ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-   <title>Vanilla 2 Forum Export Tool</title>
+   <title>Vanilla Porter - Forum Export Tool</title>
    <!-- Contents included from style.css -->
 <style>
 body {
@@ -783,7 +811,7 @@ input.Button:focus {
 div.Info {
 	text-align: left;
 	width: 568px;
-	margin: 0 auto 70px;
+	margin: 0 auto 0px;
 	font-size: 80%;
 	line-height: 1.6;
 }
@@ -811,9 +839,8 @@ div.Info li {
 	<div id="Content">
       <div class="Title">
          <h1>
-            <!-- TODO: Mark, link this to an external vanillaforums.com image -->
             <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
-            <p>Forum Export Tool</p>
+            <p>Vanilla Porter</p>
          </h1>
       </div>
    <?php
@@ -860,6 +887,12 @@ function ViewForm($Data) {
       $CanWrite = TestWrite();
 
    PageHeader(); ?>
+   <div class="Info">
+      Welcome to the Vanilla Porter.
+      This application will export your existing forum data to the Vanilla 2 import format.
+      If you want more information on how to use this application go to
+      <a href="http://vanillaforums.org/page/porter">http://vanillaforums.org/page/porter</a>.
+   </div>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
       <div class="Form">
@@ -875,7 +908,8 @@ function ViewForm($Data) {
                <label>Source Forum Type</label>
                <select name="type">
                <?php foreach($forums as $forumClass => $forumInfo) : ?>
-                  <option value="<?php echo $forumClass; ?>"><?php echo $forumInfo['name']; ?></option>
+                  <option value="<?php echo $forumClass; ?>"<?php 
+                     if(GetValue('type') == $forumClass) echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
                <?php endforeach; ?>
                </select>
             </li>
@@ -897,7 +931,7 @@ function ViewForm($Data) {
             </li>
             <li>
                <label>Database Password</label>
-               <input class="InputBox" type="password" name="dbpass" value="<?php echo urlencode(GetValue('dbpass')) ?>" />
+               <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>" />
             </li>
             <?php if($CanWrite): ?>
             <li>
@@ -998,8 +1032,8 @@ abstract class ExportController {
       if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
-         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
-         $Ex->PDO($Dsn, $this->DbInfo['dbuser'], $this->DbInfo['dbpass']);
+//         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
+         $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          $Ex->UseStreaming = $this->UseStreaming;
          // Test src tables' existence structure
@@ -1007,7 +1041,8 @@ abstract class ExportController {
          if($Msg === true) {
             // Good src tables - Start dump
             $Ex->UseCompression(TRUE);
-            set_time_limit(60*2);
+            $Ex->FilenamePrefix = $this->DbInfo['dbname'];
+            set_time_limit(60*60);
             $this->ForumExport($Ex);
 
             // Write the results.
@@ -1042,7 +1077,7 @@ abstract class ExportController {
     */
    public function TestDatabase() {
       // Connection
-      if($C = mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], '')) { // $this->DbInfo['dbpass'])) {
+      if($C = @mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
          // Database
          if(mysql_select_db($this->DbInfo['dbname'], $C)) {
             mysql_close($C);
@@ -1061,14 +1096,23 @@ abstract class ExportController {
 
 
 
-/* Contents included from class.vanilla.php */
+/* Contents included from class.vanilla1.php */
 ?><?php
 
-class Vanilla extends ExportController {
+class Vanilla1 extends ExportController {
 
-   /** @var array Required tables => columns for vBulletin import */  
+   /** @var array Required tables => columns for Vanilla 1 import */  
    protected $_SourceTables = array(
-      'user'=> array()
+      'Users'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
+      'Roles'=> array('RoleID', 'Name', 'Description'),
+      'UserRoles'=> array('UserID', 'RoleID'),
+      'Categories'=> array('CategoryID', 'Name', 'Description'),
+      'Discussions'=> array('DiscussionID', 'Name', 'CategoryID', 'Body', 'DateCreated', 'AuthUserID', 
+         'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastCommentUserID'),
+      'Comments'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body'),
+      'Conversations'=> array('DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited'),
+      'ConversationMessage'=> array('CommentID', 'DiscussionID', 'Body', 'AuthUserID', 'DateCreated'),
+      'UserConversation'=> array('UserID', 'ConversationID')
       );
    
    /**
@@ -1086,6 +1130,7 @@ class Vanilla extends ExportController {
          'Name'=>'Name',
          'Password'=>'Password',
          'Email'=>'Email',
+         'Icon'=>'Photo',
          'CountComments'=>'CountComments'
       );   
       $Ex->ExportTable('User', "SELECT * FROM :_User", $User_Map);  // ":_" will be replaced by database prefix
@@ -1103,7 +1148,6 @@ class Vanilla extends ExportController {
       );   
       $Ex->ExportTable('Role', 'select * from :_Role', $Role_Map);
   
-
       // UserRoles
       /*
 		    'UserID' => 'int', 
@@ -1132,7 +1176,6 @@ class Vanilla extends ExportController {
          'Description'=> 'Description'
       );
       $Ex->ExportTable('Category', "select CategoryID, Name, Description from :_Category", $Category_Map);
-
       
       // Discussions
       /*
@@ -1152,17 +1195,23 @@ class Vanilla extends ExportController {
       $Discussion_Map = array(
          'DiscussionID' => 'DiscussionID', 
          'Name' => 'Name',
-         'CategoryID'=> 'CategoryID', 
-         'Body'=> 'Body',
+         'CategoryID'=> 'CategoryID',
          'DateCreated'=>'DateInserted',
+         'DateCreated2'=>'DateUpdated',
          'AuthUserID'=>'InsertUserID',
-         'DateLastActive'=>'DateUpdated',
-         'LastUserID'=>'UpdateUserID',
+         'DateLastActive'=>'DateLastComment',
+         'AuthUserID2'=>'UpdateUserID',
          'Closed'=>'Closed',
+         'Sticky'=>'Announce',
+         'CountComments'=>'CountComments',
+         'Sink'=>'Sink',
+         'LastUserID'=>'LastCommentUserID'
       );
       $Ex->ExportTable('Discussion', "
-         SELECT d.*,c.Body FROM :_Discussion d
-         LEFT JOIN :_Comment c ON (c.CommentID = d.FirstCommentID)", $Discussion_Map);
+         SELECT d.*,
+            d.LastUserID as LastCommentUserID,
+            d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
+         FROM :_Discussion d", $Discussion_Map);
       
       // Comments
       /*
@@ -1183,11 +1232,25 @@ class Vanilla extends ExportController {
          'DateCreated' => 'DateInserted',
          'EditUserID' => 'UpdateUserID',
          'DateEdited' => 'DateUpdated',
-         'Body' => 'Body'
+         'Body' => 'Body',
+         'FormatType' => 'Format'
       );
       $Ex->ExportTable('Comment', "
-         SELECT * FROM :_Comment c
-         WHERE c.WhisperUserID = 0", $Comment_Map);
+         SELECT 
+            c.*
+         FROM :_Comment c
+         WHERE coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
+
+      $Ex->ExportTable('UserDiscussion', "
+         SELECT
+            w.UserID,
+            w.DiscussionID,
+            w.CountComments,
+            w.LastViewed as DateLastViewed,
+            case when b.UserID is not null then 1 else 0 end AS Bookmarked
+         FROM :_UserDiscussionWatch w
+         LEFT JOIN :_UserBookmark b
+            ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID");
       
       // Conversations
       /*
@@ -1230,17 +1293,6 @@ class Vanilla extends ExportController {
          WHERE c.WhisperUserID > 0", $ConversationMessage_Map);
       
       // UserConversation
-      $Ex->Query("CREATE TEMPORARY TABLE VanillaExportUserConversations (`UserID` INT NOT NULL ,`ConversationID` INT NOT NULL)");
-      $Ex->Query("
-            INSERT INTO VanillaExportUserConversations (ConversationID, UserID) 
-            SELECT DISTINCT DiscussionID AS ConversationID, AuthUserID AS UserID FROM :_Comment 
-            WHERE WhisperUserID > 0
-            GROUP BY DiscussionID");
-      $Ex->Query("
-            INSERT INTO VanillaExportUserConversations (ConversationID, UserID) 
-            SELECT DISTINCT DiscussionID AS ConversationID, WhisperUserID AS UserID FROM :_Comment
-            WHERE WhisperUserID > 0
-            GROUP BY DiscussionID");
       /*
          'UserID' => 'int', 
          'ConversationID' => 'int', 
@@ -1250,7 +1302,21 @@ class Vanilla extends ExportController {
          'UserID' => 'UserID',
          'ConversationID' => 'ConversationID'
       );
-      $Ex->ExportTable('UserConversation', "SELECT ConversationID, UserID FROM VanillaExportUserConversations", $UserConversation_Map);
+      $Ex->ExportTable('UserConversation', 
+         "select distinct *
+            from (
+            select
+            c.DiscussionID as ConversationID,
+            c.AuthUserID as UserID
+            from LUM_Comment c
+            where c.WhisperUserID > 0
+            union all
+            select
+            c.DiscussionID,
+            c.WhisperUserID
+            from :_Comment c
+            where c.WhisperUserID > 0)
+            w;", $UserConversation_Map);
          
       // End
       $Ex->EndExport();
@@ -1282,7 +1348,7 @@ class Vbulletin extends ExportController {
    protected $SourceTables = array(
       'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
          'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid',
-         'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid'),
+         'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid', 'avatarid'),
       'usergroup'=> array('usergroupid','title','description'),
       'userfield' => array('userid'),
       'phrase' => array('varname','text','product','fieldname','varname'),
@@ -1310,17 +1376,18 @@ class Vbulletin extends ExportController {
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
          //'posts'=>'CountComments',
-         'salt'=>'char(3)'
+         'salt'=>'char(3)',
+         'photopath'=>'char(32)'
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
+				concat('avatar', userid, '_', avatarid, '.gif') as photopath,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated
          from :_user", $User_Map);  // ":_" will be replace by database prefix
-      
       
       // Roles
       $Role_Map = array(
@@ -1329,8 +1396,7 @@ class Vbulletin extends ExportController {
          'description'=>'Description'
       );   
       $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
-  
-  
+    
       // UserRoles
       $UserRole_Map = array(
          'userid'=>'UserID',
@@ -1352,7 +1418,6 @@ class Vbulletin extends ExportController {
       # Export from our tmp table and drop
       $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
       $Ex->Query("DROP TABLE VbulletinRoles");
-
       
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
@@ -1371,7 +1436,6 @@ class Vbulletin extends ExportController {
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
       $Ex->Query("DROP TABLE VbulletinUserMeta");
-
       
       // Categories
       $Category_Map = array(
@@ -1381,19 +1445,19 @@ class Vbulletin extends ExportController {
       );
       $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
          from :_forum where threadcount > 0", $Category_Map);
-
       
       // Discussions
       $Discussion_Map = array(
          'threadid'=>'DiscussionID',
          'forumid'=>'CategoryID',
          'postuserid'=>'InsertUserID',
-         'postuserid'=>'UpdateUserID',
+         'postuserid2'=>'UpdateUserID',
          'title'=>'Name',
 			'Format'=>'Format'
       );
       $Ex->ExportTable('Discussion', "select t.*,
-				p.pagetext as Body,
+				t.postuserid as postuserid2,
+            p.pagetext as Body,
 				'BBCode' as Format,
             replycount+1 as CountComments, 
             convert(ABS(open-1),char(1)) as Closed, 
@@ -1472,6 +1536,22 @@ if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
 else {
    $CanWrite = TestWrite();
    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
+}
+
+/**
+ * Write out a value passed as bytes to its most readable format.
+ */
+function FormatMemorySize($Bytes, $Precision = 1) {
+   $Units = array('B', 'K', 'M', 'G', 'T');
+
+   $Bytes = max((int)$Bytes, 0);
+   $Pow = floor(($Bytes ? log($Bytes) : 0) / log(1024));
+   $Pow = min($Pow, count($Units) - 1);
+
+   $Bytes /= pow(1024, $Pow);
+
+   $Result = round($Bytes, $Precision).$Units[$Pow];
+   return $Result;
 }
 
 /** 

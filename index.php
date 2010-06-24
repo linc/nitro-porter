@@ -23,7 +23,7 @@ global $Supported;
 
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
-   'vanilla' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
+   'vanilla1' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
    'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
 );
 
@@ -32,7 +32,7 @@ include('class.exportmodel.php');
 include('views.php');
 include('class.exportcontroller.php');
 
-include('class.vanilla.php');
+include('class.vanilla1.php');
 include('class.vbulletin.php');
 
 // Make sure a default time zone is set
@@ -49,6 +49,22 @@ if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
 else {
    $CanWrite = TestWrite();
    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
+}
+
+/**
+ * Write out a value passed as bytes to its most readable format.
+ */
+function FormatMemorySize($Bytes, $Precision = 1) {
+   $Units = array('B', 'K', 'M', 'G', 'T');
+
+   $Bytes = max((int)$Bytes, 0);
+   $Pow = floor(($Bytes ? log($Bytes) : 0) / log(1024));
+   $Pow = min($Pow, count($Units) - 1);
+
+   $Bytes /= pow(1024, $Pow);
+
+   $Result = round($Bytes, $Precision).$Units[$Pow];
+   return $Result;
 }
 
 /** 
