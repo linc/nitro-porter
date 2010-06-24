@@ -449,12 +449,15 @@ class ExportModel {
     * @return resource The query cursor.
     */
    public function Query($Query) {
+      if (isset($this->_LastResult) && is_resource($this->_LastResult))
+         mysql_free_result($this->_LastResult);
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
 
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
       mysql_query('set names utf8');
       $Result = mysql_unbuffered_query($Query, $Connection);
+      $this->_LastResult = $Result;
       
       return $Result;
    }
@@ -518,7 +521,7 @@ class ExportModel {
          else {
             // Build array of columns in this table
             $PresentColumns = array();
-            foreach($TableDescriptions as $TD) {
+            while (($TD = mysql_fetch_assoc($TableDescriptions)) !== false) {
                $PresentColumns[] = $TD['Field'];
             }
             // Compare with required columns
@@ -527,6 +530,7 @@ class ExportModel {
                   $MissingColumns[$ReqTable][] = $ReqCol;
             }
 
+            mysql_free_result($TableDescriptions);
          }
       }
 

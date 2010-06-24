@@ -47,7 +47,7 @@ class Vbulletin extends ExportController {
          'timezoneoffset'=>'HourOffset',
          //'posts'=>'CountComments',
          'salt'=>'char(3)',
-         'photopath'=>'char(32)'
+         'photopath'=>'Photo'
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
@@ -77,11 +77,13 @@ class Vbulletin extends ExportController {
       $Ex->Query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
       # Put stupid CSV column into tmp table
       $SecondaryRoles = $Ex->Query("select userid, usergroupid, membergroupids from :_user");
-      foreach($SecondaryRoles as $Row) {
-         if($Row['membergroupids']!='') {
-            $Groups = explode(',',$Row['membergroupids']);
-            foreach($Groups as $GroupID) {
-               $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})");
+      if (is_resource($SecondaryRoles)) {
+         while (($Row = @mysql_fetch_assoc($SecondaryRoles)) !== false) {
+            if($Row['membergroupids']!='') {
+               $Groups = explode(',',$Row['membergroupids']);
+               foreach($Groups as $GroupID) {
+                  $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})");
+               }
             }
          }
       }
@@ -97,11 +99,14 @@ class Vbulletin extends ExportController {
          $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '$Field.', $Field from :_user where $Field !=''");
       # Dynamic vB user data (userfield)
       $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
-      foreach ($ProfileFields as $Field) {
-         $VbulletinField = str_replace('_title','',$Field['varname']);
-         $MetaKey = preg_replace('/[^0-9a-z_-]/','',strtolower($Field['text']));
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) 
-            select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
+      if (is_resource($ProfileFields)) {
+         while (($Field = @mysql_fetch_assoc($ProfileFields)) !== false) {
+         //foreach ($ProfileFields as $Field) {
+            $VbulletinField = str_replace('_title','',$Field['varname']);
+            $MetaKey = preg_replace('/[^0-9a-z_-]/','',strtolower($Field['text']));
+            $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue)
+               select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
+         }
       }
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
@@ -177,7 +182,7 @@ class Vbulletin extends ExportController {
          'postuserid'=>'InsertUserID'
       );
 		$Tables = $Ex->Query("show tables like ':_visitormessage'");
-      if (count($Tables) > 0) { # Table is present
+      if (mysql_fetch_assoc($Tables) !== FALSE) { # Table is present
 			$Ex->ExportTable('Activity', "select *, 
 			   FROM_UNIXTIME(dateline) as DateInserted
 			from :_visitormessage
