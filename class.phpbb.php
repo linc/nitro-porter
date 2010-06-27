@@ -1,25 +1,19 @@
 <?php
 /**
- * vBulletin-specific exporter tool
+ * phpBB exporter tool
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
- * @todo importer: html_entity_decode Category names and Discussion titles
- * @todo importer: count bookmarks, bookmark comment count
- * @todo importer: update Discussions with first & last comment ids
- * @todo importer: update CountDiscussions column on the Category, User tables
- * @todo importer: don't make ALL discussions "new" after import
  */
 
 class Phpbb extends ExportController {
 
-   /** @var array Required tables => columns for vBulletin import */
+   /** @var array Required tables => columns */
    protected $SourceTables = array(); //
 
    /**
     * Forum-specific export format
-    * @todo Project file size / export time and possibly break into multiple files
     */
    protected function ForumExport($Ex) {
       // Begin

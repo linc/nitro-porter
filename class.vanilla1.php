@@ -1,8 +1,15 @@
 <?php
-
+/**
+ * Vanilla 1 exporter tool
+ *
+ * @copyright Vanilla Forums Inc. 2010
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
+ 
 class Vanilla1 extends ExportController {
 
-   /** @var array Required tables => columns for Vanilla 1 import */  
+   /** @var array Required tables => columns */  
    protected $_SourceTables = array(
       'Users'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
       'Roles'=> array('RoleID', 'Name', 'Description'),
