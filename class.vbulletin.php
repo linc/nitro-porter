@@ -166,8 +166,8 @@ class Vbulletin extends ExportController {
            tr.threadid as DiscussionID,
            FROM_UNIXTIME(tr.readtime) as DateLastViewed,
            case when st.threadid is not null then 1 else 0 end as Bookmarked
-         from nb_threadread tr
-         left join nb_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
+         from :_threadread tr
+         left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
       
       // Activity (3.8+)
       $Activity_Map = array(
