@@ -84,7 +84,7 @@ class Vbulletin extends ExportController {
       }
       # Export from our tmp table and drop
       $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
-      $Ex->Query("DROP TABLE VbulletinRoles");
+      $Ex->Query("DROP TABLE IF EXISTS VbulletinRoles");
       
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
@@ -105,12 +105,13 @@ class Vbulletin extends ExportController {
       }
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
-      $Ex->Query("DROP TABLE VbulletinUserMeta");
+      $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
       
       // Categories
       $Category_Map = array(
          'forumid'=>'CategoryID',
          'description'=>'Description',
+         'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
          'displayorder'=>array('Column'=>'Sort', 'Type'=>'int')
       );
       $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
@@ -122,7 +123,7 @@ class Vbulletin extends ExportController {
          'forumid'=>'CategoryID',
          'postuserid'=>'InsertUserID',
          'postuserid2'=>'UpdateUserID',
-         'title'=>'Name',
+         'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
 			'Format'=>'Format'
       );
       $Ex->ExportTable('Discussion', "select t.*,
