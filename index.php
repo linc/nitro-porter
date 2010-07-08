@@ -25,7 +25,7 @@ global $Supported;
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
    'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
-   'phpbb' => array('name' => 'phpBB', 'prefix' => 'phpbb_')
+   'phpbb' => array('name' => 'phpBB 3+', 'prefix' => 'phpbb_')
 );
 
 // Support Files
