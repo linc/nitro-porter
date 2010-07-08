@@ -27,7 +27,7 @@ global $Supported;
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
    'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
-   'phpbb' => array('name' => 'phpBB', 'prefix' => 'phpbb_')
+   'phpbb' => array('name' => 'phpBB 3+', 'prefix' => 'phpbb_')
 );
 
 // Support Files
@@ -198,7 +198,7 @@ class ExportModel {
     * @param string $Path The path to the export file.
     * @param string $Source The source program that created the export. This may be used by the import routine to do additional processing.
     */
-   public function BeginExport($Path = '', $Source = '') {
+   public function BeginExport($Path = '', $Source = '', $Header = array()) {
       $this->Comments = array();
       $this->BeginTime = microtime(TRUE);
 
@@ -212,6 +212,9 @@ class ExportModel {
       fwrite($fp, 'Vanilla Export: '.$this->Version());
       if($Source)
          fwrite($fp, self::DELIM.' Source: '.$Source);
+      foreach ($Header as $Key => $Value) {
+         fwrite($fp, self::DELIM." $Key: $Value");
+      }
       fwrite($fp, self::NEWLINE.self::NEWLINE);
       $this->Comment('Export Started: '.date('Y-m-d H:i:s'));
    }
@@ -291,6 +294,14 @@ class ExportModel {
       $IDName = 'NOTSET';
       $FirstQuery = TRUE;
 
+      // Get the filters from the mappings.
+      $Filters = array();
+      foreach ($Mappings as $Column => $Mapping) {
+         if (is_array($Mapping) &&isset($Mapping['Column']) && isset($Mapping['Filter'])) {
+            $Filters[$Mapping['Column']] = $Mapping['Filter'];
+         }
+      }
+
       $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
 
       // Loop through the data and write it to the file.
@@ -337,10 +348,16 @@ class ExportModel {
                } elseif (is_numeric($Value)) {
                   // Do nothing, formats as is.
                } elseif (is_string($Value)) {
-                  //if(mb_detect_encoding($Value) != 'UTF-8')
-                  //   $Value = utf8_encode($Value);
-                  $Value = $this->HTMLDecoder($TableName, $Field, $Value);
-                  $Value = self::QUOTE
+
+                  // Check to see if there is a callback filter.
+                  if (isset($Filters[$Field])) {
+                     $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
+                  } else {
+                     if(mb_detect_encoding($Value) != 'UTF-8')
+                        $Value = utf8_encode($Value);
+                  }
+
+                     $Value = self::QUOTE
                      .str_replace($EscapeSearch, $EscapeReplace, $Value)
                      .self::QUOTE;
                } elseif (is_bool($Value)) {
@@ -402,7 +419,12 @@ class ExportModel {
                }
             } elseif(is_array($Mapping)) {
                $DestColumn = $Mapping['Column'];
-               $DestType = $Mapping['Type'];
+               if (isset($Mapping['Type']))
+                  $DestType = $Mapping['Type'];
+               elseif(isset($Structure[$DestColumn]))
+                  $DestType = $Structure[$DestColumn];
+               else
+                  $DestType = 'varchar(255)';
                $Mappings[$Column] = $DestColumn;
             }
          } elseif(array_key_exists($Column, $Structure)) {
@@ -438,14 +460,21 @@ class ExportModel {
    }
    
    /**
+    * Decode the HTML out of a value.
+    */
+   public function HTMLDecoder($Value) {
+      return html_entity_decode($Value, ENT_COMPAT, 'UTF-8');
+   }
+
+    /**
     * vBulletin needs some fields decoded and it won't hurt the others.
     */
-   public function HTMLDecoder($Table, $Field, $Value) {
-      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name') 
-         return html_entity_decode($Value);
-      else
-         return $Value;
-   }
+//   public function HTMLDecoder($Table, $Field, $Value) {
+//      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name')
+//         return html_entity_decode($Value);
+//      else
+//         return $Value;
+//   }
 
 
    protected function _OpenFile() {
@@ -1225,8 +1254,8 @@ class Vanilla1 extends ExportController {
          'Sink'=>'Sink',
          'LastUserID'=>'LastCommentUserID'
       );
-      $Ex->ExportTable('Discussion', "
-         SELECT d.*,
+      $Ex->ExportTable('Discussion',
+         "SELECT d.*,
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
          FROM :_Discussion d", $Discussion_Map);
@@ -1432,7 +1461,7 @@ class Vbulletin extends ExportController {
       }
       # Export from our tmp table and drop
       $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
-      $Ex->Query("DROP TABLE VbulletinRoles");
+      $Ex->Query("DROP TABLE IF EXISTS VbulletinRoles");
       
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
@@ -1453,12 +1482,13 @@ class Vbulletin extends ExportController {
       }
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
-      $Ex->Query("DROP TABLE VbulletinUserMeta");
+      $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
       
       // Categories
       $Category_Map = array(
          'forumid'=>'CategoryID',
          'description'=>'Description',
+         'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
          'displayorder'=>array('Column'=>'Sort', 'Type'=>'int')
       );
       $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
@@ -1470,7 +1500,7 @@ class Vbulletin extends ExportController {
          'forumid'=>'CategoryID',
          'postuserid'=>'InsertUserID',
          'postuserid2'=>'UpdateUserID',
-         'title'=>'Name',
+         'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
 			'Format'=>'Format'
       );
       $Ex->ExportTable('Discussion', "select t.*,
@@ -1633,7 +1663,7 @@ class Phpbb extends ExportController {
       $Comment_Map = array(
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
-         'post_text' => 'Body',
+         'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
 			'Format' => 'Format',
          'poster_id' => 'InsertUserID',
          'post_edit_user' => 'UpdateUserID'
@@ -1656,6 +1686,10 @@ class Phpbb extends ExportController {
       $Ex->EndExport();
    }
 
+   public function RemoveBBCodeUIDs($Value, $Field, $Row) {
+      $UID = $Row['bbcode_uid'];
+      return str_replace(':'.$UID, '', $Value);
+   }
 }
 ?><?php
 
