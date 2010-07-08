@@ -62,7 +62,8 @@ class ExportModel {
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
-            'UpdateUserID' => 'int'),
+            'UpdateUserID' => 'int',
+            'Sort' => 'int'),
       'Comment' => array(
             'CommentID' => 'int',
             'DiscussionID' => 'int',
@@ -457,6 +458,11 @@ class ExportModel {
       mysql_select_db($this->_DbName);
       mysql_query('set names utf8');
       $Result = mysql_unbuffered_query($Query, $Connection);
+
+      if ($Result === FALSE) {
+         trigger_error(mysql_error($Connection));
+      }
+
       $this->_LastResult = $Result;
       
       return $Result;
