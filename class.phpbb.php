@@ -90,7 +90,7 @@ class Phpbb extends ExportController {
       $Comment_Map = array(
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
-         'post_text' => 'Body',
+         'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
 			'Format' => 'Format',
          'poster_id' => 'InsertUserID',
          'post_edit_user' => 'UpdateUserID'
@@ -113,5 +113,9 @@ class Phpbb extends ExportController {
       $Ex->EndExport();
    }
 
+   public function RemoveBBCodeUIDs($Value, $Field, $Row) {
+      $UID = $Row['bbcode_uid'];
+      return str_replace(':'.$UID, '', $Value);
+   }
 }
 ?>
