@@ -26,7 +26,8 @@ global $Supported;
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
-   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
+   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
+   'phpbb' => array('name' => 'phpBB', 'prefix' => 'phpbb_')
 );
 
 // Support Files
@@ -96,7 +97,8 @@ class ExportModel {
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
-            'UpdateUserID' => 'int'),
+            'UpdateUserID' => 'int',
+            'Sort' => 'int'),
       'Comment' => array(
             'CommentID' => 'int',
             'DiscussionID' => 'int',
@@ -491,6 +493,11 @@ class ExportModel {
       mysql_select_db($this->_DbName);
       mysql_query('set names utf8');
       $Result = mysql_unbuffered_query($Query, $Connection);
+
+      if ($Result === FALSE) {
+         trigger_error(mysql_error($Connection));
+      }
+
       $this->_LastResult = $Result;
       
       return $Result;
@@ -1102,10 +1109,17 @@ abstract class ExportController {
 
 /* Contents included from class.vanilla1.php */
 ?><?php
-
+/**
+ * Vanilla 1 exporter tool
+ *
+ * @copyright Vanilla Forums Inc. 2010
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
+ 
 class Vanilla1 extends ExportController {
 
-   /** @var array Required tables => columns for Vanilla 1 import */  
+   /** @var array Required tables => columns */  
    protected $_SourceTables = array(
       'Users'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
       'Roles'=> array('RoleID', 'Name', 'Description'),
@@ -1334,21 +1348,16 @@ class Vanilla1 extends ExportController {
 /* Contents included from class.vbulletin.php */
 ?><?php
 /**
- * vBulletin-specific exporter tool
+ * vBulletin exporter tool
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
- * @todo importer: html_entity_decode Category names and Discussion titles
- * @todo importer: count bookmarks, bookmark comment count
- * @todo importer: update Discussions with first & last comment ids
- * @todo importer: update CountDiscussions column on the Category, User tables
- * @todo importer: don't make ALL discussions "new" after import
  */
  
 class Vbulletin extends ExportController {
    
-   /** @var array Required tables => columns for vBulletin import */
+   /** @var array Required tables => columns */
    protected $SourceTables = array(
       'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
          'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid',
@@ -1505,8 +1514,8 @@ class Vbulletin extends ExportController {
            tr.threadid as DiscussionID,
            FROM_UNIXTIME(tr.readtime) as DateLastViewed,
            case when st.threadid is not null then 1 else 0 end as Bookmarked
-         from nb_threadread tr
-         left join nb_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
+         from :_threadread tr
+         left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
       
       // Activity (3.8+)
       $Activity_Map = array(
@@ -1527,6 +1536,126 @@ class Vbulletin extends ExportController {
       $Ex->EndExport();
    }
    
+}
+?><?php
+
+
+/* Contents included from class.phpbb.php */
+?><?php
+/**
+ * phpBB exporter tool
+ *
+ * @copyright Vanilla Forums Inc. 2010
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
+
+class Phpbb extends ExportController {
+
+   /** @var array Required tables => columns */
+   protected $SourceTables = array(); //
+
+   /**
+    * Forum-specific export format.
+    * @param ExportModel $Ex
+    */
+   protected function ForumExport($Ex) {
+      // Begin
+      $Ex->BeginExport('', 'phpBB 3+', array('HashMethod' => 'phpBB'));
+
+      // Users
+      $User_Map = array(
+         'user_id'=>'UserID',
+         'username'=>'Name',
+         'user_password'=>'Password',
+         'user_email'=>'Email',
+         'user_timezone'=>'HourOffset',
+         'user_posts'=>array('Column' => 'CountComments', 'Type' => 'int')
+      );
+      $Ex->ExportTable('User', "select *,
+            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
+            FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
+            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted
+         from :_users", $User_Map);  // ":_" will be replace by database prefix
+
+
+      // Roles
+      $Role_Map = array(
+         'group_id'=>'RoleID',
+         'group_name'=>'Name',
+         'group_desc'=>'Description'
+      );
+      $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
+
+
+      // UserRoles
+      $UserRole_Map = array(
+         'user_id'=>'UserID',
+         'group_id'=>'RoleID'
+      );
+      $Ex->ExportTable('UserRole', 'select user_id, group_id from phpbb_users
+         union
+         select user_id, group_id from phpbb_user_group', $UserRole_Map);
+
+      // Categories
+      $Category_Map = array(
+         'forum_id'=>'CategoryID',
+         'forum_name'=>'Name',
+         'forum_desc'=>'Description',
+         'left_id'=>'Sort'
+      );
+      $Ex->ExportTable('Category', "select *,
+         nullif(parent_id,0) as ParentCategoryID
+         from :_forums", $Category_Map);
+
+
+      // Discussions
+      $Discussion_Map = array(
+         'topic_id'=>'DiscussionID',
+         'forum_id'=>'CategoryID',
+         'topic_poster'=>'InsertUserID',
+         'topic_title'=>'Name',
+			'Format'=>'Format',
+         'topic_views'=>'CountViews',
+         'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int')
+      );
+      $Ex->ExportTable('Discussion', "select t.*,
+				'BBCode' as Format,
+            topic_replies+1 as CountComments,
+            case t.topic_status when 1 then 1 else 0 end as Closed,
+            case t.topic_type when 1 then 1 else 0 end as Announce,
+            FROM_UNIXTIME(t.topic_time) as DateInserted,
+            FROM_UNIXTIME(t.topic_last_post_time) as DateUpdated,
+            FROM_UNIXTIME(t.topic_last_post_time) as DateLastComment
+         from :_topics t", $Discussion_Map);
+
+      // Comments
+      $Comment_Map = array(
+         'post_id' => 'CommentID',
+         'topic_id' => 'DiscussionID',
+         'post_text' => 'Body',
+			'Format' => 'Format',
+         'poster_id' => 'InsertUserID',
+         'post_edit_user' => 'UpdateUserID'
+      );
+      $Ex->ExportTable('Comment', "select p.*,
+				'BBCode' as Format,
+            FROM_UNIXTIME(p.post_time) as DateInserted,
+            FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
+         from :_posts p", $Comment_Map);
+
+      // UserDiscussion
+		$UserDiscussion_Map = array(
+			'user_id' =>  'UserID',
+         'topic_id' => 'DiscussionID');
+      $Ex->ExportTable('UserDiscussion', "select b.*,
+         1 as Bookmarked
+         from :_bookmarks b", $UserDiscussion_Map);
+
+      // End
+      $Ex->EndExport();
+   }
+
 }
 ?><?php
 
