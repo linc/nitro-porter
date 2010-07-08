@@ -115,8 +115,8 @@ class Vanilla1 extends ExportController {
          'Sink'=>'Sink',
          'LastUserID'=>'LastCommentUserID'
       );
-      $Ex->ExportTable('Discussion', "
-         SELECT d.*,
+      $Ex->ExportTable('Discussion',
+         "SELECT d.*,
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
          FROM :_Discussion d", $Discussion_Map);
