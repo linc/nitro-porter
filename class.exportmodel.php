@@ -163,7 +163,7 @@ class ExportModel {
     * @param string $Path The path to the export file.
     * @param string $Source The source program that created the export. This may be used by the import routine to do additional processing.
     */
-   public function BeginExport($Path = '', $Source = '') {
+   public function BeginExport($Path = '', $Source = '', $Header = array()) {
       $this->Comments = array();
       $this->BeginTime = microtime(TRUE);
 
@@ -177,6 +177,9 @@ class ExportModel {
       fwrite($fp, 'Vanilla Export: '.$this->Version());
       if($Source)
          fwrite($fp, self::DELIM.' Source: '.$Source);
+      foreach ($Header as $Key => $Value) {
+         fwrite($fp, self::DELIM." $Key: $Value");
+      }
       fwrite($fp, self::NEWLINE.self::NEWLINE);
       $this->Comment('Export Started: '.date('Y-m-d H:i:s'));
    }
@@ -256,6 +259,14 @@ class ExportModel {
       $IDName = 'NOTSET';
       $FirstQuery = TRUE;
 
+      // Get the filters from the mappings.
+      $Filters = array();
+      foreach ($Mappings as $Column => $Mapping) {
+         if (is_array($Mapping) &&isset($Mapping['Column']) && isset($Mapping['Filter'])) {
+            $Filters[$Mapping['Column']] = $Mapping['Filter'];
+         }
+      }
+
       $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
 
       // Loop through the data and write it to the file.
@@ -302,10 +313,16 @@ class ExportModel {
                } elseif (is_numeric($Value)) {
                   // Do nothing, formats as is.
                } elseif (is_string($Value)) {
-                  //if(mb_detect_encoding($Value) != 'UTF-8')
-                  //   $Value = utf8_encode($Value);
-                  $Value = $this->HTMLDecoder($TableName, $Field, $Value);
-                  $Value = self::QUOTE
+
+                  // Check to see if there is a callback filter.
+                  if (isset($Filters[$Field])) {
+                     $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
+                  } else {
+                     if(mb_detect_encoding($Value) != 'UTF-8')
+                        $Value = utf8_encode($Value);
+                  }
+
+                     $Value = self::QUOTE
                      .str_replace($EscapeSearch, $EscapeReplace, $Value)
                      .self::QUOTE;
                } elseif (is_bool($Value)) {
@@ -367,7 +384,12 @@ class ExportModel {
                }
             } elseif(is_array($Mapping)) {
                $DestColumn = $Mapping['Column'];
-               $DestType = $Mapping['Type'];
+               if (isset($Mapping['Type']))
+                  $DestType = $Mapping['Type'];
+               elseif(isset($Structure[$DestColumn]))
+                  $DestType = $Structure[$DestColumn];
+               else
+                  $DestType = 'varchar(255)';
                $Mappings[$Column] = $DestColumn;
             }
          } elseif(array_key_exists($Column, $Structure)) {
@@ -403,14 +425,21 @@ class ExportModel {
    }
    
    /**
+    * Decode the HTML out of a value.
+    */
+   public function HTMLDecoder($Value) {
+      return html_entity_decode($Value, ENT_COMPAT, 'UTF-8');
+   }
+
+    /**
     * vBulletin needs some fields decoded and it won't hurt the others.
     */
-   public function HTMLDecoder($Table, $Field, $Value) {
-      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name') 
-         return html_entity_decode($Value);
-      else
-         return $Value;
-   }
+//   public function HTMLDecoder($Table, $Field, $Value) {
+//      if(($Table == 'Category' || $Table == 'Discussion') && $Field == 'Name')
+//         return html_entity_decode($Value);
+//      else
+//         return $Value;
+//   }
 
 
    protected function _OpenFile() {
