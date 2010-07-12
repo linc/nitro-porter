@@ -74,6 +74,7 @@ div.Errors {
 }
 .Errors li pre,
 .Errors li code {
+   border-radius: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
 	border: 1px solid #b00;
@@ -140,6 +141,7 @@ form label span {
 	padding: 0 0 0 10px;
 }
 form select {
+   border-radius: 4px;
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    font-size: 110%;
@@ -149,6 +151,7 @@ form select {
    color: #555;
 }
 form input.InputBox {
+   border-radius: 4px;
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    font-size: 110%;
@@ -184,6 +187,7 @@ input.Button {
    padding: 3px 10px;
    background: url('http://vanillaforums.com/porter/buttonbg.png') repeat-x center left #f8f8f8;
    border: 1px solid #999;
+   border-radius: 3px;
    -moz-border-radius: 3px;
    -webkit-border-radius: 3px;
 	box-shadow: 0px 0px 2px #999;
