@@ -170,7 +170,7 @@ class ExportModel {
       if($Path)
          $this->Path = $Path;
       if(!$this->Path)
-         $this->Path = 'export '.($this->FilenamePrefix ? $this->FilenamePrefix.' ' : '').date('Y-m-d His').'.txt'.($this->UseCompression() ? '.gz' : '');
+         $this->Path = 'export_'.($this->FilenamePrefix ? $this->FilenamePrefix.'_' : '').date('Y-m-d_His').'.txt'.($this->UseCompression() ? '.gz' : '');
 
       $fp = $this->_OpenFile();
 
@@ -322,7 +322,8 @@ class ExportModel {
                         $Value = utf8_encode($Value);
                   }
 
-                     $Value = self::QUOTE
+                  $Value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $Value);
+                  $Value = self::QUOTE
                      .str_replace($EscapeSearch, $EscapeReplace, $Value)
                      .self::QUOTE;
                } elseif (is_bool($Value)) {
@@ -453,7 +454,7 @@ class ExportModel {
          @ob_end_clean();
 
          
-         $fp = fopen('php://output', 'a');
+         $fp = fopen('php://output', 'ab');
 
          header('Content-Type: text/plain');
          header("Content-Disposition: attachment; filename=\"{$this->Path}\"");
