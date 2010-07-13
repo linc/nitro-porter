@@ -205,7 +205,7 @@ class ExportModel {
       if($Path)
          $this->Path = $Path;
       if(!$this->Path)
-         $this->Path = 'export '.($this->FilenamePrefix ? $this->FilenamePrefix.' ' : '').date('Y-m-d His').'.txt'.($this->UseCompression() ? '.gz' : '');
+         $this->Path = 'export_'.($this->FilenamePrefix ? $this->FilenamePrefix.'_' : '').date('Y-m-d_His').'.txt'.($this->UseCompression() ? '.gz' : '');
 
       $fp = $this->_OpenFile();
 
@@ -357,7 +357,8 @@ class ExportModel {
                         $Value = utf8_encode($Value);
                   }
 
-                     $Value = self::QUOTE
+                  $Value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $Value);
+                  $Value = self::QUOTE
                      .str_replace($EscapeSearch, $EscapeReplace, $Value)
                      .self::QUOTE;
                } elseif (is_bool($Value)) {
@@ -488,7 +489,7 @@ class ExportModel {
          @ob_end_clean();
 
          
-         $fp = fopen('php://output', 'a');
+         $fp = fopen('php://output', 'ab');
 
          header('Content-Type: text/plain');
          header("Content-Disposition: attachment; filename=\"{$this->Path}\"");
@@ -636,7 +637,9 @@ class ExportModel {
  * HTML header
  */
 function PageHeader() {
-   ?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+   echo '<?xml version="1.0" encoding="UTF-8"?>';
+      ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
    <title>Vanilla Porter - Forum Export Tool</title>
@@ -718,6 +721,7 @@ div.Errors {
 }
 .Errors li pre,
 .Errors li code {
+   border-radius: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
 	border: 1px solid #b00;
@@ -784,6 +788,7 @@ form label span {
 	padding: 0 0 0 10px;
 }
 form select {
+   border-radius: 4px;
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    font-size: 110%;
@@ -793,6 +798,7 @@ form select {
    color: #555;
 }
 form input.InputBox {
+   border-radius: 4px;
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    font-size: 110%;
@@ -828,6 +834,7 @@ input.Button {
    padding: 3px 10px;
    background: url('http://vanillaforums.com/porter/buttonbg.png') repeat-x center left #f8f8f8;
    border: 1px solid #999;
+   border-radius: 3px;
    -moz-border-radius: 3px;
    -webkit-border-radius: 3px;
 	box-shadow: 0px 0px 2px #999;
