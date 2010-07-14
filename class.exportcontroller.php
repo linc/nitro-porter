@@ -37,7 +37,6 @@ abstract class ExportController {
       if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
-//         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
          $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          $Ex->UseStreaming = $this->UseStreaming;

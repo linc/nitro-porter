@@ -365,6 +365,54 @@ class ExportModel {
       return $Result;
    }
 
+   public function GetDatabasePrefixes() {
+      // Grab all of the tables.
+      $Data = $this->Query('show tables');
+      if ($Data === FALSE)
+         return array();
+
+      // Get the names in an array for easier parsing.
+      $Tables = array();
+      while (($Row = mysql_fetch_array($Data, MYSQL_NUM)) !== FALSE) {
+         $Tables[] = $Row[0];
+      }
+      sort($Tables);
+
+      $Prefixes = array();
+
+      // Loop through each table and get it's prefixes.
+      foreach ($Tables as $Table) {
+         $PxFound = FALSE;
+         foreach ($Prefixes as $PxIndex => $Px) {
+            $NewPx = $this->_GetPrefix($Table, $Px);
+            if (strlen($NewPx) > 0) {
+               $PxFound = TRUE;
+               if ($NewPx != $Px) {
+                  $Prefixes[$PxIndex] = $NewPx;
+               }
+               break;
+            }
+         }
+         if (!$PxFound) {
+            $Prefixes[] = $Table;
+         }
+      }
+      return $Prefixes;
+   }
+
+   protected function _GetPrefix($A, $B) {
+      $Length = min(strlen($A), strlen($B));
+      $Prefix = '';
+
+      for ($i = 0; $i < $Length; $i++) {
+         if ($A[$i] == $B[$i])
+            $Prefix .= $A[$i];
+         else
+            break;
+      }
+      return $Prefix;
+   }
+
    public function GetExportStructure($Row, $Structure, &$Mappings) {
       $ExportStructure = array();
       // See what columns from the structure are in
@@ -571,13 +619,29 @@ class ExportModel {
       }
 
       // Return results
-      if($MissingTables===false) {
+      if($MissingTables === false) {
          if(count($MissingColumns) > 0) {
+            $Result = array();
+
+            // Build a string of missing columns.
+            foreach ($MissingColumns as $Table => $Columns) {
+               $Result[] = "The $Table table is missing the following column(s): ".implode(', ', $Columns);
+            }
+            return implode("<br />\n", $Result);
          }
          else return true; // Nothing missing!
       }
       elseif($CountMissingTables == count($RequiredTables)) {
-         return 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
+         $Result = 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
+
+         // Guess the prefixes to notify the user.
+         $Prefixes = $this->GetDatabasePrefixes();
+         if (count($Prefixes) == 1)
+            $Result .= ' Based on the database you provided, your database prefix is probably '.implode(', ', $Prefixes);
+         elseif (count($Prefixes) > 0)
+            $Result .= ' Based on the database you provided, your database prefix is probably one of the following: '.implode(', ', $Prefixes);
+
+         return $Result;
       }
       else {
          return 'Missing required database tables: '.$MissingTables;

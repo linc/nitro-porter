@@ -10,17 +10,12 @@
 class Vanilla1 extends ExportController {
 
    /** @var array Required tables => columns */  
-   protected $_SourceTables = array(
-      'Users'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
-      'Roles'=> array('RoleID', 'Name', 'Description'),
-      'UserRoles'=> array('UserID', 'RoleID'),
-      'Categories'=> array('CategoryID', 'Name', 'Description'),
-      'Discussions'=> array('DiscussionID', 'Name', 'CategoryID', 'Body', 'DateCreated', 'AuthUserID', 
-         'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastCommentUserID'),
-      'Comments'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body'),
-      'Conversations'=> array('DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited'),
-      'ConversationMessage'=> array('CommentID', 'DiscussionID', 'Body', 'AuthUserID', 'DateCreated'),
-      'UserConversation'=> array('UserID', 'ConversationID')
+   public $SourceTables = array(
+      'User'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
+      'Role'=> array('RoleID', 'Name', 'Description'),
+      'Category'=> array('CategoryID', 'Name', 'Description'),
+      'Discussion'=> array('DiscussionID', 'Name', 'CategoryID', 'DateCreated', 'AuthUserID', 'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastUserID'),
+      'Comment'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body')
       );
    
    /**
