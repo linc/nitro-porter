@@ -17,7 +17,10 @@
  * @package VanillaPorter
  */
 
-error_reporting(E_ALL);
+if(defined('DEBUG'))
+   error_reporting(E_ALL);
+else
+   error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
 ini_set('display_errors', 'on');
 ini_set('track_errors', 1);
  
@@ -400,6 +403,54 @@ class ExportModel {
       return $Result;
    }
 
+   public function GetDatabasePrefixes() {
+      // Grab all of the tables.
+      $Data = $this->Query('show tables');
+      if ($Data === FALSE)
+         return array();
+
+      // Get the names in an array for easier parsing.
+      $Tables = array();
+      while (($Row = mysql_fetch_array($Data, MYSQL_NUM)) !== FALSE) {
+         $Tables[] = $Row[0];
+      }
+      sort($Tables);
+
+      $Prefixes = array();
+
+      // Loop through each table and get it's prefixes.
+      foreach ($Tables as $Table) {
+         $PxFound = FALSE;
+         foreach ($Prefixes as $PxIndex => $Px) {
+            $NewPx = $this->_GetPrefix($Table, $Px);
+            if (strlen($NewPx) > 0) {
+               $PxFound = TRUE;
+               if ($NewPx != $Px) {
+                  $Prefixes[$PxIndex] = $NewPx;
+               }
+               break;
+            }
+         }
+         if (!$PxFound) {
+            $Prefixes[] = $Table;
+         }
+      }
+      return $Prefixes;
+   }
+
+   protected function _GetPrefix($A, $B) {
+      $Length = min(strlen($A), strlen($B));
+      $Prefix = '';
+
+      for ($i = 0; $i < $Length; $i++) {
+         if ($A[$i] == $B[$i])
+            $Prefix .= $A[$i];
+         else
+            break;
+      }
+      return $Prefix;
+   }
+
    public function GetExportStructure($Row, $Structure, &$Mappings) {
       $ExportStructure = array();
       // See what columns from the structure are in
@@ -606,13 +657,29 @@ class ExportModel {
       }
 
       // Return results
-      if($MissingTables===false) {
+      if($MissingTables === false) {
          if(count($MissingColumns) > 0) {
+            $Result = array();
+
+            // Build a string of missing columns.
+            foreach ($MissingColumns as $Table => $Columns) {
+               $Result[] = "The $Table table is missing the following column(s): ".implode(', ', $Columns);
+            }
+            return implode("<br />\n", $Result);
          }
          else return true; // Nothing missing!
       }
       elseif($CountMissingTables == count($RequiredTables)) {
-         return 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
+         $Result = 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
+
+         // Guess the prefixes to notify the user.
+         $Prefixes = $this->GetDatabasePrefixes();
+         if (count($Prefixes) == 1)
+            $Result .= ' Based on the database you provided, your database prefix is probably '.implode(', ', $Prefixes);
+         elseif (count($Prefixes) > 0)
+            $Result .= ' Based on the database you provided, your database prefix is probably one of the following: '.implode(', ', $Prefixes);
+
+         return $Result;
       }
       else {
          return 'Missing required database tables: '.$MissingTables;
@@ -1079,7 +1146,6 @@ abstract class ExportController {
       if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
-//         $Dsn = 'mysql:dbname='.$this->DbInfo['dbname'].';host='.$this->DbInfo['dbhost'];
          $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          $Ex->UseStreaming = $this->UseStreaming;
@@ -1156,17 +1222,12 @@ abstract class ExportController {
 class Vanilla1 extends ExportController {
 
    /** @var array Required tables => columns */  
-   protected $_SourceTables = array(
-      'Users'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
-      'Roles'=> array('RoleID', 'Name', 'Description'),
-      'UserRoles'=> array('UserID', 'RoleID'),
-      'Categories'=> array('CategoryID', 'Name', 'Description'),
-      'Discussions'=> array('DiscussionID', 'Name', 'CategoryID', 'Body', 'DateCreated', 'AuthUserID', 
-         'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastCommentUserID'),
-      'Comments'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body'),
-      'Conversations'=> array('DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited'),
-      'ConversationMessage'=> array('CommentID', 'DiscussionID', 'Body', 'AuthUserID', 'DateCreated'),
-      'UserConversation'=> array('UserID', 'ConversationID')
+   public $SourceTables = array(
+      'User'=> array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
+      'Role'=> array('RoleID', 'Name', 'Description'),
+      'Category'=> array('CategoryID', 'Name', 'Description'),
+      'Discussion'=> array('DiscussionID', 'Name', 'CategoryID', 'DateCreated', 'AuthUserID', 'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastUserID'),
+      'Comment'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body')
       );
    
    /**
