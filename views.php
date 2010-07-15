@@ -100,7 +100,7 @@ function ViewForm($Data) {
                </select>
             </li>
             <li>
-               <label>Table Prefix <span>Table prefix is not required</span></label>
+               <label>Table Prefix <span>Most installations have a database prefix, but if you're sure you don't have one you can leave this blank.</span></label>
                <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) ?>" />
             </li>
             <li>
