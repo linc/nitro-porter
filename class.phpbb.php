@@ -52,7 +52,7 @@ class Phpbb extends ExportController {
       );
       $Ex->ExportTable('UserRole', 'select user_id, group_id from phpbb_users
          union
-         select user_id, group_id from phpbb_user_group', $UserRole_Map);
+         select user_id, group_id from :_user_group', $UserRole_Map);
 
       // Categories
       $Category_Map = array(
