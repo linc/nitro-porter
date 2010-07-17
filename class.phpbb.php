@@ -10,7 +10,17 @@
 class Phpbb extends ExportController {
 
    /** @var array Required tables => columns */
-   protected $SourceTables = array(); //
+   protected $SourceTables = array(
+      'users' => array('user_id', 'username', 'user_password', 'user_email', 'user_timezone', 'user_posts', 'user_regdate', 
+         'user_lastvisit', 'user_regdate'),
+      'groups' => array('group_id', 'group_name', 'group_desc'),
+      'user_group' => array('user_id', 'group_id'),
+      'forums' => array('forum_id', 'forum_name', 'forum_desc', 'left_id', 'parent_id'),
+      'topics' => array('topic_id'=>'DiscussionID', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id', 
+         'topic_replies', 'topic_status', 'topic_type', 'topic_time', 'topic_last_post_time', 'topic_last_post_time'),
+      'posts' => array('post_id', 'topic_id', 'post_text', 'poster_id', 'post_edit_user', 'post_time', 'post_edit_time'),
+      'bookmarks' => array('user_id', 'topic_id')
+   );
 
    /**
     * Forum-specific export format.
@@ -50,7 +60,7 @@ class Phpbb extends ExportController {
          'user_id'=>'UserID',
          'group_id'=>'RoleID'
       );
-      $Ex->ExportTable('UserRole', 'select user_id, group_id from phpbb_users
+      $Ex->ExportTable('UserRole', 'select user_id, group_id from :_users
          union
          select user_id, group_id from :_user_group', $UserRole_Map);
 
