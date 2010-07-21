@@ -581,7 +581,7 @@ class ExportModel {
     * @return string
     */
    public function Version() {
-      return '1.0';
+      return VERSION;
    }
 
    /**

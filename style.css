@@ -231,3 +231,7 @@ div.Info li {
 	margin: 0;
 	text-shadow: none;
 }
+.Version {
+   font-size: 9pt;
+   font-weight: normal;
+}

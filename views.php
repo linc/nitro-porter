@@ -26,7 +26,7 @@ function PageHeader() {
       <div class="Title">
          <h1>
             <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
-            <p>Vanilla Porter</p>
+            <p>Vanilla Porter <span class="Version">Version <?php echo VERSION; ?></span></p>
          </h1>
       </div>
    <?php
