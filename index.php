@@ -28,8 +28,7 @@ global $Supported;
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.x', 'prefix'=>'LUM_'),
-   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_'),
-   'phpbb' => array('name' => 'phpBB 3+', 'prefix' => 'phpbb_')
+   'vbulletin' => array('name'=>'vBulletin 3+', 'prefix'=>'vb_')
 );
 
 // Support Files
@@ -39,7 +38,6 @@ include('class.exportcontroller.php');
 
 include('class.vanilla1.php');
 include('class.vbulletin.php');
-include('class.phpbb.php');
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')
