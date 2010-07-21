@@ -20,6 +20,9 @@ class ExportModel {
    /** @var array Any comments that have been written during the export. */
    public $Comments = array();
 
+   /** @var string The charcter set to set as the connection anytime the database connects. */
+   public $CharacterSet = 'utf8';
+
    /** @var object File pointer */
    protected $_File = NULL;
 
@@ -365,6 +368,27 @@ class ExportModel {
       return $Result;
    }
 
+   public function GetCharacterSet($Table) {
+      // First get the collation for the database.
+      $Data = $this->Query("show table status like ':_{$Table}';");
+      if (!$Data)
+         return FALSE;
+      if ($StatusRow = mysql_fetch_assoc($Data))
+         $Collation = $StatusRow['Collation'];
+      else
+         return FALSE;
+
+      // Grab the character set from the database.
+      $Data = $this->Query("show collation like '$Collation'");
+      if (!$Data)
+         return $False;
+      if ($CollationRow = mysql_fetch_assoc($Data)) {
+         $CharacterSet = $CollationRow['Charset'];
+         return $CharacterSet;
+      }
+      return FALSE;
+   }
+
    public function GetDatabasePrefixes() {
       // Grab all of the tables.
       $Data = $this->Query('show tables');
@@ -534,7 +558,7 @@ class ExportModel {
 
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
-      mysql_query('set names utf8');
+      mysql_query("set names {$this->CharacterSet}");
       $Result = mysql_unbuffered_query($Query, $Connection);
 
       if ($Result === FALSE) {
