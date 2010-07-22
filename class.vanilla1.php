@@ -26,6 +26,8 @@ class Vanilla1 extends ExportController {
    protected function ForumExport($Ex) {
       // Get the characterset for the comments.
       $CharacterSet = $Ex->GetCharacterSet('Comment');
+      if ($CharacterSet)
+         $Ex->CharacterSet = $CharacterSet;
 
       // Begin
       $Ex->BeginExport('', 'Vanilla 1.x');
