@@ -30,7 +30,7 @@ class Vanilla1 extends ExportController {
          $Ex->CharacterSet = $CharacterSet;
 
       // Begin
-      $Ex->BeginExport('', 'Vanilla 1.x');
+      $Ex->BeginExport('', 'Vanilla 1.*');
       
       // Users
       $User_Map = array(
