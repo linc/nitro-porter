@@ -271,6 +271,7 @@ class ExportModel {
       }
 
       $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
+      $Mb = function_exists('mb_detect_encoding');
 
       // Loop through the data and write it to the file.
       $RowCount = 0;
@@ -321,7 +322,7 @@ class ExportModel {
                   if (isset($Filters[$Field])) {
                      $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
                   } else {
-                     if(mb_detect_encoding($Value) != 'UTF-8')
+                     if($Mb && mb_detect_encoding($Value) != 'UTF-8')
                         $Value = utf8_encode($Value);
                   }
 
@@ -527,9 +528,8 @@ class ExportModel {
 
          
          $fp = fopen('php://output', 'ab');
-
-         header('Content-Type: text/plain');
          header("Content-Disposition: attachment; filename=\"{$this->Path}\"");
+         header('Content-Type: text/plain');
          header("Content-Transfer-Encoding: binary");
          header('Accept-Ranges: bytes');
          header("Cache-control: private");
