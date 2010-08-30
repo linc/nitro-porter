@@ -119,7 +119,8 @@ class Vanilla1 extends ExportController {
          "SELECT d.*,
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
-         FROM :_Discussion d", $Discussion_Map);
+         FROM :_Discussion d
+         WHERE coalesce(d.WhisperUserID, 0) = 0", $Discussion_Map);
       
       // Comments
       /*
@@ -147,7 +148,10 @@ class Vanilla1 extends ExportController {
          SELECT 
             c.*
          FROM :_Comment c
-         WHERE coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
+         JOIN :_Discussion d
+            ON c.DiscussionID = d.DiscussionID
+         WHERE coalesce(d.WhisperUserID, 0) = 0
+            AND coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
 
       $Ex->ExportTable('UserDiscussion', "
          SELECT
@@ -176,10 +180,16 @@ class Vanilla1 extends ExportController {
          'EditUserID' => 'UpdateUserID',
          'DateEdited' => 'DateUpdated'
       );
-      $Ex->ExportTable('Conversation', "SELECT DISTINCT DiscussionID, AuthUserID, DateCreated, EditUserID, DateEdited 
+      $Ex->ExportTable('Conversation', "SELECT DISTINCT DiscussionID, AuthUserID, DateCreated, EditUserID, DateEdited
          FROM :_Comment c
          WHERE c.WhisperUserID > 0
-         GROUP BY DiscussionID", $Conversation_Map);
+         GROUP BY DiscussionID
+
+         UNION
+
+         SELECT DiscussionID, AuthUserID, DateCreated, NULL, NULL
+         FROM :_Discussion d
+         WHERE d.WhisperUserID > 0", $Conversation_Map);
       
       // ConversationMessage
       /*
@@ -197,8 +207,17 @@ class Vanilla1 extends ExportController {
          'DateCreated' => 'DateInserted'
       );
       $Ex->ExportTable('ConversationMessage', "
-         SELECT CommentID, DiscussionID, AuthUserID, DateCreated, Body FROM :_Comment c
-         WHERE c.WhisperUserID > 0", $ConversationMessage_Map);
+         SELECT CommentID, DiscussionID, AuthUserID, DateCreated, Body
+         FROM :_Comment c
+                  WHERE c.WhisperUserID > 0
+
+         UNION
+
+         SELECT c.CommentID, c.DiscussionID, c.AuthUserID, c.DateCreated, c.Body
+         FROM :_Comment c
+         JOIN :_Discussion d
+           ON c.DiscussionID = d.DiscussionID
+         WHERE d.WhisperUserID > 0", $ConversationMessage_Map);
       
       // UserConversation
       /*
@@ -212,19 +231,30 @@ class Vanilla1 extends ExportController {
       );
       $Ex->ExportTable('UserConversation', 
          "select distinct *
-            from (
-            select
-            c.DiscussionID as ConversationID,
-            c.AuthUserID as UserID
-            from LUM_Comment c
-            where c.WhisperUserID > 0
-            union all
-            select
-            c.DiscussionID,
-            c.WhisperUserID
-            from :_Comment c
-            where c.WhisperUserID > 0)
-            w;", $UserConversation_Map);
+         from (
+           select
+             c.DiscussionID as ConversationID,
+             c.AuthUserID as UserID
+           from :_Comment c
+           where c.WhisperUserID > 0
+
+           union all
+
+           select
+             c.DiscussionID,
+             c.WhisperUserID
+           from :_Comment c
+           where c.WhisperUserID > 0
+
+           union all
+
+           select
+             d.DiscussionID,
+             d.WhisperUserID
+           from :_Discussion d
+           where d.WhisperUserID > 0
+
+         ) w;", $UserConversation_Map);
          
       // End
       $Ex->EndExport();
