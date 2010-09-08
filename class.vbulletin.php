@@ -71,13 +71,13 @@ class Vbulletin extends ExportController {
       # Put primary groups into tmp table
       $Ex->Query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
       # Put stupid CSV column into tmp table
-      $SecondaryRoles = $Ex->Query("select userid, usergroupid, membergroupids from :_user");
+      $SecondaryRoles = $Ex->Query("select userid, usergroupid, membergroupids from :_user", TRUE);
       if (is_resource($SecondaryRoles)) {
          while (($Row = @mysql_fetch_assoc($SecondaryRoles)) !== false) {
             if($Row['membergroupids']!='') {
                $Groups = explode(',',$Row['membergroupids']);
                foreach($Groups as $GroupID) {
-                  $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})");
+                  $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})", TRUE);
                }
             }
          }
