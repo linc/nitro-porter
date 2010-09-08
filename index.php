@@ -1,5 +1,5 @@
 <?php
-define('VERSION', '1.1.3a');
+define('VERSION', '1.2.0');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.

@@ -14,7 +14,8 @@ class BbPress extends ExportController {
       'forums' => array(),
       'posts' => array(),
       'topics' => array(),
-      'users' => array()
+      'users' => array('ID', 'user_nicename', 'user_pass', 'user_email', 'user_registered'),
+      'meta' => array()
    );
    
    /**
@@ -97,7 +98,7 @@ class BbPress extends ExportController {
          'topic_id' => 'DiscussionID',
          'post_text' => 'Body',
 			'Format' => 'Format',
-         'Body' => array('Column'=>'Body','Filter'=>'bb_code_trick_reverse'),
+         'Body' => array('Column'=>'Body','Filter'=>'bbPressTrim'),
          'poster_id' => 'InsertUserID',
          'post_time' => 'DateInserted'
       );
@@ -105,9 +106,97 @@ class BbPress extends ExportController {
 				'Html' as Format
          from :_posts p", $Comment_Map);
 
+      // Conversations.
+
+      // The export is different depending on the table layout.
+      $PM = $Ex->Exists('bbpm', array('ID', 'pm_title', 'pm_from', 'pm_to', 'pm_text', 'sent_on', 'pm_thread'));
+      $ConversationVersion = '';
+
+      if ($PM === TRUE) {
+         // This is from an old version of the plugin.
+         $ConversationVersion = 'old';
+      } elseif (is_array($PM) && count(array_intersect(array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'), $PM)) == 0) {
+         // This is from a newer version of the plugin.
+         $ConversationVersion = 'new';
+      }
+
+      if ($ConversationVersion) {
+         // Conversation.
+         $Conv_Map = array(
+            'pm_thread' => 'ConversationID',
+            'pm_from' => 'InsertUserID'
+         );
+         $Ex->ExportTable('Conversation',
+            "select *, from_unixtime(sent_on) as DateInserted
+            from :_bbpm
+            where thread_depth = 0", $Conv_Map);
+
+         // ConversationMessage.
+         $ConvMessage_Map = array(
+            'ID' => 'MessageID',
+            'pm_thread' => 'ConversationID',
+            'pm_from' => 'InsertUserID',
+            'pm_text' => array('Column'=>'Body','Filter'=>'bbPressTrim')
+         );
+         $Ex->ExportTable('ConversationMessage',
+            'select *, from_unixtime(sent_on) as DateInserted
+            from :_bbpm', $ConvMessage_Map);
+
+         // UserConversation.
+         $Ex->Query("create temporary table bbpmto (UserID int, ConversationID int)");
+
+         if ($ConversationVersion == 'new') {
+            $To = $Ex->Query("select object_id, meta_value from bb_meta where object_type = 'bbpm_thread' and meta_key = 'to'", TRUE);
+            if (is_resource($To)) {
+               while (($Row = @mysql_fetch_assoc($To)) !== false) {
+                  $Thread = $Row['object_id'];
+                  $Tos = explode(',', trim($Row['meta_value'], ','));
+                  $ToIns = '';
+                  foreach ($Tos as $ToID) {
+                     $ToIns .= "($ToID,$Thread),";
+                  }
+                  $ToIns = trim($ToIns, ',');
+
+                  $Ex->Query("insert bbpmto (UserID, ConversationID) values $ToIns", TRUE);
+               }
+               mysql_free_result($To);
+
+               $Ex->ExportTable('UserConversation', 'select * from bbpmto');
+            }
+         } else {
+            $ConUser_Map = array(
+                'pm_thread' => 'ConversationID',
+                'pm_from' => 'UserID'
+            );
+            $Ex->ExportTable('UserConversation',
+               'select distinct
+                 pm_thread,
+                 pm_from,
+                 del_sender as Deleted
+               from bb_bbpm
+
+               union
+
+               select distinct
+                 pm_thread,
+                 pm_to,
+                 del_reciever
+               from bb_bbpm', $ConUser_Map);
+         }
+      }
+
+
+         
+
+         
+
       // End
       $Ex->EndExport();
    }
+}
+
+function bbPressTrim($Text) {
+   return rtrim(bb_code_trick_reverse($Text));
 }
 
 function bb_code_trick_reverse( $text ) {

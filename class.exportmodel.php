@@ -551,7 +551,7 @@ class ExportModel {
     * @param string $Query The sql to execute.
     * @return resource The query cursor.
     */
-   public function Query($Query) {
+   public function Query($Query, $Buffer = FALSE) {
       if (isset($this->_LastResult) && is_resource($this->_LastResult))
          mysql_free_result($this->_LastResult);
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
@@ -559,13 +559,17 @@ class ExportModel {
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
       mysql_query("set names {$this->CharacterSet}");
-      $Result = mysql_unbuffered_query($Query, $Connection);
+      if ($Buffer)
+         $Result = mysql_query($Query, $Connection);
+      else {
+         $Result = mysql_unbuffered_query($Query, $Connection);
+         if (is_resource($Result))
+            $this->_LastResult = $Result;
+      }
 
       if ($Result === FALSE) {
          trigger_error(mysql_error($Connection));
       }
-
-      $this->_LastResult = $Result;
       
       return $Result;
    }
@@ -606,6 +610,37 @@ class ExportModel {
     */
    public function Version() {
       return VERSION;
+   }
+
+   /**
+    * Checks whether or not a table and columns exist in the database.
+    *
+    * @param string $Table The name of the table to check.
+    * @param array $Columns An array of column names to check.
+    * @return bool|array The method will return one of the following
+    *  - true: If table and all of the columns exist.
+    *  - false: If the table does not exist.
+    *  - array: The names of the missing columns if one or more columns don't exist.
+    */
+   public function Exists($Table, $Columns = array()) {
+      $Desc = $this->Query('describe :_'.$Table);
+      if ($Desc === false)
+         return false;
+
+      if (count($Columns) == 0)
+         return true;
+      
+      $Cols = array();
+      $Missing = array();
+      while (($TD = mysql_fetch_assoc($Desc)) !== false) {
+         $Cols[] = $TD['Field'];
+      }
+      foreach ($Columns as $Column) {
+         if (!in_array($Column, $Cols))
+            $Missing[] = $Column;
+      }
+      mysql_free_result($Desc);
+      return count($Missing) == 0 ? true : $Missing;
    }
 
    /**
