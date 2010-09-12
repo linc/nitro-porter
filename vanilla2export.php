@@ -31,7 +31,7 @@ global $Supported;
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
    'vbulletin' => array('name'=>'vBulletin 3.*', 'prefix'=>'vb_'),
-   'phpbb' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
+   'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_')
 );
 
@@ -1751,7 +1751,7 @@ class Vbulletin extends ExportController {
 ?><?php
 
 
-/* Contents included from class.phpbb.php */
+/* Contents included from class.phpbb3.php */
 ?><?php
 /**
  * phpBB exporter tool
@@ -1761,7 +1761,7 @@ class Vbulletin extends ExportController {
  * @package VanillaPorter
  */
 
-class Phpbb extends ExportController {
+class Phpbb3 extends ExportController {
 
    /** @var array Required tables => columns */
    protected $SourceTables = array(

@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
 
-class Phpbb extends ExportController {
+class Phpbb3 extends ExportController {
 
    /** @var array Required tables => columns */
    protected $SourceTables = array(

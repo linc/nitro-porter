@@ -29,7 +29,7 @@ global $Supported;
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
    'vbulletin' => array('name'=>'vBulletin 3.*', 'prefix'=>'vb_'),
-   'phpbb' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
+   'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_')
 );
 
@@ -40,7 +40,7 @@ include('class.exportcontroller.php');
 
 include('class.vanilla1.php');
 include('class.vbulletin.php');
-include('class.phpbb.php');
+include('class.phpbb3.php');
 include('class.bbpress.php');
 
 // Make sure a default time zone is set
