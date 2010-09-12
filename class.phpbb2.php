@@ -7,19 +7,18 @@
  * @package VanillaPorter
  */
 
-class Phpbb extends ExportController {
+class Phpbb2 extends ExportController {
 
    /** @var array Required tables => columns */
    protected $SourceTables = array(
-      'users' => array('user_id', 'username', 'user_password', 'user_email', 'user_timezone', 'user_posts', 'user_regdate', 
-         'user_lastvisit', 'user_regdate'),
-      'groups' => array('group_id', 'group_name', 'group_desc'),
+      'users' => array('user_id', 'username', 'user_password', 'user_email', 'user_timezone', 'user_posts', 'user_regdate', 'user_lastvisit'),
+      'groups' => array('group_id', 'group_name', 'group_description'),
       'user_group' => array('user_id', 'group_id'),
-      'forums' => array('forum_id', 'forum_name', 'forum_desc', 'left_id', 'parent_id'),
-      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id', 
-         'topic_replies', 'topic_status', 'topic_type', 'topic_time', 'topic_last_post_time', 'topic_last_post_time'),
-      'posts' => array('post_id', 'topic_id', 'post_text', 'poster_id', 'post_edit_user', 'post_time', 'post_edit_time'),
-      'bookmarks' => array('user_id', 'topic_id')
+      'forums' => array('forum_id', 'forum_name', 'forum_desc', 'forum_order'),
+      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id',
+         'topic_replies', 'topic_status', 'topic_type', 'topic_time'),
+      'posts' => array('post_id', 'topic_id', 'poster_id', 'post_time', 'post_edit_time'),
+      'posts_text' => array('post_id', 'post_text')
    );
 
    /**
@@ -28,7 +27,7 @@ class Phpbb extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('', 'phpBB 3.*', array('HashMethod' => 'phpBB'));
+      $Ex->BeginExport('', 'phpBB 2.*', array('HashMethod' => 'phpBB'));
 
       // Users
       $User_Map = array(
@@ -50,7 +49,7 @@ class Phpbb extends ExportController {
       $Role_Map = array(
          'group_id'=>'RoleID',
          'group_name'=>'Name',
-         'group_desc'=>'Description'
+         'group_description'=>'Description'
       );
       $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
 
@@ -69,11 +68,9 @@ class Phpbb extends ExportController {
          'forum_id'=>'CategoryID',
          'forum_name'=>'Name',
          'forum_desc'=>'Description',
-         'left_id'=>'Sort'
+         'forum_order'=>'Sort'
       );
-      $Ex->ExportTable('Category', "select *,
-         nullif(parent_id,0) as ParentCategoryID
-         from :_forums", $Category_Map);
+      $Ex->ExportTable('Category', "select * from :_forums", $Category_Map);
 
 
       // Discussions
@@ -88,13 +85,14 @@ class Phpbb extends ExportController {
       );
       $Ex->ExportTable('Discussion', "select t.*,
 				'BBCode' as Format,
-            topic_replies+1 as CountComments,
+            t.topic_replies+1 as CountComments,
             case t.topic_status when 1 then 1 else 0 end as Closed,
             case t.topic_type when 1 then 1 else 0 end as Announce,
             FROM_UNIXTIME(t.topic_time) as DateInserted,
-            FROM_UNIXTIME(t.topic_last_post_time) as DateUpdated,
-            FROM_UNIXTIME(t.topic_last_post_time) as DateLastComment
-         from :_topics t", $Discussion_Map);
+            FROM_UNIXTIME(p.post_time) as DateUpdated,
+            FROM_UNIXTIME(p.post_time) as DateLastComment
+        from :_topics t inner join :_posts p on t.topic_last_post_id = p.post_id",
+        $Discussion_Map);
 
       // Comments
       $Comment_Map = array(
@@ -103,21 +101,14 @@ class Phpbb extends ExportController {
          'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
 			'Format' => 'Format',
          'poster_id' => 'InsertUserID',
-         'post_edit_user' => 'UpdateUserID'
+         'poster_id' => 'UpdateUserID'
       );
-      $Ex->ExportTable('Comment', "select p.*,
+      $Ex->ExportTable('Comment', "select p.*, pt.post_text
 				'BBCode' as Format,
             FROM_UNIXTIME(p.post_time) as DateInserted,
             FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
-         from :_posts p", $Comment_Map);
-
-      // UserDiscussion
-		$UserDiscussion_Map = array(
-			'user_id' =>  'UserID',
-         'topic_id' => 'DiscussionID');
-      $Ex->ExportTable('UserDiscussion', "select b.*,
-         1 as Bookmarked
-         from :_bookmarks b", $UserDiscussion_Map);
+         from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
+         $Comment_Map);
 
       // End
       $Ex->EndExport();
