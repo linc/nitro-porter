@@ -103,7 +103,7 @@ class Phpbb2 extends ExportController {
          'poster_id' => 'InsertUserID',
          'poster_id' => 'UpdateUserID'
       );
-      $Ex->ExportTable('Comment', "select p.*, pt.post_text
+      $Ex->ExportTable('Comment', "select p.*, pt.post_text,
 				'BBCode' as Format,
             FROM_UNIXTIME(p.post_time) as DateInserted,
             FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
