@@ -151,7 +151,8 @@ class Vanilla1 extends ExportController {
          JOIN :_Discussion d
             ON c.DiscussionID = d.DiscussionID
          WHERE coalesce(d.WhisperUserID, 0) = 0
-            AND coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
+            AND coalesce(c.WhisperUserID, 0) = 0
+            AND coalesce(c.Deleted, 0) = 0", $Comment_Map);
 
       $Ex->ExportTable('UserDiscussion', "
          SELECT
