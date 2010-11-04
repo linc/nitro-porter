@@ -106,6 +106,18 @@ class ExportModel {
             'Closed' => 'tinyint',
             'Announce' => 'tinyint',
             'Sink' => 'tinyint'),
+      'Media' => array(
+            'MediaID' => 'int',
+            'Name' => 'varchar(255)',
+            'Type' => 'varchar(128)',
+            'Size' => 'int',
+            'StorageMethod' => 'varchar(24)',
+            'Path' => 'varchar(255)',
+            'InsertUserID' => 'int',
+            'DateInserted' => 'datetime',
+            'ForeignID' => 'int',
+            'ForeignTable' => 'varchar(24)'
+          ),
       'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
