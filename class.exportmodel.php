@@ -621,7 +621,7 @@ class ExportModel {
     * @return string
     */
    public function Version() {
-      return VERSION;
+      return APPLICATION_VERSION;
    }
 
    /**
