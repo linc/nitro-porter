@@ -1,5 +1,6 @@
 <?php
-define('VERSION', '1.2.0');
+define('APPLICATION', 'Porter');
+define('APPLICATION_VERSION', '1.3.0');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -31,7 +32,8 @@ $Supported = array(
    'vbulletin' => array('name'=>'vBulletin 3.*', 'prefix'=>'vb_'),
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
-   'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_')
+   'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_'),
+   'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_')
 );
 
 // Support Files
@@ -44,6 +46,7 @@ include('class.vbulletin.php');
 include('class.phpbb2.php');
 include('class.phpbb3.php');
 include('class.bbpress.php');
+include('class.simplepress.php');
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')
