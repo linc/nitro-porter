@@ -25,8 +25,11 @@ class Vbulletin extends ExportController {
    );
    
    /**
-    * Forum-specific export format
-    * @todo Project file size / export time and possibly break into multiple files
+    * vBulletin-specific export format
+    *
+    * Avatars should be moved to the filesystem prior to export if they
+    * are stored in the database. Copy all the avatar_* files from
+    * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
     */
    protected function ForumExport($Ex) {
       // Begin
@@ -40,13 +43,11 @@ class Vbulletin extends ExportController {
          'email'=>'Email',
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
-         //'posts'=>'CountComments',
-         'salt'=>'char(3)',
-         'photopath'=>'Photo'
+         'salt'=>'char(3)'
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
-				concat('avatar', userid, '_', avatarid, '.gif') as photopath,
+				concat('userpics/avatar', userid, '_', avatarrevision, '.gif') as Photo,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -205,6 +206,8 @@ class Vbulletin extends ExportController {
             from :_attachment a
                left join :_thread t ON a.postid = t.firstpostid", $Media_Map);
       }
+      
+      
       
       // End
       $Ex->EndExport();
