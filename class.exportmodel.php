@@ -107,17 +107,17 @@ class ExportModel {
             'Announce' => 'tinyint',
             'Sink' => 'tinyint'),
       'Media' => array(
-          'Name' => 'varchar(255)',
-          'Type' => 'varchar(64)',
-          'Size' => 'int',
-          'StorageMethod' => 'varchar(24)',
-          'Path' => 'varchar(255)',
-          'InsertUserId' => 'int',
-          'DateInserted' => 'datetime',
-          'ForeignID' => 'int',
-          'ForeignTable' => 'varchar(24)'
+            'MediaID' => 'int',
+            'Name' => 'varchar(255)',
+            'Type' => 'varchar(128)',
+            'Size' => 'int',
+            'StorageMethod' => 'varchar(24)',
+            'Path' => 'varchar(255)',
+            'InsertUserID' => 'int',
+            'DateInserted' => 'datetime',
+            'ForeignID' => 'int',
+            'ForeignTable' => 'varchar(24)'
           ),
-      'Permission' => array(
             'RoleID' => 'int',
             'Garden.SignIn.Allow' => 'tinyint',
             'Vanilla.Discussions.View' => 'tinyint',
