@@ -92,7 +92,7 @@ function ViewForm($Data) {
          <ul>
             <li>
                <label>Source Forum Type</label>
-               <select name="type">
+               <select name="type" id="ForumType" onchange="updatePrefix();">
                <?php foreach($forums as $forumClass => $forumInfo) : ?>
                   <option value="<?php echo $forumClass; ?>"<?php 
                      if(GetValue('type') == $forumClass) echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
@@ -101,7 +101,7 @@ function ViewForm($Data) {
             </li>
             <li>
                <label>Table Prefix <span>Most installations have a database prefix, but if you're sure you don't have one you can leave this blank.</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) ?>" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
             </li>
             <li>
                <label>Database Host <span>Database host is usually "localhost"</span></label>
@@ -136,10 +136,10 @@ function ViewForm($Data) {
    <script type="text/javascript">
    //<![CDATA[
       function updatePrefix() {
-         var type = document.getElementById('forumType').value;
+         var type = document.getElementById('ForumType').value;
          switch(type) {
-            <?php foreach($forums as $forumClass => $forumInfo) : ?>
-            case '<?php echo $forumClass; ?>': document.getElementById('forumPrefix').value = '<?php echo $forumInfo['prefix']; ?>'; break;
+            <?php foreach($forums as $ForumClass => $ForumInfo) : ?>
+            case '<?php echo $ForumClass; ?>': document.getElementById('ForumPrefix').value = '<?php echo $ForumInfo['prefix']; ?>'; break;
             <?php endforeach; ?>
          }
       }
