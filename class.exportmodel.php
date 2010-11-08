@@ -118,6 +118,7 @@ class ExportModel {
             'ForeignID' => 'int',
             'ForeignTable' => 'varchar(24)'
           ),
+      'Permission' => array(
             'RoleID' => 'int',
             'Garden.SignIn.Allow' => 'tinyint',
             'Vanilla.Discussions.View' => 'tinyint',
