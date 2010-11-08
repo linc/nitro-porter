@@ -32,9 +32,10 @@ global $Supported;
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
    'vbulletin' => array('name'=>'vBulletin 3.*', 'prefix'=>'vb_'),
-   'phpbb' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
-   'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_'),
-   'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_')
+   'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
+   'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
+   'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
+   'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_')
 );
 
 // Support Files
@@ -159,6 +160,13 @@ class ExportModel {
             'DateInserted' => 'datetime',
             'ForeignID' => 'int',
             'ForeignTable' => 'varchar(24)'
+          ),
+      'Permission' => array(
+            'RoleID' => 'int',
+            'Garden.SignIn.Allow' => 'tinyint',
+            'Vanilla.Discussions.View' => 'tinyint',
+            'Vanilla.Discussions.Add' => 'tinyint',
+            'Vanilla.Comments.Add' => 'tinyint'
           ),
       'Role' => array(
             'RoleID' => 'int',
@@ -365,6 +373,17 @@ class ExportModel {
                } else {
                   $Value = NULL;
                }
+
+               if ($TableName == 'Permission') {
+                  $Foo = 'Bar';
+               }
+
+               // Check to see if there is a callback filter.
+               if (isset($Filters[$Field])) {
+                  $Callback = $Filters[$Field];
+                  $Value = call_user_func($Filters[$Field], $Value, $Field, $Row, $Column);
+               }
+
                // Format the value for writing.
                if (is_null($Value)) {
                   $Value = self::NULL;
@@ -374,7 +393,7 @@ class ExportModel {
 
                   // Check to see if there is a callback filter.
                   if (isset($Filters[$Field])) {
-                     $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
+                     //$Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
                   } else {
                      if($Mb && mb_detect_encoding($Value) != 'UTF-8')
                         $Value = utf8_encode($Value);
@@ -534,6 +553,25 @@ class ExportModel {
             $ExportStructure[$DestColumn] = $DestType;
          }
       }
+
+      // Add filtered mappings since filters can add new columns.
+      foreach ($Mappings as $Source => $Options) {
+         if (!is_array($Options) || !isset($Options['Filter']) || !isset($Options['Column']))
+            continue;
+         $DestColumn = $Options['Column'];
+         if (isset($ExportStructure[$DestColumn]))
+            continue;
+
+         if (isset($Structure[$DestColumn]))
+            $DestType = $Structure[$DestColumn];
+         elseif (isset($Options['Type']))
+            $DestType = $Options['Type'];
+         else
+            continue;
+
+         $ExportStructure[$DestColumn] = $DestType;
+      }
+
       return $ExportStructure;
    }
 
@@ -1789,7 +1827,7 @@ class Vbulletin extends ExportController {
 ?><?php
 
 
-/* Contents included from class.phpbb.php */
+/* Contents included from class.phpbb2.php */
 ?><?php
 /**
  * phpBB exporter tool
@@ -1799,7 +1837,133 @@ class Vbulletin extends ExportController {
  * @package VanillaPorter
  */
 
-class Phpbb extends ExportController {
+class Phpbb2 extends ExportController {
+
+   /** @var array Required tables => columns */
+   protected $SourceTables = array(
+      'users' => array('user_id', 'username', 'user_password', 'user_email', 'user_timezone', 'user_posts', 'user_regdate', 'user_lastvisit'),
+      'groups' => array('group_id', 'group_name', 'group_description'),
+      'user_group' => array('user_id', 'group_id'),
+      'forums' => array('forum_id', 'forum_name', 'forum_desc', 'forum_order'),
+      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id',
+         'topic_replies', 'topic_status', 'topic_type', 'topic_time'),
+      'posts' => array('post_id', 'topic_id', 'poster_id', 'post_time', 'post_edit_time'),
+      'posts_text' => array('post_id', 'post_text')
+   );
+
+   /**
+    * Forum-specific export format.
+    * @param ExportModel $Ex
+    */
+   protected function ForumExport($Ex) {
+      // Begin
+      $Ex->BeginExport('', 'phpBB 2.*', array('HashMethod' => 'phpBB'));
+
+      // Users
+      $User_Map = array(
+         'user_id'=>'UserID',
+         'username'=>'Name',
+         'user_password'=>'Password',
+         'user_email'=>'Email',
+         'user_timezone'=>'HourOffset',
+         'user_posts'=>array('Column' => 'CountComments', 'Type' => 'int')
+      );
+      $Ex->ExportTable('User', "select *,
+            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
+            FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
+            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted
+         from :_users", $User_Map);  // ":_" will be replace by database prefix
+
+
+      // Roles
+      $Role_Map = array(
+         'group_id'=>'RoleID',
+         'group_name'=>'Name',
+         'group_description'=>'Description'
+      );
+      $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
+
+
+      // UserRoles
+      $UserRole_Map = array(
+         'user_id'=>'UserID',
+         'group_id'=>'RoleID'
+      );
+      $Ex->ExportTable('UserRole', 'select user_id, group_id from :_users
+         union
+         select user_id, group_id from :_user_group', $UserRole_Map);
+
+      // Categories
+      $Category_Map = array(
+         'forum_id'=>'CategoryID',
+         'forum_name'=>'Name',
+         'forum_desc'=>'Description',
+         'forum_order'=>'Sort'
+      );
+      $Ex->ExportTable('Category', "select * from :_forums", $Category_Map);
+
+
+      // Discussions
+      $Discussion_Map = array(
+         'topic_id'=>'DiscussionID',
+         'forum_id'=>'CategoryID',
+         'topic_poster'=>'InsertUserID',
+         'topic_title'=>'Name',
+			'Format'=>'Format',
+         'topic_views'=>'CountViews',
+         'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int')
+      );
+      $Ex->ExportTable('Discussion', "select t.*,
+				'BBCode' as Format,
+            t.topic_replies+1 as CountComments,
+            case t.topic_status when 1 then 1 else 0 end as Closed,
+            case t.topic_type when 1 then 1 else 0 end as Announce,
+            FROM_UNIXTIME(t.topic_time) as DateInserted,
+            FROM_UNIXTIME(p.post_time) as DateUpdated,
+            FROM_UNIXTIME(p.post_time) as DateLastComment
+        from :_topics t inner join :_posts p on t.topic_last_post_id = p.post_id",
+        $Discussion_Map);
+
+      // Comments
+      $Comment_Map = array(
+         'post_id' => 'CommentID',
+         'topic_id' => 'DiscussionID',
+         'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
+			'Format' => 'Format',
+         'poster_id' => 'InsertUserID',
+         'poster_id' => 'UpdateUserID'
+      );
+      $Ex->ExportTable('Comment', "select p.*, pt.post_text,
+				'BBCode' as Format,
+            FROM_UNIXTIME(p.post_time) as DateInserted,
+            FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
+         from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
+         $Comment_Map);
+
+      // End
+      $Ex->EndExport();
+   }
+
+   public function RemoveBBCodeUIDs($Value, $Field, $Row) {
+      $UID = $Row['bbcode_uid'];
+      return str_replace(':'.$UID, '', $Value);
+   }
+}
+?>
+<?php
+
+
+/* Contents included from class.phpbb3.php */
+?><?php
+/**
+ * phpBB exporter tool
+ *
+ * @copyright Vanilla Forums Inc. 2010
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
+
+class Phpbb3 extends ExportController {
 
    /** @var array Required tables => columns */
    protected $SourceTables = array(
