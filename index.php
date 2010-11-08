@@ -29,7 +29,7 @@ global $Supported;
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
-   'vbulletin' => array('name'=>'vBulletin 3.*', 'prefix'=>'vb_'),
+   'vbulletin' => array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_'),
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_'),

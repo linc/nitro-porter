@@ -33,7 +33,7 @@ class Vbulletin extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('', 'vBulletin 3.*');
+      $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
       
       // Users
       $User_Map = array(
