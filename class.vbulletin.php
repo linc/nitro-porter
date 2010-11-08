@@ -192,7 +192,7 @@ class Vbulletin extends ExportController {
             'filename' => 'Name',
             'extension' => 'Type',
             'filesize' => 'Size',
-            //'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'userid' => 'InsertUserID'
          );
          $Ex->ExportTable('Media',
