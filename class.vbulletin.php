@@ -192,22 +192,19 @@ class Vbulletin extends ExportController {
             'filename' => 'Name',
             'extension' => 'Type',
             'filesize' => 'Size',
-            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            //'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'userid' => 'InsertUserID'
-          );
+         );
          $Ex->ExportTable('Media',
             "select a.*, 
-               t.firstpostid as IsDiscussion,
                t.threadid as threadid,
                'local' as StorageMethod, 
-               IF(IsDiscussion IS NULL, 'comment', 'discussion') as ForeignTable,
-               IF(IsDiscussion IS NULL, postid, threadid) as ForeignID,
-               FROM_UNIXTIME(dateline) as DateInserted,
+               IF(t.firstpostid IS NULL, 'comment', 'discussion') as ForeignTable,
+               IF(t.firstpostid IS NULL, postid, threadid) as ForeignID,
+               FROM_UNIXTIME(a.dateline) as DateInserted
             from :_attachment a
                left join :_thread t ON a.postid = t.firstpostid", $Media_Map);
       }
-      
-      
       
       // End
       $Ex->EndExport();

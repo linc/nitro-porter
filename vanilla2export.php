@@ -1081,10 +1081,9 @@ function ViewForm($Data) {
 
    PageHeader(); ?>
    <div class="Info">
-      Welcome to the Vanilla Porter.
-      This application will export your existing forum data to the Vanilla 2 import format.
-      If you want more information on how to use this application go to
-      <a href="http://vanillaforums.com/blog/help-topics/importing-data">http://vanillaforums.com/blog/help-topics/importing-data</a>.
+      Welcome to the Vanilla Porter, an application for exporting your forum to the Vanilla 2 import format.
+      For help using this application, 
+      <a href="http://vanillaforums.com/blog/help-topics/importing-data" style="text-decoration:underline;">see these instructions</a>.
    </div>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
@@ -1107,11 +1106,11 @@ function ViewForm($Data) {
                </select>
             </li>
             <li>
-               <label>Table Prefix <span>Most installations have a database prefix, but if you're sure you don't have one you can leave this blank.</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
+               <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span></label>
+               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) != '' ? urlencode(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
             </li>
             <li>
-               <label>Database Host <span>Database host is usually "localhost"</span></label>
+               <label>Database Host <span>Usually "localhost".</span></label>
                <input class="InputBox" type="text" name="dbhost" value="<?php echo urlencode(GetValue('dbhost', '', 'localhost')) ?>" />
             </li>
             <li>
@@ -1791,22 +1790,19 @@ class Vbulletin extends ExportController {
             'filename' => 'Name',
             'extension' => 'Type',
             'filesize' => 'Size',
-            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            //'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'userid' => 'InsertUserID'
-          );
+         );
          $Ex->ExportTable('Media',
             "select a.*, 
-               t.firstpostid as IsDiscussion,
                t.threadid as threadid,
                'local' as StorageMethod, 
-               IF(IsDiscussion IS NULL, 'comment', 'discussion') as ForeignTable,
-               IF(IsDiscussion IS NULL, postid, threadid) as ForeignID,
-               FROM_UNIXTIME(dateline) as DateInserted,
+               IF(t.firstpostid IS NULL, 'comment', 'discussion') as ForeignTable,
+               IF(t.firstpostid IS NULL, postid, threadid) as ForeignID,
+               FROM_UNIXTIME(a.dateline) as DateInserted
             from :_attachment a
                left join :_thread t ON a.postid = t.firstpostid", $Media_Map);
       }
-      
-      
       
       // End
       $Ex->EndExport();
