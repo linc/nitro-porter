@@ -32,7 +32,7 @@ $Supported = array(
    'vbulletin' => array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_'),
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
-   'bbPress' => array('name'=>'bbPress 1.*', 'prefx' => 'bb_'),
+   'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
    'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_')
 );
 
