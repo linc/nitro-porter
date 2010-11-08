@@ -170,23 +170,83 @@ class Vbulletin extends ExportController {
          from :_threadread tr
          left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
       
-      // Activity (3.8+)
-      $Activity_Map = array(
-         'postuserid'=>'ActivityUserID',
-         'userid'=>'RegardingUserID',
-         'pagetext'=>'Story',
-         'postuserid'=>'InsertUserID'
-      );
-		$Tables = $Ex->Query("show tables like ':_visitormessage'");
-      if (mysql_fetch_assoc($Tables) !== FALSE) { # Table is present
-			$Ex->ExportTable('Activity', "select *, 
-			   FROM_UNIXTIME(dateline) as DateInserted
-			from :_visitormessage
-			where state='visible'", $Activity_Map);
+      // Activity (from visitor messages in vBulletin 3.8+)
+      if ($Ex->Exists('visitormessage')) {
+         $Activity_Map = array(
+            'postuserid'=>'ActivityUserID',
+            'userid'=>'RegardingUserID',
+            'pagetext'=>'Story',
+            'postuserid'=>'InsertUserID'
+         );
+         $Ex->ExportTable('Activity', "select *, 
+   			   FROM_UNIXTIME(dateline) as DateInserted
+   			from :_visitormessage
+   			where state='visible'", $Activity_Map);
+      }
+      
+      // Media
+      if ($Ex->Exists('attachment')) {
+         $Media_Map = array(
+            'attachmentid' => 'MediaID',
+            'filename' => 'Name',
+            'extension' => 'Type',
+            'filesize' => 'Size',
+            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            'userid' => 'InsertUserID'
+          );
+         $Ex->ExportTable('Media',
+            "select a.*, 
+               t.firstpostid as IsDiscussion,
+               t.threadid as threadid,
+               'local' as StorageMethod, 
+               IF(IsDiscussion IS NULL, 'comment', 'discussion') as ForeignTable,
+               IF(IsDiscussion IS NULL, postid, threadid) as ForeignID,
+               FROM_UNIXTIME(dateline) as DateInserted,
+            from :_attachment a
+               left join :_thread t ON a.postid = t.firstpostid", $Media_Map);
       }
       
       // End
       $Ex->EndExport();
+   }
+   
+   /**
+    * Filter used by $Media_Map to build attachment path.
+    *
+    * vBulletin 3.0+ organizes its attachments by descending 1 level per digit
+    * of the userid, named as the attachmentid with a '.attach' extension.
+    * Example: User #312's attachments would be in the directory /3/1/2.
+    *
+    * In vBulletin 2.x, files were stored as an md5 hash in the root
+    * attachment directory with a '.file' extension. Existing files were not 
+    * changed when upgrading to 3.x so older forums will need those too.
+    *
+    * This assumes the user is going to copy their entire attachments directory
+    * into Vanilla's /uploads folder and then use our custom plugin to convert
+    * file extensions.
+    *
+    * @access public
+    * @see ExportModel::_ExportTable
+    * 
+    * @param string $Value Ignored.
+    * @param string $Field Ignored.
+    * @param array $Row Contents of the current attachment record.
+    * @return string Future path to file.
+    */
+   function BuildMediaPath($Value, $Field, $Row) {
+      if (isset($Row['hash']) && $Row['hash'] != '') { 
+         // Old school! (2.x)
+         return '/uploads/'.$Row['hash'].'.'.$Row['extension'];
+      }
+      else { // Newer than 3.0
+         // Build user directory path
+         $n = strlen($Row['userid']);
+         $DirParts = array();
+         for($i = 0; $i < $n; $i++) {
+            $DirParts[] = $Row['userid']{$i};
+         }
+         return '/uploads/'.implode('/', $DirParts).'/'.$Row['attachmentid'].'.'.$Row['extension'];
+      }
    }
    
 }

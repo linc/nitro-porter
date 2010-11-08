@@ -272,6 +272,7 @@ class Vanilla1 extends ExportController {
 
       $Ex->Query("drop table :_V1Conversation");
 
+      // Media
       if ($Ex->Exists('Attachment')) {
          $Media_Map = array(
             'AttachmentID' => 'MediaID',
