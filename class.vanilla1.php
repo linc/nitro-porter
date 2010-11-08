@@ -21,6 +21,7 @@ class Vanilla1 extends ExportController {
    /**
     * Forum-specific export format
     * @todo Project file size / export time and possibly break into multiple files
+    * @param ExportModel $Ex
     * 
     */
    protected function ForumExport($Ex) {
@@ -55,6 +56,16 @@ class Vanilla1 extends ExportController {
          'Description'=>'Description'
       );   
       $Ex->ExportTable('Role', 'select * from :_Role', $Role_Map);
+
+      // Permissions.
+      $Permission_Map = array(
+          'RoleID'=>'RoleID',
+          'PERMISSION_SIGN_IN2'=>'Garden.SignIn.Allow',
+          'View1'=>'Vanilla.Discussions.View',
+          'PERMISSION_START_DISCUSSION'=>array('Column'=>'Vanilla.Discussions.Add', 'Filter'=>array($this,'ExplodePermissions')),
+          'PERMISSION_ADD_COMMENTS'=>array('Column'=>'Vanilla.Comments.Add', 'Filter'=>array($this,'ExplodePermissions'))
+       );
+      $Ex->ExportTable('Permission', "select r.*, case Name when 'Unauthenticated' then 0 else PERMISSION_SIGN_IN end as PERMISSION_SIGN_IN2 from :_Role r", $Permission_Map);
   
       // UserRoles
       /*
@@ -169,9 +180,9 @@ class Vanilla1 extends ExportController {
 
       // Create a mapping table for conversations.
       // This cannot be a temporary table because of some of the union selects it is used in below.
-      $Ex->Query("create table LUM_V1Conversation (ConversationID int auto_increment primary key, DiscussionID int, UserID1 int, UserID2 int, DateCreated datetime, EditUserID int, DateEdited datetime)");
+      $Ex->Query("create table :_V1Conversation (ConversationID int auto_increment primary key, DiscussionID int, UserID1 int, UserID2 int, DateCreated datetime, EditUserID int, DateEdited datetime)");
 
-      $Ex->Query("insert LUM_V1Conversation (DiscussionID, UserID1, UserID2, DateCreated, EditUserID, DateEdited)
+      $Ex->Query("insert :_V1Conversation (DiscussionID, UserID1, UserID2, DateCreated, EditUserID, DateEdited)
          select
            DiscussionID,
            AuthUserID as UserID1,
@@ -179,7 +190,7 @@ class Vanilla1 extends ExportController {
            min(DateCreated),
            max(EditUserID),
            max(DateEdited)
-         from LUM_Comment
+         from :_Comment
          where coalesce(WhisperUserID, 0) <> 0
          group by DiscussionID, AuthUserID, WhisperUserID
 
@@ -192,14 +203,14 @@ class Vanilla1 extends ExportController {
            DateCreated,
            WhisperFromLastUserID,
            DateLastWhisper
-         from LUM_Discussion
+         from :_Discussion
          where coalesce(WhisperUserID, 0) <> 0");
 
       // Delete redundant conversations.
-      $Ex->Query("create index ix_V1UserID1 on LUM_V1Conversation (DiscussionID, UserID1)"); // for speed
+      $Ex->Query("create index ix_V1UserID1 on :_V1Conversation (DiscussionID, UserID1)"); // for speed
       $Ex->Query("delete t.*
-         from LUM_V1Conversation t
-         inner join LUM_Comment c
+         from :_V1Conversation t
+         inner join :_Comment c
            on c.DiscussionID = t.DiscussionID
              and c.AuthUserID = t.UserID2
              and c.WhisperUserID = t.UserID1
@@ -231,8 +242,8 @@ class Vanilla1 extends ExportController {
       );
       $Ex->ExportTable('ConversationMessage', "
          select c.CommentID, t.ConversationID, c.AuthUserID, c.DateCreated, c.Body
-         from LUM_Comment c
-         join LUM_V1Conversation t
+         from :_Comment c
+         join :_V1Conversation t
            on t.DiscussionID = c.DiscussionID
              and c.WhisperUserID in (t.UserID1, t.UserID2)
              and c.AuthUserID in (t.UserID1, t.UserID2)
@@ -241,10 +252,10 @@ class Vanilla1 extends ExportController {
          union
 
          select c.CommentID, t.ConversationID, c.AuthUserID, c.DateCreated, c.Body
-         from LUM_Comment c
-         join LUM_Discussion d
+         from :_Comment c
+         join :_Discussion d
           on c.DiscussionID = d.DiscussionID
-         join LUM_V1Conversation t
+         join :_V1Conversation t
            on t.DiscussionID = d.DiscussionID
              and d.WhisperUserID in (t.UserID1, t.UserID2)
              and d.AuthUserID in (t.UserID1, t.UserID2)
@@ -262,18 +273,51 @@ class Vanilla1 extends ExportController {
       );
       $Ex->ExportTable('UserConversation', 
          "select UserID1 as UserID, ConversationID
-         from LUM_V1Conversation
+         from :_V1Conversation
 
          union
 
          select UserID2 as UserID, ConversationID
-         from LUM_V1Conversation", $UserConversation_Map);
+         from :_V1Conversation", $UserConversation_Map);
 
       $Ex->Query("drop table :_V1Conversation");
+         
+
+      if ($Ex->Exists('Attachment')) {
+         $Media_Map = array(
+            'AttachmentID' => 'MediaID',
+            'Name' => 'Name',
+            'MimeType' => 'Type',
+            'Size' => 'Size',
+            //'StorageMethod',
+            'Path' => array('Column' => 'Path', 'Filter' => array($this, 'StripMediaPath')),
+            'UserID' => 'InsertUserID',
+            'DateCreated' => 'DateInserted',
+            'CommentID' => 'ForeignID'
+            //'ForeignTable'
+          );
+         $Ex->ExportTable('Media',
+            "select a.*, 'local' as StorageMethod, 'comment' as ForeignTable from :_Attachment a",
+            $Media_Map);
+      }
          
       // End
       $Ex->EndExport();
    }
 
+   public function StripMediaPath($AbsPath) {
+      $AbsPath = str_replace('\\', '/', $AbsPath);
+      if (($Pos = strpos($AbsPath, '/uploads/')) !== FALSE)
+         return substr($AbsPath, $Pos + 9);
+      return $AbsPath;
+   }
+
+   public function ExplodePermissions($Value, $DestField, $Row, $SourceField) {
+      $Permissions = $Row['Permissions'];
+      $Permissions = unserialize($Permissions);
+      if (isset($Permissions[$SourceField]))
+         return (bool)$Permissions[$SourceField];
+      return 0;
+   }
 }
 ?>

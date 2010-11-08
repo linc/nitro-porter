@@ -106,6 +106,24 @@ class ExportModel {
             'Closed' => 'tinyint',
             'Announce' => 'tinyint',
             'Sink' => 'tinyint'),
+      'Media' => array(
+          'Name' => 'varchar(255)',
+          'Type' => 'varchar(64)',
+          'Size' => 'int',
+          'StorageMethod' => 'varchar(24)',
+          'Path' => 'varchar(255)',
+          'InsertUserId' => 'int',
+          'DateInserted' => 'datetime',
+          'ForeignID' => 'int',
+          'ForeignTable' => 'varchar(24)'
+          ),
+      'Permission' => array(
+            'RoleID' => 'int',
+            'Garden.SignIn.Allow' => 'tinyint',
+            'Vanilla.Discussions.View' => 'tinyint',
+            'Vanilla.Discussions.Add' => 'tinyint',
+            'Vanilla.Comments.Add' => 'tinyint'
+          ),
       'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
@@ -311,6 +329,17 @@ class ExportModel {
                } else {
                   $Value = NULL;
                }
+
+               if ($TableName == 'Permission') {
+                  $Foo = 'Bar';
+               }
+
+               // Check to see if there is a callback filter.
+               if (isset($Filters[$Field])) {
+                  $Callback = $Filters[$Field];
+                  $Value = call_user_func($Filters[$Field], $Value, $Field, $Row, $Column);
+               }
+
                // Format the value for writing.
                if (is_null($Value)) {
                   $Value = self::NULL;
@@ -320,7 +349,7 @@ class ExportModel {
 
                   // Check to see if there is a callback filter.
                   if (isset($Filters[$Field])) {
-                     $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
+                     //$Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
                   } else {
                      if($Mb && mb_detect_encoding($Value) != 'UTF-8')
                         $Value = utf8_encode($Value);
@@ -480,6 +509,25 @@ class ExportModel {
             $ExportStructure[$DestColumn] = $DestType;
          }
       }
+
+      // Add filtered mappings since filters can add new columns.
+      foreach ($Mappings as $Source => $Options) {
+         if (!is_array($Options) || !isset($Options['Filter']) || !isset($Options['Column']))
+            continue;
+         $DestColumn = $Options['Column'];
+         if (isset($ExportStructure[$DestColumn]))
+            continue;
+
+         if (isset($Structure[$DestColumn]))
+            $DestType = $Structure[$DestColumn];
+         elseif (isset($Options['Type']))
+            $DestType = $Options['Type'];
+         else
+            continue;
+
+         $ExportStructure[$DestColumn] = $DestType;
+      }
+
       return $ExportStructure;
    }
 
@@ -609,7 +657,7 @@ class ExportModel {
     * @return string
     */
    public function Version() {
-      return VERSION;
+      return APPLICATION_VERSION;
    }
 
    /**
