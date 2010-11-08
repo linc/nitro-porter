@@ -101,7 +101,7 @@ function ViewForm($Data) {
             </li>
             <li>
                <label>Table Prefix <span>Most installations have a database prefix, but if you're sure you don't have one you can leave this blank.</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) != '' ? urlencode(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
             </li>
             <li>
                <label>Database Host <span>Database host is usually "localhost"</span></label>
