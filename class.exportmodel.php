@@ -120,10 +120,10 @@ class ExportModel {
           ),
       'Permission' => array(
             'RoleID' => 'int',
-            'Garden.SignIn.Allow' => 'tinyint',
-            'Vanilla.Discussions.View' => 'tinyint',
-            'Vanilla.Discussions.Add' => 'tinyint',
-            'Vanilla.Comments.Add' => 'tinyint'
+            'Garden_SignIn_Allow' => 'tinyint',
+            'Vanilla_Discussions_View' => 'tinyint',
+            'Vanilla_Discussions_Add' => 'tinyint',
+            'Vanilla_Comments_Add' => 'tinyint'
           ),
       'Role' => array(
             'RoleID' => 'int',
