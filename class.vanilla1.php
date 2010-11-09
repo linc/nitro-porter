@@ -121,7 +121,7 @@ class Vanilla1 extends ExportController {
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
          FROM :_Discussion d
-         WHERE coalesce(d.WhisperUserID, 0) = 0", $Discussion_Map);
+         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $Discussion_Map);
       
       // Comments
       /*
