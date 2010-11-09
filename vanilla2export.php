@@ -31,7 +31,7 @@ global $Supported;
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
-   'vbulletin' => array('name'=>'vBulletin 3.*', 'prefix'=>'vb_'),
+   'vbulletin' => array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_'),
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
@@ -163,10 +163,10 @@ class ExportModel {
           ),
       'Permission' => array(
             'RoleID' => 'int',
-            'Garden.SignIn.Allow' => 'tinyint',
-            'Vanilla.Discussions.View' => 'tinyint',
-            'Vanilla.Discussions.Add' => 'tinyint',
-            'Vanilla.Comments.Add' => 'tinyint'
+            'Garden_SignIn_Allow' => 'tinyint',
+            'Vanilla_Discussions_View' => 'tinyint',
+            'Vanilla_Discussions_Add' => 'tinyint',
+            'Vanilla_Comments_Add' => 'tinyint'
           ),
       'Role' => array(
             'RoleID' => 'int',
@@ -1118,10 +1118,9 @@ function ViewForm($Data) {
 
    PageHeader(); ?>
    <div class="Info">
-      Welcome to the Vanilla Porter.
-      This application will export your existing forum data to the Vanilla 2 import format.
-      If you want more information on how to use this application go to
-      <a href="http://vanillaforums.com/blog/help-topics/importing-data">http://vanillaforums.com/blog/help-topics/importing-data</a>.
+      Welcome to the Vanilla Porter, an application for exporting your forum to the Vanilla 2 import format.
+      For help using this application, 
+      <a href="http://vanillaforums.com/blog/help-topics/importing-data" style="text-decoration:underline;">see these instructions</a>.
    </div>
    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
       <input type="hidden" name="step" value="info" />
@@ -1136,7 +1135,7 @@ function ViewForm($Data) {
          <ul>
             <li>
                <label>Source Forum Type</label>
-               <select name="type">
+               <select name="type" id="ForumType" onchange="updatePrefix();">
                <?php foreach($forums as $forumClass => $forumInfo) : ?>
                   <option value="<?php echo $forumClass; ?>"<?php 
                      if(GetValue('type') == $forumClass) echo ' selected="selected"'; ?>><?php echo $forumInfo['name']; ?></option>
@@ -1144,11 +1143,11 @@ function ViewForm($Data) {
                </select>
             </li>
             <li>
-               <label>Table Prefix <span>Most installations have a database prefix, but if you're sure you don't have one you can leave this blank.</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) ?>" />
+               <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span></label>
+               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) != '' ? urlencode(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
             </li>
             <li>
-               <label>Database Host <span>Database host is usually "localhost"</span></label>
+               <label>Database Host <span>Usually "localhost".</span></label>
                <input class="InputBox" type="text" name="dbhost" value="<?php echo urlencode(GetValue('dbhost', '', 'localhost')) ?>" />
             </li>
             <li>
@@ -1180,10 +1179,10 @@ function ViewForm($Data) {
    <script type="text/javascript">
    //<![CDATA[
       function updatePrefix() {
-         var type = document.getElementById('forumType').value;
+         var type = document.getElementById('ForumType').value;
          switch(type) {
-            <?php foreach($forums as $forumClass => $forumInfo) : ?>
-            case '<?php echo $forumClass; ?>': document.getElementById('forumPrefix').value = '<?php echo $forumInfo['prefix']; ?>'; break;
+            <?php foreach($forums as $ForumClass => $ForumInfo) : ?>
+            case '<?php echo $ForumClass; ?>': document.getElementById('ForumPrefix').value = '<?php echo $ForumInfo['prefix']; ?>'; break;
             <?php endforeach; ?>
          }
       }
@@ -1449,7 +1448,7 @@ class Vanilla1 extends ExportController {
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
          FROM :_Discussion d
-         WHERE coalesce(d.WhisperUserID, 0) = 0", $Discussion_Map);
+         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $Discussion_Map);
       
       // Comments
       /*
@@ -1599,6 +1598,7 @@ class Vanilla1 extends ExportController {
 
       $Ex->Query("drop table :_V1Conversation");
 
+      // Media
       if ($Ex->Exists('Attachment')) {
          $Media_Map = array(
             'AttachmentID' => 'MediaID',
@@ -1659,12 +1659,15 @@ class Vbulletin extends ExportController {
    );
    
    /**
-    * Forum-specific export format
-    * @todo Project file size / export time and possibly break into multiple files
+    * vBulletin-specific export format
+    *
+    * Avatars should be moved to the filesystem prior to export if they
+    * are stored in the database. Copy all the avatar_* files from
+    * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('', 'vBulletin 3.*');
+      $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
       
       // Users
       $User_Map = array(
@@ -1674,13 +1677,11 @@ class Vbulletin extends ExportController {
          'email'=>'Email',
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
-         //'posts'=>'CountComments',
-         'salt'=>'char(3)',
-         'photopath'=>'Photo'
+         'salt'=>'char(3)'
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
-				concat('avatar', userid, '_', avatarid, '.gif') as photopath,
+				concat('userpics/avatar', userid, '_', avatarrevision, '.gif') as Photo,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -1804,23 +1805,82 @@ class Vbulletin extends ExportController {
          from :_threadread tr
          left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
       
-      // Activity (3.8+)
-      $Activity_Map = array(
-         'postuserid'=>'ActivityUserID',
-         'userid'=>'RegardingUserID',
-         'pagetext'=>'Story',
-         'postuserid'=>'InsertUserID'
-      );
-		$Tables = $Ex->Query("show tables like ':_visitormessage'");
-      if (mysql_fetch_assoc($Tables) !== FALSE) { # Table is present
-			$Ex->ExportTable('Activity', "select *, 
-			   FROM_UNIXTIME(dateline) as DateInserted
-			from :_visitormessage
-			where state='visible'", $Activity_Map);
+      // Activity (from visitor messages in vBulletin 3.8+)
+      if ($Ex->Exists('visitormessage')) {
+         $Activity_Map = array(
+            'postuserid'=>'ActivityUserID',
+            'userid'=>'RegardingUserID',
+            'pagetext'=>'Story',
+            'postuserid'=>'InsertUserID'
+         );
+         $Ex->ExportTable('Activity', "select *, 
+   			   FROM_UNIXTIME(dateline) as DateInserted
+   			from :_visitormessage
+   			where state='visible'", $Activity_Map);
+      }
+      
+      // Media
+      if ($Ex->Exists('attachment')) {
+         $Media_Map = array(
+            'attachmentid' => 'MediaID',
+            'filename' => 'Name',
+            'extension' => 'Type',
+            'filesize' => 'Size',
+            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            'userid' => 'InsertUserID'
+         );
+         $Ex->ExportTable('Media',
+            "select a.*, 
+               t.threadid as threadid,
+               'local' as StorageMethod, 
+               IF(t.firstpostid IS NULL, 'comment', 'discussion') as ForeignTable,
+               IF(t.firstpostid IS NULL, postid, threadid) as ForeignID,
+               FROM_UNIXTIME(a.dateline) as DateInserted
+            from :_attachment a
+               left join :_thread t ON a.postid = t.firstpostid", $Media_Map);
       }
       
       // End
       $Ex->EndExport();
+   }
+   
+   /**
+    * Filter used by $Media_Map to build attachment path.
+    *
+    * vBulletin 3.0+ organizes its attachments by descending 1 level per digit
+    * of the userid, named as the attachmentid with a '.attach' extension.
+    * Example: User #312's attachments would be in the directory /3/1/2.
+    *
+    * In vBulletin 2.x, files were stored as an md5 hash in the root
+    * attachment directory with a '.file' extension. Existing files were not 
+    * changed when upgrading to 3.x so older forums will need those too.
+    *
+    * This assumes the user is going to copy their entire attachments directory
+    * into Vanilla's /uploads folder and then use our custom plugin to convert
+    * file extensions.
+    *
+    * @access public
+    * @see ExportModel::_ExportTable
+    * 
+    * @param string $Value Ignored.
+    * @param string $Field Ignored.
+    * @param array $Row Contents of the current attachment record.
+    * @return string Future path to file.
+    */
+   function BuildMediaPath($Value, $Field, $Row) {
+      if (isset($Row['hash']) && $Row['hash'] != '') { 
+         // Old school! (2.x)
+         return '/uploads/'.$Row['hash'].'.'.$Row['extension'];
+      }
+      else { // Newer than 3.0
+         // Build user directory path
+         $n = strlen($Row['userid']);
+         $DirParts = array();
+         for($i = 0; $i < $n; $i++) {
+            $DirParts[] = $Row['userid']{$i};
+         }
+         return '/uploads/'.implode('/', $DirParts).'/'.$Row['attachmentid'].'.'.$Row['extension'];
+      }
    }
    
 }
