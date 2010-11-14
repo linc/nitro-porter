@@ -1,12 +1,32 @@
 <?php
 /**
- * vBulletin exporter tool
+ * vBulletin exporter tool.
+ * 
+ * This will migrate all vBulletin data for 3.x and 4.x forums. It even 
+ * accounts for attachments created during 2.x and moved to 3.x.
+ *
+ * MIGRATING FILES:
+ * 
+ * 1) Avatars should be moved to the filesystem prior to export if they
+ * are stored in the database. Copy all the avatar_* files from
+ * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
+ * 
+ * 2) Attachments should likewise be moved to the filesystem prior to
+ * export. Copy all attachments from vBulletin's attachments folder to 
+ * Vanilla's /upload folder without changing the internal folder structure.
+ * Install the FileUpload plugin in Vanilla BEFORE importing.
  *
  * @copyright Vanilla Forums Inc. 2010
+ * @author Matt Lincoln Russell lincoln@icrontic.com
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
- 
+
+/**
+ * vBulletin-specific extension of generic ExportController.
+ *
+ * @package VanillaPorter
+ */
 class Vbulletin extends ExportController {
    
    /** @var array Required tables => columns */
@@ -25,11 +45,7 @@ class Vbulletin extends ExportController {
    );
    
    /**
-    * vBulletin-specific export format
-    *
-    * Avatars should be moved to the filesystem prior to export if they
-    * are stored in the database. Copy all the avatar_* files from
-    * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
+    * Export each table one at a time.
     */
    protected function ForumExport($Ex) {
       // Begin
