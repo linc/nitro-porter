@@ -161,13 +161,6 @@ class ExportModel {
             'ForeignID' => 'int',
             'ForeignTable' => 'varchar(24)'
           ),
-      'Permission' => array(
-            'RoleID' => 'int',
-            'Garden_SignIn_Allow' => 'tinyint',
-            'Vanilla_Discussions_View' => 'tinyint',
-            'Vanilla_Discussions_Add' => 'tinyint',
-            'Vanilla_Comments_Add' => 'tinyint'
-          ),
       'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
@@ -184,7 +177,6 @@ class ExportModel {
             'HourOffset' => 'int',
             'CountDiscussions' => 'int',
             'CountComments' => 'int',
-            'DiscoveryText' => 'text',
             'Photo' => 'varchar(255)',
             'DateOfBirth' => 'datetime',
             'DateFirstVisit' => 'datetime',
@@ -374,17 +366,6 @@ class ExportModel {
                } else {
                   $Value = NULL;
                }
-
-               if ($TableName == 'Permission') {
-                  $Foo = 'Bar';
-               }
-
-               // Check to see if there is a callback filter.
-               if (isset($Filters[$Field])) {
-                  $Callback = $Filters[$Field];
-                  $Value = call_user_func($Filters[$Field], $Value, $Field, $Row, $Column);
-               }
-
                // Format the value for writing.
                if (is_null($Value)) {
                   $Value = self::NULL;
@@ -394,7 +375,7 @@ class ExportModel {
 
                   // Check to see if there is a callback filter.
                   if (isset($Filters[$Field])) {
-                     //$Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
+                     $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
                   } else {
                      if($Mb && mb_detect_encoding($Value) != 'UTF-8')
                         $Value = utf8_encode($Value);
@@ -554,25 +535,6 @@ class ExportModel {
             $ExportStructure[$DestColumn] = $DestType;
          }
       }
-
-      // Add filtered mappings since filters can add new columns.
-      foreach ($Mappings as $Source => $Options) {
-         if (!is_array($Options) || !isset($Options['Filter']) || !isset($Options['Column']))
-            continue;
-         $DestColumn = $Options['Column'];
-         if (isset($ExportStructure[$DestColumn]))
-            continue;
-
-         if (isset($Structure[$DestColumn]))
-            $DestType = $Structure[$DestColumn];
-         elseif (isset($Options['Type']))
-            $DestType = $Options['Type'];
-         else
-            continue;
-
-         $ExportStructure[$DestColumn] = $DestType;
-      }
-
       return $ExportStructure;
    }
 
@@ -1842,15 +1804,36 @@ class Vbulletin extends ExportController {
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'userid' => 'InsertUserID'
          );
+         // Test if hash field exists from 2.x
+         $SelectHash = '';
+         if ($Ex->Exists('attachment', array('hash')))
+            $SelectHash = 'a.hash,';
+         
+         // A) Do NOT grab every field to avoid potential 'filedata' blob.
+         // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
+         
+         // First comment attachments => 'Discussion' foreign key
          $Ex->ExportTable('Media',
-            "select a.*, 
-               t.threadid as threadid,
+            "select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
                'local' as StorageMethod, 
-               IF(t.firstpostid IS NULL, 'comment', 'discussion') as ForeignTable,
-               IF(t.firstpostid IS NULL, postid, threadid) as ForeignID,
+               'discussion' as ForeignTable,
+               t.threadid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted
-            from :_attachment a
-               left join :_thread t ON a.postid = t.firstpostid", $Media_Map);
+            from :_thread t
+               left join :_attachment a ON a.postid = t.firstpostid
+            where a.attachmentid > 0", $Media_Map);
+         
+         // All other comment attachments => 'Comment' foreign key
+         $Ex->ExportTable('Media',
+            "select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
+               'local' as StorageMethod, 
+               'comment' as ForeignTable,
+               a.postid as ForeignID,
+               FROM_UNIXTIME(a.dateline) as DateInserted
+            from :_post p
+               inner join :_thread t ON p.threadid = t.threadid
+               left join :_attachment a ON a.postid = p.postid
+            where p.postid <> t.firstpostid and  a.attachmentid > 0", $Media_Map);
       }
       
       // End
@@ -1883,7 +1866,7 @@ class Vbulletin extends ExportController {
    function BuildMediaPath($Value, $Field, $Row) {
       if (isset($Row['hash']) && $Row['hash'] != '') { 
          // Old school! (2.x)
-         return '/uploads/'.$Row['hash'].'.'.$Row['extension'];
+         return '/uploads/'.$Row['hash'].'.file';//.$Row['extension'];
       }
       else { // Newer than 3.0
          // Build user directory path
@@ -1892,7 +1875,7 @@ class Vbulletin extends ExportController {
          for($i = 0; $i < $n; $i++) {
             $DirParts[] = $Row['userid']{$i};
          }
-         return '/uploads/'.implode('/', $DirParts).'/'.$Row['attachmentid'].'.'.$Row['extension'];
+         return '/uploads/'.implode('/', $DirParts).'/'.$Row['attachmentid'].'.attach';//.$Row['extension'];
       }
    }
    
