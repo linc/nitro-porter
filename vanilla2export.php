@@ -2,7 +2,7 @@
 
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.3.0');
+define('APPLICATION_VERSION', '1.3.1');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -184,6 +184,7 @@ class ExportModel {
             'HourOffset' => 'int',
             'CountDiscussions' => 'int',
             'CountComments' => 'int',
+            'DiscoveryText' => 'text',
             'Photo' => 'varchar(255)',
             'DateOfBirth' => 'datetime',
             'DateFirstVisit' => 'datetime',
@@ -1367,11 +1368,23 @@ class Vanilla1 extends ExportController {
          'Password'=>'Password',
          'Email'=>'Email',
          'Icon'=>'Photo',
-         'CountComments'=>'CountComments'
+         'CountComments'=>'CountComments',
+         'Discovery'=>'DiscoveryText'
       );   
       $Ex->ExportTable('User', "SELECT * FROM :_User", $User_Map);  // ":_" will be replaced by database prefix
       
       // Roles
+      
+      // Since the zero role is a valid role in Vanilla 1 then we'll have to reassign it.
+      $R = $Ex->Query('select max(RoleID) as RoleID from :_Role');
+      $ZeroRoleID = 0;
+      if (is_resource($R)) {
+         while (($Row = @mysql_fetch_assoc($R)) !== false) {
+            $ZeroRoleID = $Row['RoleID'];
+         }
+      }
+      $ZeroRoleID++;
+
       /*
 		    'RoleID' => 'int', 
 		    'Name' => 'varchar(100)', 
@@ -1382,7 +1395,7 @@ class Vanilla1 extends ExportController {
          'Name'=>'Name',
          'Description'=>'Description'
       );   
-      $Ex->ExportTable('Role', 'select * from :_Role', $Role_Map);
+      $Ex->ExportTable('Role', "select RoleID, Name, Description from :_Role union all select $ZeroRoleID, 'Applicant', 'Created by the Vanilla Porter'", $Role_Map);
   
       // UserRoles
       /*
@@ -1393,7 +1406,7 @@ class Vanilla1 extends ExportController {
          'UserID' => 'UserID', 
          'RoleID'=> 'RoleID'
       );
-      $Ex->ExportTable('UserRole', 'select UserID, RoleID from :_User', $UserRole_Map);
+      $Ex->ExportTable('UserRole', "select UserID, case RoleID when 0 then $ZeroRoleID else RoleID end as RoleID from :_User", $UserRole_Map);
       
       // Categories
       /*

@@ -141,6 +141,7 @@ class ExportModel {
             'HourOffset' => 'int',
             'CountDiscussions' => 'int',
             'CountComments' => 'int',
+            'DiscoveryText' => 'text',
             'Photo' => 'varchar(255)',
             'DateOfBirth' => 'datetime',
             'DateFirstVisit' => 'datetime',
