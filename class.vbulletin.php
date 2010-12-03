@@ -213,7 +213,7 @@ class Vbulletin extends ExportController {
          );
          // Test if hash field exists from 2.x
          $SelectHash = '';
-         if ($Ex->Exists('attachment', array('hash')))
+         if ($Ex->Exists('attachment', array('hash')) === true)
             $SelectHash = 'a.hash,';
          
          // A) Do NOT grab every field to avoid potential 'filedata' blob.
