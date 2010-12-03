@@ -273,7 +273,7 @@ class Vbulletin extends ExportController {
    function BuildMediaPath($Value, $Field, $Row) {
       if (isset($Row['hash']) && $Row['hash'] != '') { 
          // Old school! (2.x)
-         return '/uploads/'.$Row['hash'].'.file';//.$Row['extension'];
+         return $Row['hash'].'.file';//.$Row['extension'];
       }
       else { // Newer than 3.0
          // Build user directory path
@@ -282,7 +282,7 @@ class Vbulletin extends ExportController {
          for($i = 0; $i < $n; $i++) {
             $DirParts[] = $Row['userid']{$i};
          }
-         return '/uploads/'.implode('/', $DirParts).'/'.$Row['attachmentid'].'.attach';//.$Row['extension'];
+         return implode('/', $DirParts).'/'.$Row['attachmentid'].'.attach';//.$Row['extension'];
       }
    }
    
