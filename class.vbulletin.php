@@ -288,8 +288,16 @@ class Vbulletin extends ExportController {
    
    /**
     * Set valid MIME type for images.
+    * 
+    * @access public
+    * @see ExportModel::_ExportTable
+    * 
+    * @param string $Value Extension from vBulletin.
+    * @param string $Field Ignored.
+    * @param array $Row Ignored.
+    * @return string Extension or accurate MIME type.
     */
-   function BuildMediaPath($Value, $Field, $Row) {
+   function BuildMimeType($Value, $Field, $Row) {
       switch ($Value) {
          case 'jpg':
          case 'gif':
