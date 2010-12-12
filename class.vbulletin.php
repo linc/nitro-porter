@@ -37,9 +37,9 @@ class Vbulletin extends ExportController {
       'usergroup'=> array('usergroupid','title','description'),
       'userfield' => array('userid'),
       'phrase' => array('varname','text','product','fieldname','varname'),
-      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost'),
+      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost','visible'),
       'deletionlog' => array('type','primaryid'),
-      'post' => array('postid','threadid','pagetext','userid','dateline'),
+      'post' => array('postid','threadid','pagetext','userid','dateline','visible'),
       'forum' => array('forumid','description','displayorder','title','description','displayorder'),
       'subscribethread' => array('userid','threadid')
    );
@@ -154,9 +154,10 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastpost) as DateUpdated,
             FROM_UNIXTIME(lastpost) as DateLastComment
          from :_thread t
-            left join :_deletionlog d ON (d.type='thread' AND d.primaryid=t.threadid)
-				left join :_post p ON p.postid = t.firstpostid
-         where d.primaryid IS NULL", $Discussion_Map);
+            left join :_deletionlog d on (d.type='thread' and d.primaryid=t.threadid)
+				left join :_post p on p.postid = t.firstpostid
+         where d.primaryid is null
+            and t.visible = 1", $Discussion_Map);
       
       // Comments
       $Comment_Map = array(
@@ -169,12 +170,14 @@ class Vbulletin extends ExportController {
 				'BBCode' as Format,
             p.userid as InsertUserID,
             p.userid as UpdateUserID,
-            FROM_UNIXTIME(p.dateline) as DateInserted,
+         FROM_UNIXTIME(p.dateline) as DateInserted,
             FROM_UNIXTIME(p.dateline) as DateUpdated
          from :_post p
-				inner join :_thread t ON p.threadid = t.threadid
-            left join :_deletionlog d ON (d.type='post' AND d.primaryid=p.postid)
-         where p.postid <> t.firstpostid and d.primaryid IS NULL", $Comment_Map);
+				inner join :_thread t on p.threadid = t.threadid
+            left join :_deletionlog d on (d.type='post' and d.primaryid=p.postid)
+         where p.postid <> t.firstpostid 
+            and d.primaryid is null
+            and p.visible = 1", $Comment_Map);
       
       // UserDiscussion
 		$UserDiscussion_Map = array(
