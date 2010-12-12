@@ -1815,7 +1815,7 @@ class Vbulletin extends ExportController {
          $Media_Map = array(
             'attachmentid' => 'MediaID',
             'filename' => 'Name',
-            'extension' => 'Type',
+            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
             'filesize' => 'Size',
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'userid' => 'InsertUserID'
@@ -1893,6 +1893,28 @@ class Vbulletin extends ExportController {
          }
          return implode('/', $DirParts).'/'.$Row['attachmentid'].'.attach';//.$Row['extension'];
       }
+   }
+   
+   /**
+    * Set valid MIME type for images.
+    * 
+    * @access public
+    * @see ExportModel::_ExportTable
+    * 
+    * @param string $Value Extension from vBulletin.
+    * @param string $Field Ignored.
+    * @param array $Row Ignored.
+    * @return string Extension or accurate MIME type.
+    */
+   function BuildMimeType($Value, $Field, $Row) {
+      switch ($Value) {
+         case 'jpg':
+         case 'gif':
+         case 'png':
+            $Value = 'image/'.$Value;
+            break;
+      }
+      return $Value;
    }
    
 }
