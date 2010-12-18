@@ -59,11 +59,11 @@ class Vbulletin extends ExportController {
          'email'=>'Email',
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
-         'salt'=>'char(3)'
+         'salt'=>'char(3)',
+         'avatarrevision' => array('Column' => 'Photo', 'Filter' => array($this, 'BuildAvatar'))
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
-				concat('userpics/avatar', userid, '_', avatarrevision, '.gif') as Photo,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -309,6 +309,24 @@ class Vbulletin extends ExportController {
             break;
       }
       return $Value;
+   }
+   
+   /**
+    * Create Photo path from avatar data.
+    * 
+    * @access public
+    * @see ExportModel::_ExportTable
+    * 
+    * @param string $Value Ignored.
+    * @param string $Field Ignored.
+    * @param array $Row Contents of the current attachment record.
+    * @return string Path to avatar if one exists, or blank if none.
+    */
+   function BuildAvatar($Value, $Field, $Row) {
+      if ($Row['avatarrevision'] > 0)
+         return 'userpics/avatar' . $Row['userid'] . '_' . $Row['avatarrevision'] . '.gif';
+      else
+         return '';
    }
    
 }
