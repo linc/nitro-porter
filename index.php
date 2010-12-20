@@ -1,6 +1,6 @@
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.3.1');
+define('APPLICATION_VERSION', '1.4a');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -29,11 +29,13 @@ global $Supported;
 /** @var array Supported forum packages: classname => array(name, prefix) */
 $Supported = array(
    'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
+   'vanilla2' => array('name'=> 'Vanilla 2.*', 'prefix'=>'GDN_'),
    'vbulletin' => array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_'),
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
-   'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_')
+   'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_'),
+   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefx' => 'smf_')
 );
 
 // Support Files
@@ -42,11 +44,13 @@ include('views.php');
 include('class.exportcontroller.php');
 
 include('class.vanilla1.php');
+include('class.vanilla2.php');
 include('class.vbulletin.php');
 include('class.phpbb2.php');
 include('class.phpbb3.php');
 include('class.bbpress.php');
 include('class.simplepress.php');
+include('class.smf.php');
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')

@@ -47,6 +47,9 @@ class ExportModel {
     */
    public $Prefix = '';
 
+   /** @var string The path to the source of the export in the case where a file is being converted. */
+   public $SourcePath = '';
+
    /**
     * @var array Strucutes that define the format of the export tables.
     */
@@ -205,6 +208,8 @@ class ExportModel {
       }
       fwrite($fp, self::NEWLINE.self::NEWLINE);
       $this->Comment('Export Started: '.date('Y-m-d H:i:s'));
+
+      return $fp;
    }
 
    /**
@@ -332,10 +337,6 @@ class ExportModel {
                   $Value = NULL;
                }
 
-               if ($TableName == 'Permission') {
-                  $Foo = 'Bar';
-               }
-
                // Check to see if there is a callback filter.
                if (isset($Filters[$Field])) {
                   $Callback = $Filters[$Field];
@@ -398,6 +399,32 @@ class ExportModel {
       $Result = sprintf('%02d:%05.2f', $m, $s);
 
       return $Result;
+   }
+
+   static function FormatValue($Value) {
+      static $EscapeSearch = NULL; if ($EscapeSearch === NULL) $EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
+      static $EscapeReplace = NULL; if ($EscapeReplace === NULL) $EscapeReplace = array(self::ESCAPE.self::ESCAPE, self::ESCAPE.self::DELIM, self::ESCAPE.self::NEWLINE, self::ESCAPE.self::QUOTE);
+
+      // Format the value for writing.
+      if (is_null($Value)) {
+         $Value = self::NULL;
+      } elseif (is_numeric($Value)) {
+         // Do nothing, formats as is.
+      } elseif (is_string($Value)) {
+         if($Mb && mb_detect_encoding($Value) != 'UTF-8')
+            $Value = utf8_encode($Value);
+
+         $Value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $Value);
+         $Value = self::QUOTE
+            .str_replace($EscapeSearch, $EscapeReplace, $Value)
+            .self::QUOTE;
+      } elseif (is_bool($Value)) {
+         $Value = $Value ? 1 : 0;
+      } else {
+         // Unknown format.
+         $Value = self::NULL;
+      }
+      return $Value;
    }
 
    public function GetCharacterSet($Table) {
@@ -755,6 +782,32 @@ class ExportModel {
       else {
          return 'Missing required database tables: '.$MissingTables;
       }
+   }
+
+   public function WriteBeginTable($fp, $TableName, $Columns) {
+      $TableHeader = '';
+
+      foreach($Columns as $Key => $Value) {
+         if (is_numeric($Key)) {
+            $Column = $Value;
+            $Type = '';
+         } else {
+            $Column = $Key;
+            $Type = $Value;
+         }
+
+         if(strlen($TableHeader) > 0)
+            $TableHeader .= self::DELIM;
+
+         if ($Type)
+            $TableHeader .= $Column.':'.$Type;
+         else
+            $TableHeader .= $Column;
+      }
+
+      fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
+      fwrite($fp, $TableHeader.self::NEWLINE);
+      
    }
 }
 ?>
