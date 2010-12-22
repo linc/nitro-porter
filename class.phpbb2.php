@@ -81,12 +81,12 @@ class Phpbb2 extends ExportController {
          'forum_id'=>'CategoryID',
          'topic_poster'=>'InsertUserID',
          'topic_title'=>'Name',
-			'Format'=>'Format',
+         'Format'=>'Format',
          'topic_views'=>'CountViews',
          'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int')
       );
       $Ex->ExportTable('Discussion', "select t.*,
-				'BBCode' as Format,
+        'BBCode' as Format,
             t.topic_replies+1 as CountComments,
             case t.topic_status when 1 then 1 else 0 end as Closed,
             case t.topic_type when 1 then 1 else 0 end as Announce,
@@ -101,11 +101,11 @@ class Phpbb2 extends ExportController {
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
          'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
-			'Format' => 'Format',
+         'Format' => 'Format',
          'poster_id' => 'InsertUserID'
       );
       $Ex->ExportTable('Comment', "select p.*, pt.post_text,
-				'BBCode' as Format,
+        'BBCode' as Format,
             FROM_UNIXTIME(p.post_time) as DateInserted,
             FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
          from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
