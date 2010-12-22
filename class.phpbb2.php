@@ -102,8 +102,7 @@ class Phpbb2 extends ExportController {
          'topic_id' => 'DiscussionID',
          'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
 			'Format' => 'Format',
-         'poster_id' => 'InsertUserID',
-         'poster_id' => 'UpdateUserID'
+         'poster_id' => 'InsertUserID'
       );
       $Ex->ExportTable('Comment', "select p.*, pt.post_text,
 				'BBCode' as Format,
