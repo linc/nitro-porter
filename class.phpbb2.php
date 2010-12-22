@@ -51,7 +51,8 @@ class Phpbb2 extends ExportController {
          'group_name'=>'Name',
          'group_description'=>'Description'
       );
-      $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
+      // Skip single-user groups
+      $Ex->ExportTable('Role', 'select * from :_groups where group_single_user = 0', $Role_Map);
 
 
       // UserRoles
@@ -59,9 +60,10 @@ class Phpbb2 extends ExportController {
          'user_id'=>'UserID',
          'group_id'=>'RoleID'
       );
+      // Skip pending memberships
       $Ex->ExportTable('UserRole', 'select user_id, group_id from :_users
          union
-         select user_id, group_id from :_user_group', $UserRole_Map);
+         select user_id, group_id from :_user_group where user_pending = 0', $UserRole_Map);
 
       // Categories
       $Category_Map = array(
