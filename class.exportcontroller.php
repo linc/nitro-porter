@@ -16,6 +16,11 @@ abstract class ExportController {
 
    protected $UseStreaming = FALSE;
 
+   /**
+    * @var ExportModel
+    */
+   protected $Ex = NULL;
+
    /** Forum-specific export routine */
    abstract protected function ForumExport($Ex);
 
@@ -37,8 +42,13 @@ abstract class ExportController {
       if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
+         $Ex->Controller = $this;
          $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
+         $Ex->Destination = $this->Param('dest', 'file');
+         $Ex->DestDb = $this->Param('destdb', NULL);
+         $Ex->TestMode = $this->Param('test', FALSE);
+
          $Ex->UseStreaming = $this->UseStreaming;
          // Test src tables' existence structure
          $Msg = $Ex->VerifySource($this->SourceTables);
@@ -76,24 +86,35 @@ abstract class ExportController {
       $this->UseStreaming = array_key_exists('savefile', $_POST) ? FALSE : TRUE;
    }
 
+   public function Param($Name, $Default = FALSE) {
+      if (isset($_POST[$Name]))
+         return $_POST[$Name];
+      elseif (isset($_GET[$Name]))
+         return $_GET[$Name];
+      else
+         return $Default;
+   }
+
    /**
     * Test database connection info
     */
    public function TestDatabase() {
       // Connection
-      if($C = @mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
+      if($C = mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
          // Database
          if(mysql_select_db($this->DbInfo['dbname'], $C)) {
             mysql_close($C);
-            return true;
+            $Result = true;
          }
          else {
             mysql_close($C);
-            return 'Could not find database &ldquo;'.$this->DbInfo['dbname'].'&rdquo;.';
+            $Result = 'Could not find database &ldquo;'.$this->DbInfo['dbname'].'&rdquo;.';
          }
       }
       else
-         return 'Could not connect to '.$this->DbInfo['dbhost'].' as '.$this->DbInfo['dbuser'].' with given password.';
+         $Result = 'Could not connect to '.$this->DbInfo['dbhost'].' as '.$this->DbInfo['dbuser'].' with given password.';
+
+      return $Result;
    }
 }
 ?>

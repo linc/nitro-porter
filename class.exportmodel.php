@@ -20,8 +20,13 @@ class ExportModel {
    /** @var array Any comments that have been written during the export. */
    public $Comments = array();
 
+   /** @var ExportController **/
+   public $Controller = NULL;
+
    /** @var string The charcter set to set as the connection anytime the database connects. */
    public $CharacterSet = 'utf8';
+
+   public $Destination = 'file';
 
    /** @var object File pointer */
    protected $_File = NULL;
@@ -46,6 +51,8 @@ class ExportModel {
     * @see ExportModel::ExportTable()
     */
    public $Prefix = '';
+
+   public $Queries = array();
 
    /** @var string The path to the source of the export in the case where a file is being converted. */
    public $SourcePath = '';
@@ -91,6 +98,7 @@ class ExportModel {
             'MessageID' => 'int',
             'ConversationID' => 'int',
             'Body' => 'text',
+            'Format' => 'varchar(20)',
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime'),
       'Discussion' => array(
@@ -133,6 +141,14 @@ class ExportModel {
             'Name' => 'varchar(100)',
             'Description' => 'varchar(200)',
             'CanSession' => 'tinyint'),
+      'Tag' => array(
+            'TagID' => 'int',
+            'Name' => 'varchar(255)',
+            'InsertUserID' => 'int',
+            'DateInserted' => 'datetime'),
+      'TagDiscussion' => array(
+            'TagID' => 'int',
+            'DiscussionID' => 'int'),
       'User' => array(
             'UserID' => 'int',
             'Name' => 'varchar(20)',
@@ -169,6 +185,8 @@ class ExportModel {
             'UserID' => 'int',
             'RoleID' => 'int')
    );
+
+   public $TestMode = FALSE;
 
    /**
     * @var bool Whether or not to use compression when creating the file.
@@ -241,6 +259,11 @@ class ExportModel {
          else
             fclose($this->_File);
       }
+
+      if ($this->TestMode || $this->Controller->Param('dumpsql')) {
+         $Queries = '<pre>'.implode("\n\n", $this->Queries).'</pre>';
+         $this->Comment($Queries, TRUE);
+      }
    }
 
    /**
@@ -277,6 +300,20 @@ class ExportModel {
          fwrite($fp, self::NEWLINE);
          return;
       }
+
+      if ($this->Destination == 'database') {
+         $this->_ExportTableDB($TableName, $Query, $Mappings);
+         return;
+      }
+
+      // If we are in test mode then limit the query.
+      if ($this->TestMode) {
+         $Query = rtrim($Query, ';');
+         if (stripos($Query, 'select') !== FALSE && stripos($Query, 'limit') === FALSE) {
+            $Query .= ' limit 10';
+         }
+      }
+
       $Structure = $this->_Structures[$TableName];
 
       // Set the search and replace to escape strings.
@@ -386,6 +423,67 @@ class ExportModel {
       mysql_close();
 
       return $RowCount;
+   }
+
+   protected function _ExportTableDB($TableName, $Query, $Mappings = array()) {
+      $DestDb = '';
+      if (isset($this->DestDb))
+         $DestDb = $this->DestDb.'.';
+
+      // Limit the query to grab any additional columns.
+      $QueryStruct = rtrim($Query, ';').' limit 1';
+      $Structure = $this->_Structures[$TableName];
+      
+      $Data = $this->Query($QueryStruct, TRUE);
+//      $Mb = function_exists('mb_detect_encoding');
+
+      // Loop through the data and write it to the file.
+      if ($Data === FALSE)
+         return;
+      
+      // Get the export structure.
+      while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
+         $Row = (array)$Row;
+
+         // Get the export structure.
+         $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+
+         $Mappings = array_flip($Mappings);
+         break;
+      }
+      mysql_close($Data);
+
+      // Build the create table statement.
+      $ColumnDefs = array();
+      foreach ($ExportStructure as $ColumnName => $Type) {
+         $ColumnDefs[] = "`$ColumnName` $Type";
+      }
+      $this->Query("drop table if exists {$DestDb}GDN_z$TableName");
+      $CreateSql = "create table {$DestDb}GDN_z$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
+      $this->Query($CreateSql);
+
+      // Build the insert statement.
+      if ($this->TestMode) {
+         $Query = rtrim($Query, ';').' limit 10';
+      }
+
+      $InsertColumns = array();
+      $SelectColumns = array();
+      foreach ($ExportStructure as $ColumnName => $Type) {
+         $InsertColumns[] = "`$ColumnName`";
+         
+         if (isset($Mappings[$ColumnName])) {
+            $SelectColumns[] = "`{$Mappings[$ColumnName]}`";
+         } else {
+            $SelectColumns[] = "`{$ColumnName}`";
+         }
+      }
+
+      $InsertSql = "insert {$DestDb}GDN_z$TableName"
+         ." (\n  ".implode(",\n   ", $InsertColumns)."\n)\n"
+         ."select \n  ".implode(",\n  ", $SelectColumns)."\n"
+         ."from (\n  ".str_replace("\n", "\n  ", $Query)."\n) q";
+      $this->Query($InsertSql);
    }
 
    static function FormatElapsed($Start, $End = NULL) {
@@ -632,6 +730,8 @@ class ExportModel {
       if (isset($this->_LastResult) && is_resource($this->_LastResult))
          mysql_free_result($this->_LastResult);
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
+      $Query = rtrim($Query, ';').';';
+      $this->Queries[] = $Query;
 
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
