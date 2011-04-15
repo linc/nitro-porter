@@ -89,9 +89,8 @@ class Phpbb2 extends ExportController {
             case t.topic_status when 1 then 1 else 0 end as Closed,
             case t.topic_type when 1 then 1 else 0 end as Announce,
             FROM_UNIXTIME(t.topic_time) as DateInserted,
-            FROM_UNIXTIME(p.post_time) as DateUpdated,
-            FROM_UNIXTIME(p.post_time) as DateLastComment
-        from :_topics t inner join :_posts p on t.topic_last_post_id = p.post_id",
+            FROM_UNIXTIME(p.post_time) as DateUpdated
+        from :_topics t left join :_posts p on t.topic_last_post_id = p.post_id",
         $Discussion_Map);
 
       // Comments
