@@ -30,6 +30,8 @@ class Vbulletin extends ExportController {
     * Avatars should be moved to the filesystem prior to export if they
     * are stored in the database. Copy all the avatar_* files from
     * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
+    *
+    * @param ExportModel $Ex
     */
    protected function ForumExport($Ex) {
       // Begin
