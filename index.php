@@ -1,6 +1,6 @@
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.4a');
+define('APPLICATION_VERSION', '1.4b');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -35,7 +35,7 @@ $Supported = array(
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
    'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_'),
-   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefx' => 'smf_')
+   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_')
 );
 
 // Support Files
@@ -56,6 +56,11 @@ include('class.smf.php');
 if (ini_get('date.timezone') == '')
    date_default_timezone_set('America/Montreal');
 
+if ($argc) {
+   ParseCommandLine($argv);
+   define('CONSOLE', 1);
+}
+
 // Instantiate the appropriate controller or display the input page.
 if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
    // Mini-Factory
@@ -67,6 +72,15 @@ else {
    $CanWrite = TestWrite();
    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
 }
+
+if (defined('CONSOLE'))
+   echo "\n";
+
+function ErrorHandler() {
+   echo "Error";
+}
+
+set_error_handler("ErrorHandler");
 
 /**
  * Write out a value passed as bytes to its most readable format.
@@ -82,6 +96,57 @@ function FormatMemorySize($Bytes, $Precision = 1) {
 
    $Result = round($Bytes, $Precision).$Units[$Pow];
    return $Result;
+}
+
+function ParseCommandLine($Argv) {
+   global $Supported;
+
+   $Args = array(
+       'type' => 'The type of forum being exported ('.implode(', ', array_keys($Supported)).').',
+       'prefix' => 'The database table prefix.',
+       'dbhost' => 'The database host.',
+       'dbname' => 'The database name.',
+       'dbuser' => 'The database user.',
+       'dbpass' => 'The database password.',
+       'savefile' => 'Whether or not to save the file.');
+
+   $Script = $Argv[0];
+   unset($Argv[0]);
+
+   if (count($Argv) == 0) {
+      echo "usage: php $Script parm1=value ...\n";
+      foreach ($Args as $Name => $Help) {
+         echo " $Name: $Help\n";
+      }
+
+      die();
+   }
+
+   $Errors = 0;
+   foreach ($Argv as $Arg) {
+      $Parts = explode('=', $Arg, 2);
+      if (count($Parts) < 2) {
+         echo "Malformed argument $Arg.\n";
+         $Errors++;
+         continue;
+      }
+
+      list($Name, $Value) = $Parts;
+      if (!isset($Args[$Name])) {
+         echo "Unknown argument $Name.\n";
+         $Errors++;
+         continue;
+      }
+
+      $_POST[$Name] = $Value;
+      unset($Args[$Name]);
+   }
+   if (count($Args) > 0) {
+      $Errors++;
+      echo "Missing arguments: ".implode(', ', array_keys($Args));
+   }
+   if ($Errors)
+      die("\n$Errors error(s)\n");
 }
 
 /** 
