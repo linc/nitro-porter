@@ -65,6 +65,12 @@ function ViewNoPermission($msg) {
  * Form: Database connection info
  */
 function ViewForm($Data) {
+   if (defined('CONSOLE')) {
+      echo $msg;
+      return;
+   }
+
+
    $forums = GetValue('Supported', $Data, array());
    $msg = GetValue('Msg', $Data, '');
    $Info = GetValue('Info', $Data, '');
@@ -78,7 +84,7 @@ function ViewForm($Data) {
       For help using this application, 
       <a href="http://vanillaforums.com/blog/help-topics/importing-data" style="text-decoration:underline;">see these instructions</a>.
    </div>
-   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+<form action="<?php echo $_SERVER['PHP_SELF'].'?'.http_build_query($_GET); ?>" method="post">
       <input type="hidden" name="step" value="info" />
       <div class="Form">
          <?php if($msg!='') : ?>
