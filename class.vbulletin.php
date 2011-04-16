@@ -205,6 +205,180 @@ class Vbulletin extends ExportController {
    			from :_visitormessage
    			where state='visible'", $Activity_Map);
       }
+
+      // Massge the pms to conversations.
+      
+      $Ex->Query('drop table if exists z_pmto');
+      $Ex->Query('create table z_pmto (
+        pmtextid int unsigned,
+        userid int unsigned,
+        primary key(pmtextid, userid)
+      )');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pmtextid,
+        userid
+      from nb_pm;');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pmtextid,
+        fromuserid
+      from nb_pmtext;');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pm.pmtextid,
+        r.userid
+      from nb_pm pm
+      join nb_pmreceipt r
+        on pm.pmid = r.pmid;');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pm.pmtextid,
+        r.touserid
+      from nb_pm pm
+      join nb_pmreceipt r
+        on pm.pmid = r.pmid;');
+
+      $Ex->Query('drop table if exists z_pmto2;');
+      $Ex->Query('create table z_pmto2 (
+        pmtextid int unsigned,
+        userids varchar(250),
+        primary key (pmtextid)
+      );');
+
+      $Ex->Query('insert z_pmto2 (
+        pmtextid,
+        userids
+      )
+      select
+        pmtextid,
+        group_concat(userid order by userid)
+      from z_pmto t
+      group by t.pmtextid;');
+
+      $Ex->Query('drop table if exists z_pmtext;');
+      $Ex->Query('create table z_pmtext (
+        pmtextid int unsigned,
+        title varchar(250),
+        title2 varchar(250),
+        userids varchar(250),
+        group_id int unsigned
+      );');
+
+      $Ex->Query("insert z_pmtext (
+        pmtextid,
+        title,
+        title2
+      )
+      select
+        pmtextid,
+        title,
+        case when title like 'Re: %' then trim(substring(title, 4)) else title end as title2
+      from nb_pmtext pm;");
+
+      $Ex->Query('create index z_idx_pmtext on z_pmtext (pmtextid);');
+
+      $Ex->Query('update z_pmtext pm
+      join z_pmto2 t
+        on pm.pmtextid = t.pmtextid
+      set pm.userids = t.userids;');
+
+      // A conversation is a group of pmtexts with the same title and same users.
+
+      $Ex->Query('drop table if exists z_pmgroup;');
+      $Ex->Query('create table z_pmgroup (
+        group_id int unsigned,
+        title varchar(250),
+        userids varchar(250)
+      );');
+
+      $Ex->Query('insert z_pmgroup (
+        group_id,
+        title,
+        userids
+      )
+      select
+        min(pm.pmtextid),
+        pm.title2,
+        t2.userids
+      from z_pmtext pm
+      join z_pmto2 t2
+        on pm.pmtextid = t2.pmtextid
+      group by pm.title2, t2.userids;');
+
+      $Ex->Query('create index z_idx_pmgroup on z_pmgroup (title, userids);');
+      $Ex->Query('create index z_idx_pmgroup2 on z_pmgroup (group_id);');
+
+      $Ex->Query('update z_pmtext pm
+      join z_pmgroup g
+        on pm.title = g.title and pm.userids = g.userids
+      set pm.group_id = g.group_id;');
+
+      // Conversations.
+      $Conversation_Map = array(
+         'pmtextid' => 'ConversationID',
+         'fromuserud' => 'InsertUserID',
+         'title2' => array('Column' => 'Subject', 'Type' => 'varchar(250)')
+      );
+      $Ex->ExportTable('Conversation', 
+      'select
+         pm.*,
+         g.title as title2,
+         FROM_UNIXTIME(pm.dateline) as DateInserted
+       from :_pmtext pm
+       join z_pmgroup g
+         on g.group_id = pm.pmtextid', $Conversation_Map);
+
+      // Coversation Messages.
+      $ConversationMessage_Map = array(
+          'pmtextid' => 'MessageID',
+          'group_id' => 'ConversationID',
+          'message' => 'Body',
+          'fromuserid' => 'InsertUserID'
+      );
+      $Ex->ExportTable('ConversationMessage',
+      "select
+         pm.*,
+         pm2.group_id,
+         'BBCode' as Format,
+         FROM_UNIXTIME(pm.dateline) as DateInserted
+       from :_pmtext pm
+       join z_pmtext pm2
+         on pm.pmtextid = pm2.pmtextid", $ConversationMessage_Map);
+
+      // User Conversation.
+      $UserConversation_Map = array(
+         'userid' => 'UserID',
+         'group_id' => 'ConversationID'
+      );
+      $Ex->ExportTable('UserConversation',
+      "select
+         g.group_id,
+         t.userid
+       from z_pmto t
+       join z_pmgroup g
+         on g.group_id = t.pmtextid;", $UserConversation_Map);
+
+      $Ex->Query('drop table if exists z_pmto');
+      $Ex->Query('drop table if exists z_pmto2;');
+      $Ex->Query('drop table if exists z_pmtext;');
+      $Ex->Query('drop table if exists z_pmgroup;');
       
       // Media
       if ($Ex->Exists('attachment')) {
