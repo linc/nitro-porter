@@ -61,6 +61,17 @@ if ($argc) {
    define('CONSOLE', 1);
 }
 
+if (isset($_GET['type'])) {
+   $CustomType = $_GET['type'];
+   if (!isset($Supported[$CustomType])) {
+      $Path = 'class.'.strtolower($CustomType).'.php';
+      if (file_exists($Path)) {
+         $Supported[$CustomType] = array('name' => $CustomType.' (custom)', 'prefix' => '');
+         include_once($Path);
+      }
+   }
+}
+
 // Instantiate the appropriate controller or display the input page.
 if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
    // Mini-Factory
@@ -132,11 +143,6 @@ function ParseCommandLine($Argv) {
       }
 
       list($Name, $Value) = $Parts;
-      if (!isset($Args[$Name])) {
-         echo "Unknown argument $Name.\n";
-         $Errors++;
-         continue;
-      }
 
       $_POST[$Name] = $Value;
       unset($Args[$Name]);
