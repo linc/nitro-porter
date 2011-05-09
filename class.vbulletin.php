@@ -131,10 +131,11 @@ class Vbulletin extends ExportController {
          'forumid'=>'CategoryID',
          'description'=>'Description',
          'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
-         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int')
+         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int'),
+         'parentid'=>'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
-         from :_forum where threadcount > 0", $Category_Map);
+      $Ex->ExportTable('Category', "select f.*, left(title,30) as Name
+         from :_forum f", $Category_Map);
       
       // Discussions
       $Discussion_Map = array(
@@ -143,7 +144,8 @@ class Vbulletin extends ExportController {
          'postuserid'=>'InsertUserID',
          'postuserid2'=>'UpdateUserID',
          'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
-			'Format'=>'Format'
+			'Format'=>'Format',
+         'views'=>'CountViews'
       );
       $Ex->ExportTable('Discussion', "select t.*,
 				t.postuserid as postuserid2,
@@ -222,7 +224,7 @@ class Vbulletin extends ExportController {
       select
         pmtextid,
         userid
-      from nb_pm;');
+      from :_pm;');
 
       $Ex->Query('insert ignore z_pmto (
         pmtextid,
@@ -231,7 +233,7 @@ class Vbulletin extends ExportController {
       select
         pmtextid,
         fromuserid
-      from nb_pmtext;');
+      from :_pmtext;');
 
       $Ex->Query('insert ignore z_pmto (
         pmtextid,
@@ -240,8 +242,8 @@ class Vbulletin extends ExportController {
       select
         pm.pmtextid,
         r.userid
-      from nb_pm pm
-      join nb_pmreceipt r
+      from :_pm pm
+      join :_pmreceipt r
         on pm.pmid = r.pmid;');
 
       $Ex->Query('insert ignore z_pmto (
@@ -251,8 +253,8 @@ class Vbulletin extends ExportController {
       select
         pm.pmtextid,
         r.touserid
-      from nb_pm pm
-      join nb_pmreceipt r
+      from :_pm pm
+      join :_pmreceipt r
         on pm.pmid = r.pmid;');
 
       $Ex->Query('drop table if exists z_pmto2;');
@@ -290,7 +292,7 @@ class Vbulletin extends ExportController {
         pmtextid,
         title,
         case when title like 'Re: %' then trim(substring(title, 4)) else title end as title2
-      from nb_pmtext pm;");
+      from :_pmtext pm;");
 
       $Ex->Query('create index z_idx_pmtext on z_pmtext (pmtextid);');
 
@@ -327,13 +329,13 @@ class Vbulletin extends ExportController {
 
       $Ex->Query('update z_pmtext pm
       join z_pmgroup g
-        on pm.title = g.title and pm.userids = g.userids
+        on pm.title2 = g.title and pm.userids = g.userids
       set pm.group_id = g.group_id;');
 
       // Conversations.
       $Conversation_Map = array(
          'pmtextid' => 'ConversationID',
-         'fromuserud' => 'InsertUserID',
+         'fromuserid' => 'InsertUserID',
          'title2' => array('Column' => 'Subject', 'Type' => 'varchar(250)')
       );
       $Ex->ExportTable('Conversation', 
