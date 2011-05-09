@@ -201,88 +201,188 @@ class Vanilla1 extends ExportController {
       
       // Conversations
 
-      // Create a mapping table for conversations.
-      // This cannot be a temporary table because of some of the union selects it is used in below.
-      $Ex->Query("create table :_V1Conversation (ConversationID int auto_increment primary key, DiscussionID int, UserID1 int, UserID2 int, DateCreated datetime, EditUserID int, DateEdited datetime)");
+      // Create a mapping tables for conversations.
+      // These mapping tables are used to group comments that a) are in the same discussion and b) are from and to the same users.
 
-      $Ex->Query("insert :_V1Conversation (DiscussionID, UserID1, UserID2, DateCreated, EditUserID, DateEdited)
-         select
-           DiscussionID,
-           AuthUserID as UserID1,
-           WhisperUserID as UserID2,
-           min(DateCreated),
-           max(EditUserID),
-           max(DateEdited)
-         from :_Comment
-         where coalesce(WhisperUserID, 0) <> 0
-         group by DiscussionID, AuthUserID, WhisperUserID
+      $Ex->Query("drop table if exists z_pmto");
 
-         union
+      $Ex->Query("create table z_pmto (
+  CommentID int,
+  UserID int,
+  primary key(CommentID, UserID)
+ )");
 
-         select
-           DiscussionID,
-           AuthUserID as UserID1,
-           WhisperUserID as UserID2,
-           DateCreated,
-           WhisperFromLastUserID,
-           DateLastWhisper
-         from :_Discussion
-         where coalesce(WhisperUserID, 0) <> 0");
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  CommentID,
+  AuthUserID
+from :_Comment
+where coalesce(WhisperUserID, 0) <> 0");
 
-      // Delete redundant conversations.
-      $Ex->Query("create index ix_V1UserID1 on :_V1Conversation (DiscussionID, UserID1)"); // for speed
-      $Ex->Query("delete t.*
-         from :_V1Conversation t
-         inner join :_Comment c
-           on c.DiscussionID = t.DiscussionID
-             and c.AuthUserID = t.UserID2
-             and c.WhisperUserID = t.UserID1
-             and c.AuthUserID < c.WhisperUserID");
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  CommentID,
+  WhisperUserID
+from :_Comment
+where coalesce(WhisperUserID, 0) <> 0");
 
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  c.CommentID,
+  d.AuthUserID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  c.CommentID,
+  d.WhisperUserID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  c.CommentID,
+  c.AuthUserID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("drop table if exists z_pmto2");
+
+      $Ex->Query("create table z_pmto2 (
+  CommentID int,
+  UserIDs varchar(250),
+  primary key (CommentID)
+)");
+
+      $Ex->Query("insert z_pmto2 (
+  CommentID,
+  UserIDs
+)
+select
+  CommentID,
+  group_concat(UserID order by UserID)
+from z_pmto
+group by CommentID");
+
+
+      $Ex->Query("drop table if exists z_pm");
+
+      $Ex->Query("create table z_pm (
+  CommentID int,
+  DiscussionID int,
+  UserIDs varchar(250),
+  GroupID int
+)");
+
+      $Ex->Query("insert ignore z_pm (
+  CommentID,
+  DiscussionID
+)
+select
+  CommentID,
+  DiscussionID
+from :_Comment
+where coalesce(WhisperUserID, 0) <> 0");
+
+      $Ex->Query("insert ignore z_pm (
+  CommentID,
+  DiscussionID
+)
+select
+  c.CommentID,
+  c.DiscussionID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("update z_pm pm
+join z_pmto2 t
+  on t.CommentID = pm.CommentID
+set pm.UserIDs = t.UserIDs");
+
+      $Ex->Query("drop table if exists z_pmgroup");
+
+      $Ex->Query("create table z_pmgroup (
+  GroupID int,
+  DiscussionID int,
+  UserIDs varchar(250)
+)");
+
+      $Ex->Query("insert z_pmgroup (
+  GroupID,
+  DiscussionID,
+  UserIDs
+)
+select
+  min(pm.CommentID),
+  pm.DiscussionID,
+  t2.UserIDs
+from z_pm pm
+join z_pmto2 t2
+  on pm.CommentID = t2.CommentID
+group by pm.DiscussionID, t2.UserIDs");
+
+      $Ex->Query("create index z_idx_pmgroup on z_pmgroup (DiscussionID, UserIDs)");
+
+      $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (GroupID)");
+
+      $Ex->Query("update z_pm pm
+join z_pmgroup g
+  on pm.DiscussionID = g.DiscussionID and pm.UserIDs = g.UserIDs
+set pm.GroupID = g.GroupID");
 
       $Conversation_Map = array(
-         'UserID1' => 'InsertUserID',
+         'AuthUserID' => 'InsertUserID',
          'DateCreated' => 'DateInserted',
          'EditUserID' => 'UpdateUserID',
-         'DateEdited' => 'DateUpdated'
+         'DateEdited' => 'DateUpdated',
+         'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
       );
-      $Ex->ExportTable('Conversation', "select * from :_V1Conversation", $Conversation_Map);
+      $Ex->ExportTable('Conversation',
+      "select c.*, d.Name
+from :_Comment c
+join :_Discussion d
+  on d.DiscussionID = c.DiscussionID
+join z_pmgroup g
+  on g.GroupID = c.CommentID;", $Conversation_Map);
       
-      // ConversationMessage
-      /*
-         'MessageID' => 'int', 
-         'ConversationID' => 'int', 
-         'Body' => 'text', 
-         'InsertUserID' => 'int', 
-         'DateInserted' => 'datetime'
-      */
+      // ConversationMessage.
       $ConversationMessage_Map = array(
          'CommentID' => 'MessageID',
-         'DiscussionID' => 'ConversationID',
+         'GroupID' => 'ConversationID',
          'Body' => 'Body',
+         'FormatType' => 'Format',
          'AuthUserID' => 'InsertUserID',
          'DateCreated' => 'DateInserted'
       );
-      $Ex->ExportTable('ConversationMessage', "
-         select c.CommentID, t.ConversationID, c.AuthUserID, c.DateCreated, c.Body
-         from :_Comment c
-         join :_V1Conversation t
-           on t.DiscussionID = c.DiscussionID
-             and c.WhisperUserID in (t.UserID1, t.UserID2)
-             and c.AuthUserID in (t.UserID1, t.UserID2)
-         where c.WhisperUserID > 0
-
-         union
-
-         select c.CommentID, t.ConversationID, c.AuthUserID, c.DateCreated, c.Body
-         from :_Comment c
-         join :_Discussion d
-          on c.DiscussionID = d.DiscussionID
-         join :_V1Conversation t
-           on t.DiscussionID = d.DiscussionID
-             and d.WhisperUserID in (t.UserID1, t.UserID2)
-             and d.AuthUserID in (t.UserID1, t.UserID2)
-         where d.WhisperUserID > 0", $ConversationMessage_Map);
+      $Ex->ExportTable('ConversationMessage', 
+      "select c.*, pm.GroupID
+from z_pm pm
+join :_Comment c
+  on pm.CommentID = c.CommentID", $ConversationMessage_Map);
       
       // UserConversation
       /*
@@ -292,18 +392,20 @@ class Vanilla1 extends ExportController {
       */
       $UserConversation_Map = array(
          'UserID' => 'UserID',
-         'ConversationID' => 'ConversationID'
+         'GroupID' => 'ConversationID'
       );
       $Ex->ExportTable('UserConversation', 
-         "select UserID1 as UserID, ConversationID
-         from :_V1Conversation
+         "select distinct
+  pm.GroupID,
+  t.UserID
+from z_pmto t
+join z_pm pm
+  on pm.CommentID = t.CommentID", $UserConversation_Map);
 
-         union
-
-         select UserID2 as UserID, ConversationID
-         from :_V1Conversation", $UserConversation_Map);
-
-      $Ex->Query("drop table :_V1Conversation");
+      $Ex->Query("drop table z_pmto");
+      $Ex->Query("drop table z_pmto2");
+      $Ex->Query("drop table z_pm");
+      $Ex->Query("drop table z_pmgroup");
 
       // Media
       if ($Ex->Exists('Attachment')) {
