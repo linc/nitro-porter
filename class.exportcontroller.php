@@ -43,6 +43,7 @@ abstract class ExportController {
          // Create db object
          $Ex = new ExportModel;
          $Ex->Controller = $this;
+         $this->Ex = $Ex;
          $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
          $Ex->Destination = $this->Param('dest', 'file');
