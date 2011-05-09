@@ -25,6 +25,8 @@ class Vanilla1 extends ExportController {
     * 
     */
    protected function ForumExport($Ex) {
+      $this->Ex = $Ex;
+
       // Get the characterset for the comments.
       $CharacterSet = $Ex->GetCharacterSet('Comment');
       if ($CharacterSet)
@@ -68,7 +70,27 @@ class Vanilla1 extends ExportController {
          'Description'=>'Description'
       );   
       $Ex->ExportTable('Role', "select RoleID, Name, Description from :_Role union all select $ZeroRoleID, 'Applicant', 'Created by the Vanilla Porter'", $Role_Map);
-  
+
+      $Permission_Map = array(
+         'RoleID' => 'RoleID',
+         'PERMISSION_SIGN_IN' => 'Garden.SignIn.Allow',
+         'Permissions' => array('Column' => 'Vanilla.Comments.Add', 'Type' => 'tinyint', 'Filter' => array($this, 'FilterPermissions')),
+         'PERMISSION_START_DISCUSSION' => array('Column' => 'Vanilla.Discussions.Add', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_SINK_DISCUSSION' => array('Column' => 'Vanilla.Discussions.Sink', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_STICK_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Announce', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_CLOSE_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Close', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_EDIT_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_EDIT_COMMENTS' => array('Column' => 'Vanilla.Comments.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_ADD_CATEGORIES' => array('Column' => 'Vanilla.Categories.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_APPROVE_APPLICANTS' => array('Column' => 'Garden.Applicants.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_EDIT_USERS' => array('Column' => 'Garden.Users.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_MANAGE_REGISTRATION' => array('Column' => 'Garden.Registration.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array('Column' => 'Garden.Settings.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_MANAGE_EXTENSIONS' => array('Column' => 'Garden.Plugins.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_MANAGE_THEMES' => array('Column' => 'Garden.Themes.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool'))
+      );
+      $Ex->ExportTable('Permission', "select * from :_Role", $Permission_Map);
+
       // UserRoles
       /*
 		    'UserID' => 'int', 
@@ -310,6 +332,28 @@ class Vanilla1 extends ExportController {
       if (($Pos = strpos($AbsPath, '/uploads/')) !== FALSE)
          return substr($AbsPath, $Pos + 9);
       return $AbsPath;
+   }
+
+   function FilterPermissions($Permissions, $ColumnName, &$Row) {
+      $Permissions2 = unserialize($Permissions);
+
+      foreach ($Permissions2 as $Name => $Value) {
+         if (is_null($Value))
+            $Permissions2[$Name] = FALSE;
+      }
+
+      if (is_array($Permissions2)) {
+         $Row = array_merge($Row, $Permissions2);
+         $this->Ex->CurrentRow = $Row;
+         return isset($Permissions2['PERMISSION_ADD_COMMENTS']) ? $Permissions2['PERMISSION_ADD_COMMENTS'] : FALSE;
+      }
+      return FALSE;
+   }
+
+   function ForceBool($Value) {
+      if ($Value)
+         return TRUE;
+      return FALSE;
    }
 }
 ?>
