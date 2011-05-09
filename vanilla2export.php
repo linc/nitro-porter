@@ -2,7 +2,7 @@
 
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.4a');
+define('APPLICATION_VERSION', '1.5b');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -37,7 +37,7 @@ $Supported = array(
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
    'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_'),
-   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefx' => 'smf_')
+   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_')
 );
 
 // Support Files
@@ -65,8 +65,16 @@ class ExportModel {
    /** @var array Any comments that have been written during the export. */
    public $Comments = array();
 
+   /** @var ExportController **/
+   public $Controller = NULL;
+
    /** @var string The charcter set to set as the connection anytime the database connects. */
    public $CharacterSet = 'utf8';
+
+   /** @var array **/
+   public $CurrentRow = NULL;
+
+   public $Destination = 'file';
 
    /** @var object File pointer */
    protected $_File = NULL;
@@ -91,6 +99,8 @@ class ExportModel {
     * @see ExportModel::ExportTable()
     */
    public $Prefix = '';
+
+   public $Queries = array();
 
    /** @var string The path to the source of the export in the case where a file is being converted. */
    public $SourcePath = '';
@@ -136,6 +146,7 @@ class ExportModel {
             'MessageID' => 'int',
             'ConversationID' => 'int',
             'Body' => 'text',
+            'Format' => 'varchar(20)',
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime'),
       'Discussion' => array(
@@ -150,6 +161,7 @@ class ExportModel {
             'UpdateUserID' => 'int',
             'DateLastComment' => 'datetime',
             'CountComments' => 'int',
+            'CountViews' => 'int',
             'Score' => 'float',
             'Closed' => 'tinyint',
             'Announce' => 'tinyint',
@@ -166,11 +178,29 @@ class ExportModel {
             'ForeignID' => 'int',
             'ForeignTable' => 'varchar(24)'
           ),
+      'Permission' => array(
+            'RoleID' => 'int',
+//            '_Permissions' => 'varchar(20)',
+            'Garden.SignIn.Allow' => 'tinyint',
+            'Garden.Activity.View' => 'tinyint',
+            'Garden.Profiles.View' => 'tinyint',
+            'Vanilla.Discussions.View' => 'tinyint',
+            'Vanilla.Discussions.Add' => 'tinyint',
+            'Vanilla.Comments.Add' => 'tinyint'
+          ),
       'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
             'Description' => 'varchar(200)',
             'CanSession' => 'tinyint'),
+      'Tag' => array(
+            'TagID' => 'int',
+            'Name' => 'varchar(255)',
+            'InsertUserID' => 'int',
+            'DateInserted' => 'datetime'),
+      'TagDiscussion' => array(
+            'TagID' => 'int',
+            'DiscussionID' => 'int'),
       'User' => array(
             'UserID' => 'int',
             'Name' => 'varchar(20)',
@@ -182,12 +212,14 @@ class ExportModel {
             'HourOffset' => 'int',
             'CountDiscussions' => 'int',
             'CountComments' => 'int',
+            'DiscoveryText' => 'text',
             'Photo' => 'varchar(255)',
             'DateOfBirth' => 'datetime',
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
             'DateInserted' => 'datetime',
-            'DateUpdated' => 'datetime'),
+            'DateUpdated' => 'datetime',
+            'Banned' => 'tinyint'),
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
@@ -206,6 +238,8 @@ class ExportModel {
             'UserID' => 'int',
             'RoleID' => 'int')
    );
+
+   public $TestMode = FALSE;
 
    /**
     * @var bool Whether or not to use compression when creating the file.
@@ -278,6 +312,11 @@ class ExportModel {
          else
             fclose($this->_File);
       }
+
+      if ($this->TestMode || $this->Controller->Param('dumpsql')) {
+         $Queries = '<pre>'.implode("\n\n", $this->Queries).'</pre>';
+         $this->Comment($Queries, TRUE);
+      }
    }
 
    /**
@@ -314,6 +353,20 @@ class ExportModel {
          fwrite($fp, self::NEWLINE);
          return;
       }
+
+      if ($this->Destination == 'database') {
+         $this->_ExportTableDB($TableName, $Query, $Mappings);
+         return;
+      }
+
+      // If we are in test mode then limit the query.
+      if ($this->TestMode) {
+         $Query = rtrim($Query, ';');
+         if (stripos($Query, 'select') !== FALSE && stripos($Query, 'limit') === FALSE) {
+            $Query .= ' limit 10';
+         }
+      }
+
       $Structure = $this->_Structures[$TableName];
 
       // Set the search and replace to escape strings.
@@ -340,7 +393,9 @@ class ExportModel {
       if ($Data !== FALSE) {
          while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
             $Row = (array)$Row; // export%202010-05-06%20210937.txt
+            $this->CurrentRow =& $Row;
             $RowCount++;
+            
             if($FirstQuery) {
                // Start with the table name.
                fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
@@ -373,6 +428,15 @@ class ExportModel {
                } else {
                   $Value = NULL;
                }
+
+               // Check to see if there is a callback filter.
+               if (isset($Filters[$Field])) {
+                  $Callback = $Filters[$Field];
+                  $Row2 =& $Row;
+                  $Value = call_user_func($Filters[$Field], $Value, $Field, $Row2, $Column);
+                  $Row = $this->CurrentRow;
+               }
+
                // Format the value for writing.
                if (is_null($Value)) {
                   $Value = self::NULL;
@@ -382,7 +446,7 @@ class ExportModel {
 
                   // Check to see if there is a callback filter.
                   if (isset($Filters[$Field])) {
-                     $Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
+                     //$Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
                   } else {
                      if($Mb && mb_detect_encoding($Value) != 'UTF-8')
                         $Value = utf8_encode($Value);
@@ -416,6 +480,68 @@ class ExportModel {
       mysql_close();
 
       return $RowCount;
+   }
+
+   protected function _ExportTableDB($TableName, $Query, $Mappings = array()) {
+      $DestDb = '';
+      if (isset($this->DestDb))
+         $DestDb = $this->DestDb.'.';
+
+      // Limit the query to grab any additional columns.
+      $QueryStruct = rtrim($Query, ';').' limit 1';
+      $Structure = $this->_Structures[$TableName];
+      
+      $Data = $this->Query($QueryStruct, TRUE);
+//      $Mb = function_exists('mb_detect_encoding');
+
+      // Loop through the data and write it to the file.
+      if ($Data === FALSE)
+         return;
+      
+      // Get the export structure.
+      while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
+         $Row = (array)$Row;
+
+         // Get the export structure.
+         $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+
+         $Mappings = array_flip($Mappings);
+         break;
+      }
+      mysql_close($Data);
+
+      // Build the create table statement.
+      $ColumnDefs = array();
+      foreach ($ExportStructure as $ColumnName => $Type) {
+         $ColumnDefs[] = "`$ColumnName` $Type";
+      }
+      $this->Query("drop table if exists {$DestDb}GDN_z$TableName");
+      $CreateSql = "create table {$DestDb}GDN_z$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
+      $this->Query($CreateSql);
+
+      $Query = rtrim($Query, ';');
+      // Build the insert statement.
+      if ($this->TestMode) {
+         $Query .= ' limit 10';
+      }
+
+      $InsertColumns = array();
+      $SelectColumns = array();
+      foreach ($ExportStructure as $ColumnName => $Type) {
+         $InsertColumns[] = "`$ColumnName`";
+         
+         if (isset($Mappings[$ColumnName])) {
+            $SelectColumns[] = "`{$Mappings[$ColumnName]}`";
+         } else {
+            $SelectColumns[] = "`{$ColumnName}`";
+         }
+      }
+
+      $InsertSql = "insert {$DestDb}GDN_z$TableName"
+         ." (\n  ".implode(",\n   ", $InsertColumns)."\n)\n"
+         ."select \n  ".implode(",\n  ", $SelectColumns)."\n"
+         ."from (\n  ".str_replace("\n", "\n  ", $Query)."\n) q";
+      $this->Query($InsertSql);
    }
 
    static function FormatElapsed($Start, $End = NULL) {
@@ -568,6 +694,26 @@ class ExportModel {
             $ExportStructure[$DestColumn] = $DestType;
          }
       }
+
+      // Add filtered mappings since filters can add new columns.
+      foreach ($Mappings as $Source => $Options) {
+         if (!is_array($Options) || !isset($Options['Column']))
+            continue;
+         $DestColumn = $Options['Column'];
+         if (isset($ExportStructure[$DestColumn]))
+            continue;
+
+         if (isset($Structure[$DestColumn]))
+            $DestType = $Structure[$DestColumn];
+         elseif (isset($Options['Type']))
+            $DestType = $Options['Type'];
+         else
+            continue;
+
+         $ExportStructure[$DestColumn] = $DestType;
+         $Mappings[$Source] = $DestColumn;
+      }
+
       return $ExportStructure;
    }
 
@@ -643,6 +789,8 @@ class ExportModel {
       if (isset($this->_LastResult) && is_resource($this->_LastResult))
          mysql_free_result($this->_LastResult);
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
+      $Query = rtrim($Query, ';').';';
+      $this->Queries[] = $Query;
 
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
@@ -853,9 +1001,7 @@ body {
    margin: 0px;
    padding: 0px;
    text-align: center;
-   color:#076C8E;
-   text-shadow:0 1px 0 #FFFFFF;   
-   }
+}
 a,
 a:link,
 a:active,
@@ -919,7 +1065,6 @@ div.Errors {
    color: #fff !important;
    font-size: 16px;
    line-height: 150%;
-   text-shadow: #900 0 1px 0;
 }
 .Errors li pre,
 .Errors li code {
@@ -931,7 +1076,6 @@ div.Errors {
 	margin: 10px 0 0;
 	padding: 4px 8px;
 	display: block;
-	text-shadow: none;
 	font-size: 13px;
 	font-weight: normal;
 	font-family: monospace;
@@ -971,7 +1115,6 @@ form ul li.Warning div {
    font-size: 14px;
 	line-height: 1.6;
 	color: #000;
-	text-shadow: none;
    padding: 16px 0 8px;
 }
 form label {
@@ -986,7 +1129,6 @@ form label span {
 	font-size: 13px;
 	color: #555;
 	font-weight: normal;
-	text-shadow: none;
 	padding: 0 0 0 10px;
 }
 form select {
@@ -1061,7 +1203,6 @@ div.Info {
 	text-align: left;
 	width: 568px;
 	margin: 0 auto 0px;
-	font-size: 80%;
 	line-height: 1.6;
 }
 div.Info h1 {
@@ -1072,13 +1213,11 @@ div.Info p {
 	color: #000;
 	padding: 3px 0 6px;
 	margin: 0;
-	text-shadow: none;
 }
 div.Info li {
 	color: #000;
 	padding: 1px 0;
 	margin: 0;
-	text-shadow: none;
 }
 .Version {
    font-size: 9pt;
@@ -1131,6 +1270,12 @@ function ViewNoPermission($msg) {
  * Form: Database connection info
  */
 function ViewForm($Data) {
+   if (defined('CONSOLE')) {
+      echo $msg;
+      return;
+   }
+
+
    $forums = GetValue('Supported', $Data, array());
    $msg = GetValue('Msg', $Data, '');
    $Info = GetValue('Info', $Data, '');
@@ -1144,7 +1289,7 @@ function ViewForm($Data) {
       For help using this application, 
       <a href="http://vanillaforums.com/blog/help-topics/importing-data" style="text-decoration:underline;">see these instructions</a>.
    </div>
-   <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+<form action="<?php echo $_SERVER['PHP_SELF'].'?'.http_build_query($_GET); ?>" method="post">
       <input type="hidden" name="step" value="info" />
       <div class="Form">
          <?php if($msg!='') : ?>
@@ -1262,6 +1407,11 @@ abstract class ExportController {
 
    protected $UseStreaming = FALSE;
 
+   /**
+    * @var ExportModel
+    */
+   protected $Ex = NULL;
+
    /** Forum-specific export routine */
    abstract protected function ForumExport($Ex);
 
@@ -1283,8 +1433,14 @@ abstract class ExportController {
       if($Msg === true) {
          // Create db object
          $Ex = new ExportModel;
+         $Ex->Controller = $this;
+         $this->Ex = $Ex;
          $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
          $Ex->Prefix = $this->DbInfo['prefix'];
+         $Ex->Destination = $this->Param('dest', 'file');
+         $Ex->DestDb = $this->Param('destdb', NULL);
+         $Ex->TestMode = $this->Param('test', FALSE);
+
          $Ex->UseStreaming = $this->UseStreaming;
          // Test src tables' existence structure
          $Msg = $Ex->VerifySource($this->SourceTables);
@@ -1322,24 +1478,35 @@ abstract class ExportController {
       $this->UseStreaming = array_key_exists('savefile', $_POST) ? FALSE : TRUE;
    }
 
+   public function Param($Name, $Default = FALSE) {
+      if (isset($_POST[$Name]))
+         return $_POST[$Name];
+      elseif (isset($_GET[$Name]))
+         return $_GET[$Name];
+      else
+         return $Default;
+   }
+
    /**
     * Test database connection info
     */
    public function TestDatabase() {
       // Connection
-      if($C = @mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
+      if($C = mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
          // Database
          if(mysql_select_db($this->DbInfo['dbname'], $C)) {
             mysql_close($C);
-            return true;
+            $Result = true;
          }
          else {
             mysql_close($C);
-            return 'Could not find database &ldquo;'.$this->DbInfo['dbname'].'&rdquo;.';
+            $Result = 'Could not find database &ldquo;'.$this->DbInfo['dbname'].'&rdquo;.';
          }
       }
       else
-         return 'Could not connect to '.$this->DbInfo['dbhost'].' as '.$this->DbInfo['dbuser'].' with given password.';
+         $Result = 'Could not connect to '.$this->DbInfo['dbhost'].' as '.$this->DbInfo['dbuser'].' with given password.';
+
+      return $Result;
    }
 }
 ?><?php
@@ -1374,6 +1541,8 @@ class Vanilla1 extends ExportController {
     * 
     */
    protected function ForumExport($Ex) {
+      $this->Ex = $Ex;
+
       // Get the characterset for the comments.
       $CharacterSet = $Ex->GetCharacterSet('Comment');
       if ($CharacterSet)
@@ -1417,7 +1586,27 @@ class Vanilla1 extends ExportController {
          'Description'=>'Description'
       );   
       $Ex->ExportTable('Role', "select RoleID, Name, Description from :_Role union all select $ZeroRoleID, 'Applicant', 'Created by the Vanilla Porter'", $Role_Map);
-  
+
+      $Permission_Map = array(
+         'RoleID' => 'RoleID',
+         'PERMISSION_SIGN_IN' => 'Garden.SignIn.Allow',
+         'Permissions' => array('Column' => 'Vanilla.Comments.Add', 'Type' => 'tinyint', 'Filter' => array($this, 'FilterPermissions')),
+         'PERMISSION_START_DISCUSSION' => array('Column' => 'Vanilla.Discussions.Add', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_SINK_DISCUSSION' => array('Column' => 'Vanilla.Discussions.Sink', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_STICK_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Announce', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_CLOSE_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Close', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_EDIT_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_EDIT_COMMENTS' => array('Column' => 'Vanilla.Comments.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_ADD_CATEGORIES' => array('Column' => 'Vanilla.Categories.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_APPROVE_APPLICANTS' => array('Column' => 'Garden.Applicants.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_EDIT_USERS' => array('Column' => 'Garden.Users.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_MANAGE_REGISTRATION' => array('Column' => 'Garden.Registration.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array('Column' => 'Garden.Settings.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_MANAGE_EXTENSIONS' => array('Column' => 'Garden.Plugins.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_MANAGE_THEMES' => array('Column' => 'Garden.Themes.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool'))
+      );
+      $Ex->ExportTable('Permission', "select * from :_Role", $Permission_Map);
+
       // UserRoles
       /*
 		    'UserID' => 'int', 
@@ -1528,88 +1717,188 @@ class Vanilla1 extends ExportController {
       
       // Conversations
 
-      // Create a mapping table for conversations.
-      // This cannot be a temporary table because of some of the union selects it is used in below.
-      $Ex->Query("create table :_V1Conversation (ConversationID int auto_increment primary key, DiscussionID int, UserID1 int, UserID2 int, DateCreated datetime, EditUserID int, DateEdited datetime)");
+      // Create a mapping tables for conversations.
+      // These mapping tables are used to group comments that a) are in the same discussion and b) are from and to the same users.
 
-      $Ex->Query("insert :_V1Conversation (DiscussionID, UserID1, UserID2, DateCreated, EditUserID, DateEdited)
-         select
-           DiscussionID,
-           AuthUserID as UserID1,
-           WhisperUserID as UserID2,
-           min(DateCreated),
-           max(EditUserID),
-           max(DateEdited)
-         from :_Comment
-         where coalesce(WhisperUserID, 0) <> 0
-         group by DiscussionID, AuthUserID, WhisperUserID
+      $Ex->Query("drop table if exists z_pmto");
 
-         union
+      $Ex->Query("create table z_pmto (
+  CommentID int,
+  UserID int,
+  primary key(CommentID, UserID)
+ )");
 
-         select
-           DiscussionID,
-           AuthUserID as UserID1,
-           WhisperUserID as UserID2,
-           DateCreated,
-           WhisperFromLastUserID,
-           DateLastWhisper
-         from :_Discussion
-         where coalesce(WhisperUserID, 0) <> 0");
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  CommentID,
+  AuthUserID
+from :_Comment
+where coalesce(WhisperUserID, 0) <> 0");
 
-      // Delete redundant conversations.
-      $Ex->Query("create index ix_V1UserID1 on :_V1Conversation (DiscussionID, UserID1)"); // for speed
-      $Ex->Query("delete t.*
-         from :_V1Conversation t
-         inner join :_Comment c
-           on c.DiscussionID = t.DiscussionID
-             and c.AuthUserID = t.UserID2
-             and c.WhisperUserID = t.UserID1
-             and c.AuthUserID < c.WhisperUserID");
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  CommentID,
+  WhisperUserID
+from :_Comment
+where coalesce(WhisperUserID, 0) <> 0");
 
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  c.CommentID,
+  d.AuthUserID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  c.CommentID,
+  d.WhisperUserID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("insert ignore z_pmto (
+  CommentID,
+  UserID
+)
+select distinct
+  c.CommentID,
+  c.AuthUserID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("drop table if exists z_pmto2");
+
+      $Ex->Query("create table z_pmto2 (
+  CommentID int,
+  UserIDs varchar(250),
+  primary key (CommentID)
+)");
+
+      $Ex->Query("insert z_pmto2 (
+  CommentID,
+  UserIDs
+)
+select
+  CommentID,
+  group_concat(UserID order by UserID)
+from z_pmto
+group by CommentID");
+
+
+      $Ex->Query("drop table if exists z_pm");
+
+      $Ex->Query("create table z_pm (
+  CommentID int,
+  DiscussionID int,
+  UserIDs varchar(250),
+  GroupID int
+)");
+
+      $Ex->Query("insert ignore z_pm (
+  CommentID,
+  DiscussionID
+)
+select
+  CommentID,
+  DiscussionID
+from :_Comment
+where coalesce(WhisperUserID, 0) <> 0");
+
+      $Ex->Query("insert ignore z_pm (
+  CommentID,
+  DiscussionID
+)
+select
+  c.CommentID,
+  c.DiscussionID
+from :_Discussion d
+join :_Comment c
+  on c.DiscussionID = d.DiscussionID
+where coalesce(d.WhisperUserID, 0) <> 0");
+
+      $Ex->Query("update z_pm pm
+join z_pmto2 t
+  on t.CommentID = pm.CommentID
+set pm.UserIDs = t.UserIDs");
+
+      $Ex->Query("drop table if exists z_pmgroup");
+
+      $Ex->Query("create table z_pmgroup (
+  GroupID int,
+  DiscussionID int,
+  UserIDs varchar(250)
+)");
+
+      $Ex->Query("insert z_pmgroup (
+  GroupID,
+  DiscussionID,
+  UserIDs
+)
+select
+  min(pm.CommentID),
+  pm.DiscussionID,
+  t2.UserIDs
+from z_pm pm
+join z_pmto2 t2
+  on pm.CommentID = t2.CommentID
+group by pm.DiscussionID, t2.UserIDs");
+
+      $Ex->Query("create index z_idx_pmgroup on z_pmgroup (DiscussionID, UserIDs)");
+
+      $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (GroupID)");
+
+      $Ex->Query("update z_pm pm
+join z_pmgroup g
+  on pm.DiscussionID = g.DiscussionID and pm.UserIDs = g.UserIDs
+set pm.GroupID = g.GroupID");
 
       $Conversation_Map = array(
-         'UserID1' => 'InsertUserID',
+         'AuthUserID' => 'InsertUserID',
          'DateCreated' => 'DateInserted',
          'EditUserID' => 'UpdateUserID',
-         'DateEdited' => 'DateUpdated'
+         'DateEdited' => 'DateUpdated',
+         'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
       );
-      $Ex->ExportTable('Conversation', "select * from :_V1Conversation", $Conversation_Map);
+      $Ex->ExportTable('Conversation',
+      "select c.*, d.Name
+from :_Comment c
+join :_Discussion d
+  on d.DiscussionID = c.DiscussionID
+join z_pmgroup g
+  on g.GroupID = c.CommentID;", $Conversation_Map);
       
-      // ConversationMessage
-      /*
-         'MessageID' => 'int', 
-         'ConversationID' => 'int', 
-         'Body' => 'text', 
-         'InsertUserID' => 'int', 
-         'DateInserted' => 'datetime'
-      */
+      // ConversationMessage.
       $ConversationMessage_Map = array(
          'CommentID' => 'MessageID',
-         'DiscussionID' => 'ConversationID',
+         'GroupID' => 'ConversationID',
          'Body' => 'Body',
+         'FormatType' => 'Format',
          'AuthUserID' => 'InsertUserID',
          'DateCreated' => 'DateInserted'
       );
-      $Ex->ExportTable('ConversationMessage', "
-         select c.CommentID, t.ConversationID, c.AuthUserID, c.DateCreated, c.Body
-         from :_Comment c
-         join :_V1Conversation t
-           on t.DiscussionID = c.DiscussionID
-             and c.WhisperUserID in (t.UserID1, t.UserID2)
-             and c.AuthUserID in (t.UserID1, t.UserID2)
-         where c.WhisperUserID > 0
-
-         union
-
-         select c.CommentID, t.ConversationID, c.AuthUserID, c.DateCreated, c.Body
-         from :_Comment c
-         join :_Discussion d
-          on c.DiscussionID = d.DiscussionID
-         join :_V1Conversation t
-           on t.DiscussionID = d.DiscussionID
-             and d.WhisperUserID in (t.UserID1, t.UserID2)
-             and d.AuthUserID in (t.UserID1, t.UserID2)
-         where d.WhisperUserID > 0", $ConversationMessage_Map);
+      $Ex->ExportTable('ConversationMessage', 
+      "select c.*, pm.GroupID
+from z_pm pm
+join :_Comment c
+  on pm.CommentID = c.CommentID", $ConversationMessage_Map);
       
       // UserConversation
       /*
@@ -1619,18 +1908,20 @@ class Vanilla1 extends ExportController {
       */
       $UserConversation_Map = array(
          'UserID' => 'UserID',
-         'ConversationID' => 'ConversationID'
+         'GroupID' => 'ConversationID'
       );
       $Ex->ExportTable('UserConversation', 
-         "select UserID1 as UserID, ConversationID
-         from :_V1Conversation
+         "select distinct
+  pm.GroupID,
+  t.UserID
+from z_pmto t
+join z_pm pm
+  on pm.CommentID = t.CommentID", $UserConversation_Map);
 
-         union
-
-         select UserID2 as UserID, ConversationID
-         from :_V1Conversation", $UserConversation_Map);
-
-      $Ex->Query("drop table :_V1Conversation");
+      $Ex->Query("drop table z_pmto");
+      $Ex->Query("drop table z_pmto2");
+      $Ex->Query("drop table z_pm");
+      $Ex->Query("drop table z_pmgroup");
 
       // Media
       if ($Ex->Exists('Attachment')) {
@@ -1659,6 +1950,28 @@ class Vanilla1 extends ExportController {
       if (($Pos = strpos($AbsPath, '/uploads/')) !== FALSE)
          return substr($AbsPath, $Pos + 9);
       return $AbsPath;
+   }
+
+   function FilterPermissions($Permissions, $ColumnName, &$Row) {
+      $Permissions2 = unserialize($Permissions);
+
+      foreach ($Permissions2 as $Name => $Value) {
+         if (is_null($Value))
+            $Permissions2[$Name] = FALSE;
+      }
+
+      if (is_array($Permissions2)) {
+         $Row = array_merge($Row, $Permissions2);
+         $this->Ex->CurrentRow = $Row;
+         return isset($Permissions2['PERMISSION_ADD_COMMENTS']) ? $Permissions2['PERMISSION_ADD_COMMENTS'] : FALSE;
+      }
+      return FALSE;
+   }
+
+   function ForceBool($Value) {
+      if ($Value)
+         return TRUE;
+      return FALSE;
    }
 }
 ?>
@@ -1775,6 +2088,8 @@ class Vbulletin extends ExportController {
    
    /**
     * Export each table one at a time.
+    *
+    * @param ExportModel $Ex
     */
    protected function ForumExport($Ex) {
       // Begin
@@ -1858,10 +2173,11 @@ class Vbulletin extends ExportController {
          'forumid'=>'CategoryID',
          'description'=>'Description',
          'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
-         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int')
+         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int'),
+         'parentid'=>'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select forumid, left(title,30) as Name, description, displayorder
-         from :_forum where threadcount > 0", $Category_Map);
+      $Ex->ExportTable('Category', "select f.*, left(title,30) as Name
+         from :_forum f", $Category_Map);
       
       // Discussions
       $Discussion_Map = array(
@@ -1870,7 +2186,8 @@ class Vbulletin extends ExportController {
          'postuserid'=>'InsertUserID',
          'postuserid2'=>'UpdateUserID',
          'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
-			'Format'=>'Format'
+			'Format'=>'Format',
+         'views'=>'CountViews'
       );
       $Ex->ExportTable('Discussion', "select t.*,
 				t.postuserid as postuserid2,
@@ -1932,6 +2249,180 @@ class Vbulletin extends ExportController {
    			from :_visitormessage
    			where state='visible'", $Activity_Map);
       }
+
+      // Massge the pms to conversations.
+      
+      $Ex->Query('drop table if exists z_pmto');
+      $Ex->Query('create table z_pmto (
+        pmtextid int unsigned,
+        userid int unsigned,
+        primary key(pmtextid, userid)
+      )');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pmtextid,
+        userid
+      from :_pm;');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pmtextid,
+        fromuserid
+      from :_pmtext;');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pm.pmtextid,
+        r.userid
+      from :_pm pm
+      join :_pmreceipt r
+        on pm.pmid = r.pmid;');
+
+      $Ex->Query('insert ignore z_pmto (
+        pmtextid,
+        userid
+      )
+      select
+        pm.pmtextid,
+        r.touserid
+      from :_pm pm
+      join :_pmreceipt r
+        on pm.pmid = r.pmid;');
+
+      $Ex->Query('drop table if exists z_pmto2;');
+      $Ex->Query('create table z_pmto2 (
+        pmtextid int unsigned,
+        userids varchar(250),
+        primary key (pmtextid)
+      );');
+
+      $Ex->Query('insert z_pmto2 (
+        pmtextid,
+        userids
+      )
+      select
+        pmtextid,
+        group_concat(userid order by userid)
+      from z_pmto t
+      group by t.pmtextid;');
+
+      $Ex->Query('drop table if exists z_pmtext;');
+      $Ex->Query('create table z_pmtext (
+        pmtextid int unsigned,
+        title varchar(250),
+        title2 varchar(250),
+        userids varchar(250),
+        group_id int unsigned
+      );');
+
+      $Ex->Query("insert z_pmtext (
+        pmtextid,
+        title,
+        title2
+      )
+      select
+        pmtextid,
+        title,
+        case when title like 'Re: %' then trim(substring(title, 4)) else title end as title2
+      from :_pmtext pm;");
+
+      $Ex->Query('create index z_idx_pmtext on z_pmtext (pmtextid);');
+
+      $Ex->Query('update z_pmtext pm
+      join z_pmto2 t
+        on pm.pmtextid = t.pmtextid
+      set pm.userids = t.userids;');
+
+      // A conversation is a group of pmtexts with the same title and same users.
+
+      $Ex->Query('drop table if exists z_pmgroup;');
+      $Ex->Query('create table z_pmgroup (
+        group_id int unsigned,
+        title varchar(250),
+        userids varchar(250)
+      );');
+
+      $Ex->Query('insert z_pmgroup (
+        group_id,
+        title,
+        userids
+      )
+      select
+        min(pm.pmtextid),
+        pm.title2,
+        t2.userids
+      from z_pmtext pm
+      join z_pmto2 t2
+        on pm.pmtextid = t2.pmtextid
+      group by pm.title2, t2.userids;');
+
+      $Ex->Query('create index z_idx_pmgroup on z_pmgroup (title, userids);');
+      $Ex->Query('create index z_idx_pmgroup2 on z_pmgroup (group_id);');
+
+      $Ex->Query('update z_pmtext pm
+      join z_pmgroup g
+        on pm.title2 = g.title and pm.userids = g.userids
+      set pm.group_id = g.group_id;');
+
+      // Conversations.
+      $Conversation_Map = array(
+         'pmtextid' => 'ConversationID',
+         'fromuserid' => 'InsertUserID',
+         'title2' => array('Column' => 'Subject', 'Type' => 'varchar(250)')
+      );
+      $Ex->ExportTable('Conversation', 
+      'select
+         pm.*,
+         g.title as title2,
+         FROM_UNIXTIME(pm.dateline) as DateInserted
+       from :_pmtext pm
+       join z_pmgroup g
+         on g.group_id = pm.pmtextid', $Conversation_Map);
+
+      // Coversation Messages.
+      $ConversationMessage_Map = array(
+          'pmtextid' => 'MessageID',
+          'group_id' => 'ConversationID',
+          'message' => 'Body',
+          'fromuserid' => 'InsertUserID'
+      );
+      $Ex->ExportTable('ConversationMessage',
+      "select
+         pm.*,
+         pm2.group_id,
+         'BBCode' as Format,
+         FROM_UNIXTIME(pm.dateline) as DateInserted
+       from :_pmtext pm
+       join z_pmtext pm2
+         on pm.pmtextid = pm2.pmtextid", $ConversationMessage_Map);
+
+      // User Conversation.
+      $UserConversation_Map = array(
+         'userid' => 'UserID',
+         'group_id' => 'ConversationID'
+      );
+      $Ex->ExportTable('UserConversation',
+      "select
+         g.group_id,
+         t.userid
+       from z_pmto t
+       join z_pmgroup g
+         on g.group_id = t.pmtextid;", $UserConversation_Map);
+
+      $Ex->Query('drop table if exists z_pmto');
+      $Ex->Query('drop table if exists z_pmto2;');
+      $Ex->Query('drop table if exists z_pmtext;');
+      $Ex->Query('drop table if exists z_pmgroup;');
       
       // Media
       if ($Ex->Exists('attachment')) {
@@ -2116,7 +2607,8 @@ class Phpbb2 extends ExportController {
          'group_name'=>'Name',
          'group_description'=>'Description'
       );
-      $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
+      // Skip single-user groups
+      $Ex->ExportTable('Role', 'select * from :_groups where group_single_user = 0', $Role_Map);
 
 
       // UserRoles
@@ -2124,9 +2616,10 @@ class Phpbb2 extends ExportController {
          'user_id'=>'UserID',
          'group_id'=>'RoleID'
       );
+      // Skip pending memberships
       $Ex->ExportTable('UserRole', 'select user_id, group_id from :_users
          union
-         select user_id, group_id from :_user_group', $UserRole_Map);
+         select user_id, group_id from :_user_group where user_pending = 0', $UserRole_Map);
 
       // Categories
       $Category_Map = array(
@@ -2144,19 +2637,18 @@ class Phpbb2 extends ExportController {
          'forum_id'=>'CategoryID',
          'topic_poster'=>'InsertUserID',
          'topic_title'=>'Name',
-			'Format'=>'Format',
+         'Format'=>'Format',
          'topic_views'=>'CountViews',
          'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int')
       );
       $Ex->ExportTable('Discussion', "select t.*,
-				'BBCode' as Format,
+        'BBCode' as Format,
             t.topic_replies+1 as CountComments,
             case t.topic_status when 1 then 1 else 0 end as Closed,
             case t.topic_type when 1 then 1 else 0 end as Announce,
             FROM_UNIXTIME(t.topic_time) as DateInserted,
-            FROM_UNIXTIME(p.post_time) as DateUpdated,
-            FROM_UNIXTIME(p.post_time) as DateLastComment
-        from :_topics t inner join :_posts p on t.topic_last_post_id = p.post_id",
+            FROM_UNIXTIME(p.post_time) as DateUpdated
+        from :_topics t left join :_posts p on t.topic_last_post_id = p.post_id",
         $Discussion_Map);
 
       // Comments
@@ -2164,12 +2656,11 @@ class Phpbb2 extends ExportController {
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
          'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
-			'Format' => 'Format',
-         'poster_id' => 'InsertUserID',
-         'poster_id' => 'UpdateUserID'
+         'Format' => 'Format',
+         'poster_id' => 'InsertUserID'
       );
       $Ex->ExportTable('Comment', "select p.*, pt.post_text,
-				'BBCode' as Format,
+        'BBCode' as Format,
             FROM_UNIXTIME(p.post_time) as DateInserted,
             FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
          from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
@@ -2785,12 +3276,13 @@ class SMF extends ExportController {
 	  union
 
       select
-        `ID_BOARD` as `CategoryID`,
-        `name` as `Name`,
-		`description` as `Description`,
-		(CASE WHEN `ID_PARENT` = 0 THEN (`ID_CAT` + 1000000) ELSE `ID_PARENT` END) as `ParentCategoryID`,
-        `boardOrder` as `Sort`
-      from :_boards
+        b.`ID_BOARD` as `CategoryID`,
+
+        b.`name` as `Name`,
+		  b.`description` as `Description`,
+		(CASE WHEN b.`ID_PARENT` = 0 THEN (`ID_CAT` + 1000000) ELSE `ID_PARENT` END) as `ParentCategoryID`,
+        b.`boardOrder` as `Sort`
+      from :_boards b
 
 	  ", $Category_Map);
 
@@ -2851,43 +3343,161 @@ class SMF extends ExportController {
 		 where m.ID_MSG <> t.ID_FIRST_MSG;
        ", $Comment_Map);
 
+    // Conversations need a bit more conversion so execute a series of queries for that.
+    $Ex->Query('create table :_smfpmto (
+  id int,
+  to_id int,
+  deleted tinyint,
+  primary key(id, to_id)
+)');
+
+    $Ex->Query('insert :_smfpmto (
+  id,
+  to_id,
+  deleted
+)
+select
+  ID_PM,
+  ID_MEMBER_FROM,
+  deletedBySender
+from :_personal_messages');
+
+    $Ex->Query('insert ignore :_smfpmto (
+  id,
+  to_id,
+  deleted
+)
+select
+  ID_PM,
+  ID_MEMBER,
+  deleted
+from :_pm_recipients');
+
+    $Ex->Query('create table :_smfpmto2 (
+  id int,
+  to_ids varchar(255),
+  primary key(id)
+)');
+
+    $Ex->Query('insert :_smfpmto2 (
+  id,
+  to_ids
+)
+select
+  id,
+  group_concat(to_id order by to_id)
+from :_smfpmto
+group by id');
+
+    $Ex->Query('create table :_smfpm (
+  id int,
+  group_id int,
+  subject varchar(200),
+  subject2 varchar(200),
+  from_id int,
+  to_ids varchar(255))');
+
+    $Ex->Query('create index :_idx_smfpm2 on :_smfpm (subject2, from_id)');
+    $Ex->Query('create index :_idx_smfpmg on :_smfpm (group_id)');
+
+    $Ex->Query('insert :_smfpm (
+  id,
+  subject,
+  subject2,
+  from_id,
+  to_ids
+)
+select
+  ID_PM,
+  subject,
+  case when subject like \'Re: %\' then trim(substring(subject, 4)) else subject end as subject2,
+  ID_MEMBER_FROM,
+  to2.to_ids
+from :_personal_messages pm
+join :_smfpmto2 to2
+  on pm.ID_PM = to2.id');
+
+    $Ex->Query('create table :_smfgroups (
+  id int primary key,
+  subject2 varchar(200),
+  to_ids varchar(255)
+)');
+
+    $Ex->Query('insert :_smfgroups
+select
+  min(id) as group_id, subject2, to_ids
+from :_smfpm
+group by subject2, to_ids');
+
+    $Ex->Query('create index :_idx_smfgroups on :_smfgroups (subject2, to_ids)');
+
+    $Ex->Query('update :_smfpm pm
+join :_smfgroups g
+  on pm.subject2 = g.subject2 and pm.to_ids = g.to_ids
+set pm.group_id = g.id');
+
 	 // Conversation.
 	 $Conv_Map = array(
-		'ID_PM' => 'ConversationID',
-		'ID_MEMBER_FROM' => 'InsertUserID',
-		'DateInserted' => 'DateInserted'
+		'id' => 'ConversationID',
+		'from_id' => 'InsertUserID',
+		'DateInserted' => 'DateInserted',
+      'subject2' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
 	 );
 	 $Ex->ExportTable('Conversation',
-		"select *, from_unixtime(msgtime) as DateInserted
-		from :_personal_messages
-		where deletedBySender = 0", $Conv_Map);
+"select
+  pm.group_id,
+  pm.from_id,
+  pm.subject2,
+  from_unixtime(pm2.msgtime) as DateInserted
+from :_smfpm pm
+join :_personal_messages pm2
+  on pm.id = pm2.ID_PM
+where pm.id = pm.group_id", $Conv_Map);
 
 	 // ConversationMessage.
 	 $ConvMessage_Map = array(
-		'MessageID' => 'MessageID',
-		'ConversationID' => 'ConversationID',
+		'id' => 'MessageID',
+		'group_id' => 'ConversationID',
 		'DateInserted' => 'DateInserted',
-		'ID_MEMBER_FROM' => 'InsertUserID',
-		'body' => array('Column'=>'Body','Filter'=>'bb2html')
+		'from_id' => 'InsertUserID',
+		'body' => array('Column'=>'Body')
 	 );
 	 $Ex->ExportTable('ConversationMessage',
-		"select *, ID_PM AS MessageID, ID_PM AS ConversationID, from_unixtime(msgtime) as DateInserted
-		from :_personal_messages
-		where deletedBySender = 0", $ConvMessage_Map);
+"select
+  pm.id,
+  pm.group_id,
+  from_unixtime(pm2.msgtime) as DateInserted,
+  pm.from_id,
+  'BBCode' as Format,
+  case when pm.subject = pm.subject2 then concat(pm.subject, '\n\n', pm2.body) else pm2.body end as body
+from :_smfpm pm
+join :_personal_messages pm2
+  on pm.id = pm2.ID_PM", $ConvMessage_Map);
 
 	 // UserConversation.
 	 $UserConv_Map = array(
-		'ID_MEMBER' => 'UserID',
-		'ConversationID' => 'ConversationID',
-		'LastMessageID' => 'LastMessageID'
+		'to_id' => 'UserID',
+		'group_id' => 'ConversationID',
+      'deleted' => 'Deleted'
 	 );
 	 $Ex->ExportTable('UserConversation',
-		"select *, ID_PM AS LastMessageID, ID_PM AS ConversationID
-		from :_pm_recipients
-		where deletedBySender = 0", $UserConv_Map);
+
+"select
+   pm.group_id,
+   t.to_id,
+   t.deleted
+ from :_smfpmto t
+ join :_smfpm pm
+   on t.id = pm.group_id", $UserConv_Map);
+    
+      $Ex->Query('drop table :_smfpm');
+      $Ex->Query('drop table :_smfpmto');
+      $Ex->Query('drop table :_smfpmto2');
+      $Ex->Query('drop table :_smfgroups');
 
       // End
       $Ex->EndExport();
+//      echo implode("\n\n", $Ex->Queries);
    }
 
    function DecodeNumericEntity($Text) {
@@ -2914,1665 +3524,28 @@ class SMF extends ExportController {
          return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))). chr(0x80 | (0x3f & $char));
      }
    }
-}
-
-function bb2html($text)
-{
-  global $txt, $scripturl, $context, $modSettings, $user_info;
-
-  $user_info['time_format'] = '%Y-%m-%d';
-
-  // A bit of language stuff used by the parser
-  $txt['lang_character_set'] = 'utf8';
-  $txt['smf238'] = 'Code';
-  $txt['smf239'] = 'Quote from';
-  $txt['smf240'] = 'Quote';
-  $txt[176] = 'on';
-  $txt['lang_locale'] = 'en';
-  $txt[287] = 'Smiley';
-  $txt[288] = 'Angry';
-  $txt[289] = 'Cheesy';
-  $txt[290] = 'Laugh';
-  $txt[291] = 'Sad';
-  $txt[292] = 'Wink';
-  $txt[293] = 'Grin';
-  $txt[294] = 'Shocked';
-  $txt[295] = 'Cool';
-  $txt[296] = 'Huh';
-  $txt[450] = 'Roll Eyes';
-  $txt[451] = 'Tongue';
-  $txt[526] = 'Embarrassed';
-  $txt[527] = 'Lips sealed';
-  $txt[528] = 'Undecided';
-  $txt[529] = 'Kiss';
-  $txt[530] = 'Cry';
-
-  // URL stuff
-  $scripturl = dirname($_SERVER['REQUEST_URI']); // TODO: make sure this is right
-
-  // some settings
-  $modSettings['enableBBC'] = true;
-  $modSettings['enablePostHTML'] = true;
-  $modSettings['max_image_width'] = 500;
-  $modSettings['max_image_height'] = 500;
-  $modSettings['autoLinkUrls'] = false;
-  $modSettings['fixLongWords'] = false;
-
-  return parse_bbc($text, false);
-}
-
-// Format a time to make it look purdy.
-function timeformat($logTime, $show_today = true)
-{
-  global $user_info, $txt, $db_prefix, $modSettings, $func;
-
-  // Offset the time.
-  $time = $logTime + ($user_info['time_offset'] + $modSettings['time_offset']) * 3600;
-
-  // We can't have a negative date (on Windows, at least.)
-  if ($time < 0)
-    $time = 0;
-
-  // Today and Yesterday?
-  if ($modSettings['todayMod'] >= 1 && $show_today === true)
-  {
-    // Get the current time.
-    $nowtime = forum_time();
-
-    $then = @getdate($time);
-    $now = @getdate($nowtime);
-
-    // Try to make something of a time format string...
-    $s = strpos($user_info['time_format'], '%S') === false ? '' : ':%S';
-    if (strpos($user_info['time_format'], '%H') === false && strpos($user_info['time_format'], '%T') === false)
-      $today_fmt = '%I:%M' . $s . ' %p';
-    else
-      $today_fmt = '%H:%M' . $s;
-
-    // Same day of the year, same year.... Today!
-    if ($then['yday'] == $now['yday'] && $then['year'] == $now['year'])
-      return $txt['smf10'] . timeformat($logTime, $today_fmt);
-
-    // Day-of-year is one less and same year, or it's the first of the year and that's the last of the year...
-    if ($modSettings['todayMod'] == '2' && (($then['yday'] == $now['yday'] - 1 && $then['year'] == $now['year']) || ($now['yday'] == 0 && $then['year'] == $now['year'] - 1) && $then['mon'] == 12 && $then['mday'] == 31))
-      return $txt['smf10b'] . timeformat($logTime, $today_fmt);
-  }
-
-  $str = !is_bool($show_today) ? $show_today : $user_info['time_format'];
-
-  if (setlocale(LC_TIME, $txt['lang_locale']))
-  {
-    foreach (array('%a', '%A', '%b', '%B') as $token)
-      if (strpos($str, $token) !== false)
-        $str = str_replace($token, $func['ucwords'](strftime($token, $time)), $str);
-  }
-  else
-  {
-    // Do-it-yourself time localization.  Fun.
-    foreach (array('%a' => 'days_short', '%A' => 'days', '%b' => 'months_short', '%B' => 'months') as $token => $text_label)
-      if (strpos($str, $token) !== false)
-        $str = str_replace($token, $txt[$text_label][(int) strftime($token === '%a' || $token === '%A' ? '%w' : '%m', $time)], $str);
-    if (strpos($str, '%p'))
-      $str = str_replace('%p', (strftime('%H', $time) < 12 ? 'am' : 'pm'), $str);
-  }
-
-  // Format any other characters..
-  return strftime($str, $time);
-}
-
-// Removes special entities from strings.  Compatibility...
-function un_htmlspecialchars($string)
-{
-  return strtr($string, array_flip(get_html_translation_table(HTML_SPECIALCHARS, ENT_QUOTES)) + array('&#039;' => '\'', '&nbsp;' => ' '));
-}
-
-// This gets all possible permutations of an array.
-function permute($array)
-{
-  $orders = array($array);
-
-  $n = count($array);
-  $p = range(0, $n);
-  for ($i = 1; $i < $n; null)
-  {
-    $p[$i]--;
-    $j = $i % 2 != 0 ? $p[$i] : 0;
-
-    $temp = $array[$i];
-    $array[$i] = $array[$j];
-    $array[$j] = $temp;
-
-    for ($i = 1; $p[$i] == 0; $i++)
-      $p[$i] = 1;
-
-    $orders[] = $array;
-  }
-
-  return $orders;
-}
-
-// Parse bulletin board code in a string, as well as smileys optionally.
-function parse_bbc($message, $smileys = true, $cache_id = '')
-{
-  global $txt, $scripturl, $context, $modSettings, $user_info;
-  static $bbc_codes = array(), $itemcodes = array(), $no_autolink_tags = array();
-  static $disabled;
-
-  // Never show smileys for wireless clients.  More bytes, can't see it anyway :P.
-  if (WIRELESS)
-    $smileys = false;
-  elseif ($smileys !== null && ($smileys == '1' || $smileys == '0'))
-    $smileys = (bool) $smileys;
-
-  if (empty($modSettings['enableBBC']) && $message !== false)
-  {
-    if ($smileys === true)
-      parsesmileys($message);
-
-    return $message;
-  }
-
-  // Just in case it wasn't determined yet whether UTF-8 is enabled.
-  if (!isset($context['utf8']))
-    $context['utf8'] = (empty($modSettings['global_character_set']) ? $txt['lang_character_set'] : $modSettings['global_character_set']) === 'UTF-8';
-
-  // Sift out the bbc for a performance improvement.
-  if (empty($bbc_codes) || $message === false)
-  {
-    if (!empty($modSettings['disabledBBC']))
-    {
-      $temp = explode(',', strtolower($modSettings['disabledBBC']));
-
-      foreach ($temp as $tag)
-        $disabled[trim($tag)] = true;
-    }
-
-    if (empty($modSettings['enableEmbeddedFlash']))
-      $disabled['flash'] = true;
-
-    /* The following bbc are formatted as an array, with keys as follows:
-
-      tag: the tag's name - should be lowercase!
-
-      type: one of...
-        - (missing): [tag]parsed content[/tag]
-        - unparsed_equals: [tag=xyz]parsed content[/tag]
-        - parsed_equals: [tag=parsed data]parsed content[/tag]
-        - unparsed_content: [tag]unparsed content[/tag]
-        - closed: [tag], [tag/], [tag /]
-        - unparsed_commas: [tag=1,2,3]parsed content[/tag]
-        - unparsed_commas_content: [tag=1,2,3]unparsed content[/tag]
-        - unparsed_equals_content: [tag=...]unparsed content[/tag]
-
-      parameters: an optional array of parameters, for the form
-        [tag abc=123]content[/tag].  The array is an associative array
-        where the keys are the parameter names, and the values are an
-        array which may contain the following:
-        - match: a regular expression to validate and match the value.
-        - quoted: true if the value should be quoted.
-        - validate: callback to evaluate on the data, which is $data.
-        - value: a string in which to replace $1 with the data.
-          either it or validate may be used, not both.
-        - optional: true if the parameter is optional.
-
-      test: a regular expression to test immediately after the tag's
-        '=', ' ' or ']'.  Typically, should have a \] at the end.
-        Optional.
-
-      content: only available for unparsed_content, closed,
-        unparsed_commas_content, and unparsed_equals_content.
-        $1 is replaced with the content of  the tag.  Parameters
-        are repalced in the form {param}.  For unparsed_commas_content,
-        $2, $3, ..., $n are replaced.
-
-      before: only when content is not used, to go before any
-        content.  For unparsed_equals, $1 is replaced with the value.
-        For unparsed_commas, $1, $2, ..., $n are replaced.
-
-      after: similar to before in every way, except that it is used
-        when the tag is closed.
-
-      disabled_content: used in place of content when the tag is
-        disabled.  For closed, default is '', otherwise it is '$1' if
-        block_level is false, '<div>$1</div>' elsewise.
-
-      disabled_before: used in place of before when disabled.  Defaults
-        to '<div>' if block_level, '' if not.
-
-      disabled_after: used in place of after when disabled.  Defaults
-        to '</div>' if block_level, '' if not.
-
-      block_level: set to true the tag is a "block level" tag, similar
-        to HTML.  Block level tags cannot be nested inside tags that are
-        not block level, and will not be implicitly closed as easily.
-        One break following a block level tag may also be removed.
-
-      trim: if set, and 'inside' whitespace after the begin tag will be
-        removed.  If set to 'outside', whitespace after the end tag will
-        meet the same fate.
-
-      validate: except when type is missing or 'closed', a callback to
-        validate the data as $data.  Depending on the tag's type, $data
-        may be a string or an array of strings (corresponding to the
-        replacement.)
-
-      quoted: when type is 'unparsed_equals' or 'parsed_equals' only,
-        may be not set, 'optional', or 'required' corresponding to if
-        the content may be quoted.  This allows the parser to read
-        [tag="abc]def[esdf]"] properly.
-
-      require_parents: an array of tag names, or not set.  If set, the
-        enclosing tag *must* be one of the listed tags, or parsing won't
-        occur.
-
-      require_children: similar to require_parents, if set children
-        won't be parsed if they are not in the list.
-
-      disallow_children: similar to, but very different from,
-        require_children, if it is set the listed tags will not be
-        parsed inside the tag.
-    */
-
-    $codes = array(
-      array(
-        'tag' => 'abbr',
-        'type' => 'unparsed_equals',
-        'before' => '<abbr title="$1">',
-        'after' => '</abbr>',
-        'quoted' => 'optional',
-        'disabled_after' => ' ($1)',
-      ),
-      array(
-        'tag' => 'acronym',
-        'type' => 'unparsed_equals',
-        'before' => '<acronym title="$1">',
-        'after' => '</acronym>',
-        'quoted' => 'optional',
-        'disabled_after' => ' ($1)',
-      ),
-      array(
-        'tag' => 'anchor',
-        'type' => 'unparsed_equals',
-        'test' => '[#]?([A-Za-z][A-Za-z0-9_\-]*)\]',
-        'before' => '<span id="post_$1" />',
-        'after' => '',
-      ),
-      array(
-        'tag' => 'b',
-        'before' => '<b>',
-        'after' => '</b>',
-      ),
-      array(
-        'tag' => 'black',
-        'before' => '<span style="color: black;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'blue',
-        'before' => '<span style="color: blue;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'br',
-        'type' => 'closed',
-        'content' => '<br />',
-      ),
-      array(
-        'tag' => 'code',
-        'type' => 'unparsed_content',
-        'content' => '<div class="codeheader">' . $txt['smf238'] . ':</div><div class="code">' . ($context['browser']['is_gecko'] ? '<pre style="margin-top: 0; display: inline;">$1</pre>' : '$1') . '</div>',
-        // !!! Maybe this can be simplified?
-        'validate' => isset($disabled['code']) ? null : create_function('&$tag, &$data, $disabled', '
-          global $context;
-
-          if (!isset($disabled[\'code\']))
-          {
-            $php_parts = preg_split(\'~(&lt;\?php|\?&gt;)~\', $data, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-            for ($php_i = 0, $php_n = count($php_parts); $php_i < $php_n; $php_i++)
-            {
-              // Do PHP code coloring?
-              if ($php_parts[$php_i] != \'&lt;?php\')
-                continue;
-
-              $php_string = \'\';
-              while ($php_i + 1 < count($php_parts) && $php_parts[$php_i] != \'?&gt;\')
-              {
-                $php_string .= $php_parts[$php_i];
-                $php_parts[$php_i++] = \'\';
-              }
-              $php_parts[$php_i] = highlight_php_code($php_string . $php_parts[$php_i]);
-            }
-
-            // Fix the PHP code stuff...
-            $data = str_replace("<pre style=\"display: inline;\">\t</pre>", "\t", implode(\'\', $php_parts));
-
-            // Older browsers are annoying, aren\'t they?
-            if ($context[\'browser\'][\'is_ie4\'] || $context[\'browser\'][\'is_ie5\'] || $context[\'browser\'][\'is_ie5.5\'])
-              $data = str_replace("\t", "<pre style=\"display: inline;\">\t</pre>", $data);
-            elseif (!$context[\'browser\'][\'is_gecko\'])
-              $data = str_replace("\t", "<span style=\"white-space: pre;\">\t</span>", $data);
-          }'),
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'code',
-        'type' => 'unparsed_equals_content',
-        'content' => '<div class="codeheader">' . $txt['smf238'] . ': ($2)</div><div class="code">' . ($context['browser']['is_gecko'] ? '<pre style="margin-top: 0; display: inline;">$1</pre>' : '$1') . '</div>',
-        // !!! Maybe this can be simplified?
-        'validate' => isset($disabled['code']) ? null : create_function('&$tag, &$data, $disabled', '
-          global $context;
-
-          if (!isset($disabled[\'code\']))
-          {
-            $php_parts = preg_split(\'~(&lt;\?php|\?&gt;)~\', $data[0], -1, PREG_SPLIT_DELIM_CAPTURE);
-
-            for ($php_i = 0, $php_n = count($php_parts); $php_i < $php_n; $php_i++)
-            {
-              // Do PHP code coloring?
-              if ($php_parts[$php_i] != \'&lt;?php\')
-                continue;
-
-              $php_string = \'\';
-              while ($php_i + 1 < count($php_parts) && $php_parts[$php_i] != \'?&gt;\')
-              {
-                $php_string .= $php_parts[$php_i];
-                $php_parts[$php_i++] = \'\';
-              }
-              $php_parts[$php_i] = highlight_php_code($php_string . $php_parts[$php_i]);
-            }
-
-            // Fix the PHP code stuff...
-            $data[0] = str_replace("<pre style=\"display: inline;\">\t</pre>", "\t", implode(\'\', $php_parts));
-
-            // Older browsers are annoying, aren\'t they?
-            if ($context[\'browser\'][\'is_ie4\'] || $context[\'browser\'][\'is_ie5\'] || $context[\'browser\'][\'is_ie5.5\'])
-              $data = str_replace("\t", "<pre style=\"display: inline;\">\t</pre>", $data);
-            elseif (!$context[\'browser\'][\'is_gecko\'])
-              $data = str_replace("\t", "<span style=\"white-space: pre;\">\t</span>", $data);
-          }'),
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'center',
-        'before' => '<div align="center">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'color',
-        'type' => 'unparsed_equals',
-        'test' => '(#[\da-fA-F]{3}|#[\da-fA-F]{6}|[A-Za-z]{1,12})\]',
-        'before' => '<span style="color: $1;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'email',
-        'type' => 'unparsed_content',
-        'content' => '<a href="mailto:$1">$1</a>',
-        // !!! Should this respect guest_hideContacts?
-        'validate' => create_function('&$tag, &$data, $disabled', '$data = strtr($data, array(\'<br />\' => \'\'));'),
-      ),
-      array(
-        'tag' => 'email',
-        'type' => 'unparsed_equals',
-        'before' => '<a href="mailto:$1">',
-        'after' => '</a>',
-        // !!! Should this respect guest_hideContacts?
-        'disallow_children' => array('email', 'ftp', 'url', 'iurl'),
-        'disabled_after' => ' ($1)',
-      ),
-      array(
-        'tag' => 'ftp',
-        'type' => 'unparsed_content',
-        'content' => '<a href="$1" target="_blank">$1</a>',
-        'validate' => create_function('&$tag, &$data, $disabled', '$data = strtr($data, array(\'<br />\' => \'\'));'),
-      ),
-      array(
-        'tag' => 'ftp',
-        'type' => 'unparsed_equals',
-        'before' => '<a href="$1" target="_blank">',
-        'after' => '</a>',
-        'disallow_children' => array('email', 'ftp', 'url', 'iurl'),
-        'disabled_after' => ' ($1)',
-      ),
-      array(
-        'tag' => 'font',
-        'type' => 'unparsed_equals',
-        'test' => '[A-Za-z0-9_,\-\s]+?\]',
-        'before' => '<span style="font-family: $1;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'flash',
-        'type' => 'unparsed_commas_content',
-        'test' => '\d+,\d+\]',
-        'content' => ($context['browser']['is_ie'] && !$context['browser']['is_mac_ie'] ? '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="$2" height="$3"><param name="movie" value="$1" /><param name="play" value="true" /><param name="loop" value="true" /><param name="quality" value="high" /><param name="AllowScriptAccess" value="never" /><embed src="$1" width="$2" height="$3" play="true" loop="true" quality="high" AllowScriptAccess="never" /><noembed><a href="$1" target="_blank">$1</a></noembed></object>' : '<embed type="application/x-shockwave-flash" src="$1" width="$2" height="$3" play="true" loop="true" quality="high" AllowScriptAccess="never" /><noembed><a href="$1" target="_blank">$1</a></noembed>'),
-        'validate' => create_function('&$tag, &$data, $disabled', '
-          if (isset($disabled[\'url\']))
-            $tag[\'content\'] = \'$1\';'),
-        'disabled_content' => '<a href="$1" target="_blank">$1</a>',
-      ),
-      array(
-        'tag' => 'green',
-        'before' => '<span style="color: green;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'glow',
-        'type' => 'unparsed_commas',
-        'test' => '[#0-9a-zA-Z\-]{3,12},([012]\d{1,2}|\d{1,2})(,[^]]+)?\]',
-        'before' => $context['browser']['is_ie'] ? '<table border="0" cellpadding="0" cellspacing="0" style="display: inline; vertical-align: middle; font: inherit;"><tr><td style="filter: Glow(color=$1, strength=$2); font: inherit;">' : '<span style="background-color: $1;">',
-        'after' => $context['browser']['is_ie'] ? '</td></tr></table> ' : '</span>',
-      ),
-      array(
-        'tag' => 'hr',
-        'type' => 'closed',
-        'content' => '<hr />',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'html',
-        'type' => 'unparsed_content',
-        'content' => '$1',
-        'block_level' => true,
-        'disabled_content' => '$1',
-      ),
-      array(
-        'tag' => 'img',
-        'type' => 'unparsed_content',
-        'parameters' => array(
-          'alt' => array('optional' => true),
-          'width' => array('optional' => true, 'value' => ' width="$1"', 'match' => '(\d+)'),
-          'height' => array('optional' => true, 'value' => ' height="$1"', 'match' => '(\d+)'),
-        ),
-        'content' => '<img src="$1" alt="{alt}"{width}{height} border="0" />',
-        'validate' => create_function('&$tag, &$data, $disabled', '$data = strtr($data, array(\'<br />\' => \'\'));'),
-        'disabled_content' => '($1)',
-      ),
-      array(
-        'tag' => 'img',
-        'type' => 'unparsed_content',
-        'content' => '<img src="$1" alt="" border="0" />',
-        'validate' => create_function('&$tag, &$data, $disabled', '$data = strtr($data, array(\'<br />\' => \'\'));'),
-        'disabled_content' => '($1)',
-      ),
-      array(
-        'tag' => 'i',
-        'before' => '<i>',
-        'after' => '</i>',
-      ),
-      array(
-        'tag' => 'iurl',
-        'type' => 'unparsed_content',
-        'content' => '<a href="$1" rel="nofollow">$1</a>',
-        'validate' => create_function('&$tag, &$data, $disabled', '$data = strtr($data, array(\'<br />\' => \'\'));'),
-      ),
-      array(
-        'tag' => 'iurl',
-        'type' => 'unparsed_equals',
-        'before' => '<a href="$1" rel="nofollow">',
-        'after' => '</a>',
-        'validate' => create_function('&$tag, &$data, $disabled', '
-          if (substr($data, 0, 1) == \'#\')
-            $data = \'#post_\' . substr($data, 1);'),
-        'disallow_children' => array('email', 'ftp', 'url', 'iurl'),
-        'disabled_after' => ' ($1)',
-      ),
-      array(
-        'tag' => 'li',
-        'before' => '<li>',
-        'after' => '</li>',
-        'trim' => 'outside',
-        'require_parents' => array('list'),
-        'block_level' => true,
-        'disabled_before' => '',
-        'disabled_after' => '<br />',
-      ),
-      array(
-        'tag' => 'list',
-        'before' => '<ul style="margin-top: 0; margin-bottom: 0;">',
-        'after' => '</ul>',
-        'trim' => 'inside',
-        'require_children' => array('li'),
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'list',
-        'parameters' => array(
-          'type' => array('match' => '(none|disc|circle|square|decimal|decimal-leading-zero|lower-roman|upper-roman|lower-alpha|upper-alpha|lower-greek|lower-latin|upper-latin|hebrew|armenian|georgian|cjk-ideographic|hiragana|katakana|hiragana-iroha|katakana-iroha)'),
-        ),
-        'before' => '<ul style="margin-top: 0; margin-bottom: 0; list-style-type: {type};">',
-        'after' => '</ul>',
-        'trim' => 'inside',
-        'require_children' => array('li'),
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'left',
-        'before' => '<div style="text-align: left;">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'ltr',
-        'before' => '<div dir="ltr">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'me',
-        'type' => 'unparsed_equals',
-        'before' => '<div class="meaction">* $1 ',
-        'after' => '</div>',
-        'quoted' => 'optional',
-        'block_level' => true,
-        'disabled_before' => '/me ',
-        'disabled_after' => '<br />',
-      ),
-      array(
-        'tag' => 'move',
-        'before' => '<marquee>',
-        'after' => '</marquee>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'nobbc',
-        'type' => 'unparsed_content',
-        'content' => '$1',
-      ),
-      array(
-        'tag' => 'pre',
-        'before' => '<pre>',
-        'after' => '</pre>',
-      ),
-      array(
-        'tag' => 'php',
-        'type' => 'unparsed_content',
-        'content' => '<div class="phpcode">$1</div>',
-        'validate' => isset($disabled['php']) ? null : create_function('&$tag, &$data, $disabled', '
-          if (!isset($disabled[\'php\']))
-          {
-            $add_begin = substr(trim($data), 0, 5) != \'&lt;?\';
-            $data = highlight_php_code($add_begin ? \'&lt;?php \' . $data . \'?&gt;\' : $data);
-            if ($add_begin)
-              $data = preg_replace(array(\'~^(.+?)&lt;\?.{0,40}?php(&nbsp;|\s)~\', \'~\?&gt;((?:</(font|span)>)*)$~\'), \'$1\', $data, 2);
-          }'),
-        'block_level' => true,
-        'disabled_content' => '$1',
-      ),
-      array(
-        'tag' => 'quote',
-        'before' => '<div class="quoteheader">' . $txt['smf240'] . '</div><div class="quote">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'quote',
-        'parameters' => array(
-          'author' => array('match' => '(.{1,192}?)', 'quoted' => true, 'validate' => 'parse_bbc'),
-        ),
-        'before' => '<div class="quoteheader">' . $txt['smf239'] . ': {author}</div><div class="quote">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'quote',
-        'type' => 'parsed_equals',
-        'before' => '<div class="quoteheader">' . $txt['smf239'] . ': $1</div><div class="quote">',
-        'after' => '</div>',
-        'quoted' => 'optional',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'quote',
-        'parameters' => array(
-          'author' => array('match' => '([^<>]{1,192}?)'),
-          'link' => array('match' => '(?:board=\d+;)?((?:topic|threadid)=[\dmsg#\./]{1,40}(?:;start=[\dmsg#\./]{1,40})?|action=profile;u=\d+)'),
-          'date' => array('match' => '(\d+)', 'validate' => 'timeformat'),
-        ),
-        'before' => '<div class="quoteheader"><a href="' . $scripturl . '?{link}">' . $txt['smf239'] . ': {author} ' . $txt[176] . ' {date}</a></div><div class="quote">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'quote',
-        'parameters' => array(
-          'author' => array('match' => '(.{1,192}?)', 'validate' => 'parse_bbc'),
-        ),
-        'before' => '<div class="quoteheader">' . $txt['smf239'] . ': {author}</div><div class="quote">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'right',
-        'before' => '<div style="text-align: right;">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'red',
-        'before' => '<span style="color: red;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'rtl',
-        'before' => '<div dir="rtl">',
-        'after' => '</div>',
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 's',
-        'before' => '<del>',
-        'after' => '</del>',
-      ),
-      array(
-        'tag' => 'size',
-        'type' => 'unparsed_equals',
-        'test' => '([1-9][\d]?p[xt]|(?:x-)?small(?:er)?|(?:x-)?large[r]?)\]',
-        // !!! line-height
-        'before' => '<span style="font-size: $1; line-height: 1.3em;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'size',
-        'type' => 'unparsed_equals',
-        'test' => '[1-9]\]',
-        // !!! line-height
-        'before' => '<font size="$1" style="line-height: 1.3em;">',
-        'after' => '</font>',
-      ),
-      array(
-        'tag' => 'sub',
-        'before' => '<sub>',
-        'after' => '</sub>',
-      ),
-      array(
-        'tag' => 'sup',
-        'before' => '<sup>',
-        'after' => '</sup>',
-      ),
-      array(
-        'tag' => 'shadow',
-        'type' => 'unparsed_commas',
-        'test' => '[#0-9a-zA-Z\-]{3,12},(left|right|top|bottom|[0123]\d{0,2})\]',
-        'before' => $context['browser']['is_ie'] ? '<span style="filter: Shadow(color=$1, direction=$2); height: 1.2em;\">' : '<span style="text-shadow: $1 $2">',
-        'after' => '</span>',
-        'validate' => $context['browser']['is_ie'] ? create_function('&$tag, &$data, $disabled', '
-          if ($data[1] == \'left\')
-            $data[1] = 270;
-          elseif ($data[1] == \'right\')
-            $data[1] = 90;
-          elseif ($data[1] == \'top\')
-            $data[1] = 0;
-          elseif ($data[1] == \'bottom\')
-            $data[1] = 180;
-          else
-            $data[1] = (int) $data[1];') : create_function('&$tag, &$data, $disabled', '
-          if ($data[1] == \'top\' || (is_numeric($data[1]) && $data[1] < 50))
-            return \'0 -2px\';
-          elseif ($data[1] == \'right\' || (is_numeric($data[1]) && $data[1] < 100))
-            return \'2px 0\';
-          elseif ($data[1] == \'bottom\' || (is_numeric($data[1]) && $data[1] < 190))
-            return \'0 2px\';
-          elseif ($data[1] == \'left\' || (is_numeric($data[1]) && $data[1] < 280))
-            return \'-2px 0\';
-          else
-            return \'0 0\';'),
-      ),
-      array(
-        'tag' => 'time',
-        'type' => 'unparsed_content',
-        'content' => '$1',
-        'validate' => create_function('&$tag, &$data, $disabled', '
-          if (is_numeric($data))
-            $data = timeformat($data);
-          else
-            $tag[\'content\'] = \'[time]$1[/time]\';'),
-      ),
-      array(
-        'tag' => 'tt',
-        'before' => '<tt>',
-        'after' => '</tt>',
-      ),
-      array(
-        'tag' => 'table',
-        'before' => '<table style="font: inherit; color: inherit;">',
-        'after' => '</table>',
-        'trim' => 'inside',
-        'require_children' => array('tr'),
-        'block_level' => true,
-      ),
-      array(
-        'tag' => 'tr',
-        'before' => '<tr>',
-        'after' => '</tr>',
-        'require_parents' => array('table'),
-        'require_children' => array('td'),
-        'trim' => 'both',
-        'block_level' => true,
-        'disabled_before' => '',
-        'disabled_after' => '',
-      ),
-      array(
-        'tag' => 'td',
-        'before' => '<td valign="top" style="font: inherit; color: inherit;">',
-        'after' => '</td>',
-        'require_parents' => array('tr'),
-        'trim' => 'outside',
-        'block_level' => true,
-        'disabled_before' => '',
-        'disabled_after' => '',
-      ),
-      array(
-        'tag' => 'url',
-        'type' => 'unparsed_content',
-        'content' => '<a href="$1" rel="nofollow" target="_blank">$1</a>',
-        'validate' => create_function('&$tag, &$data, $disabled', '$data = strtr($data, array(\'<br />\' => \'\'));'),
-      ),
-      array(
-        'tag' => 'url',
-        'type' => 'unparsed_equals',
-        'before' => '<a href="$1" rel="nofollow" target="_blank">',
-        'after' => '</a>',
-        'disallow_children' => array('email', 'ftp', 'url', 'iurl'),
-        'disabled_after' => ' ($1)',
-      ),
-      array(
-        'tag' => 'u',
-        'before' => '<span style="text-decoration: underline;">',
-        'after' => '</span>',
-      ),
-      array(
-        'tag' => 'white',
-        'before' => '<span style="color: white;">',
-        'after' => '</span>',
-      ),
-    );
-
-    // This is mainly for the bbc manager, so it's easy to add tags above.  Custom BBC should be added above this line.
-    if ($message === false)
-      return $codes;
-
-    // So the parser won't skip them.
-    $itemcodes = array(
-      '*' => '',
-      '@' => 'disc',
-      '+' => 'square',
-      'x' => 'square',
-      '#' => 'square',
-      'o' => 'circle',
-      'O' => 'circle',
-      '0' => 'circle',
-    );
-    if (!isset($disabled['li']) && !isset($disabled['list']))
-    {
-      foreach ($itemcodes as $c => $dummy)
-        $bbc_codes[$c] = array();
-    }
-
-    // Inside these tags autolink is not recommendable.
-    $no_autolink_tags = array(
-      'url',
-      'iurl',
-      'ftp',
-      'email',
-    );
-
-    // Shhhh!
-    if (!isset($disabled['color']))
-    {
-      $codes[] = array(
-        'tag' => 'chrissy',
-        'before' => '<span style="color: #CC0099;">',
-        'after' => ' :-*</span>',
-      );
-      $codes[] = array(
-        'tag' => 'kissy',
-        'before' => '<span style="color: #CC0099;">',
-        'after' => ' :-*</span>',
-      );
-    }
-
-    foreach ($codes as $c)
-      $bbc_codes[substr($c['tag'], 0, 1)][] = $c;
-    $codes = null;
-  }
-
-  // Shall we take the time to cache this?
-  if ($cache_id != '' && !empty($modSettings['cache_enable']) && (($modSettings['cache_enable'] >= 2 && strlen($message) > 1000) || strlen($message) > 2400))
-  {
-    // It's likely this will change if the message is modified.
-    $cache_key = 'parse:' . $cache_id . '-' . md5(md5($message) . '-' . $smileys . (empty($disabled) ? '' : implode(',', array_keys($disabled))) . serialize($context['browser']) . $txt['lang_locale'] . $user_info['time_offset'] . $user_info['time_format']);
-
-    if (($temp = cache_get_data($cache_key, 240)) != null)
-      return $temp;
-
-    $cache_t = microtime();
-  }
-
-  if ($smileys === 'print')
-  {
-    // [glow], [shadow], and [move] can't really be printed.
-    $disabled['glow'] = true;
-    $disabled['shadow'] = true;
-    $disabled['move'] = true;
-
-    // Colors can't well be displayed... supposed to be black and white.
-    $disabled['color'] = true;
-    $disabled['black'] = true;
-    $disabled['blue'] = true;
-    $disabled['white'] = true;
-    $disabled['red'] = true;
-    $disabled['green'] = true;
-    $disabled['me'] = true;
-
-    // Color coding doesn't make sense.
-    $disabled['php'] = true;
-
-    // Links are useless on paper... just show the link.
-    $disabled['ftp'] = true;
-    $disabled['url'] = true;
-    $disabled['iurl'] = true;
-    $disabled['email'] = true;
-    $disabled['flash'] = true;
-
-    // !!! Change maybe?
-    if (!isset($_GET['images']))
-      $disabled['img'] = true;
-
-    // !!! Interface/setting to add more?
-  }
-
-  $open_tags = array();
-  $message = strtr($message, array("\n" => '<br />'));
-
-  // The non-breaking-space looks a bit different each time.
-  $non_breaking_space = $context['utf8'] ? ($context['server']['complex_preg_chars'] ? '\x{C2A0}' : chr(0xC2) . chr(0xA0)) : '\xA0';
-
-  $pos = -1;
-  while ($pos !== false)
-  {
-    $last_pos = isset($last_pos) ? max($pos, $last_pos) : $pos;
-    $pos = strpos($message, '[', $pos + 1);
-
-    // Failsafe.
-    if ($pos === false || $last_pos > $pos)
-      $pos = strlen($message) + 1;
-
-    // Can't have a one letter smiley, URL, or email! (sorry.)
-    if ($last_pos < $pos - 1)
-    {
-      // We want to eat one less, and one more, character (for smileys.)
-      $last_pos = max($last_pos - 1, 0);
-      $data = substr($message, $last_pos, $pos - $last_pos + 1);
-
-      // Take care of some HTML!
-      if (!empty($modSettings['enablePostHTML']) && strpos($data, '&lt;') !== false)
-      {
-        $data = preg_replace('~&lt;a\s+href=(?:&quot;)?((?:http://|ftp://|https://|ftps://|mailto:).+?)(?:&quot;)?&gt;~i', '[url=$1]', $data);
-        $data = preg_replace('~&lt;/a&gt;~i', '[/url]', $data);
-
-        // <br /> should be empty.
-        $empty_tags = array('br', 'hr');
-        foreach ($empty_tags as $tag)
-          $data = str_replace(array('&lt;' . $tag . '&gt;', '&lt;' . $tag . '/&gt;', '&lt;' . $tag . ' /&gt;'), '[' . $tag . ' /]', $data);
-
-        // b, u, i, s, pre... basic tags.
-        $closable_tags = array('b', 'u', 'i', 's', 'em', 'ins', 'del', 'pre', 'blockquote');
-        foreach ($closable_tags as $tag)
-        {
-          $diff = substr_count($data, '&lt;' . $tag . '&gt;') - substr_count($data, '&lt;/' . $tag . '&gt;');
-          $data = strtr($data, array('&lt;' . $tag . '&gt;' => '<' . $tag . '>', '&lt;/' . $tag . '&gt;' => '</' . $tag . '>'));
-
-          if ($diff > 0)
-            $data .= str_repeat('</' . $tag . '>', $diff);
-        }
-
-        // Do <img ... /> - with security... action= -> action-.
-        preg_match_all('~&lt;img\s+src=(?:&quot;)?((?:http://|ftp://|https://|ftps://).+?)(?:&quot;)?(?:\s+alt=(?:&quot;)?(.*?)(?:&quot;)?)?(?:\s?/)?&gt;~i', $data, $matches, PREG_PATTERN_ORDER);
-        if (!empty($matches[0]))
-        {
-          $replaces = array();
-          foreach ($matches[1] as $match => $imgtag)
-          {
-            // No alt?
-            if (!isset($matches[2][$match]))
-              $matches[2][$match] = '';
-
-            // Remove action= from the URL - no funny business, now.
-            if (preg_match('~action(=|%3d)(?!dlattach)~i', $imgtag) != 0)
-              $imgtag = preg_replace('~action(=|%3d)(?!dlattach)~i', 'action-', $imgtag);
-
-            // Check if the image is larger than allowed.
-//            if (!empty($modSettings['max_image_width']) && !empty($modSettings['max_image_height']))
-//            {
-//              list ($width, $height) = url_image_size($imgtag);
-//
-//              if (!empty($modSettings['max_image_width']) && $width > $modSettings['max_image_width'])
-//              {
-//                $height = (int) (($modSettings['max_image_width'] * $height) / $width);
-//                $width = $modSettings['max_image_width'];
-//              }
-//
-//              if (!empty($modSettings['max_image_height']) && $height > $modSettings['max_image_height'])
-//              {
-//                $width = (int) (($modSettings['max_image_height'] * $width) / $height);
-//                $height = $modSettings['max_image_height'];
-//              }
-//
-//              // Set the new image tag.
-//              $replaces[$matches[0][$match]] = '<img src="' . $imgtag . '" width="' . $width . '" height="' . $height . '" alt="' . $matches[2][$match] . '" border="0" />';
-//            }
-//            else
-              $replaces[$matches[0][$match]] = '<img src="' . $imgtag . '" alt="' . $matches[2][$match] . '" border="0" />';
-          }
-
-          $data = strtr($data, $replaces);
-        }
-      }
-
-      if (!empty($modSettings['autoLinkUrls']))
-      {
-        // Are we inside tags that should be auto linked?
-        $no_autolink_area = false;
-        if (!empty($open_tags))
-        {
-          foreach ($open_tags as $open_tag)
-            if (in_array($open_tag['tag'], $no_autolink_tags))
-              $no_autolink_area = true;
-        }
-
-        // Don't go backwards.
-        //!!! Don't think is the real solution....
-        $lastAutoPos = isset($lastAutoPos) ? $lastAutoPos : 0;
-        if ($pos < $lastAutoPos)
-          $no_autolink_area = true;
-        $lastAutoPos = $pos;
-
-        if (!$no_autolink_area)
-        {
-          // Parse any URLs.... have to get rid of the @ problems some things cause... stupid email addresses.
-          if (!isset($disabled['url']) && (strpos($data, '://') !== false || strpos($data, 'www.') !== false))
-          {
-            // Switch out quotes really quick because they can cause problems.
-            $data = strtr($data, array('&#039;' => '\'', '&nbsp;' => $context['utf8'] ? "\xC2\xA0" : "\xA0", '&quot;' => '>">', '"' => '<"<', '&lt;' => '<lt<'));
-            $data = preg_replace(array('~(?<=[\s>\.(;\'"]|^)((?:http|https|ftp|ftps)://[\w\-_%@:|]+(?:\.[\w\-_%]+)*(?::\d+)?(?:/[\w\-_\~%\.@,\?&;=#+:\'\\\\]*|[\(\{][\w\-_\~%\.@,\?&;=#(){}+:\'\\\\]*)*[/\w\-_\~%@\?;=#}\\\\])~i', '~(?<=[\s>(\'<]|^)(www(?:\.[\w\-_]+)+(?::\d+)?(?:/[\w\-_\~%\.@,\?&;=#+:\'\\\\]*|[\(\{][\w\-_\~%\.@,\?&;=#(){}+:\'\\\\]*)*[/\w\-_\~%@\?;=#}\\\\])~i'), array('[url]$1[/url]', '[url=http://$1]$1[/url]'), $data);
-            $data = strtr($data, array('\'' => '&#039;', $context['utf8'] ? "\xC2\xA0" : "\xA0" => '&nbsp;', '>">' => '&quot;', '<"<' => '"', '<lt<' => '&lt;'));
-          }
-
-          // Next, emails...
-          if (!isset($disabled['email']) && strpos($data, '@') !== false)
-          {
-            $data = preg_replace('~(?<=[\?\s' . $non_breaking_space . '\[\]()*\\\;>]|^)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?,\s' . $non_breaking_space . '\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;|\.(?:\.|;|&nbsp;|\s|$|<br />))~' . ($context['utf8'] ? 'u' : ''), '[email]$1[/email]', $data);
-            $data = preg_replace('~(?<=<br />)([\w\-\.]{1,80}@[\w\-]+\.[\w\-\.]+[\w\-])(?=[?\.,;\s' . $non_breaking_space . '\[\]()*\\\]|$|<br />|&nbsp;|&gt;|&lt;|&quot;|&#039;)~' . ($context['utf8'] ? 'u' : ''), '[email]$1[/email]', $data);
-          }
-        }
-      }
-
-      $data = strtr($data, array("\t" => '&nbsp;&nbsp;&nbsp;'));
-
-      if (!empty($modSettings['fixLongWords']) && $modSettings['fixLongWords'] > 5)
-      {
-        // This is SADLY and INCREDIBLY browser dependent.
-        if ($context['browser']['is_gecko'] || $context['browser']['is_konqueror'])
-          $breaker = '<span style="margin: 0 -0.5ex 0 0;"> </span>';
-        // Opera...
-        elseif ($context['browser']['is_opera'])
-          $breaker = '<span style="margin: 0 -0.65ex 0 -1px;"> </span>';
-        // Internet Explorer...
-        else
-          $breaker = '<span style="width: 0; margin: 0 -0.6ex 0 -1px;"> </span>';
-
-        // PCRE will not be happy if we don't give it a short.
-        $modSettings['fixLongWords'] = (int) min(65535, $modSettings['fixLongWords']);
-
-        // The idea is, find words xx long, and then replace them with xx + space + more.
-        if (strlen($data) > $modSettings['fixLongWords'])
-        {
-          // This is done in a roundabout way because $breaker has "long words" :P.
-          $data = strtr($data, array($breaker => '< >', '&nbsp;' => $context['utf8'] ? "\xC2\xA0" : "\xA0"));
-          $data = preg_replace(
-            '~(?<=[>;:!? ' . $non_breaking_space . '\]()]|^)([\w\.]{' . $modSettings['fixLongWords'] . ',})~e' . ($context['utf8'] ? 'u' : ''),
-            "preg_replace('/(.{" . ($modSettings['fixLongWords'] - 1) . '})/' . ($context['utf8'] ? 'u' : '') . "', '\\\$1< >', '\$1')",
-            $data);
-          $data = strtr($data, array('< >' => $breaker, $context['utf8'] ? "\xC2\xA0" : "\xA0" => '&nbsp;'));
-        }
-      }
-
-      // Do any smileys!
-      if ($smileys === true)
-        parsesmileys($data);
-
-      // If it wasn't changed, no copying or other boring stuff has to happen!
-      if ($data != substr($message, $last_pos, $pos - $last_pos + 1))
-      {
-        $message = substr($message, 0, $last_pos) . $data . substr($message, $pos + 1);
-
-        // Since we changed it, look again incase we added or removed a tag.  But we don't want to skip any.
-        $old_pos = strlen($data) + $last_pos - 1;
-        $pos = strpos($message, '[', $last_pos);
-        $pos = $pos === false ? $old_pos : min($pos, $old_pos);
-      }
-    }
-
-    // Are we there yet?  Are we there yet?
-    if ($pos >= strlen($message) - 1)
-      break;
-
-    $tags = strtolower(substr($message, $pos + 1, 1));
-
-    if ($tags == '/' && !empty($open_tags))
-    {
-      $pos2 = strpos($message, ']', $pos + 1);
-      if ($pos2 == $pos + 2)
-        continue;
-      $look_for = strtolower(substr($message, $pos + 2, $pos2 - $pos - 2));
-
-      $to_close = array();
-      $block_level = null;
-      do
-      {
-        $tag = array_pop($open_tags);
-        if (!$tag)
-          break;
-
-        if (!empty($tag['block_level']))
-        {
-          // Only find out if we need to.
-          if ($block_level === false)
-          {
-            array_push($open_tags, $tag);
-            break;
-          }
-
-          // The idea is, if we are LOOKING for a block level tag, we can close them on the way.
-          if (strlen($look_for) > 0 && isset($bbc_codes[$look_for{0}]))
-          {
-            foreach ($bbc_codes[$look_for{0}] as $temp)
-              if ($temp['tag'] == $look_for)
-              {
-                $block_level = !empty($temp['block_level']);
-                break;
-              }
-          }
-
-          if ($block_level !== true)
-          {
-            $block_level = false;
-            array_push($open_tags, $tag);
-            break;
-          }
-        }
-
-        $to_close[] = $tag;
-      }
-      while ($tag['tag'] != $look_for);
-
-      // Did we just eat through everything and not find it?
-      if ((empty($open_tags) && (empty($tag) || $tag['tag'] != $look_for)))
-      {
-        $open_tags = $to_close;
-        continue;
-      }
-      elseif (!empty($to_close) && $tag['tag'] != $look_for)
-      {
-        if ($block_level === null && isset($look_for{0}, $bbc_codes[$look_for{0}]))
-        {
-          foreach ($bbc_codes[$look_for{0}] as $temp)
-            if ($temp['tag'] == $look_for)
-            {
-              $block_level = !empty($temp['block_level']);
-              break;
-            }
-        }
-
-        // We're not looking for a block level tag (or maybe even a tag that exists...)
-        if (!$block_level)
-        {
-          foreach ($to_close as $tag)
-            array_push($open_tags, $tag);
-          continue;
-        }
-      }
-
-      foreach ($to_close as $tag)
-      {
-        $message = substr($message, 0, $pos) . $tag['after'] . substr($message, $pos2 + 1);
-        $pos += strlen($tag['after']);
-        $pos2 = $pos - 1;
-
-        // See the comment at the end of the big loop - just eating whitespace ;).
-        if (!empty($tag['block_level']) && substr($message, $pos, 6) == '<br />')
-          $message = substr($message, 0, $pos) . substr($message, $pos + 6);
-        if (!empty($tag['trim']) && $tag['trim'] != 'inside' && preg_match('~(<br />|&nbsp;|\s)*~', substr($message, $pos), $matches) != 0)
-          $message = substr($message, 0, $pos) . substr($message, $pos + strlen($matches[0]));
-      }
-
-      if (!empty($to_close))
-      {
-        $to_close = array();
-        $pos--;
-      }
-
-      continue;
-    }
-
-    // No tags for this character, so just keep going (fastest possible course.)
-    if (!isset($bbc_codes[$tags]))
-      continue;
-
-    $inside = empty($open_tags) ? null : $open_tags[count($open_tags) - 1];
-    $tag = null;
-    foreach ($bbc_codes[$tags] as $possible)
-    {
-      // Not a match?
-      if (strtolower(substr($message, $pos + 1, strlen($possible['tag']))) != $possible['tag'])
-        continue;
-
-      $next_c = substr($message, $pos + 1 + strlen($possible['tag']), 1);
-
-      // A test validation?
-      if (isset($possible['test']) && preg_match('~^' . $possible['test'] . '~', substr($message, $pos + 1 + strlen($possible['tag']) + 1)) == 0)
-        continue;
-      // Do we want parameters?
-      elseif (!empty($possible['parameters']))
-      {
-        if ($next_c != ' ')
-          continue;
-      }
-      elseif (isset($possible['type']))
-      {
-        // Do we need an equal sign?
-        if (in_array($possible['type'], array('unparsed_equals', 'unparsed_commas', 'unparsed_commas_content', 'unparsed_equals_content', 'parsed_equals')) && $next_c != '=')
-          continue;
-        // Maybe we just want a /...
-        if ($possible['type'] == 'closed' && $next_c != ']' && substr($message, $pos + 1 + strlen($possible['tag']), 2) != '/]' && substr($message, $pos + 1 + strlen($possible['tag']), 3) != ' /]')
-          continue;
-        // An immediate ]?
-        if ($possible['type'] == 'unparsed_content' && $next_c != ']')
-          continue;
-      }
-      // No type means 'parsed_content', which demands an immediate ] without parameters!
-      elseif ($next_c != ']')
-        continue;
-
-      // Check allowed tree?
-      if (isset($possible['require_parents']) && ($inside === null || !in_array($inside['tag'], $possible['require_parents'])))
-        continue;
-      elseif (isset($inside['require_children']) && !in_array($possible['tag'], $inside['require_children']))
-        continue;
-      // If this is in the list of disallowed child tags, don't parse it.
-      elseif (isset($inside['disallow_children']) && in_array($possible['tag'], $inside['disallow_children']))
-        continue;
-
-      $pos1 = $pos + 1 + strlen($possible['tag']) + 1;
-
-      // This is long, but it makes things much easier and cleaner.
-      if (!empty($possible['parameters']))
-      {
-        $preg = array();
-        foreach ($possible['parameters'] as $p => $info)
-          $preg[] = '(\s+' . $p . '=' . (empty($info['quoted']) ? '' : '&quot;') . (isset($info['match']) ? $info['match'] : '(.+?)') . (empty($info['quoted']) ? '' : '&quot;') . ')' . (empty($info['optional']) ? '' : '?');
-
-        // Okay, this may look ugly and it is, but it's not going to happen much and it is the best way of allowing any order of parameters but still parsing them right.
-        $match = false;
-        $orders = permute($preg);
-        foreach ($orders as $p)
-          if (preg_match('~^' . implode('', $p) . '\]~i', substr($message, $pos1 - 1), $matches) != 0)
-          {
-            $match = true;
-            break;
-          }
-
-        // Didn't match our parameter list, try the next possible.
-        if (!$match)
-          continue;
-
-        $params = array();
-        for ($i = 1, $n = count($matches); $i < $n; $i += 2)
-        {
-          $key = strtok(ltrim($matches[$i]), '=');
-          if (isset($possible['parameters'][$key]['value']))
-            $params['{' . $key . '}'] = strtr($possible['parameters'][$key]['value'], array('$1' => $matches[$i + 1]));
-          elseif (isset($possible['parameters'][$key]['validate']))
-            $params['{' . $key . '}'] = $possible['parameters'][$key]['validate']($matches[$i + 1]);
-          else
-            $params['{' . $key . '}'] = $matches[$i + 1];
-
-          // Just to make sure: replace any $ or { so they can't interpolate wrongly.
-          $params['{' . $key . '}'] = strtr($params['{' . $key . '}'], array('$' => '&#036;', '{' => '&#123;'));
-        }
-
-        foreach ($possible['parameters'] as $p => $info)
-        {
-          if (!isset($params['{' . $p . '}']))
-            $params['{' . $p . '}'] = '';
-        }
-
-        $tag = $possible;
-
-        // Put the parameters into the string.
-        if (isset($tag['before']))
-          $tag['before'] = strtr($tag['before'], $params);
-        if (isset($tag['after']))
-          $tag['after'] = strtr($tag['after'], $params);
-        if (isset($tag['content']))
-          $tag['content'] = strtr($tag['content'], $params);
-
-        $pos1 += strlen($matches[0]) - 1;
-      }
-      else
-        $tag = $possible;
-      break;
-    }
-
-    // Item codes are complicated buggers... they are implicit [li]s and can make [list]s!
-    if ($smileys !== false && $tag === null && isset($itemcodes[substr($message, $pos + 1, 1)]) && substr($message, $pos + 2, 1) == ']' && !isset($disabled['list']) && !isset($disabled['li']))
-    {
-      if (substr($message, $pos + 1, 1) == '0' && !in_array(substr($message, $pos - 1, 1), array(';', ' ', "\t", '>')))
-        continue;
-      $tag = $itemcodes[substr($message, $pos + 1, 1)];
-
-      // First let's set up the tree: it needs to be in a list, or after an li.
-      if ($inside === null || ($inside['tag'] != 'list' && $inside['tag'] != 'li'))
-      {
-        $open_tags[] = array(
-          'tag' => 'list',
-          'after' => '</ul>',
-          'block_level' => true,
-          'require_children' => array('li'),
-          'disallow_children' => isset($inside['disallow_children']) ? $inside['disallow_children'] : null,
-        );
-        $code = '<ul style="margin-top: 0; margin-bottom: 0;">';
-      }
-      // We're in a list item already: another itemcode?  Close it first.
-      elseif ($inside['tag'] == 'li')
-      {
-        array_pop($open_tags);
-        $code = '</li>';
-      }
-      else
-        $code = '';
-
-      // Now we open a new tag.
-      $open_tags[] = array(
-        'tag' => 'li',
-        'after' => '</li>',
-        'trim' => 'outside',
-        'block_level' => true,
-        'disallow_children' => isset($inside['disallow_children']) ? $inside['disallow_children'] : null,
-      );
-
-      // First, open the tag...
-      $code .= '<li' . ($tag == '' ? '' : ' type="' . $tag . '"') . '>';
-      $message = substr($message, 0, $pos) . $code . substr($message, $pos + 3);
-      $pos += strlen($code) - 1;
-
-      // Next, find the next break (if any.)  If there's more itemcode after it, keep it going - otherwise close!
-      $pos2 = strpos($message, '<br />', $pos);
-      $pos3 = strpos($message, '[/', $pos);
-      if ($pos2 !== false && ($pos2 <= $pos3 || $pos3 === false))
-      {
-        preg_match('~^(<br />|&nbsp;|\s|\[)+~', substr($message, $pos2 + 6), $matches);
-        $message = substr($message, 0, $pos2) . (!empty($matches[0]) && substr($matches[0], -1) == '[' ? '[/li]' : '[/li][/list]') . substr($message, $pos2);
-
-        $open_tags[count($open_tags) - 2]['after'] = '</ul>';
-      }
-      // Tell the [list] that it needs to close specially.
-      else
-      {
-        // Move the li over, because we're not sure what we'll hit.
-        $open_tags[count($open_tags) - 1]['after'] = '';
-        $open_tags[count($open_tags) - 2]['after'] = '</li></ul>';
-      }
-
-      continue;
-    }
-
-    // Implicitly close lists and tables if something other than what's required is in them.  This is needed for itemcode.
-    if ($tag === null && $inside !== null && !empty($inside['require_children']))
-    {
-      array_pop($open_tags);
-
-      $message = substr($message, 0, $pos) . $inside['after'] . substr($message, $pos);
-      $pos += strlen($inside['after']) - 1;
-    }
-
-    // No tag?  Keep looking, then.  Silly people using brackets without actual tags.
-    if ($tag === null)
-      continue;
-
-    // Propagate the list to the child (so wrapping the disallowed tag won't work either.)
-    if (isset($inside['disallow_children']))
-      $tag['disallow_children'] = isset($tag['disallow_children']) ? array_unique(array_merge($tag['disallow_children'], $inside['disallow_children'])) : $inside['disallow_children'];
-
-    // Is this tag disabled?
-    if (isset($disabled[$tag['tag']]))
-    {
-      if (!isset($tag['disabled_before']) && !isset($tag['disabled_after']) && !isset($tag['disabled_content']))
-      {
-        $tag['before'] = !empty($tag['block_level']) ? '<div>' : '';
-        $tag['after'] = !empty($tag['block_level']) ? '</div>' : '';
-        $tag['content'] = isset($tag['type']) && $tag['type'] == 'closed' ? '' : (!empty($tag['block_level']) ? '<div>$1</div>' : '$1');
-      }
-      elseif (isset($tag['disabled_before']) || isset($tag['disabled_after']))
-      {
-        $tag['before'] = isset($tag['disabled_before']) ? $tag['disabled_before'] : (!empty($tag['block_level']) ? '<div>' : '');
-        $tag['after'] = isset($tag['disabled_after']) ? $tag['disabled_after'] : (!empty($tag['block_level']) ? '</div>' : '');
-      }
-      else
-        $tag['content'] = $tag['disabled_content'];
-    }
-
-    // The only special case is 'html', which doesn't need to close things.
-    if (!empty($tag['block_level']) && $tag['tag'] != 'html' && empty($inside['block_level']))
-    {
-      $n = count($open_tags) - 1;
-      while (empty($open_tags[$n]['block_level']) && $n >= 0)
-        $n--;
-
-      // Close all the non block level tags so this tag isn't surrounded by them.
-      for ($i = count($open_tags) - 1; $i > $n; $i--)
-      {
-        $message = substr($message, 0, $pos) . $open_tags[$i]['after'] . substr($message, $pos);
-        $pos += strlen($open_tags[$i]['after']);
-        $pos1 += strlen($open_tags[$i]['after']);
-
-        // Trim or eat trailing stuff... see comment at the end of the big loop.
-        if (!empty($open_tags[$i]['block_level']) && substr($message, $pos, 6) == '<br />')
-          $message = substr($message, 0, $pos) . substr($message, $pos + 6);
-        if (!empty($open_tags[$i]['trim']) && $tag['trim'] != 'inside' && preg_match('~(<br />|&nbsp;|\s)*~', substr($message, $pos), $matches) != 0)
-          $message = substr($message, 0, $pos) . substr($message, $pos + strlen($matches[0]));
-
-        array_pop($open_tags);
-      }
-    }
-
-    // No type means 'parsed_content'.
-    if (!isset($tag['type']))
-    {
-      // !!! Check for end tag first, so people can say "I like that [i] tag"?
-      $open_tags[] = $tag;
-      $message = substr($message, 0, $pos) . $tag['before'] . substr($message, $pos1);
-      $pos += strlen($tag['before']) - 1;
-    }
-    // Don't parse the content, just skip it.
-    elseif ($tag['type'] == 'unparsed_content')
-    {
-      $pos2 = stripos($message, '[/' . substr($message, $pos + 1, strlen($tag['tag'])) . ']', $pos1);
-      if ($pos2 === false)
-        continue;
-
-      $data = substr($message, $pos1, $pos2 - $pos1);
-
-      if (!empty($tag['block_level']) && substr($data, 0, 6) == '<br />')
-        $data = substr($data, 6);
-
-      if (isset($tag['validate']))
-        $tag['validate']($tag, $data, $disabled);
-
-      $code = strtr($tag['content'], array('$1' => $data));
-      $message = substr($message, 0, $pos) . $code . substr($message, $pos2 + 3 + strlen($tag['tag']));
-      $pos += strlen($code) - 1;
-    }
-    // Don't parse the content, just skip it.
-    elseif ($tag['type'] == 'unparsed_equals_content')
-    {
-      // The value may be quoted for some tags - check.
-      if (isset($tag['quoted']))
-      {
-        $quoted = substr($message, $pos1, 6) == '&quot;';
-        if ($tag['quoted'] != 'optional' && !$quoted)
-          continue;
-
-        if ($quoted)
-          $pos1 += 6;
-      }
-      else
-        $quoted = false;
-
-      $pos2 = strpos($message, $quoted == false ? ']' : '&quot;]', $pos1);
-      if ($pos2 === false)
-        continue;
-      $pos3 = stripos($message, '[/' . substr($message, $pos + 1, strlen($tag['tag'])) . ']', $pos2);
-      if ($pos3 === false)
-        continue;
-
-      $data = array(
-        substr($message, $pos2 + ($quoted == false ? 1 : 7), $pos3 - ($pos2 + ($quoted == false ? 1 : 7))),
-        substr($message, $pos1, $pos2 - $pos1)
-      );
-
-      if (!empty($tag['block_level']) && substr($data[0], 0, 6) == '<br />')
-        $data[0] = substr($data[0], 6);
-
-      // Validation for my parking, please!
-      if (isset($tag['validate']))
-        $tag['validate']($tag, $data, $disabled);
-
-      $code = strtr($tag['content'], array('$1' => $data[0], '$2' => $data[1]));
-      $message = substr($message, 0, $pos) . $code . substr($message, $pos3 + 3 + strlen($tag['tag']));
-      $pos += strlen($code) - 1;
-    }
-    // A closed tag, with no content or value.
-    elseif ($tag['type'] == 'closed')
-    {
-      $pos2 = strpos($message, ']', $pos);
-      $message = substr($message, 0, $pos) . $tag['content'] . substr($message, $pos2 + 1);
-      $pos += strlen($tag['content']) - 1;
-    }
-    // This one is sorta ugly... :/.  Unforunately, it's needed for flash.
-    elseif ($tag['type'] == 'unparsed_commas_content')
-    {
-      $pos2 = strpos($message, ']', $pos1);
-      if ($pos2 === false)
-        continue;
-      $pos3 = stripos($message, '[/' . substr($message, $pos + 1, strlen($tag['tag'])) . ']', $pos2);
-      if ($pos3 === false)
-        continue;
-
-      // We want $1 to be the content, and the rest to be csv.
-      $data = explode(',', ',' . substr($message, $pos1, $pos2 - $pos1));
-      $data[0] = substr($message, $pos2 + 1, $pos3 - $pos2 - 1);
-
-      if (isset($tag['validate']))
-        $tag['validate']($tag, $data, $disabled);
-
-      $code = $tag['content'];
-      foreach ($data as $k => $d)
-        $code = strtr($code, array('$' . ($k + 1) => trim($d)));
-      $message = substr($message, 0, $pos) . $code . substr($message, $pos3 + 3 + strlen($tag['tag']));
-      $pos += strlen($code) - 1;
-    }
-    // This has parsed content, and a csv value which is unparsed.
-    elseif ($tag['type'] == 'unparsed_commas')
-    {
-      $pos2 = strpos($message, ']', $pos1);
-      if ($pos2 === false)
-        continue;
-
-      $data = explode(',', substr($message, $pos1, $pos2 - $pos1));
-
-      if (isset($tag['validate']))
-        $tag['validate']($tag, $data, $disabled);
-
-      // Fix after, for disabled code mainly.
-      foreach ($data as $k => $d)
-        $tag['after'] = strtr($tag['after'], array('$' . ($k + 1) => trim($d)));
-
-      $open_tags[] = $tag;
-
-      // Replace them out, $1, $2, $3, $4, etc.
-      $code = $tag['before'];
-      foreach ($data as $k => $d)
-        $code = strtr($code, array('$' . ($k + 1) => trim($d)));
-      $message = substr($message, 0, $pos) . $code . substr($message, $pos2 + 1);
-      $pos += strlen($code) - 1;
-    }
-    // A tag set to a value, parsed or not.
-    elseif ($tag['type'] == 'unparsed_equals' || $tag['type'] == 'parsed_equals')
-    {
-      // The value may be quoted for some tags - check.
-      if (isset($tag['quoted']))
-      {
-        $quoted = substr($message, $pos1, 6) == '&quot;';
-        if ($tag['quoted'] != 'optional' && !$quoted)
-          continue;
-
-        if ($quoted)
-          $pos1 += 6;
-      }
-      else
-        $quoted = false;
-
-      $pos2 = strpos($message, $quoted == false ? ']' : '&quot;]', $pos1);
-      if ($pos2 === false)
-        continue;
-
-      $data = substr($message, $pos1, $pos2 - $pos1);
-
-      // Validation for my parking, please!
-      if (isset($tag['validate']))
-        $tag['validate']($tag, $data, $disabled);
-
-      // For parsed content, we must recurse to avoid security problems.
-      if ($tag['type'] != 'unparsed_equals')
-        $data = parse_bbc($data);
-
-      $tag['after'] = strtr($tag['after'], array('$1' => $data));
-
-      $open_tags[] = $tag;
-
-      $code = strtr($tag['before'], array('$1' => $data));
-      $message = substr($message, 0, $pos) . $code . substr($message, $pos2 + ($quoted == false ? 1 : 7));
-      $pos += strlen($code) - 1;
-    }
-
-    // If this is block level, eat any breaks after it.
-    if (!empty($tag['block_level']) && substr($message, $pos + 1, 6) == '<br />')
-      $message = substr($message, 0, $pos + 1) . substr($message, $pos + 7);
-
-    // Are we trimming outside this tag?
-    if (!empty($tag['trim']) && $tag['trim'] != 'outside' && preg_match('~(<br />|&nbsp;|\s)*~', substr($message, $pos + 1), $matches) != 0)
-      $message = substr($message, 0, $pos + 1) . substr($message, $pos + 1 + strlen($matches[0]));
-  }
-
-  // Close any remaining tags.
-  while ($tag = array_pop($open_tags))
-    $message .= $tag['after'];
-
-  if (substr($message, 0, 1) == ' ')
-    $message = '&nbsp;' . substr($message, 1);
-
-  // Cleanup whitespace.
-  $message = strtr($message, array('  ' => ' &nbsp;', "\r" => '', "\n" => '<br />', '<br /> ' => '<br />&nbsp;', '&#13;' => "\n"));
-
-  // Cache the output if it took some time...
-  if (isset($cache_key, $cache_t) && array_sum(explode(' ', microtime())) - array_sum(explode(' ', $cache_t)) > 0.05)
-    cache_put_data($cache_key, $message, 240);
-
-  return $message;
-}
-
-// Parse smileys in the passed message.
-function parsesmileys(&$message)
-{
-  global $modSettings, $db_prefix, $txt, $user_info, $context;
-  static $smileyfromcache = array(), $smileytocache = array();
-
-  // No smiley set at all?!
-  if ($user_info['smiley_set'] == 'none')
-    return;
-
-  // If the smiley array hasn't been set, do it now.
-  if (empty($smileyfromcache))
-  {
-    // Use the default smileys if it is disabled. (better for "portability" of smileys.)
-    if (empty($modSettings['smiley_enable']))
-    {
-      $smileysfrom = array('>:D', ':D', '::)', '>:(', ':)', ';)', ';D', ':(', ':o', '8)', ':P', '???', ':-[', ':-X', ':-*', ':\'(', ':-\\', '^-^', 'O0', 'C:-)', '0:)');
-      $smileysto = array('evil.gif', 'cheesy.gif', 'rolleyes.gif', 'angry.gif', 'smiley.gif', 'wink.gif', 'grin.gif', 'sad.gif', 'shocked.gif', 'cool.gif', 'tongue.gif', 'huh.gif', 'embarrassed.gif', 'lipsrsealed.gif', 'kiss.gif', 'cry.gif', 'undecided.gif', 'azn.gif', 'afro.gif', 'police.gif', 'angel.gif');
-      $smileysdescs = array('', $txt[289], $txt[450], $txt[288], $txt[287], $txt[292], $txt[293], $txt[291], $txt[294], $txt[295], $txt[451], $txt[296], $txt[526], $txt[527], $txt[529], $txt[530], $txt[528], '', '', '', '');
-    }
-    else
-    {
-      // Load the smileys in reverse order by length so they don't get parsed wrong.
-      if (($temp = cache_get_data('parsing_smileys', 480)) == null)
-      {
-        $result = db_query("
-          SELECT code, filename, description
-          FROM {$db_prefix}smileys", __FILE__, __LINE__);
-        $smileysfrom = array();
-        $smileysto = array();
-        $smileysdescs = array();
-        while ($row = mysql_fetch_assoc($result))
-        {
-          $smileysfrom[] = $row['code'];
-          $smileysto[] = $row['filename'];
-          $smileysdescs[] = $row['description'];
-        }
-        mysql_free_result($result);
-
-        cache_put_data('parsing_smileys', array($smileysfrom, $smileysto, $smileysdescs), 480);
-      }
-      else
-        list ($smileysfrom, $smileysto, $smileysdescs) = $temp;
-    }
-
-    // The non-breaking-space is a complex thing...
-    $non_breaking_space = $context['utf8'] ? ($context['server']['complex_preg_chars'] ? '\x{A0}' : pack('C*', 0xC2, 0xA0)) : '\xA0';
-
-    // This smiley regex makes sure it doesn't parse smileys within code tags (so [url=mailto:David@bla.com] doesn't parse the :D smiley)
-    for ($i = 0, $n = count($smileysfrom); $i < $n; $i++)
-    {
-      $smileyfromcache[] = '/(?<=[>:\?\.\s' . $non_breaking_space . '[\]()*\\\;]|^)(' . preg_quote($smileysfrom[$i], '/') . '|' . preg_quote(htmlspecialchars($smileysfrom[$i], ENT_QUOTES), '/') . ')(?=[^[:alpha:]0-9]|$)/' . ($context['utf8'] ? 'u' : '');
-      // Escape a bunch of smiley-related characters in the description so it doesn't get a double dose :P.
-      $smileytocache[] = '<img src="' . $modSettings['smileys_url'] . '/' . $user_info['smiley_set'] . '/' . $smileysto[$i] . '" alt="' . strtr(htmlspecialchars($smileysdescs[$i]), array(':' => '&#58;', '(' => '&#40;', ')' => '&#41;', '$' => '&#36;', '[' => '&#091;')) . '" border="0" />';
-    }
-  }
-
-  // Replace away!
-  // !!! There must be a way to speed this up.
-  $message = preg_replace($smileyfromcache, $smileytocache, $message);
-}
-
-// Highlight any code...
-function highlight_php_code($code)
-{
-  global $context;
-
-  // Remove special characters.
-  $code = un_htmlspecialchars(strtr($code, array('<br />' => "\n", "\t" => 'SMF_TAB();', '&#91;' => '[')));
-
-  $oldlevel = error_reporting(0);
-
-  // It's easier in 4.2.x+.
-  if (@version_compare(PHP_VERSION, '4.2.0') == -1)
-  {
-    ob_start();
-    @highlight_string($code);
-    $buffer = str_replace(array("\n", "\r"), '', ob_get_contents());
-    ob_end_clean();
-  }
-  else
-    $buffer = str_replace(array("\n", "\r"), '', @highlight_string($code, true));
-
-  error_reporting($oldlevel);
-
-  // Yes, I know this is kludging it, but this is the best way to preserve tabs from PHP :P.
-  $buffer = preg_replace('~SMF_TAB(</(font|span)><(font color|span style)="[^"]*?">)?\(\);~', "<pre style=\"display: inline;\">\t</pre>", $buffer);
-
-  return strtr($buffer, array('\'' => '&#039;', '<code>' => '', '</code>' => ''));
-}
-
-
-?><?php
+}<?php
 
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')
    date_default_timezone_set('America/Montreal');
+
+if (isset($argc)) {
+   ParseCommandLine($argv);
+   define('CONSOLE', 1);
+}
+
+if (isset($_GET['type'])) {
+   $CustomType = $_GET['type'];
+   if (!isset($Supported[$CustomType])) {
+      $Path = 'class.'.strtolower($CustomType).'.php';
+      if (file_exists($Path)) {
+         $Supported[$CustomType] = array('name' => $CustomType.' (custom)', 'prefix' => '');
+         include_once($Path);
+      }
+   }
+}
 
 // Instantiate the appropriate controller or display the input page.
 if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
@@ -4585,6 +3558,15 @@ else {
    $CanWrite = TestWrite();
    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
 }
+
+if (defined('CONSOLE'))
+   echo "\n";
+
+function ErrorHandler() {
+   echo "Error";
+}
+
+set_error_handler("ErrorHandler");
 
 /**
  * Write out a value passed as bytes to its most readable format.
@@ -4600,6 +3582,52 @@ function FormatMemorySize($Bytes, $Precision = 1) {
 
    $Result = round($Bytes, $Precision).$Units[$Pow];
    return $Result;
+}
+
+function ParseCommandLine($Argv) {
+   global $Supported;
+
+   $Args = array(
+       'type' => 'The type of forum being exported ('.implode(', ', array_keys($Supported)).').',
+       'prefix' => 'The database table prefix.',
+       'dbhost' => 'The database host.',
+       'dbname' => 'The database name.',
+       'dbuser' => 'The database user.',
+       'dbpass' => 'The database password.',
+       'savefile' => 'Whether or not to save the file.');
+
+   $Script = $Argv[0];
+   unset($Argv[0]);
+
+   if (count($Argv) == 0) {
+      echo "usage: php $Script parm1=value ...\n";
+      foreach ($Args as $Name => $Help) {
+         echo " $Name: $Help\n";
+      }
+
+      die();
+   }
+
+   $Errors = 0;
+   foreach ($Argv as $Arg) {
+      $Parts = explode('=', $Arg, 2);
+      if (count($Parts) < 2) {
+         echo "Malformed argument $Arg.\n";
+         $Errors++;
+         continue;
+      }
+
+      list($Name, $Value) = $Parts;
+
+      $_POST[$Name] = $Value;
+      unset($Args[$Name]);
+   }
+   if (count($Args) > 0) {
+      $Errors++;
+      echo "Missing arguments: ".implode(', ', array_keys($Args));
+   }
+   if ($Errors)
+      die("\n$Errors error(s)\n");
 }
 
 /** 
