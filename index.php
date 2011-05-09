@@ -56,7 +56,7 @@ include('class.smf.php');
 if (ini_get('date.timezone') == '')
    date_default_timezone_set('America/Montreal');
 
-if ($argc) {
+if (isset($argc)) {
    ParseCommandLine($argv);
    define('CONSOLE', 1);
 }
