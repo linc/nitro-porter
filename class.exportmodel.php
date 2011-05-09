@@ -26,6 +26,9 @@ class ExportModel {
    /** @var string The charcter set to set as the connection anytime the database connects. */
    public $CharacterSet = 'utf8';
 
+   /** @var array **/
+   public $CurrentRow = NULL;
+
    public $Destination = 'file';
 
    /** @var object File pointer */
@@ -113,6 +116,7 @@ class ExportModel {
             'UpdateUserID' => 'int',
             'DateLastComment' => 'datetime',
             'CountComments' => 'int',
+            'CountViews' => 'int',
             'Score' => 'float',
             'Closed' => 'tinyint',
             'Announce' => 'tinyint',
@@ -131,10 +135,13 @@ class ExportModel {
           ),
       'Permission' => array(
             'RoleID' => 'int',
-            'Garden_SignIn_Allow' => 'tinyint',
-            'Vanilla_Discussions_View' => 'tinyint',
-            'Vanilla_Discussions_Add' => 'tinyint',
-            'Vanilla_Comments_Add' => 'tinyint'
+//            '_Permissions' => 'varchar(20)',
+            'Garden.SignIn.Allow' => 'tinyint',
+            'Garden.Activity.View' => 'tinyint',
+            'Garden.Profiles.View' => 'tinyint',
+            'Vanilla.Discussions.View' => 'tinyint',
+            'Vanilla.Discussions.Add' => 'tinyint',
+            'Vanilla.Comments.Add' => 'tinyint'
           ),
       'Role' => array(
             'RoleID' => 'int',
@@ -166,7 +173,8 @@ class ExportModel {
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
             'DateInserted' => 'datetime',
-            'DateUpdated' => 'datetime'),
+            'DateUpdated' => 'datetime',
+            'Banned' => 'tinyint'),
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
@@ -340,7 +348,9 @@ class ExportModel {
       if ($Data !== FALSE) {
          while (($Row = mysql_fetch_assoc($Data)) !== FALSE) {
             $Row = (array)$Row; // export%202010-05-06%20210937.txt
+            $this->CurrentRow =& $Row;
             $RowCount++;
+            
             if($FirstQuery) {
                // Start with the table name.
                fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
@@ -377,7 +387,9 @@ class ExportModel {
                // Check to see if there is a callback filter.
                if (isset($Filters[$Field])) {
                   $Callback = $Filters[$Field];
-                  $Value = call_user_func($Filters[$Field], $Value, $Field, $Row, $Column);
+                  $Row2 =& $Row;
+                  $Value = call_user_func($Filters[$Field], $Value, $Field, $Row2, $Column);
+                  $Row = $this->CurrentRow;
                }
 
                // Format the value for writing.
@@ -462,9 +474,10 @@ class ExportModel {
       $CreateSql = "create table {$DestDb}GDN_z$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
       $this->Query($CreateSql);
 
+      $Query = rtrim($Query, ';');
       // Build the insert statement.
       if ($this->TestMode) {
-         $Query = rtrim($Query, ';').' limit 10';
+         $Query .= ' limit 10';
       }
 
       $InsertColumns = array();
@@ -639,7 +652,7 @@ class ExportModel {
 
       // Add filtered mappings since filters can add new columns.
       foreach ($Mappings as $Source => $Options) {
-         if (!is_array($Options) || !isset($Options['Filter']) || !isset($Options['Column']))
+         if (!is_array($Options) || !isset($Options['Column']))
             continue;
          $DestColumn = $Options['Column'];
          if (isset($ExportStructure[$DestColumn]))
@@ -653,6 +666,7 @@ class ExportModel {
             continue;
 
          $ExportStructure[$DestColumn] = $DestType;
+         $Mappings[$Source] = $DestColumn;
       }
 
       return $ExportStructure;
