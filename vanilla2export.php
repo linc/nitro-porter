@@ -3524,9 +3524,8 @@ join :_personal_messages pm2
          return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))). chr(0x80 | (0x3f & $char));
      }
    }
-}
+}<?php
 ?><?php
-
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')
