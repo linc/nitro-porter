@@ -2,7 +2,7 @@
 
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.5b');
+define('APPLICATION_VERSION', '1.5.1b');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -2571,10 +2571,11 @@ class Phpbb2 extends ExportController {
       'groups' => array('group_id', 'group_name', 'group_description'),
       'user_group' => array('user_id', 'group_id'),
       'forums' => array('forum_id', 'forum_name', 'forum_desc', 'forum_order'),
-      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id',
-         'topic_replies', 'topic_status', 'topic_type', 'topic_time'),
+      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id', 'topic_replies', 'topic_status', 'topic_type', 'topic_time'),
       'posts' => array('post_id', 'topic_id', 'poster_id', 'post_time', 'post_edit_time'),
-      'posts_text' => array('post_id', 'post_text')
+      'posts_text' => array('post_id', 'post_text'),
+      'privmsgs' => array('privmsgs_id', 'privmsgs_subject', 'privmsgs_from_userid', 'privmsgs_to_userid', 'privmsgs_date'),
+      'privmsgs_text' => array('privmsgs_text_id', 'privmsgs_bbcode_uid', 'privmsgs_text')
    );
 
    /**
@@ -2623,13 +2624,31 @@ class Phpbb2 extends ExportController {
 
       // Categories
       $Category_Map = array(
-         'forum_id'=>'CategoryID',
-         'forum_name'=>'Name',
-         'forum_desc'=>'Description',
-         'forum_order'=>'Sort'
+         'id'=>'CategoryID',
+         'cat_title'=>'Name',
+         'description'=>'Description',
+         'parentid' => 'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select * from :_forums", $Category_Map);
+      $Ex->ExportTable('Category',
+"select
+  c.cat_id * 1000 as id,
+  c.cat_title,
+  c.cat_order * 1000 as Sort,
+  null as parentid,
+  '' as description
+from :_categories c
 
+union all
+
+select
+  f.forum_id,
+  f.forum_name,
+  c.cat_order * 1000 + f.forum_order,
+  c.cat_id * 1000 as parentid,
+  f.forum_desc
+from :_forums f
+left join :_categories c
+  on f.cat_id = c.cat_id", $Category_Map);
 
       // Discussions
       $Discussion_Map = array(
@@ -2666,8 +2685,152 @@ class Phpbb2 extends ExportController {
          from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
          $Comment_Map);
 
+      // Conversations tables.
+
+      $Ex->Query("drop table if exists z_pmto;");
+
+      $Ex->Query("create table z_pmto (
+id int unsigned,
+userid int unsigned,
+primary key(id, userid));");
+
+      $Ex->Query("insert ignore z_pmto (id, userid)
+select privmsgs_id, privmsgs_from_userid
+from :_privmsgs;");
+
+      $Ex->Query("insert ignore z_pmto (id, userid)
+select privmsgs_id, privmsgs_to_userid
+from :_privmsgs;");
+
+      $Ex->Query("drop table if exists z_pmto2;");
+
+      $Ex->Query("create table z_pmto2 (
+  id int unsigned,
+  userids varchar(250),
+  primary key (id)
+);");
+
+      $Ex->Query("insert ignore z_pmto2 (id, userids)
+select
+  id,
+  group_concat(userid order by userid)
+from z_pmto
+group by id;");
+
+      $Ex->Query("drop table if exists z_pm;");
+
+      $Ex->Query("create table z_pm (
+  id int unsigned,
+  subject varchar(255),
+  subject2 varchar(255),
+  userids varchar(250),
+  groupid int unsigned
+);");
+
+      $Ex->Query("insert z_pm (
+  id,
+  subject,
+  subject2,
+  userids
+)
+select
+  pm.privmsgs_id,
+  pm.privmsgs_subject,
+  case when pm.privmsgs_subject like 'Re: %' then trim(substring(pm.privmsgs_subject, 4)) else pm.privmsgs_subject end as subject2,
+  t.userids
+from :_privmsgs pm
+join z_pmto2 t
+  on t.id = pm.privmsgs_id;");
+
+      $Ex->Query("create index z_idx_pm on z_pm (id);");
+
+      $Ex->Query("drop table if exists z_pmgroup;");
+
+      $Ex->Query("create table z_pmgroup (
+  groupid int unsigned,
+  subject varchar(255),
+  userids varchar(250)
+);");
+
+      $Ex->Query("insert z_pmgroup (
+  groupid,
+  subject,
+  userids
+)
+select
+  min(pm.id),
+  pm.subject2,
+  pm.userids
+from z_pm pm
+group by pm.subject2, pm.userids;");
+
+      $Ex->Query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
+      $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
+
+      $Ex->Query("update z_pm pm
+join z_pmgroup g
+  on pm.subject2 = g.subject and pm.userids = g.userids
+set pm.groupid = g.groupid;");
+
+      // Conversations.
+      $Conversation_Map = array(
+         'privmsgs_id' => 'ConversationID',
+         'privmsgs_from_userid' => 'InsertUserID',
+         'RealSubject' => array('Column' => 'Subject', 'Type' => 'varchar(250)', 'Filter' => array('Phpbb2', 'EntityDecode'))
+      );
+
+      $Ex->ExportTable('Conversation', "select
+  g.subject as RealSubject,
+  pm.*,
+  from_unixtime(pm.privmsgs_date) as DateInserted
+from :_privmsgs pm
+join z_pmgroup g
+  on g.groupid = pm.privmsgs_id", $Conversation_Map);
+
+      // Coversation Messages.
+      $ConversationMessage_Map = array(
+          'privmsgs_id' => 'MessageID',
+          'group_id' => 'ConversationID',
+          'privmsgs_text' => array('Column' => 'Body', 'Filter'=>array($this, 'RemoveBBCodeUIDs')),
+          'privmsgs_from_userid' => 'InsertUserID'
+      );
+      $Ex->ExportTable('ConversationMessage',
+      "select
+         pm.*,
+         txt.*,
+         pm2.groupid,
+         'BBCode' as Format,
+         FROM_UNIXTIME(pm.privmsgs_date) as DateInserted
+       from :_privmsgs pm
+       join :_privmsgs_text txt
+         on pm.privmsgs_id = txt.privmsgs_text_id
+       join z_pm pm2
+         on pm.privmsgs_id = pm2.id", $ConversationMessage_Map);
+
+      // User Conversation.
+      $UserConversation_Map = array(
+         'userid' => 'UserID',
+         'groupid' => 'ConversationID'
+      );
+      $Ex->ExportTable('UserConversation',
+      "select
+         g.groupid,
+         t.userid
+       from z_pmto t
+       join z_pmgroup g
+         on g.groupid = t.id;", $UserConversation_Map);
+
+      $Ex->Query('drop table if exists z_pmto');
+      $Ex->Query('drop table if exists z_pmto2;');
+      $Ex->Query('drop table if exists z_pm;');
+      $Ex->Query('drop table if exists z_pmgroup;');
+
       // End
       $Ex->EndExport();
+   }
+
+   public static function EntityDecode($Value) {
+      return html_entity_decode($Value, ENT_QUOTES, 'UTF-8');
    }
 
    public function RemoveBBCodeUIDs($Value, $Field, $Row) {
@@ -2693,13 +2856,11 @@ class Phpbb3 extends ExportController {
 
    /** @var array Required tables => columns */
    protected $SourceTables = array(
-      'users' => array('user_id', 'username', 'user_password', 'user_email', 'user_timezone', 'user_posts', 'user_regdate', 
-         'user_lastvisit', 'user_regdate'),
+      'users' => array('user_id', 'username', 'user_password', 'user_email', 'user_timezone', 'user_posts', 'user_regdate', 'user_lastvisit', 'user_regdate'),
       'groups' => array('group_id', 'group_name', 'group_desc'),
       'user_group' => array('user_id', 'group_id'),
       'forums' => array('forum_id', 'forum_name', 'forum_desc', 'left_id', 'parent_id'),
-      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id', 
-         'topic_replies', 'topic_status', 'topic_type', 'topic_time', 'topic_last_post_time', 'topic_last_post_time'),
+      'topics' => array('topic_id', 'forum_id', 'topic_poster',  'topic_title', 'topic_views', 'topic_first_post_id', 'topic_replies', 'topic_status', 'topic_type', 'topic_time', 'topic_last_post_time', 'topic_last_post_time'),
       'posts' => array('post_id', 'topic_id', 'post_text', 'poster_id', 'post_edit_user', 'post_time', 'post_edit_time'),
       'bookmarks' => array('user_id', 'topic_id')
    );
@@ -2757,7 +2918,6 @@ class Phpbb3 extends ExportController {
          nullif(parent_id,0) as ParentCategoryID
          from :_forums", $Category_Map);
 
-
       // Discussions
       $Discussion_Map = array(
          'topic_id'=>'DiscussionID',
@@ -2800,6 +2960,167 @@ class Phpbb3 extends ExportController {
       $Ex->ExportTable('UserDiscussion', "select b.*,
          1 as Bookmarked
          from :_bookmarks b", $UserDiscussion_Map);
+
+      // Conversations tables.
+
+      $Ex->Query("drop table if exists z_pmto;");
+
+      $Ex->Query("create table z_pmto (
+id int unsigned,
+userid int unsigned,
+primary key(id, userid));");
+
+      $Ex->Query("insert ignore z_pmto (id, userid)
+select msg_id, author_id
+from :_privmsgs;");
+
+      $Ex->Query("insert ignore z_pmto (id, userid)
+select msg_id, user_id
+from :_privmsgs_to;");
+
+      $Ex->Query("insert ignore z_pmto (id, userid)
+select msg_id, author_id
+from :_privmsgs_to;");
+
+      $Ex->Query("drop table if exists z_pmto2;");
+
+      $Ex->Query("create table z_pmto2 (
+  id int unsigned,
+  userids varchar(250),
+  primary key (id)
+);");
+
+      $Ex->Query("insert ignore z_pmto2 (id, userids)
+select
+  id,
+  group_concat(userid order by userid)
+from z_pmto
+group by id;");
+
+      $Ex->Query("drop table if exists z_pm;");
+
+      $Ex->Query("create table z_pm (
+  id int unsigned,
+  subject varchar(255),
+  subject2 varchar(255),
+  userids varchar(250),
+  groupid int unsigned
+);");
+
+      $Ex->Query("insert z_pm (
+  id,
+  subject,
+  subject2,
+  userids
+)
+select
+  pm.msg_id,
+  pm.message_subject,
+  case when pm.message_subject like 'Re: %' then trim(substring(pm.message_subject, 4)) else pm.message_subject end as subject2,
+  t.userids
+from :_privmsgs pm
+join z_pmto2 t
+  on t.id = pm.msg_id;");
+
+      $Ex->Query("create index z_idx_pm on z_pm (id);");
+
+      $Ex->Query("drop table if exists z_pmgroup;");
+
+      $Ex->Query("create table z_pmgroup (
+  groupid int unsigned,
+  subject varchar(255),
+  userids varchar(250)
+);");
+
+      $Ex->Query("insert z_pmgroup (
+  groupid,
+  subject,
+  userids
+)
+select
+  min(pm.id),
+  pm.subject2,
+  pm.userids
+from z_pm pm
+group by pm.subject2, pm.userids;");
+
+      $Ex->Query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
+      $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
+
+      $Ex->Query("update z_pm pm
+join z_pmgroup g
+  on pm.subject2 = g.subject and pm.userids = g.userids
+set pm.groupid = g.groupid;");
+
+      // Conversations.
+      $Conversation_Map = array(
+         'msg_id' => 'ConversationID',
+         'author_id' => 'InsertUserID',
+         'RealSubject' => array('Column' => 'Subject', 'Type' => 'varchar(250)', 'Filter' => array('Phpbb2', 'EntityDecode'))
+      );
+
+      $Ex->ExportTable('Conversation', "select
+  g.subject as RealSubject,
+  pm.*,
+  from_unixtime(pm.message_time) as DateInserted
+from :_privmsgs pm
+join z_pmgroup g
+  on g.groupid = pm.msg_id", $Conversation_Map);
+
+      // Coversation Messages.
+      $ConversationMessage_Map = array(
+          'msg_id' => 'MessageID',
+          'groupid' => 'ConversationID',
+          'message_text' => array('Column' => 'Body', 'Filter'=>array($this, 'RemoveBBCodeUIDs')),
+          'author_id' => 'InsertUserID'
+      );
+      $Ex->ExportTable('ConversationMessage',
+      "select
+         pm.*,
+         pm2.groupid,
+         'BBCode' as Format,
+         FROM_UNIXTIME(pm.message_time) as DateInserted
+       from :_privmsgs pm
+       join z_pm pm2
+         on pm.msg_id = pm2.id", $ConversationMessage_Map);
+
+      // User Conversation.
+      $UserConversation_Map = array(
+         'userid' => 'UserID',
+         'groupid' => 'ConversationID'
+      );
+      $Ex->ExportTable('UserConversation',
+      "select
+         g.groupid,
+         t.userid
+       from z_pmto t
+       join z_pmgroup g
+         on g.groupid = t.id;", $UserConversation_Map);
+
+      $Ex->Query('drop table if exists z_pmto');
+      $Ex->Query('drop table if exists z_pmto2;');
+      $Ex->Query('drop table if exists z_pm;');
+      $Ex->Query('drop table if exists z_pmgroup;');
+
+      // Media.
+      $Media_Map = array(
+          'attach_id' => 'MediaID',
+          'real_filename' => 'Name',
+          'post_id' => 'InsertUserID',
+          'mimetype' => 'Type',
+          'filesize' => 'Size',
+      );
+      $Ex->ExportTable('Media', 
+      "select
+  case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
+  case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
+  concat ('FileUpload/', a.physical_filename) as Path,
+  FROM_UNIXTIME(a.filetime) as DateInserted,
+  'local' as StorageMethod,
+  a.*
+from :_attachments a
+join :_topics t
+  on a.topic_id = t.topic_id", $Media_Map);
 
       // End
       $Ex->EndExport();
@@ -3524,8 +3845,9 @@ join :_personal_messages pm2
          return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))). chr(0x80 | (0x3f & $char));
      }
    }
-}<?php
+}
 ?><?php
+
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')
