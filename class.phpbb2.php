@@ -101,17 +101,14 @@ left join :_categories c
          'topic_poster'=>'InsertUserID',
          'topic_title'=>'Name',
          'Format'=>'Format',
-         'topic_views'=>'CountViews',
-         'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int')
+         'topic_views'=>'CountViews'
       );
       $Ex->ExportTable('Discussion', "select t.*,
         'BBCode' as Format,
-            t.topic_replies+1 as CountComments,
-            case t.topic_status when 1 then 1 else 0 end as Closed,
-            case t.topic_type when 1 then 1 else 0 end as Announce,
-            FROM_UNIXTIME(t.topic_time) as DateInserted,
-            FROM_UNIXTIME(p.post_time) as DateUpdated
-        from :_topics t left join :_posts p on t.topic_last_post_id = p.post_id",
+         case t.topic_status when 1 then 1 else 0 end as Closed,
+         case t.topic_type when 1 then 1 else 0 end as Announce,
+         FROM_UNIXTIME(t.topic_time) as DateInserted
+        from :_topics t",
         $Discussion_Map);
 
       // Comments
@@ -122,15 +119,14 @@ left join :_categories c
          'Format' => 'Format',
          'poster_id' => 'InsertUserID'
       );
-      $Ex->ExportTable('Comment', "select p.*, pt.post_text,
+      $Ex->ExportTable('Comment', "select p.*, pt.post_text, pt.bbcode_uid,
         'BBCode' as Format,
-            FROM_UNIXTIME(p.post_time) as DateInserted,
-            FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
+         FROM_UNIXTIME(p.post_time) as DateInserted,
+         FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
          from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
          $Comment_Map);
 
       // Conversations tables.
-
       $Ex->Query("drop table if exists z_pmto;");
 
       $Ex->Query("create table z_pmto (
@@ -242,6 +238,7 @@ join z_pmgroup g
       "select
          pm.*,
          txt.*,
+         txt.privmsgs_bbcode_uid as bbcode_uid,
          pm2.groupid,
          'BBCode' as Format,
          FROM_UNIXTIME(pm.privmsgs_date) as DateInserted
