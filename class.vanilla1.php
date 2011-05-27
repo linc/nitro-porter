@@ -357,8 +357,8 @@ set pm.GroupID = g.GroupID");
       $Conversation_Map = array(
          'AuthUserID' => 'InsertUserID',
          'DateCreated' => 'DateInserted',
-         'EditUserID' => 'UpdateUserID',
-         'DateEdited' => 'DateUpdated',
+         'DiscussionID' => array('Column' => 'DiscussionID', 'Type' => 'int'),
+         'CommentID' => 'ConversationID',
          'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
       );
       $Ex->ExportTable('Conversation',
