@@ -2,7 +2,7 @@
 
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.5.1b');
+define('APPLICATION_VERSION', '1.5.3');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -1669,8 +1669,12 @@ class Vanilla1 extends ExportController {
       $Ex->ExportTable('Discussion',
          "SELECT d.*,
             d.LastUserID as LastCommentUserID,
-            d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
+            d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2,
+            c.Body,
+            c.FormatType as Format
          FROM :_Discussion d
+         LEFT JOIN :_Comment c
+            ON d.FirstCommentID = c.CommentID
          WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $Discussion_Map);
       
       // Comments
@@ -1701,7 +1705,8 @@ class Vanilla1 extends ExportController {
          FROM :_Comment c
          JOIN :_Discussion d
             ON c.DiscussionID = d.DiscussionID
-         WHERE coalesce(d.WhisperUserID, 0) = 0
+         WHERE d.FirstCommentID <> c.CommentID
+            AND coalesce(d.WhisperUserID, 0) = 0
             AND coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
 
       $Ex->ExportTable('UserDiscussion', "
@@ -1873,8 +1878,8 @@ set pm.GroupID = g.GroupID");
       $Conversation_Map = array(
          'AuthUserID' => 'InsertUserID',
          'DateCreated' => 'DateInserted',
-         'EditUserID' => 'UpdateUserID',
-         'DateEdited' => 'DateUpdated',
+         'DiscussionID' => array('Column' => 'DiscussionID', 'Type' => 'int'),
+         'CommentID' => 'ConversationID',
          'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
       );
       $Ex->ExportTable('Conversation',
@@ -2657,17 +2662,14 @@ left join :_categories c
          'topic_poster'=>'InsertUserID',
          'topic_title'=>'Name',
          'Format'=>'Format',
-         'topic_views'=>'CountViews',
-         'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int')
+         'topic_views'=>'CountViews'
       );
       $Ex->ExportTable('Discussion', "select t.*,
         'BBCode' as Format,
-            t.topic_replies+1 as CountComments,
-            case t.topic_status when 1 then 1 else 0 end as Closed,
-            case t.topic_type when 1 then 1 else 0 end as Announce,
-            FROM_UNIXTIME(t.topic_time) as DateInserted,
-            FROM_UNIXTIME(p.post_time) as DateUpdated
-        from :_topics t left join :_posts p on t.topic_last_post_id = p.post_id",
+         case t.topic_status when 1 then 1 else 0 end as Closed,
+         case t.topic_type when 1 then 1 else 0 end as Announce,
+         FROM_UNIXTIME(t.topic_time) as DateInserted
+        from :_topics t",
         $Discussion_Map);
 
       // Comments
@@ -2678,15 +2680,14 @@ left join :_categories c
          'Format' => 'Format',
          'poster_id' => 'InsertUserID'
       );
-      $Ex->ExportTable('Comment', "select p.*, pt.post_text,
+      $Ex->ExportTable('Comment', "select p.*, pt.post_text, pt.bbcode_uid,
         'BBCode' as Format,
-            FROM_UNIXTIME(p.post_time) as DateInserted,
-            FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
+         FROM_UNIXTIME(p.post_time) as DateInserted,
+         FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
          from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
          $Comment_Map);
 
       // Conversations tables.
-
       $Ex->Query("drop table if exists z_pmto;");
 
       $Ex->Query("create table z_pmto (
@@ -2798,6 +2799,7 @@ join z_pmgroup g
       "select
          pm.*,
          txt.*,
+         txt.privmsgs_bbcode_uid as bbcode_uid,
          pm2.groupid,
          'BBCode' as Format,
          FROM_UNIXTIME(pm.privmsgs_date) as DateInserted
@@ -3853,9 +3855,12 @@ join :_personal_messages pm2
 if (ini_get('date.timezone') == '')
    date_default_timezone_set('America/Montreal');
 
-if (isset($argc)) {
+
+if (PHP_SAPI == 'cli')
+   define('CONSOLE', TRUE);
+
+if (defined('CONSOLE')) {
    ParseCommandLine($argv);
-   define('CONSOLE', 1);
 }
 
 if (isset($_GET['type'])) {
