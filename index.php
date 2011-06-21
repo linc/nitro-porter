@@ -1,6 +1,6 @@
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.5.1b');
+define('APPLICATION_VERSION', '1.5.3');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -56,9 +56,12 @@ include('class.smf.php');
 if (ini_get('date.timezone') == '')
    date_default_timezone_set('America/Montreal');
 
-if (isset($argc)) {
+
+if (PHP_SAPI == 'cli')
+   define('CONSOLE', TRUE);
+
+if (defined('CONSOLE')) {
    ParseCommandLine($argv);
-   define('CONSOLE', 1);
 }
 
 if (isset($_GET['type'])) {
