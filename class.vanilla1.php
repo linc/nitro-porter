@@ -153,8 +153,12 @@ class Vanilla1 extends ExportController {
       $Ex->ExportTable('Discussion',
          "SELECT d.*,
             d.LastUserID as LastCommentUserID,
-            d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2
+            d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2,
+            c.Body,
+            c.FormatType as Format
          FROM :_Discussion d
+         LEFT JOIN :_Comment c
+            ON d.FirstCommentID = c.CommentID
          WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $Discussion_Map);
       
       // Comments
@@ -185,7 +189,8 @@ class Vanilla1 extends ExportController {
          FROM :_Comment c
          JOIN :_Discussion d
             ON c.DiscussionID = d.DiscussionID
-         WHERE coalesce(d.WhisperUserID, 0) = 0
+         WHERE d.FirstCommentID <> c.CommentID
+            AND coalesce(d.WhisperUserID, 0) = 0
             AND coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
 
       $Ex->ExportTable('UserDiscussion', "
