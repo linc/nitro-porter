@@ -1,20 +1,18 @@
 <?php
 /**
- * ppPress exporter tool
+ * bbPress exporter tool
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
-
 class BbPress extends ExportController {
-
    /** @var array Required tables => columns */
    protected $SourceTables = array(
       'forums' => array(),
       'posts' => array(),
       'topics' => array(),
-      'users' => array('ID', 'user_nicename', 'user_pass', 'user_email', 'user_registered'),
+      'users' => array('ID', 'user_login', 'user_pass', 'user_email', 'user_registered'),
       'meta' => array()
    );
    
@@ -24,12 +22,12 @@ class BbPress extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('', 'bbPress 1.*', array('HashMethod' => 'Vanilla'));
+      $Ex->BeginExport('', 'bbPress 1.*', array('HashMethod' => 'Reset'));
 
       // Users
       $User_Map = array(
          'ID'=>'UserID',
-         'user_nicename'=>'Name',
+         'user_login'=>'Name',
          'user_pass'=>'Password',
          'user_email'=>'Email',
          'user_registered'=>'DateInserted'
@@ -45,7 +43,6 @@ class BbPress extends ExportController {
          union select 5, 'Member'
          union select 6, 'Inactive'
          union select 7, 'Blocked'");
-
 
       // UserRoles
       $UserRole_Map = array(
@@ -75,7 +72,6 @@ class BbPress extends ExportController {
       $Ex->ExportTable('Category', "select *,
          nullif(forum_parent,0) as ParentCategoryID
          from :_forums", $Category_Map);
-
 
       // Discussions
       $Discussion_Map = array(
@@ -184,11 +180,6 @@ class BbPress extends ExportController {
                from bb_bbpm', $ConUser_Map);
          }
       }
-
-
-         
-
-         
 
       // End
       $Ex->EndExport();
