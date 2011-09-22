@@ -42,6 +42,7 @@ $Supported = array(
 include('class.exportmodel.php');
 include('views.php');
 include('class.exportcontroller.php');
+include('class.csv.php');
 
 include('class.vanilla1.php');
 include('class.vanilla2.php');

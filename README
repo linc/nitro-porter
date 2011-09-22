@@ -7,3 +7,9 @@ Use the compiled package at vanillaforums.org instead.
 
 If you are modifying the code for your own purposes, don't modify vanilla2export.php directly.
 Modify the other source files and then run or browse to make.php and it will generate a new copy of vanilla2export.php.
+
+
+Tips
+-----
+1) You can include a custom file in your build by calling make.php?type=ClassName
+2) New export classes must extend either ExportController (default) or CsvController (CSV-based exporters).
