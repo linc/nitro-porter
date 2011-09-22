@@ -22,7 +22,7 @@ class BbPress extends ExportController {
     */
    protected function ForumExport($Ex) {
       // Begin
-      $Ex->BeginExport('', 'bbPress 1.*', array('HashMethod' => 'Reset'));
+      $Ex->BeginExport('', 'bbPress 1.*', array('HashMethod' => 'Vanilla'));
 
       // Users
       $User_Map = array(
