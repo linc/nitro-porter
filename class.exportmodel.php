@@ -79,14 +79,17 @@ class ExportModel {
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
-            'Sort' => 'int'),
+            'Sort' => 'int',
+            'Archived' => 'tinyint(1)'),
       'Comment' => array(
             'CommentID' => 'int',
             'DiscussionID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
+            'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
+            'UpdateIPAddress' => 'varchar(15)',
             'Format' => 'varchar(20)',
             'Body' => 'text',
             'Score' => 'float'),
@@ -112,8 +115,10 @@ class ExportModel {
             'CategoryID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
+            'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
+            'UpdateIPAddress' => 'varchar(15)',
             'DateLastComment' => 'datetime',
             'CountComments' => 'int',
             'CountViews' => 'int',
@@ -135,7 +140,7 @@ class ExportModel {
           ),
       'Permission' => array(
             'RoleID' => 'int',
-//            '_Permissions' => 'varchar(20)',
+            '_Permissions' => 'varchar(255)',
             'Garden.SignIn.Allow' => 'tinyint',
             'Garden.Activity.View' => 'tinyint',
             'Garden.Profiles.View' => 'tinyint',
@@ -173,8 +178,15 @@ class ExportModel {
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
             'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'Banned' => 'tinyint'),
+      'UserAuthentication' => array(
+          'ForeignUserKey' => 'varchar(255)',
+          'ProviderKey' => 'varchar(64)',
+          'UserID' => 'varchar(11)',
+          'Attributes' => 'text'
+          ),
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
@@ -497,6 +509,23 @@ class ExportModel {
          ."select \n  ".implode(",\n  ", $SelectColumns)."\n"
          ."from (\n  ".str_replace("\n", "\n  ", $Query)."\n) q";
       $this->Query($InsertSql);
+   }
+   
+   public function FixPermissionColumns($Columns) {
+      $Result = array();
+      foreach ($Columns as $Index => $Value) {
+         if (is_string($Value) && strpos($Value, '.') !== FALSE)
+            $Value = array('Column' => $Value, 'Type' => 'tinyint(1)');
+         $Result[$Index] = $Value;
+      }
+      return $Result;
+   }
+   
+   public function ForceDate($Value) {
+      if (!$Value || preg_match('`0000-00-00`', $Value)) {
+         return gmdate('Y-m-d H:i:s');
+      }
+      return $Value;
    }
 
    static function FormatElapsed($Start, $End = NULL) {
