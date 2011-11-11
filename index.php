@@ -1,6 +1,6 @@
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.0');
+define('APPLICATION_VERSION', '1.6.1');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -34,7 +34,7 @@ $Supported = array(
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
-   'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_'),
+   'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_'),
    'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_')
 );
 
