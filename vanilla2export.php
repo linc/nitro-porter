@@ -2163,7 +2163,7 @@ class Vbulletin extends ExportController {
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
       # Standard vB user data
-      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'IQC', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
+      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
       foreach($UserFields as $Field => $InsertAs)
          $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Profile_$InsertAs', $Field from :_user where $Field !=''");
       # Dynamic vB user data (userfield)
@@ -2171,7 +2171,7 @@ class Vbulletin extends ExportController {
       if (is_resource($ProfileFields)) {
          while (($Field = @mysql_fetch_assoc($ProfileFields))) {
             $VbulletinField = str_replace('_title', '', $Field['varname']);
-            $MetaKey = preg_replace('/[^0-9a-zA-Z_-]/', '', $Field['text']);
+            $MetaKey = preg_replace('/[^0-9a-zA-Z_- ]/', '', $Field['text']);
             $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue)
                select userid, 'Profile_".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
          }
