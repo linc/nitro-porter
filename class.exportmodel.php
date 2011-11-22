@@ -37,7 +37,7 @@ class ExportModel {
    /** @var string A prefix to put into an automatically generated filename. */
    public $FilenamePrefix = '';
 
-   protected $_Host;
+   public $_Host;
 
    protected $_Limit = 20000;
 
@@ -180,7 +180,8 @@ class ExportModel {
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
-            'Banned' => 'tinyint'),
+            'Banned' => 'tinyint',
+            'ShowEmail' => 'tinyint'),
       'UserAuthentication' => array(
           'ForeignUserKey' => 'varchar(255)',
           'ProviderKey' => 'varchar(64)',
