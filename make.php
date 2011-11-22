@@ -4,8 +4,7 @@
 </head>
 <body>
    <pre><?php
-   /** Make the final vanilla2export.php file from the other sources.
-    */
+   // Make the final vanilla2export.php file from the other sources.
 
    // Open the file.
    $Path = dirname(__FILE__).'/vanilla2export.php';
