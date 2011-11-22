@@ -1,6 +1,6 @@
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.1');
+define('APPLICATION_VERSION', '1.6.2');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.

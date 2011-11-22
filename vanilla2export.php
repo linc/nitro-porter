@@ -2,7 +2,7 @@
 
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.1');
+define('APPLICATION_VERSION', '1.6.2');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -37,7 +37,8 @@ $Supported = array(
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
    'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_'),
-   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_')
+   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_'),
+   'punbb' => array('name'=>'PunBB 1.*', 'prefix' => 'punbb_')
 );
 
 // Support Files
@@ -82,7 +83,7 @@ class ExportModel {
    /** @var string A prefix to put into an automatically generated filename. */
    public $FilenamePrefix = '';
 
-   protected $_Host;
+   public $_Host;
 
    protected $_Limit = 20000;
 
@@ -124,14 +125,17 @@ class ExportModel {
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
-            'Sort' => 'int'),
+            'Sort' => 'int',
+            'Archived' => 'tinyint(1)'),
       'Comment' => array(
             'CommentID' => 'int',
             'DiscussionID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
+            'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
+            'UpdateIPAddress' => 'varchar(15)',
             'Format' => 'varchar(20)',
             'Body' => 'text',
             'Score' => 'float'),
@@ -157,8 +161,10 @@ class ExportModel {
             'CategoryID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
+            'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
+            'UpdateIPAddress' => 'varchar(15)',
             'DateLastComment' => 'datetime',
             'CountComments' => 'int',
             'CountViews' => 'int',
@@ -180,7 +186,7 @@ class ExportModel {
           ),
       'Permission' => array(
             'RoleID' => 'int',
-//            '_Permissions' => 'varchar(20)',
+            '_Permissions' => 'varchar(255)',
             'Garden.SignIn.Allow' => 'tinyint',
             'Garden.Activity.View' => 'tinyint',
             'Garden.Profiles.View' => 'tinyint',
@@ -218,8 +224,16 @@ class ExportModel {
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
             'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
-            'Banned' => 'tinyint'),
+            'Banned' => 'tinyint',
+            'ShowEmail' => 'tinyint'),
+      'UserAuthentication' => array(
+          'ForeignUserKey' => 'varchar(255)',
+          'ProviderKey' => 'varchar(64)',
+          'UserID' => 'varchar(11)',
+          'Attributes' => 'text'
+          ),
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
@@ -542,6 +556,23 @@ class ExportModel {
          ."select \n  ".implode(",\n  ", $SelectColumns)."\n"
          ."from (\n  ".str_replace("\n", "\n  ", $Query)."\n) q";
       $this->Query($InsertSql);
+   }
+   
+   public function FixPermissionColumns($Columns) {
+      $Result = array();
+      foreach ($Columns as $Index => $Value) {
+         if (is_string($Value) && strpos($Value, '.') !== FALSE)
+            $Value = array('Column' => $Value, 'Type' => 'tinyint(1)');
+         $Result[$Index] = $Value;
+      }
+      return $Result;
+   }
+   
+   public function ForceDate($Value) {
+      if (!$Value || preg_match('`0000-00-00`', $Value)) {
+         return gmdate('Y-m-d H:i:s');
+      }
+      return $Value;
    }
 
    static function FormatElapsed($Start, $End = NULL) {
@@ -2083,6 +2114,32 @@ class Vanilla2 extends ExportController {
  * @package VanillaPorter
  */
 class Vbulletin extends ExportController {
+   static $Permissions = array(
+   
+   'genericpermissions' => array(
+       1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
+       2 => 'Garden.Profiles.Edit',
+       1024 => 'Plugins.Signatures.Edit'
+       ),
+   
+   'forumpermissions' => array(
+       1 => 'Vanilla.Discussions.View',
+       16 => 'Vanilla.Discussions.Add',
+       64 => 'Vanilla.Comments.Add',
+       4096 => 'Plugins.Attachments.Download',
+       8192 => 'Plugins.Attachments.Upload'),
+   
+   'adminpermissions' => array(
+       1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
+       2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
+//       4 => 'Garden.Settings.Manage',),
+       ),
+   
+   'wolpermissions' => array(
+       16 => 'Plugins.WhosOnline.ViewHidden')
+   );
+   
+   static $Permissions2 = array();
    
    /** @var array Required tables => columns */
    protected $SourceTables = array(
@@ -2159,6 +2216,21 @@ class Vbulletin extends ExportController {
       # Export from our tmp table and drop
       $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
       $Ex->Query("DROP TABLE IF EXISTS VbulletinRoles");
+      
+      // Permissions.
+      $Permissions_Map = array(
+          'usergroupid' => 'RoleID',
+          'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, SignInPermission)),
+          'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
+          'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
+      );
+      $this->AddPermissionColumns(self::$Permissions, $Permissions_Map);
+      $Ex->ExportTable('Permission', 'select * from :_usergroup', $Permissions_Map);
+      
+//      $Ex->EndExport();
+//      return;
+      
+      
       
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
@@ -2465,11 +2537,11 @@ class Vbulletin extends ExportController {
                FROM_UNIXTIME(a.dateline) as DateInserted
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
-            where a.attachmentid > 0", $Media_Map);
+            where a.attachmentid > 0
          
-         // All other comment attachments => 'Comment' foreign key
-         $Ex->ExportTable('Media',
-            "select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
+            union all
+         
+            select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
                'local' as StorageMethod, 
                'comment' as ForeignTable,
                a.postid as ForeignID,
@@ -2477,7 +2549,8 @@ class Vbulletin extends ExportController {
             from :_post p
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
-            where p.postid <> t.firstpostid and  a.attachmentid > 0", $Media_Map);
+            where p.postid <> t.firstpostid and  a.attachmentid > 0
+            ", $Media_Map);
       }
       
       // End
@@ -2563,6 +2636,42 @@ class Vbulletin extends ExportController {
          return '';
    }
    
+   function SignInPermission($Value, $Field, $Row) {
+      $Result = TRUE;
+      if (stripos($Row['title'], 'unregistered') !== FALSE)
+         $Result = FALSE;
+      elseif (stripos($Row['title'], 'banned') !== FALSE)
+         $Result = FALSE;
+      
+      return $Result;
+   }
+   
+   function FilterPermissions($Value, $Field, $Row) {
+      if (!isset(self::$Permissions2[$Field]))
+         return 0;
+      
+      $Column = self::$Permissions2[$Field][0];
+      $Mask = self::$Permissions2[$Field][1];
+      
+      $Value = ($Row[$Column] & $Mask) == $Mask;
+      return $Value;
+   }
+   
+   function AddPermissionColumns($ColumnGroups, &$Map) {
+      $Permissions2 = array();
+      
+      foreach ($ColumnGroups as $ColumnGroup => $Columns) {
+         foreach ($Columns as $Mask => $ColumnArray) {
+            $ColumnArray = (array)$ColumnArray;
+            foreach ($ColumnArray as $Column) {
+               $Map[$Column] = array('Column' => $Column, 'Type' => 'tinyint(1)', 'Filter' => array($this, FilterPermissions));
+               
+               $Permissions2[$Column] = array($ColumnGroup, $Mask);
+            }
+         }
+      }
+      self::$Permissions2 = $Permissions2;
+   }
 }
 ?><?php
 
@@ -3849,6 +3958,239 @@ join :_personal_messages pm2
    }
 }
 ?><?php
+
+
+/* Contents included from class.punbb.php */
+?><?php
+/**
+ * Punbb exporter tool
+ *
+ * @copyright Vanilla Forums Inc. 2010
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
+
+class Punbb extends ExportController {
+
+   /** @var array Required tables => columns */  
+   public $SourceTables = array(
+      );
+   
+   /**
+    * Forum-specific export format
+    * @todo Project file size / export time and possibly break into multiple files
+    * @param ExportModel $Ex
+    * 
+    */
+   protected function ForumExport($Ex) {
+
+      $Ex->BeginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
+      
+      // User.
+      $User_Map = array(
+          'id' => 'UserID',
+          'username' => 'Name',
+          'email' => 'Email',
+          'timezone' => 'HourOffset',
+          'registration_ip' => 'InsertIPAddress',
+          'PasswordHash' => 'Password');
+      $Ex->ExportTable('User', "
+         select 
+           u.*, 
+           concat(u.password, '$', u.salt) as PasswordHash, 
+           from_unixtime(registered) as DateInserted, 
+           from_unixtime(last_visit) as DateLastActive
+         from :_users u
+         where group_id <> 2", $User_Map);
+      
+      // Role.
+      $Role_Map = array(
+          'g_id' => 'RoleID',
+          'g_title' => 'Name'
+          );
+      $Ex->ExportTable('Role', "select * from :_groups", $Role_Map);
+      
+      // Permission.
+      $Permission_Map = array(
+          'g_id' => 'RoleID',
+          'g_modertor' => 'Garden.Moderation.Manage',
+          'g_mod_edit_users' => 'Garden.Users.Edit',
+          'g_mod_rename_users' => 'Garden.Users.Delete',
+          'g_read_board' => 'Vanilla.Discussions.View',
+          'g_view_users' => 'Garden.Profiles.View',
+          'g_post_topics' => 'Vanilla.Discussions.Add',
+          'g_post_replies' => 'Vanilla.Comments.Add',
+          'g_pun_attachment_allow_download' => 'Plugins.Attachments.Download.Allow',
+          'g_pun_attachment_allow_upload' => 'Plugins.Attachments.Upload.Allow',
+          
+          );
+      $Permission_Map = $Ex->FixPermissionColumns($Permission_Map);
+      $Ex->ExportTable('Permission', "
+      select
+         g.*,
+         g_post_replies as `Garden.SignIn.Allow`,
+         g_mod_edit_users as `Garden.Users.Add`,
+         case when g_title = 'Administrators' then 'All' else null end as _Permissions
+      from :_groups g", $Permission_Map);
+      
+      // UserRole.
+      $UserRole_Map = array(
+          'id' => 'UserID',
+          'group_id' => 'RoleID'
+      );
+      $Ex->ExportTable('UserRole',
+         "select
+            case u.group_id when 2 then 0 else id end as id,
+            u.group_id
+          from :_users u", $UserRole_Map);
+      
+      // Signatures.
+      $Ex->ExportTable('UserMeta', "
+         select
+         id,
+         'Plugin.Signatures.Sig' as Name,
+         signature
+      from :_users u
+      where u.signature is not null", array('id ' => 'UserID', 'signature' => 'Value'));
+      
+      
+      // Category.
+      $Category_Map = array(
+          'id' => 'CategoryID',
+          'forum_name' => 'Name',
+          'forum_desc' => 'Description',
+          'disp_position' => 'Sort',
+          'parent_id' => 'ParentCategoryID'
+          );
+      $Ex->ExportTable('Category', "
+      select
+        id,
+        forum_name,
+        forum_desc,
+        disp_position,
+        cat_id * 1000 as parent_id
+      from punbb_forums f
+      union
+
+      select
+        id * 1000,
+        cat_name,
+        '',
+        disp_position,
+        null
+      from punbb_categories", $Category_Map);
+      
+      // Discussion.
+      $Discussion_Map = array(
+          'id' => 'DiscussionID',
+          'poster_id' => 'InsertUserID',
+          'poster_ip' => 'InsertIPAddress',
+          'closed' => 'Closed',
+          'sticky' => 'Announce',
+          'forum_id' => 'CategoryID',
+          'subject' => 'Name',
+          'message' => 'Body'
+          
+          );
+      $Ex->ExportTable('Discussion', "
+      select t.*, 
+        from_unixtime(p.posted) as DateInserted, 
+        p.poster_id, 
+        p.poster_ip,
+        p.message,
+        from_unixtime(p.edited) as DateUpdated, 
+        eu.id as UpdateUserID,
+        'BBCode' as Format
+      from punbb_topics t
+      left join punbb_posts p
+        on t.first_post_id = p.id
+      left join punbb_users eu
+        on eu.username = p.edited_by", $Discussion_Map);
+      
+      // Comment.
+      $Comment_Map = array(
+          'id' => 'CommentID',
+          'topic_id' => 'DiscussionID',
+          'poster_id' => 'InsertUserID',
+          'poster_ip' => 'InsertIPAddress',
+          'message' => 'Body'
+      );
+      $Ex->ExportTable('Comment', "
+            select p.*, 
+        'BBCode' as Format,
+        from_unixtime(p.posted) as DateInserted,
+        from_unixtime(p.edited) as DateUpdated, 
+        eu.id as UpdateUserID
+      from punbb_topics t
+      join punbb_posts p
+        on t.id = p.topic_id
+      left join punbb_users eu
+        on eu.username = p.edited_by
+      where p.id <> t.first_post_id;", $Comment_Map);
+      
+      // Tag.
+      $Tag_Map = array(
+          'id' => 'TagID',
+          'tag' => 'Name');
+      $Ex->ExportTable('Tag', "select * from :_tags", $Tag_Map);
+      
+      // TagDisucssion.
+      $TagDiscussionMap = array(
+          'topic_id' => 'DiscussionID',
+          'tag_id' => 'TagID');
+      $Ex->ExportTable('TagDiscussion', "select * from :_topic_tags", $TagDiscussionMap);
+      
+      // Media.
+      $Media_Map = array(
+         'id' => 'MediaID',
+         'filename' => 'Name',
+         'file_mime_type' => 'Type',
+         'size' => 'Size',
+         'owner_id' => 'InsertUserID'
+       );
+      $Ex->ExportTable('Media', "
+      select f.*,
+         concat('FileUpload/', f.file_path) as Path,
+         from_unixtime(f.uploaded_at) as DateInserted,
+         case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
+         coalesce(post_id, topic_id) as ForieignID
+      from :_attach_files f", $Media_Map);
+      
+      
+      // End
+      $Ex->EndExport();
+   }
+
+   function StripMediaPath($AbsPath) {
+      if (($Pos = strpos($AbsPath, '/uploads/')) !== FALSE)
+         return substr($AbsPath, $Pos + 9);
+      return $AbsPath;
+   }
+
+   function FilterPermissions($Permissions, $ColumnName, &$Row) {
+      $Permissions2 = unserialize($Permissions);
+
+      foreach ($Permissions2 as $Name => $Value) {
+         if (is_null($Value))
+            $Permissions2[$Name] = FALSE;
+      }
+
+      if (is_array($Permissions2)) {
+         $Row = array_merge($Row, $Permissions2);
+         $this->Ex->CurrentRow = $Row;
+         return isset($Permissions2['PERMISSION_ADD_COMMENTS']) ? $Permissions2['PERMISSION_ADD_COMMENTS'] : FALSE;
+      }
+      return FALSE;
+   }
+
+   function ForceBool($Value) {
+      if ($Value)
+         return TRUE;
+      return FALSE;
+   }
+}
+?>
+<?php
 
 
 // Make sure a default time zone is set
