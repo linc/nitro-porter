@@ -34,7 +34,7 @@ $Supported = array(
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
-   'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_'),
+   'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_'),
    'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_'),
    'punbb' => array('name'=>'PunBB 1.*', 'prefix' => 'punbb_')
 );

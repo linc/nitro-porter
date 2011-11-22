@@ -5,6 +5,10 @@
  * This will migrate all vBulletin data for 3.x and 4.x forums. It even 
  * accounts for attachments created during 2.x and moved to 3.x.
  *
+ * Supports the FileUpload, ProfileExtender, and Signature plugins.
+ * All vBulletin data appropriate for those plugins will be prepared
+ * and transferred.
+ *
  * MIGRATING FILES:
  * 
  * 1) Avatars should be moved to the filesystem prior to export if they
@@ -14,7 +18,7 @@
  * 2) Attachments should likewise be moved to the filesystem prior to
  * export. Copy all attachments from vBulletin's attachments folder to 
  * Vanilla's /upload folder without changing the internal folder structure.
- * Install the FileUpload plugin in Vanilla BEFORE importing.
+ * IMPORTANT: Enable the FileUpload plugin BEFORE IMPORTING.
  *
  * @copyright Vanilla Forums Inc. 2010
  * @author Matt Lincoln Russell lincoln@icrontic.com
@@ -149,20 +153,21 @@ class Vbulletin extends ExportController {
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
       # Standard vB user data
-      $UserFields = array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid');
-      foreach($UserFields as $Field)
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '$Field.', $Field from :_user where $Field !=''");
+      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
+      foreach($UserFields as $Field => $InsertAs)
+         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Profile_$InsertAs', $Field from :_user where $Field !=''");
       # Dynamic vB user data (userfield)
       $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
       if (is_resource($ProfileFields)) {
-         while (($Field = @mysql_fetch_assoc($ProfileFields)) !== false) {
-         //foreach ($ProfileFields as $Field) {
-            $VbulletinField = str_replace('_title','',$Field['varname']);
-            $MetaKey = preg_replace('/[^0-9a-z_-]/','',strtolower($Field['text']));
+         while (($Field = @mysql_fetch_assoc($ProfileFields))) {
+            $VbulletinField = str_replace('_title', '', $Field['varname']);
+            $MetaKey = preg_replace('/[^0-9a-zA-Z_- ]/', '', $Field['text']);
             $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue)
-               select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
+               select userid, 'Profile_".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
          }
       }
+      # Get signatures
+      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Sig', signatureparsed from :_sigparsed");
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
       $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");

@@ -2,7 +2,7 @@
 
 <?php
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.5.3');
+define('APPLICATION_VERSION', '1.6.1');
 /**
  * Vanilla 2 Exporter
  * This script exports other forum databases to the Vanilla 2 import format.
@@ -36,7 +36,7 @@ $Supported = array(
    'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
    'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
    'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
-   'SimplePress' => array('name'=>'SimpePress 1.*', 'prefix' => 'wp_'),
+   'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_'),
    'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_')
 );
 
@@ -1514,98 +1514,6 @@ abstract class ExportController {
 
 /* Contents included from class.csv.php */
 ?><?php
-/**
- * Utility additions for CSV-based exporter tools.
- *
- * @copyright Vanilla Forums Inc. 2011
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
- */
-
-/**
- * Adds CSV utility methods for CSV-based exporters.
- *
- * @package VanillaPorter
- */
-abstract class CsvController extends ExportController {
-   /**
-    * Import a CSV table into a database.
-    *
-    * @param string $Path
-    * @param string $TableName
-    * @param array $ColumnInfo
-    */
-   public function ImportCsv($Path, $TableName, $ColumnInfo = array()) {
-      $this->_DefineCsvTable($Path, $TableName, $ColumnInfo);
-
-      $this->Ex->Query("truncate table `$TableName`;");
-
-      $QPath = mysql_escape_string($Path);
-
-      $Sql = "load data infile '$QPath' into table $TableName
-         character set utf8
-         columns terminated by ','
-         optionally enclosed by '\"'
-         lines terminated by ',\\n'
-         ignore 1 lines";
-      $this->Ex->Query($Sql);
-   }
-
-   /**
-    * Build database tables based on information we can glean.
-    *
-    * @param string $Path
-    * @param string $TableName
-    * @param array $ColumnInfo
-    */
-   protected function _DefineCsvTable($Path, $TableName, $ColumnInfo = array()) {
-      // Grab the header information.
-      $fp = fopen($Path, 'rb');
-      $HeaderLine = fgets($fp);
-      fclose($fp);
-
-      $ColumnNames = explode(',', $HeaderLine);
-
-      // Loop through the columns and buld up a tabledef.
-      $Defs = array();
-      foreach ($ColumnNames as $ColumnName) {
-         $ColumnName = trim($ColumnName);
-         if (!$ColumnName) {
-            continue;
-         }
-
-         // Check for duplicate filenames.
-         $ColumnName2 = $ColumnName;
-         for($i = 1; isset($Defs[$ColumnName2]); $i++) {
-            $ColumnName2 = "DUP{$i}_{$ColumnName}";
-         }
-         $ColumnName = $ColumnName2;
-
-         $Defs[$ColumnName] = $ColumnName.' varchar(200)'; // default column def.
-
-         // Check to see if there is a more specific column definition.
-         foreach ($ColumnInfo as $Expr => $ColumnDef) {
-            if ($Expr == $ColumnName) {
-               $Defs[$ColumnName] = $ColumnName.' '.$ColumnDef;
-               break;
-            } elseif ($Expr[0] == $Expr[strlen($Expr) - 1]) {
-               if (preg_match($Expr, $ColumnName)) {
-                  $Defs[$ColumnName] = $ColumnName.' '.$ColumnDef;
-                  break;
-               }
-            }
-         }
-      }
-
-      // Drop the table.
-      $this->Ex->Query("drop table if exists `$TableName`");
-
-      // Create the table.
-      $CreateDef = "create table `$TableName` (\n".implode(",\n", $Defs).')';
-      $this->Ex->Query($CreateDef, TRUE);
-   }
-}
-?><?php
 
 
 
@@ -2148,6 +2056,10 @@ class Vanilla2 extends ExportController {
  * This will migrate all vBulletin data for 3.x and 4.x forums. It even 
  * accounts for attachments created during 2.x and moved to 3.x.
  *
+ * Supports the FileUpload, ProfileExtender, and Signature plugins.
+ * All vBulletin data appropriate for those plugins will be prepared
+ * and transferred.
+ *
  * MIGRATING FILES:
  * 
  * 1) Avatars should be moved to the filesystem prior to export if they
@@ -2157,7 +2069,7 @@ class Vanilla2 extends ExportController {
  * 2) Attachments should likewise be moved to the filesystem prior to
  * export. Copy all attachments from vBulletin's attachments folder to 
  * Vanilla's /upload folder without changing the internal folder structure.
- * Install the FileUpload plugin in Vanilla BEFORE importing.
+ * IMPORTANT: Enable the FileUpload plugin BEFORE IMPORTING.
  *
  * @copyright Vanilla Forums Inc. 2010
  * @author Matt Lincoln Russell lincoln@icrontic.com
@@ -2251,20 +2163,21 @@ class Vbulletin extends ExportController {
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
       # Standard vB user data
-      $UserFields = array('usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid');
-      foreach($UserFields as $Field)
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, '$Field.', $Field from :_user where $Field !=''");
+      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
+      foreach($UserFields as $Field => $InsertAs)
+         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Profile_$InsertAs', $Field from :_user where $Field !=''");
       # Dynamic vB user data (userfield)
       $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
       if (is_resource($ProfileFields)) {
-         while (($Field = @mysql_fetch_assoc($ProfileFields)) !== false) {
-         //foreach ($ProfileFields as $Field) {
-            $VbulletinField = str_replace('_title','',$Field['varname']);
-            $MetaKey = preg_replace('/[^0-9a-z_-]/','',strtolower($Field['text']));
+         while (($Field = @mysql_fetch_assoc($ProfileFields))) {
+            $VbulletinField = str_replace('_title', '', $Field['varname']);
+            $MetaKey = preg_replace('/[^0-9a-zA-Z_- ]/', '', $Field['text']);
             $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue)
-               select userid, '".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
+               select userid, 'Profile_".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
          }
       }
+      # Get signatures
+      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Sig', signatureparsed from :_sigparsed");
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
       $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
