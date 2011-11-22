@@ -28,6 +28,32 @@
  * @package VanillaPorter
  */
 class Vbulletin extends ExportController {
+   static $Permissions = array(
+   
+   'genericpermissions' => array(
+       1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
+       2 => 'Garden.Profiles.Edit',
+       1024 => 'Plugins.Signatures.Edit'
+       ),
+   
+   'forumpermissions' => array(
+       1 => 'Vanilla.Discussions.View',
+       16 => 'Vanilla.Discussions.Add',
+       64 => 'Vanilla.Comments.Add',
+       4096 => 'Plugins.Attachments.Download',
+       8192 => 'Plugins.Attachments.Upload'),
+   
+   'adminpermissions' => array(
+       1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
+       2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
+//       4 => 'Garden.Settings.Manage',),
+       ),
+   
+   'wolpermissions' => array(
+       16 => 'Plugins.WhosOnline.ViewHidden')
+   );
+   
+   static $Permissions2 = array();
    
    /** @var array Required tables => columns */
    protected $SourceTables = array(
@@ -104,6 +130,21 @@ class Vbulletin extends ExportController {
       # Export from our tmp table and drop
       $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
       $Ex->Query("DROP TABLE IF EXISTS VbulletinRoles");
+      
+      // Permissions.
+      $Permissions_Map = array(
+          'usergroupid' => 'RoleID',
+          'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, SignInPermission)),
+          'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
+          'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
+      );
+      $this->AddPermissionColumns(self::$Permissions, $Permissions_Map);
+      $Ex->ExportTable('Permission', 'select * from :_usergroup', $Permissions_Map);
+      
+//      $Ex->EndExport();
+//      return;
+      
+      
       
       // UserMeta
       $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
@@ -409,11 +450,11 @@ class Vbulletin extends ExportController {
                FROM_UNIXTIME(a.dateline) as DateInserted
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
-            where a.attachmentid > 0", $Media_Map);
+            where a.attachmentid > 0
          
-         // All other comment attachments => 'Comment' foreign key
-         $Ex->ExportTable('Media',
-            "select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
+            union all
+         
+            select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
                'local' as StorageMethod, 
                'comment' as ForeignTable,
                a.postid as ForeignID,
@@ -421,7 +462,8 @@ class Vbulletin extends ExportController {
             from :_post p
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
-            where p.postid <> t.firstpostid and  a.attachmentid > 0", $Media_Map);
+            where p.postid <> t.firstpostid and  a.attachmentid > 0
+            ", $Media_Map);
       }
       
       // End
@@ -507,5 +549,41 @@ class Vbulletin extends ExportController {
          return '';
    }
    
+   function SignInPermission($Value, $Field, $Row) {
+      $Result = TRUE;
+      if (stripos($Row['title'], 'unregistered') !== FALSE)
+         $Result = FALSE;
+      elseif (stripos($Row['title'], 'banned') !== FALSE)
+         $Result = FALSE;
+      
+      return $Result;
+   }
+   
+   function FilterPermissions($Value, $Field, $Row) {
+      if (!isset(self::$Permissions2[$Field]))
+         return 0;
+      
+      $Column = self::$Permissions2[$Field][0];
+      $Mask = self::$Permissions2[$Field][1];
+      
+      $Value = ($Row[$Column] & $Mask) == $Mask;
+      return $Value;
+   }
+   
+   function AddPermissionColumns($ColumnGroups, &$Map) {
+      $Permissions2 = array();
+      
+      foreach ($ColumnGroups as $ColumnGroup => $Columns) {
+         foreach ($Columns as $Mask => $ColumnArray) {
+            $ColumnArray = (array)$ColumnArray;
+            foreach ($ColumnArray as $Column) {
+               $Map[$Column] = array('Column' => $Column, 'Type' => 'tinyint(1)', 'Filter' => array($this, FilterPermissions));
+               
+               $Permissions2[$Column] = array($ColumnGroup, $Mask);
+            }
+         }
+      }
+      self::$Permissions2 = $Permissions2;
+   }
 }
 ?>
