@@ -155,7 +155,7 @@ class Vbulletin extends ExportController {
       # Standard vB user data
       $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
       foreach($UserFields as $Field => $InsertAs)
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Profile_$InsertAs', $Field from :_user where $Field !=''");
+         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Profile.$InsertAs', $Field from :_user where $Field !=''");
       # Dynamic vB user data (userfield)
       $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
       if (is_resource($ProfileFields)) {
@@ -163,7 +163,7 @@ class Vbulletin extends ExportController {
             $VbulletinField = str_replace('_title', '', $Field['varname']);
             $MetaKey = preg_replace('/[^0-9a-zA-Z_- ]/', '', $Field['text']);
             $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue)
-               select userid, 'Profile_".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
+               select userid, 'Profile.".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
          }
       }
       # Get signatures
