@@ -82,7 +82,7 @@ class Vbulletin extends ExportController {
    protected function ForumExport($Ex) {
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
-      
+  
       // Users
       $User_Map = array(
          'userid'=>'UserID',
@@ -147,31 +147,34 @@ class Vbulletin extends ExportController {
       
 //      $Ex->EndExport();
 //      return;
-      
-      
-      
+
+
       // UserMeta
-      $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`MetaKey` VARCHAR( 64 ) NOT NULL ,`MetaValue` VARCHAR( 255 ) NOT NULL)");
+      $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 64 ) NOT NULL ,`Value` VARCHAR( 255 ) NOT NULL)");
       # Standard vB user data
       $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
       foreach($UserFields as $Field => $InsertAs)
-         $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Profile.$InsertAs', $Field from :_user where $Field !=''");
+         $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
       # Dynamic vB user data (userfield)
       $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
       if (is_resource($ProfileFields)) {
-         while (($Field = @mysql_fetch_assoc($ProfileFields))) {
-            $VbulletinField = str_replace('_title', '', $Field['varname']);
-            $MetaKey = preg_replace('/[^0-9a-zA-Z_- ]/', '', $Field['text']);
-            $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue)
-               select userid, 'Profile.".$MetaKey."', ".$VbulletinField." from :_userfield where ".$VbulletinField."!=''");
+         $ProfileQueries = array();
+         while ($Field = @mysql_fetch_assoc($ProfileFields)) {
+            $Column = str_replace('_title', '', $Field['varname']);
+            $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
+            $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
+               select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
+         }
+         foreach ($ProfileQueries as $Query) {
+            $Ex->Query($Query);
          }
       }
       # Get signatures
-      $Ex->Query("insert into VbulletinUserMeta (UserID, MetaKey, MetaValue) select userid, 'Sig', signatureparsed from :_sigparsed");
+      $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Sig', signatureparsed from :_sigparsed");
       # Export from our tmp table and drop
-      $Ex->ExportTable('UserMeta', 'select UserID, MetaKey as Name, MetaValue as Value from VbulletinUserMeta');
+      $Ex->ExportTable('UserMeta', 'select * from VbulletinUserMeta');
       $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
-      
+
       // Categories
       $Category_Map = array(
          'forumid'=>'CategoryID',
