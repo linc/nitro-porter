@@ -2532,6 +2532,7 @@ class Vbulletin extends ExportController {
          
          // A) Do NOT grab every field to avoid potential 'filedata' blob.
          // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
+         // C) We lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
          
          // First comment attachments => 'Discussion' foreign key
          $Ex->ExportTable('Media',
@@ -2539,7 +2540,9 @@ class Vbulletin extends ExportController {
                'local' as StorageMethod, 
                'discussion' as ForeignTable,
                t.threadid as ForeignID,
-               FROM_UNIXTIME(a.dateline) as DateInserted
+               FROM_UNIXTIME(a.dateline) as DateInserted,
+               '1' as ImageHeight,
+               '1' as ImageWidth
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
             where a.attachmentid > 0
@@ -2550,7 +2553,9 @@ class Vbulletin extends ExportController {
                'local' as StorageMethod, 
                'comment' as ForeignTable,
                a.postid as ForeignID,
-               FROM_UNIXTIME(a.dateline) as DateInserted
+               FROM_UNIXTIME(a.dateline) as DateInserted,
+               '1' as ImageHeight,
+               '1' as ImageWidth
             from :_post p
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
