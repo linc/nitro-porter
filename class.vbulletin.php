@@ -234,15 +234,20 @@ class Vbulletin extends ExportController {
             and p.visible = 1", $Comment_Map);
       
       // UserDiscussion
-		$UserDiscussion_Map = array(
-			'DateLastViewed' =>  'datetime');
-      $Ex->ExportTable('UserDiscussion', "select
+      $Ex->ExportTable('UserDiscussion', "select 
+            st.userid as UserID,
+            st.threadid as DiscussionID,
+            '1' as Bookmarked,
+            FROM_UNIXTIME(tr.readtime) as DateLastViewed
+         from :_subscribethread st
+         left join :_threadread tr on tr.userid = st.userid and tr.threadid = st.threadid");
+      /*$Ex->ExportTable('UserDiscussion', "select
            tr.userid as UserID,
            tr.threadid as DiscussionID,
            FROM_UNIXTIME(tr.readtime) as DateLastViewed,
            case when st.threadid is not null then 1 else 0 end as Bookmarked
          from :_threadread tr
-         left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");
+         left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");*/
       
       // Activity (from visitor messages in vBulletin 3.8+)
       if ($Ex->Exists('visitormessage')) {
