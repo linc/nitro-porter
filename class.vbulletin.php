@@ -257,7 +257,7 @@ class Vbulletin extends ExportController {
    			where state='visible'", $Activity_Map);
       }
 
-      // Massge the pms to conversations.
+      // Massage PMs into Conversations.
       
       $Ex->Query('drop table if exists z_pmto');
       $Ex->Query('create table z_pmto (

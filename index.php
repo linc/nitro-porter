@@ -1,21 +1,17 @@
 <?php
-define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.4');
 /**
  * Vanilla 2 Exporter
+ * 
  * This script exports other forum databases to the Vanilla 2 import format.
- * To use this script copy it to your web server and open it in your browser.
- * If you have a larger database the directory should be writable so that the export file can be saved locally and zipped.
+ * To use this script, copy it to your web server and open it in your browser.
+ * If you have a large database, make the directory writable so that the export file can be saved locally and zipped.
  *
- * Copyright 2010 Vanilla Forums Inc.
- * This file is part of Garden.
- * Garden is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- * Garden is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License along with Garden.  If not, see <http://www.gnu.org/licenses/>.
- * Contact Vanilla Forums Inc. at support [at] vanillaforums [dot] com
- *
+ * @copyright 2010 Vanilla Forums Inc.
+ * @license GNU GPLv2
  * @package VanillaPorter
  */
+define('APPLICATION', 'Porter');
+define('APPLICATION_VERSION', '1.6.4');
 
 if(defined('DEBUG'))
    error_reporting(E_ALL);
