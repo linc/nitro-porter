@@ -14,6 +14,7 @@
  * 1) Avatars should be moved to the filesystem prior to export if they
  * are stored in the database. Copy all the avatar_* files from
  * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
+ * IMPORTANT: Make /userpics writable by the server BEFORE IMPORTING.
  * 
  * 2) Attachments should likewise be moved to the filesystem prior to
  * export. Copy all attachments from vBulletin's attachments folder to 
