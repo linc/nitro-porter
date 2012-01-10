@@ -15,7 +15,7 @@ class Vanilla1 extends ExportController {
       'Role'=> array('RoleID', 'Name', 'Description'),
       'Category'=> array('CategoryID', 'Name', 'Description'),
       'Discussion'=> array('DiscussionID', 'Name', 'CategoryID', 'DateCreated', 'AuthUserID', 'DateLastActive', 'Closed', 'Sticky', 'CountComments', 'Sink', 'LastUserID'),
-      'Comment'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body')
+      'Comment'=> array('CommentID', 'DiscussionID', 'AuthUserID', 'DateCreated', 'EditUserID', 'DateEdited', 'Body', 'Deleted')
       );
    
    /**
@@ -190,6 +190,7 @@ class Vanilla1 extends ExportController {
          JOIN :_Discussion d
             ON c.DiscussionID = d.DiscussionID
          WHERE d.FirstCommentID <> c.CommentID
+            AND c.Deleted = '0'
             AND coalesce(d.WhisperUserID, 0) = 0
             AND coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
 
