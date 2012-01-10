@@ -11,7 +11,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.5');
+define('APPLICATION_VERSION', '1.6.6');
 
 if(defined('DEBUG'))
    error_reporting(E_ALL);
@@ -39,7 +39,6 @@ $Supported = array(
 include('class.exportmodel.php');
 include('views.php');
 include('class.exportcontroller.php');
-include('class.csv.php');
 
 include('class.vanilla1.php');
 include('class.vanilla2.php');
