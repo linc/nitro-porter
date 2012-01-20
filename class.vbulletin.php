@@ -93,7 +93,8 @@ class Vbulletin extends ExportController {
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
          'salt'=>'char(3)',
-         'avatarrevision' => array('Column' => 'Photo', 'Filter' => array($this, 'BuildAvatar'))
+         'avatarrevision' => array('Column' => 'Photo', 'Filter' => array($this, 'BuildAvatar')),
+         'ipaddress' => 'LastIPAddress'
       );
       $Ex->ExportTable('User', "select *,
 				concat(`password`, salt) as password2,
@@ -195,10 +196,12 @@ class Vbulletin extends ExportController {
          'postuserid2'=>'UpdateUserID',
          'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
 			'Format'=>'Format',
-         'views'=>'CountViews'
+         'views'=>'CountViews',
+         'ipaddress' => 'InsertIPAddress'
       );
       $Ex->ExportTable('Discussion', "select t.*,
 				t.postuserid as postuserid2,
+            p.ipaddress,
             p.pagetext as Body,
 				'BBCode' as Format,
             replycount+1 as CountComments, 
@@ -218,7 +221,8 @@ class Vbulletin extends ExportController {
          'postid' => 'CommentID',
          'threadid' => 'DiscussionID',
          'pagetext' => 'Body',
-			'Format' => 'Format'
+			'Format' => 'Format',
+         'ipaddress' => 'InsertIPAddress'
       );
       $Ex->ExportTable('Comment', "select p.*,
 				'BBCode' as Format,
