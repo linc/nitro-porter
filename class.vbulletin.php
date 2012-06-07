@@ -33,6 +33,9 @@
  * @package VanillaPorter
  */
 class Vbulletin extends ExportController {
+   public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', f.filedataid,'.', f.extension) as Path";
+   public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
+   
    static $Permissions = array(
    
    'genericpermissions' => array(
@@ -81,8 +84,33 @@ class Vbulletin extends ExportController {
     * @param ExportModel $Ex
     */
    protected function ForumExport($Ex) {
+      $ForumID = $this->Param('forumid');
+      if ($ForumID)
+         $ForumWhere = ' and t.forumid '.(strpos($ForumID, ', ') === FALSE ? "= $ForumID" : "in ($ForumID)");
+      else
+         $ForumWhere = '';
+      
+      $CharacterSet = $Ex->GetCharacterSet('post');
+      if ($CharacterSet)
+         $Ex->CharacterSet = $CharacterSet;
+      
+      $this->ExportBlobs(
+         $this->Param('attachments'),
+         $this->Param('avatars'),
+         $ForumWhere
+      );
+      
+      if ($this->Param('noexport'))
+         return;
+      
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
+      
+      $Now = time();
+      
+//      $this->_ExportMedia();
+//      $Ex->EndExport();
+//      return;
   
       // Users
       $User_Map = array(
@@ -93,17 +121,30 @@ class Vbulletin extends ExportController {
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
          'salt'=>'char(3)',
-         'avatarrevision' => array('Column' => 'Photo', 'Filter' => array($this, 'BuildAvatar')),
          'ipaddress' => 'LastIPAddress'
       );
-      $Ex->ExportTable('User', "select *,
+      
+      if ($UseFieAvatar = $this->GetConfig('usefileavatar'))
+         $User_Map['filephoto'] = 'Photo';
+      else
+         $User_Map['customphoto'] = 'Photo';
+      
+      $Ex->ExportTable('User', "select u.*,
 				concat(`password`, salt) as password2,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
-            FROM_UNIXTIME(lastactivity) as DateUpdated
-         from :_user", $User_Map);  // ":_" will be replace by database prefix
+            FROM_UNIXTIME(lastactivity) as DateUpdated,
+            case when avatarrevision > 0 then concat('userpics/avatar', u.userid, '_', 'avatarrevision', '.gif') else null end  as filephoto,
+            {$this->AvatarSelect},
+            case when ub.userid is not null then 1 else 0 end as Banned,
+            'vbulletin' as HashMethod
+         from :_user u
+         left join :_customavatar a
+         	on u.userid = a.userid
+         left join :_userban ub
+       	 	on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
       
       // Roles
       $Role_Map = array(
@@ -140,7 +181,7 @@ class Vbulletin extends ExportController {
       // Permissions.
       $Permissions_Map = array(
           'usergroupid' => 'RoleID',
-          'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, SignInPermission)),
+          'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'SignInPermission')),
           'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
           'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
       );
@@ -181,12 +222,13 @@ class Vbulletin extends ExportController {
       $Category_Map = array(
          'forumid'=>'CategoryID',
          'description'=>'Description',
-         'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
+         'Name'=>array('Column'=>'Name'), //,'Filter'=>array($Ex, 'HTMLDecoder')),
          'displayorder'=>array('Column'=>'Sort', 'Type'=>'int'),
          'parentid'=>'ParentCategoryID'
       );
       $Ex->ExportTable('Category', "select f.*, left(title,30) as Name
-         from :_forum f", $Category_Map);
+         from :_forum f
+         where 1 = 1 $ForumWhere", $Category_Map);
       
       // Discussions
       $Discussion_Map = array(
@@ -199,6 +241,13 @@ class Vbulletin extends ExportController {
          'views'=>'CountViews',
          'ipaddress' => 'InsertIPAddress'
       );
+      
+      if ($Ex->Destination == 'database') {
+         // Remove the filter from the title so that this doesn't take too long.
+         $Ex->HTMLDecoderDb('thread', 'title', 'threadid');
+         unset($Discussion_Map['title']['Filter']);
+      }
+      
       $Ex->ExportTable('Discussion', "select t.*,
 				t.postuserid as postuserid2,
             p.ipaddress,
@@ -214,7 +263,8 @@ class Vbulletin extends ExportController {
             left join :_deletionlog d on (d.type='thread' and d.primaryid=t.threadid)
 				left join :_post p on p.postid = t.firstpostid
          where d.primaryid is null
-            and t.visible = 1", $Discussion_Map);
+            and t.visible = 1
+            $ForumWhere", $Discussion_Map);
       
       // Comments
       $Comment_Map = array(
@@ -231,11 +281,14 @@ class Vbulletin extends ExportController {
          FROM_UNIXTIME(p.dateline) as DateInserted,
             FROM_UNIXTIME(p.dateline) as DateUpdated
          from :_post p
-				inner join :_thread t on p.threadid = t.threadid
-            left join :_deletionlog d on (d.type='post' and d.primaryid=p.postid)
+         inner join :_thread t 
+            on p.threadid = t.threadid
+         left join :_deletionlog d 
+            on (d.type='post' and d.primaryid=p.postid)
          where p.postid <> t.firstpostid 
             and d.primaryid is null
-            and p.visible = 1", $Comment_Map);
+            and p.visible = 1
+            $ForumWhere", $Comment_Map);
       
       // UserDiscussion
       $Ex->ExportTable('UserDiscussion', "select 
@@ -256,13 +309,17 @@ class Vbulletin extends ExportController {
       // Activity (from visitor messages in vBulletin 3.8+)
       if ($Ex->Exists('visitormessage')) {
          $Activity_Map = array(
-            'postuserid'=>'ActivityUserID',
-            'userid'=>'RegardingUserID',
+            'postuserid'=>'RegardingUserID',
+            'userid'=>'ActivityUserID',
             'pagetext'=>'Story',
-            'postuserid'=>'InsertUserID'
          );
          $Ex->ExportTable('Activity', "select *, 
-   			   FROM_UNIXTIME(dateline) as DateInserted
+               '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
+               FROM_UNIXTIME(dateline) as DateInserted,
+               INET_NTOA(ipaddress) as InsertIPAddress,
+               postuserid as InsertUserID,
+               -1 as NotifiyUserID,
+               'WallPost' as ActivityType
    			from :_visitormessage
    			where state='visible'", $Activity_Map);
       }
@@ -443,54 +500,131 @@ class Vbulletin extends ExportController {
       
       // Media
       if ($Ex->Exists('attachment')) {
-         $Media_Map = array(
-            'attachmentid' => 'MediaID',
-            'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-            'filesize' => 'Size',
-            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
-            'userid' => 'InsertUserID'
-         );
-         // Test if hash field exists from 2.x
-         $SelectHash = '';
-         if ($Ex->Exists('attachment', array('hash')) === true)
-            $SelectHash = 'a.hash,';
-         
-         // A) Do NOT grab every field to avoid potential 'filedata' blob.
-         // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
-         // C) We lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
-         
-         // First comment attachments => 'Discussion' foreign key
-         $Ex->ExportTable('Media',
-            "select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
-               'local' as StorageMethod, 
-               'discussion' as ForeignTable,
-               t.threadid as ForeignID,
-               FROM_UNIXTIME(a.dateline) as DateInserted,
-               '1' as ImageHeight,
-               '1' as ImageWidth
-            from :_thread t
-               left join :_attachment a ON a.postid = t.firstpostid
-            where a.attachmentid > 0
-         
-            union all
-         
-            select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
-               'local' as StorageMethod, 
-               'comment' as ForeignTable,
-               a.postid as ForeignID,
-               FROM_UNIXTIME(a.dateline) as DateInserted,
-               '1' as ImageHeight,
-               '1' as ImageWidth
-            from :_post p
-               inner join :_thread t ON p.threadid = t.threadid
-               left join :_attachment a ON a.postid = p.postid
-            where p.postid <> t.firstpostid and  a.attachmentid > 0
-            ", $Media_Map);
+         $this->_ExportMedia();
       }
       
       // End
       $Ex->EndExport();
+      
+      
+   }
+   
+   function ExportBlobs($Attachments = TRUE, $CustomAvatars = TRUE) {
+      $Ex = $this->Ex;
+      
+      if ($Attachments) {
+         $Sql = "select 
+            f.filedata, 
+            {$this->AttachSelect}
+            from :_filedata f";
+         $Ex->ExportBlobs($Sql, 'filedata', 'Path');
+      }
+      
+      if ($CustomAvatars) {
+         $Sql = "select 
+               a.filedata, 
+               {$this->AvatarSelect}
+            from :_customavatar a
+            ";
+         $Sql = str_replace('u.userid', 'a.userid', $Sql);
+         $Ex->ExportBlobs($Sql, 'filedata', 'customphoto', 80);
+      }
+      
+   }
+   
+   function _ExportMedia() {
+      $Ex = $this->Ex;
+      
+      if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
+         $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
+         
+         $Media_Map = array(
+             'attachmentid' => 'MediaID',
+             'filename' => 'Name',
+             'filesize' => 'Size',
+             'width' => 'ImageWidth',
+             'height' => 'ImageHeight',
+             'userid' => 'InsertUserID'
+             );
+         
+         $Ex->ExportTable('Media', "select 
+            case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
+            case when t.threadid is not null then t.threadid else a.contenttypeid end as ForeignID,
+            {$this->AttachSelect},
+            concat('image/', f.extension) as Type,
+            FROM_UNIXTIME(a.dateline) as DateInserted,
+            'local' as StorageMethod,
+            a.*,
+            f.extension, f.filesize,
+            f.width, f.height
+         from :_attachment a
+         join :_contenttype ct
+            on a.contenttypeid = ct.contenttypeid
+         join :_filedata f
+            on f.filedataid = a.filedataid
+         left join :_thread t
+            on t.firstpostid = a.contentid and a.contenttypeid = 1
+         where a.contentid > 0", $Media_Map);
+      } else {
+         $this->_ExportMediaOld();
+      }
+   }
+   
+   function _ExportMediaOld() {   
+      $Ex = $this->Ex;
+      
+      $Media_Map = array(
+         'attachmentid' => 'MediaID',
+         'filename' => 'Name',
+         'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
+         'filesize' => 'Size',
+         'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+         'userid' => 'InsertUserID'
+      );
+      // Test if hash field exists from 2.x
+      $AttachColumns = array('hash', 'filehash', 'filesize');
+      $Missing = $Ex->Exists('attachment', $AttachColumns);
+      $AttachColumnsString = '';
+      foreach ($AttachColumns as $ColumnName) {
+         if (in_array($ColumnName, $Missing)) {
+            $AttachColumnsString .= ", null as $ColumnName";
+         } else {
+            $AttachColumnsString .= ", a.$ColumnName";
+         }
+      }
+
+      // A) Do NOT grab every field to avoid potential 'filedata' blob.
+      // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
+      // C) We lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
+
+      // First comment attachments => 'Discussion' foreign key
+      $Extension = ExportModel::FileExtension('a.filename');
+      $Ex->ExportTable('Media',
+         "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
+            'local' as StorageMethod, 
+            'discussion' as ForeignTable,
+            t.threadid as ForeignID,
+            FROM_UNIXTIME(a.dateline) as DateInserted,
+            '1' as ImageHeight,
+            '1' as ImageWidth
+         from :_thread t
+            left join :_attachment a ON a.postid = t.firstpostid
+         where a.attachmentid > 0
+
+         union all
+
+         select a.attachmentid, a.filename, $Extension $AttachColumnsString a.userid,
+            'local' as StorageMethod, 
+            'comment' as ForeignTable,
+            a.postid as ForeignID,
+            FROM_UNIXTIME(a.dateline) as DateInserted,
+            '1' as ImageHeight,
+            '1' as ImageWidth
+         from :_post p
+            inner join :_thread t ON p.threadid = t.threadid
+            left join :_attachment a ON a.postid = p.postid
+         where p.postid <> t.firstpostid and  a.attachmentid > 0
+         ", $Media_Map);
    }
    
    /**
@@ -565,12 +699,12 @@ class Vbulletin extends ExportController {
     * @param array $Row Contents of the current attachment record.
     * @return string Path to avatar if one exists, or blank if none.
     */
-   function BuildAvatar($Value, $Field, $Row) {
-      if ($Row['avatarrevision'] > 0)
-         return 'userpics/avatar' . $Row['userid'] . '_' . $Row['avatarrevision'] . '.gif';
-      else
-         return '';
-   }
+//   function BuildAvatar($Value, $Field, $Row) {
+//      if ($Row['avatarrevision'] > 0)
+//         return 'userpics/avatar' . $Row['userid'] . '_' . $Row['avatarrevision'] . '.gif';
+//      else
+//         return '';
+//   }
    
    function SignInPermission($Value, $Field, $Row) {
       $Result = TRUE;
@@ -580,6 +714,15 @@ class Vbulletin extends ExportController {
          $Result = FALSE;
       
       return $Result;
+   }
+   
+   function GetConfig($Name) {
+      $Sql = "select * from :_setting where varname = 'usefileavatar'";
+      $Result = $this->Ex->Query($Sql, TRUE);
+      if ($Row = mysql_fetch_assoc($Result)) {
+         return $Row['value'];
+      }
+      return FALSE;
    }
    
    function FilterPermissions($Value, $Field, $Row) {
@@ -600,7 +743,7 @@ class Vbulletin extends ExportController {
          foreach ($Columns as $Mask => $ColumnArray) {
             $ColumnArray = (array)$ColumnArray;
             foreach ($ColumnArray as $Column) {
-               $Map[$Column] = array('Column' => $Column, 'Type' => 'tinyint(1)', 'Filter' => array($this, FilterPermissions));
+               $Map[$Column] = array('Column' => $Column, 'Type' => 'tinyint(1)', 'Filter' => array($this, 'FilterPermissions'));
                
                $Permissions2[$Column] = array($ColumnGroup, $Mask);
             }
