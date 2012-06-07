@@ -16,6 +16,7 @@ class ExportModel {
    const NULL = '\N';
    const QUOTE = '"';
 
+   public $CaptureOnly = FALSE;
 
    /** @var array Any comments that have been written during the export. */
    public $Comments = array();
@@ -25,11 +26,18 @@ class ExportModel {
 
    /** @var string The charcter set to set as the connection anytime the database connects. */
    public $CharacterSet = 'utf8';
+   
+   /**
+    * @var int The chunk size when exporting large tables.
+    */
+   public $ChunkSize = 100000;
 
    /** @var array **/
    public $CurrentRow = NULL;
 
    public $Destination = 'file';
+   
+   public $DestPrefix = 'GDN_z';
 
    /** @var object File pointer */
    protected $_File = NULL;
@@ -38,8 +46,6 @@ class ExportModel {
    public $FilenamePrefix = '';
 
    public $_Host;
-
-   protected $_Limit = 20000;
 
    /** @var object PDO instance */
    protected $_PDO = NULL;
@@ -56,23 +62,37 @@ class ExportModel {
    public $Prefix = '';
 
    public $Queries = array();
+   
+   protected $_QueryStructures = array();
 
    /** @var string The path to the source of the export in the case where a file is being converted. */
    public $SourcePath = '';
+   
+   /**
+    * @var string 
+    */
+   public $SourcePrefix = '';
+   
+   public $ScriptCreateTable = TRUE;
 
    /**
     * @var array Strucutes that define the format of the export tables.
     */
    protected $_Structures = array(
       'Activity' => array(
+            'ActivityType' => 'varchar(20)',
             'ActivityUserID' => 'int',
             'RegardingUserID' => 'int',
+            'NotifyUserID' => 'int',
+            'HeadlineFormat' => 'varchar(255)',
             'Story' => 'text',
             'InsertUserID' => 'int',
-            'DateInserted' => 'datetime'),
+            'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)'),
       'Category' => array(
             'CategoryID' => 'int',
             'Name' => 'varchar(30)',
+            'UrlCode' => 'varchar(255)',
             'Description' => 'varchar(250)',
             'ParentCategoryID' => 'int',
             'DateInserted' => 'datetime',
@@ -95,6 +115,7 @@ class ExportModel {
             'Score' => 'float'),
       'Conversation' => array(
             'ConversationID' => 'int',
+            'Subject' => 'varchar(255)',
             'FirstMessageID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
@@ -106,7 +127,8 @@ class ExportModel {
             'Body' => 'text',
             'Format' => 'varchar(20)',
             'InsertUserID' => 'int',
-            'DateInserted' => 'datetime'),
+            'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)'),
       'Discussion' => array(
             'DiscussionID' => 'int',
             'Name' => 'varchar(100)',
@@ -136,7 +158,9 @@ class ExportModel {
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime',
             'ForeignID' => 'int',
-            'ForeignTable' => 'varchar(24)'
+            'ForeignTable' => 'varchar(24)',
+            'ImageWidth' => 'int',
+            'ImageHeight' => 'int'
           ),
       'Permission' => array(
             'RoleID' => 'int',
@@ -165,8 +189,11 @@ class ExportModel {
             'UserID' => 'int',
             'Name' => 'varchar(20)',
             'Email' => 'varchar(200)',
-            'Password' => 'varbinary(34)',
+            'Password' => 'varbinary(100)',
+            'HashMethod' => 'varchar(10)',
             //'Gender' => array('m', 'f'),
+            'Title' => 'varchar(100)',
+            'Location' => 'varchar(100)',
             'Score' => 'float',
             'InviteUserID' => 'int',
             'HourOffset' => 'int',
@@ -179,6 +206,7 @@ class ExportModel {
             'DateLastActive' => 'datetime',
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)',
+            'LastIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'Banned' => 'tinyint',
             'ShowEmail' => 'tinyint'),
@@ -191,6 +219,7 @@ class ExportModel {
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
+            'Deleted' => 'tinyint(1)',
             'LastMessageID' => 'int'),
       'UserDiscussion' => array(
             'UserID' => 'int',
@@ -208,6 +237,8 @@ class ExportModel {
    );
 
    public $TestMode = FALSE;
+   
+   public $TestLimit = 10;
 
    /**
     * @var bool Whether or not to use compression when creating the file.
@@ -239,13 +270,19 @@ class ExportModel {
 
       $fp = $this->_OpenFile();
 
-      fwrite($fp, 'Vanilla Export: '.$this->Version());
+      $Comment = 'Vanilla Export: '.$this->Version();
+      
       if($Source)
-         fwrite($fp, self::DELIM.' Source: '.$Source);
+         $Comment .= self::DELIM.' Source: '.$Source;
       foreach ($Header as $Key => $Value) {
-         fwrite($fp, self::DELIM." $Key: $Value");
+         $Comment .= self::DELIM." $Key: $Value";
       }
-      fwrite($fp, self::NEWLINE.self::NEWLINE);
+      
+      if ($this->CaptureOnly)
+         $this->Comment($Comment);
+      else
+         fwrite($fp, $Comment.self::NEWLINE.self::NEWLINE);
+     
       $this->Comment('Export Started: '.date('Y-m-d H:i:s'));
 
       return $fp;
@@ -257,7 +294,14 @@ class ExportModel {
     * @param bool $Echo Whether or not to echo the message in addition to writing it to the file.
     */
    public function Comment($Message, $Echo = TRUE) {
-      fwrite($this->_File, self::COMMENT.' '.str_replace(self::NEWLINE, self::NEWLINE.self::COMMENT.' ', $Message).self::NEWLINE);
+      if ($this->Destination == 'file')
+         $Char = self::COMMENT;
+      else
+         $Char = '--';
+         
+      $Comment = $Char.' '.str_replace(self::NEWLINE, self::NEWLINE.self::COMMENT.' ', $Message).self::NEWLINE;
+      
+      fwrite($this->_File, $Comment);
       if($Echo)
          $this->Comments[] = $Message;
    }
@@ -272,6 +316,14 @@ class ExportModel {
       $this->Comment('Export Completed: '.date('Y-m-d H:i:s'));
       $this->Comment(sprintf('Elapsed Time: %s', self::FormatElapsed($this->TotalTime)));
 
+      if ($this->TestMode || $this->Controller->Param('dumpsql') || $this->CaptureOnly) {
+         $Queries = implode("\n\n", $this->Queries);
+         if ($this->Destination == 'database')
+            fwrite($this->_File, $Queries);
+         else
+            $this->Comment($Queries, TRUE);
+      }
+      
       if($this->UseStreaming) {
          //ob_flush();
       } else {
@@ -281,10 +333,7 @@ class ExportModel {
             fclose($this->_File);
       }
 
-      if ($this->TestMode || $this->Controller->Param('dumpsql')) {
-         $Queries = '<pre>'.implode("\n\n", $this->Queries).'</pre>';
-         $this->Comment($Queries, TRUE);
-      }
+      
    }
 
    /**
@@ -310,8 +359,69 @@ class ExportModel {
       $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
       fwrite($this->_File, self::NEWLINE);
    }
+   
+   protected function _ExportTableImport($TableName, $Query, $Mappings = array()) {
+      // Backup the settings.
+      $DestinationBak = $this->Destination;
+      $this->Destination = 'file';
+      
+      $_FileBak = $this->_File;
+      $Path = dirname(__FILE__).'/'.$TableName.'.csv';
+      $this->Comment("Exporting To: $Path");
+      $fp = fopen($Path, 'wb');
+      $this->_File = $fp;
+      
+      // First export the file to a file.
+      $this->_ExportTable($TableName, $Query, $Mappings, array('NoEndline' => TRUE));
+      
+      // Now define a table to import into.
+      $this->_CreateExportTable($TableName, $Query, $Mappings);
+      
+      // Now load the data.
+      $Sql = "load data local infile '$Path' into table {$this->DestDb}.{$this->DestPrefix}$TableName
+         character set utf8
+         columns terminated by ','
+         optionally enclosed by '\"'
+         escaped by '\\\\'
+         lines terminated by '\\n'
+         ignore 2 lines";
+      $this->Query($Sql);
+      
+      // Restore the settings.
+      $this->Destination = $DestinationBak;
+      $this->_File = $_FileBak;
+   }
+   
+   public function ExportBlobs($Sql, $BlobColumn, $PathColumn, $Thumbnail = FALSE) {
+      $Result = $this->Query($Sql);
+      if (!$Result) {
+         die("Sql error: $Sql");
+      }
+      
+      while ($Row = mysql_fetch_assoc($Result)) {
+         $Path = dirname(__FILE__).'/'.$Row[$PathColumn];
+         if (!file_exists(dirname($Path))) {
+            $R = mkdir(dirname($Path), 0777, TRUE); 
+            if (!$R)
+               die("Could not create ".dirname($Path));
+         }
+         
+         $PicPath = str_replace('/avat', '/pavat', $Path);
+         $fp = fopen($PicPath, 'wb');
+         fwrite($fp, $Row[$BlobColumn]);
+         fclose($fp);
+         
+         if ($Thumbnail) {
+            if ($Thumbnail === TRUE)
+               $Thumbnail = 50;
+            
+            $ThumbPath = str_replace('/avat', '/navat', $Path);
+            $this->GenerateThumbnail($PicPath, $ThumbPath, $Thumbnail, $Thumbnail);
+         }
+      }
+   }
 
-   protected function _ExportTable($TableName, $Query, $Mappings = array()) {
+   protected function _ExportTable($TableName, $Query, $Mappings = array(), $Options = array()) {
       $fp = $this->_File;
 
       // Make sure the table is valid for export.
@@ -326,12 +436,21 @@ class ExportModel {
          $this->_ExportTableDB($TableName, $Query, $Mappings);
          return;
       }
+      
+      // Check for a chunked query.
+      $Query = str_replace('{from}', -2000000000, $Query);
+      $Query = str_replace('{to}', 2000000000, $Query);
+      
+      if (strpos($Query, '{from}') !== FALSE) {
+         $this->_ExportTableDBChunked($TableName, $Query, $Mappings);
+         return;
+      }
 
       // If we are in test mode then limit the query.
-      if ($this->TestMode) {
+      if ($this->TestMode && $this->TestLimit) {
          $Query = rtrim($Query, ';');
          if (stripos($Query, 'select') !== FALSE && stripos($Query, 'limit') === FALSE) {
-            $Query .= ' limit 10';
+            $Query .= " limit {$this->TestLimit}";
          }
       }
 
@@ -353,7 +472,7 @@ class ExportModel {
          }
       }
 
-      $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
+      $Data = $this->Query($Query);
       $Mb = function_exists('mb_detect_encoding');
 
       // Loop through the data and write it to the file.
@@ -390,7 +509,7 @@ class ExportModel {
                if (array_key_exists($Field, $Row)) {
                   // The column has an exact match in the export.
                   $Value = $Row[$Field];
-               } elseif (array_key_exists($Field, $Mappings)) {
+               } elseif (array_key_exists($Field, $Mappings) && isset($Row[$Mappings[$Field]])) {
                   // The column is mapped.
                   $Value = $Row[$Mappings[$Field]];
                } else {
@@ -443,18 +562,20 @@ class ExportModel {
          mysql_free_result($Data);
       unset($Data);
 
-      // Write an empty line to signify the end of the table.
-      fwrite($fp, self::NEWLINE);
+      if (!isset($Options['NoEndline'])) {
+         // Write an empty line to signify the end of the table.
+         fwrite($fp, self::NEWLINE);
+      }
+      
       mysql_close();
 
       return $RowCount;
    }
-
-   protected function _ExportTableDB($TableName, $Query, $Mappings = array()) {
-      $DestDb = '';
-      if (isset($this->DestDb))
-         $DestDb = $this->DestDb.'.';
-
+   
+   protected function _CreateExportTable($TableName, $Query, $Mappings = array()) {
+      if (!$this->ScriptCreateTable)
+         return;
+      
       // Limit the query to grab any additional columns.
       $QueryStruct = rtrim($Query, ';').' limit 1';
       $Structure = $this->_Structures[$TableName];
@@ -477,39 +598,114 @@ class ExportModel {
          break;
       }
       mysql_close($Data);
+      
+      // Build the create table statement.
+      $ColumnDefs = array();
+      foreach ($ExportStructure as $ColumnName => $Type) {
+         $ColumnDefs[] = "`$ColumnName` $Type";
+      }
+      $DestDb = '';
+      if (isset($this->DestDb))
+         $DestDb = $this->DestDb.'.';
+      
+      $this->Query("drop table if exists {$DestDb}{$this->DestPrefix}$TableName");
+      $CreateSql = "create table {$DestDb}{$this->DestPrefix}$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
+      
+      $this->Query($CreateSql);
+   }
+
+   protected function _ExportTableDB($TableName, $Query, $Mappings = array()) {
+      if ($this->HasFilter($Mappings) || strpos($Query, 'union all') !== FALSE) {
+         $this->_ExportTableImport($TableName, $Query, $Mappings);
+         return;
+      }
+      
+      // Check for a chunked query.
+      if (strpos($Query, '{from}') !== FALSE) {
+         $this->_ExportTableDBChunked($TableName, $Query, $Mappings);
+         return;
+      }
+      
+      $DestDb = '';
+      if (isset($this->DestDb))
+         $DestDb = $this->DestDb.'.';
+
+      // Limit the query to grab any additional columns.
+      $QueryStruct = $this->GetQueryStructure($Query, $TableName);
+      $Structure = $this->_Structures[$TableName];
+      
+      $ExportStructure = $this->GetExportStructure($QueryStruct, $Structure, $Mappings);
+
+      $Mappings = array_flip($Mappings);
 
       // Build the create table statement.
       $ColumnDefs = array();
       foreach ($ExportStructure as $ColumnName => $Type) {
          $ColumnDefs[] = "`$ColumnName` $Type";
       }
-      $this->Query("drop table if exists {$DestDb}GDN_z$TableName");
-      $CreateSql = "create table {$DestDb}GDN_z$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
-      $this->Query($CreateSql);
+      if ($this->ScriptCreateTable) {
+         $this->Query("drop table if exists {$DestDb}{$this->DestPrefix}$TableName");
+         $CreateSql = "create table {$DestDb}{$this->DestPrefix}$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
+         $this->Query($CreateSql);
+      }
 
       $Query = rtrim($Query, ';');
       // Build the insert statement.
-      if ($this->TestMode) {
-         $Query .= ' limit 10';
+      if ($this->TestMode && $this->TestLimit) {
+         $Query .= " limit {$this->TestLimit}";
       }
+      
+//      echo $Query."\n\n\n";
+//      die();
+//      print_r(ParseSelect($Query));
 
       $InsertColumns = array();
       $SelectColumns = array();
-      foreach ($ExportStructure as $ColumnName => $Type) {
-         $InsertColumns[] = "`$ColumnName`";
-         
+      foreach ($ExportStructure as $ColumnName => $Type) {         
+         $InsertColumns[] = '`'.$ColumnName.'`';
          if (isset($Mappings[$ColumnName])) {
-            $SelectColumns[] = "`{$Mappings[$ColumnName]}`";
+            $SelectColumns[$ColumnName] = $Mappings[$ColumnName];
          } else {
-            $SelectColumns[] = "`{$ColumnName}`";
+            $SelectColumns[$ColumnName] = $ColumnName;
          }
       }
+//      print_r($SelectColumns);
+      
+      $Query = ReplaceSelect($Query, $SelectColumns);
 
-      $InsertSql = "insert {$DestDb}GDN_z$TableName"
+      $InsertSql = "replace {$DestDb}{$this->DestPrefix}$TableName"
          ." (\n  ".implode(",\n   ", $InsertColumns)."\n)\n"
-         ."select \n  ".implode(",\n  ", $SelectColumns)."\n"
-         ."from (\n  ".str_replace("\n", "\n  ", $Query)."\n) q";
+         .$Query;
+      
+//      die($InsertSql);
       $this->Query($InsertSql);
+   }
+   
+   protected function _ExportTableDBChunked($TableName, $Query, $Mappings = array()) {
+      // Grab the table name from the first from.
+      if (preg_match('`\sfrom\s([^\s]+)`', $Query, $Matches)) {
+         $From = $Matches[1];
+      } else {
+         trigger_error("Could not figure out table for $TableName chunking.", E_USER_WARNING);
+         return;
+      }
+      
+      $Sql = "show table status like '{$From}';";
+      $R = $this->Query($Sql, TRUE);
+      $Row = mysql_fetch_assoc($R);
+      mysql_free_result($R);
+      $Max = $Row['Auto_increment'];
+      
+      if (!$Max)
+         $Max = 2000000;
+      
+      for ($i = 0; $i < $Max; $i += $this->ChunkSize) {
+         $From = $i;
+         $To = $From + $this->ChunkSize - 1;
+         
+         $Sql = str_replace(array('{from}', '{to}'), array($From, $To), $Query);
+         $this->_ExportTableDB($TableName, $Sql, $Mappings);
+      }
    }
    
    public function FixPermissionColumns($Columns) {
@@ -566,6 +762,61 @@ class ExportModel {
          $Value = self::NULL;
       }
       return $Value;
+   }
+   
+   public function GenerateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
+      list($WidthSource, $HeightSource, $Type) = getimagesize($Path);
+      
+      $XCoord = 0;
+      $YCoord = 0;
+      $HeightDiff = $HeightSource - $Height;
+      $WidthDiff = $WidthSource - $Width;
+      if ($WidthDiff > $HeightDiff) {
+         // Crop the original width down
+         $NewWidthSource = round(($Width * $HeightSource) / $Height);
+
+         // And set the original x position to the cropped start point.
+         $XCoord = round(($WidthSource - $NewWidthSource) / 2);
+         $WidthSource = $NewWidthSource;
+      } else {
+         // Crop the original height down
+         $NewHeightSource = round(($Height * $WidthSource) / $Width);
+
+         // And set the original y position to the cropped start point.
+         $YCoord = round(($HeightSource - $NewHeightSource) / 2);
+         $HeightSource = $NewHeightSource;
+      }
+      
+      switch ($Type) {
+            case 1:
+               $SourceImage = imagecreatefromgif($Path);
+            break;
+         case 2:
+               $SourceImage = imagecreatefromjpeg($Path);
+            break;
+         case 3:
+            $SourceImage = imagecreatefrompng($Path);
+            imagealphablending($SourceImage, TRUE);
+            break;
+      }
+      
+      $TargetImage = imagecreatetruecolor($Width, $Height);
+      imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource, $HeightSource);
+      imagedestroy($SourceImage);
+      
+      switch ($Type) {
+         case 1:
+            imagegif($TargetImage, $ThumbPath);
+            break;
+         case 2:
+            imagejpeg($TargetImage, $ThumbPath);
+            break;
+         case 3:
+            imagepng($TargetImage, $ThumbPath);
+            break;
+      }
+      imagedestroy($TargetImage);
+//      die('</pre>foo');
    }
 
    public function GetCharacterSet($Table) {
@@ -701,6 +952,25 @@ class ExportModel {
 
       return $ExportStructure;
    }
+   
+   public function GetQueryStructure($Query, $Key = FALSE) {
+      $QueryStruct = rtrim($Query, ';').' limit 1';
+      if (!$Key)
+         $Key = md5($QueryStruct);
+      if (isset($this->_QueryStructures[$Key]))
+         return $this->_QueryStructures[$Key];
+      
+      $R = $this->Query($QueryStruct, TRUE);
+      $i = 0;
+      $Result = array();
+      while ($i < mysql_num_fields($R)) {
+         $Meta = mysql_fetch_field($R, $i);
+         $Result[$Meta->name] = $Meta->table;
+         $i++;
+      }
+      $this->_QueryStructures[$Key] = $Result;
+      return $Result;
+   }
 
    protected function _GetTableHeader($Structure, $GlobalStructure) {
       $TableHeader = '';
@@ -717,11 +987,46 @@ class ExportModel {
       return $TableHeader;
    }
    
+   public function HasFilter(&$Mappings) {
+      foreach ($Mappings as $Column => $Info) {
+         if (is_array($Info) && isset($Info['Filter'])) {
+            return TRUE;
+         }
+      }
+      return FALSE;
+   }
+   
    /**
     * Decode the HTML out of a value.
     */
    public function HTMLDecoder($Value) {
-      return html_entity_decode($Value, ENT_COMPAT, 'UTF-8');
+      return html_entity_decode($Value, ENT_QUOTES, 'UTF-8');
+   }
+   
+   public function HTMLDecoderDb($TableName, $ColumnName, $PK) {
+      $Common = array('&amp;' => '&', '&lt;' => '<', '&gt;' => '>', '&apos;' => "'", '&quot;' => '"', '&#39;' => "'");
+      foreach ($Common as $From => $To) {
+         $FromQ = mysql_escape_string($From);
+         $ToQ = mysql_escape_string($To);
+         $Sql = "update :_{$TableName} set $ColumnName = replace($ColumnName, '$FromQ', '$ToQ') where $ColumnName like '%$FromQ%'";
+         
+         $this->Query($Sql);
+      }
+      
+      // Now decode the remaining rows.
+      $Sql = "select * from :_$TableName where $ColumnName like '%&%;%'";
+      $Result = $this->Query($Sql, TRUE);
+      while ($Row = mysql_fetch_assoc($Result)) {
+         $From = $Row[$ColumnName];
+         $To = $this->HTMLDecoder($From);
+         
+         if ($From != $To) {
+            $ToQ = mysql_escape_string($To);
+            $Sql = "update :_{$TableName} set $ColumnName = '$ToQ' where $PK = {$Row[$PK]}";
+            $this->Query($Sql, TRUE);
+         }
+      }
+      
    }
 
     /**
@@ -774,8 +1079,19 @@ class ExportModel {
       if (isset($this->_LastResult) && is_resource($this->_LastResult))
          mysql_free_result($this->_LastResult);
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
+      if ($this->SourcePrefix) {
+         $Query = preg_replace("`\b{$this->SourcePrefix}`", $this->Prefix, $Query); // replace prefix.
+      }
+      
       $Query = rtrim($Query, ';').';';
-      $this->Queries[] = $Query;
+      
+      if (!preg_match('`limit 1;$`', $Query))
+         $this->Queries[] = $Query;
+         
+      if ($this->Destination == 'database' && $this->CaptureOnly) {
+         if (!preg_match('`^\s*select|show|describe`', $Query))
+            return 'SKIPPED';
+      }
 
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
@@ -789,10 +1105,22 @@ class ExportModel {
       }
 
       if ($Result === FALSE) {
+         echo '<pre>', htmlspecialchars($Query), '</pre>';
          trigger_error(mysql_error($Connection));
       }
       
       return $Result;
+   }
+   
+   public function QueryN($SqlList) {
+      if (!is_array($SqlList))
+         $SqlList = explode(';', $SqlList);
+      
+      foreach ($SqlList as $Sql) {
+         $Sql = trim($Sql);
+         if ($Sql)
+            $this->Query($Sql);
+      }
    }
    
    public function SetConnection($Host = NULL, $Username = NULL, $Password = NULL, $DbName = NULL) {
@@ -811,6 +1139,17 @@ class ExportModel {
    public function Structures() {
       return $this->_Structures;
    }
+   
+   public function TimestampToDate($Value) {
+      if ($Value == NULL)
+         return NULL;
+      else
+         return gmdate('Y-m-d H:i:s', $Value);
+   }
+   
+   public function TimestampToDateDb($Value) {
+      
+   }
 
    /**
     * Whether or not to use compression on the output file.
@@ -821,7 +1160,7 @@ class ExportModel {
       if($Value !== NULL)
          $this->_UseCompression = $Value;
 
-      return $this->_UseCompression && !$this->UseStreaming && function_exists('gzopen');
+      return $this->_UseCompression && $this->Destination == 'file' && !$this->UseStreaming && function_exists('gzopen');
    }
 
    /**
@@ -844,23 +1183,47 @@ class ExportModel {
     *  - array: The names of the missing columns if one or more columns don't exist.
     */
    public function Exists($Table, $Columns = array()) {
-      $Desc = $this->Query('describe :_'.$Table);
-      if ($Desc === false)
-         return false;
-
+      static $_Exists = array();
+      
+      if (!isset($_Exists[$Table])) {
+         $Result = $this->Query("show table status like ':_$Table'", TRUE);
+         if (!$Result) {
+            $_Exists[$Table] = FALSE;
+         } elseif (!mysql_fetch_assoc($Result)) {
+            $_Exists[$Table] = FALSE;
+         } else {
+            mysql_free_result($Result);
+            $Desc = $this->Query('describe :_'.$Table);
+            if ($Desc === false) {
+               $_Exists[$Table] = FALSE;
+            } else {
+               if (is_string($Desc))
+                  die($Desc);
+               
+               $Cols = array();
+               while (($TD = mysql_fetch_assoc($Desc)) !== false) {
+                  $Cols[$TD['Field']] = $TD;
+               }
+               mysql_free_result($Desc);
+               $_Exists[$Table] = $Cols;
+            }
+         }
+      }
+      
+      if ($_Exists[$Table] == FALSE)
+         return FALSE;
+      
+      $Columns = (array)$Columns;
+      
       if (count($Columns) == 0)
          return true;
       
-      $Cols = array();
       $Missing = array();
-      while (($TD = mysql_fetch_assoc($Desc)) !== false) {
-         $Cols[] = $TD['Field'];
-      }
+      $Cols = array_keys($_Exists[$Table]);
       foreach ($Columns as $Column) {
          if (!in_array($Column, $Cols))
             $Missing[] = $Column;
       }
-      mysql_free_result($Desc);
       return count($Missing) == 0 ? true : $Missing;
    }
 
@@ -952,6 +1315,14 @@ class ExportModel {
       fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
       fwrite($fp, $TableHeader.self::NEWLINE);
       
+   }
+   
+   public static function FileExtension($ColumnName) {
+      return "right($ColumnName, instr(reverse($ColumnName), '.'))";
+   }
+   
+   public function UrlDecode($Value) {
+      return urldecode($Value);
    }
 }
 ?>
