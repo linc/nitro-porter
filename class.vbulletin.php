@@ -542,9 +542,10 @@ class Vbulletin extends ExportController {
       $Ex = $this->Ex;
       
       if ($Attachments) {
+         $Identity = ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) ? 'f.filedataid' : 'f.attachmentid';
          $Sql = "select 
             f.filedata, 
-            {$this->AttachSelect}
+            concat('attachments/', f.userid, '/', $Identity, '.attach') as Path
             from :_attachment f"; // :_filedata
          $Ex->ExportBlobs($Sql, 'filedata', 'Path');
       }
@@ -568,27 +569,43 @@ class Vbulletin extends ExportController {
    function ExportMedia() {
       $Ex = $this->Ex;
       
-      if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
-         $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
+      $Media_Map = array(
+         'attachmentid' => 'MediaID',
+         'filename' => 'Name',
+         'filesize' => 'Size',
+         'userid' => 'InsertUserID',
+         'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
+         'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath'))
+         );
          
-         $Media_Map = array(
-             'attachmentid' => 'MediaID',
-             'filename' => 'Name',
-             'filesize' => 'Size',
-             'width' => 'ImageWidth',
-             'height' => 'ImageHeight',
-             'userid' => 'InsertUserID'
-             );
+      // Add hash fields if they exist (from 2.x)
+      $AttachColumns = array('hash', 'filehash');
+      $Missing = $Ex->Exists('attachment', $AttachColumns);
+      $AttachColumnsString = '';
+      foreach ($AttachColumns as $ColumnName) {
+         if (in_array($ColumnName, $Missing)) {
+            $AttachColumnsString .= ", null as $ColumnName";
+         } else {
+            $AttachColumnsString .= ", a.$ColumnName";
+         }
+      }
+      
+      // Do the export
+      if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
+         // Exporting 4.x with 'filedata' table.
+         $Media_Map['width'] = 'ImageWidth';
+         $Media_Map['height'] = 'ImageHeight';
+         
+         // Build an index to join on.
+         $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
          
          $Ex->ExportTable('Media', "select 
             case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
             case when t.threadid is not null then t.threadid else a.contenttypeid end as ForeignID,
-            {$this->AttachSelect},
-            concat('image/', f.extension) as Type,
             FROM_UNIXTIME(a.dateline) as DateInserted,
             'local' as StorageMethod,
             a.*,
-            f.extension, f.filesize,
+            f.extension, f.filesize $AttachColumnsString,
             f.width, f.height
          from :_attachment a
          join :_contenttype ct
@@ -599,65 +616,38 @@ class Vbulletin extends ExportController {
             on t.firstpostid = a.contentid and a.contenttypeid = 1
          where a.contentid > 0", $Media_Map);
       } else {
-         $this->ExportMediaOld();
-      }
-   }
+         // Exporting 3.x without 'filedata' table.
+         // Do NOT grab every field to avoid 'filedata' blob in 3.x.
+         // Left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
+         // Lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
+         $Extension = ExportModel::FileExtension('a.filename');
+         $Ex->ExportTable('Media',
+            "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
+               'local' as StorageMethod, 
+               'discussion' as ForeignTable,
+               t.threadid as ForeignID,
+               FROM_UNIXTIME(a.dateline) as DateInserted,
+               '1' as ImageHeight,
+               '1' as ImageWidth
+            from :_thread t
+               left join :_attachment a ON a.postid = t.firstpostid
+            where a.attachmentid > 0
    
-   function ExportMediaOld() {   
-      $Ex = $this->Ex;
-      
-      $Media_Map = array(
-         'attachmentid' => 'MediaID',
-         'filename' => 'Name',
-         'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-         'filesize' => 'Size',
-         'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
-         'userid' => 'InsertUserID'
-      );
-      // Test if hash field exists from 2.x
-      $AttachColumns = array('hash', 'filehash', 'filesize');
-      $Missing = $Ex->Exists('attachment', $AttachColumns);
-      $AttachColumnsString = '';
-      foreach ($AttachColumns as $ColumnName) {
-         if (in_array($ColumnName, $Missing)) {
-            $AttachColumnsString .= ", null as $ColumnName";
-         } else {
-            $AttachColumnsString .= ", a.$ColumnName";
-         }
+            union all
+   
+            select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
+               'local' as StorageMethod, 
+               'comment' as ForeignTable,
+               a.postid as ForeignID,
+               FROM_UNIXTIME(a.dateline) as DateInserted,
+               '1' as ImageHeight,
+               '1' as ImageWidth
+            from :_post p
+               inner join :_thread t ON p.threadid = t.threadid
+               left join :_attachment a ON a.postid = p.postid
+            where p.postid <> t.firstpostid and  a.attachmentid > 0
+            ", $Media_Map);         
       }
-
-      // A) Do NOT grab every field to avoid potential 'filedata' blob in 3.x.
-      // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
-      // C) We lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
-
-      // First comment attachments => 'Discussion' foreign key
-      $Extension = ExportModel::FileExtension('a.filename');
-      $Ex->ExportTable('Media',
-         "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-            'local' as StorageMethod, 
-            'discussion' as ForeignTable,
-            t.threadid as ForeignID,
-            FROM_UNIXTIME(a.dateline) as DateInserted,
-            '1' as ImageHeight,
-            '1' as ImageWidth
-         from :_thread t
-            left join :_attachment a ON a.postid = t.firstpostid
-         where a.attachmentid > 0
-
-         union all
-
-         select a.attachmentid, a.filename, $Extension $AttachColumnsString, a.userid,
-            'local' as StorageMethod, 
-            'comment' as ForeignTable,
-            a.postid as ForeignID,
-            FROM_UNIXTIME(a.dateline) as DateInserted,
-            '1' as ImageHeight,
-            '1' as ImageWidth
-         from :_post p
-            inner join :_thread t ON p.threadid = t.threadid
-            left join :_attachment a ON a.postid = p.postid
-         where p.postid <> t.firstpostid and  a.attachmentid > 0
-         ", $Media_Map);
    }
    
    /**
@@ -669,11 +659,7 @@ class Vbulletin extends ExportController {
     *
     * In vBulletin 2.x, files were stored as an md5 hash in the root
     * attachment directory with a '.file' extension. Existing files were not 
-    * changed when upgrading to 3.x so older forums will need those too.
-    *
-    * This assumes the user is going to copy their entire attachments directory
-    * into Vanilla's /uploads folder and then use our custom plugin to convert
-    * file extensions.
+    * moved when upgrading to 3.x so older forums will need those too.
     *
     * @access public
     * @see ExportModel::_ExportTable
@@ -686,7 +672,7 @@ class Vbulletin extends ExportController {
    function BuildMediaPath($Value, $Field, $Row) {
       if (isset($Row['hash']) && $Row['hash'] != '') { 
          // Old school! (2.x)
-         return $Row['hash'].'.file';//.$Row['extension'];
+         $FilePath = $Row['hash'].'.file';//.$Row['extension'];
       }
       else { // Newer than 3.0
          // Build user directory path
@@ -695,8 +681,14 @@ class Vbulletin extends ExportController {
          for($i = 0; $i < $n; $i++) {
             $DirParts[] = $Row['userid']{$i};
          }
-         return implode('/', $DirParts).'/'.$Row['attachmentid'].'.attach';//.$Row['extension'];
+         
+         // 3.x uses attachmentid, 4.x uses filedataid
+         $Identity = (isset($Row['filedataid'])) ? $Row['filedataid'] : $Row['attachmentid'];
+         
+         $FilePath = implode('/', $DirParts).'/'.$Identity.'.attach';
       }
+      
+      return 'attachments/'.$FilePath;
    }
    
    /**

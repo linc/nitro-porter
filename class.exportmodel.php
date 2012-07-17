@@ -399,6 +399,23 @@ class ExportModel {
       }
       
       while ($Row = mysql_fetch_assoc($Result)) {
+         // vBulletin attachment hack (can't do this in MySQL)
+         if (strpos($Row[$PathColumn], '.attach') && strpos($Row[$PathColumn], 'attachments/') !== FALSE) {
+            $PathParts = explode('/', $Row[$PathColumn]); // 3 parts
+            
+            // Split up the userid into a path, digit by digit
+            $n = strlen($PathParts[1]);
+            $DirParts = array();
+            for($i = 0; $i < $n; $i++) {
+               $DirParts[] = $PathParts[1]{$i};
+            }
+            $PathParts[1] = implode('/', $DirParts);
+            
+            // Rebuild full path
+            $Row[$PathColumn] = implode('/', $PathParts);
+         }
+         
+         // Build path
          $Path = dirname(__FILE__).'/'.$Row[$PathColumn];
          if (!file_exists(dirname($Path))) {
             $R = mkdir(dirname($Path), 0777, TRUE); 
