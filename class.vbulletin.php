@@ -34,7 +34,7 @@
  */
 class Vbulletin extends ExportController {
    //public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', f.filedataid,'.', f.extension) as Path";
-   public $AttachSelect = "concat('/attachments/', left(f.filehash, 2), '/', f.filehash, '_', f.attachmentid,'.', f.extension) as Path";
+   //public $AttachSelect = "concat('/attachments/', left(f.filehash, 2), '/', f.filehash, '_', f.attachmentid,'.', f.extension) as Path";
    public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
    
    static $Permissions = array(
@@ -64,19 +64,30 @@ class Vbulletin extends ExportController {
    
    static $Permissions2 = array();
    
-   /** @var array Required tables => columns */
+   /** @var array Required tables => columns. Commented values are optional. */
    protected $SourceTables = array(
+      //'attachments'
+      //'contenttype'
+      //'customavatar'
+      'deletionlog' => array('type','primaryid'),
+      //'filedata'
+      'forum' => array('forumid','description','displayorder','title','description','displayorder'),
+      'phrase' => array('varname','text','product','fieldname','varname'),
+      //'pm'
+      //'pmgroup'
+      //'pmreceipt'
+      //'pmtext'
+      'post' => array('postid','threadid','pagetext','userid','dateline','visible'),
+      'subscribethread' => array('userid','threadid'),
+      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost','visible'),
+      //'threadread'
       'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
          'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid',
          'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid', 'avatarid'),
-      'usergroup'=> array('usergroupid','title','description'),
+      //'userban'
       'userfield' => array('userid'),
-      'phrase' => array('varname','text','product','fieldname','varname'),
-      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost','visible'),
-      'deletionlog' => array('type','primaryid'),
-      'post' => array('postid','threadid','pagetext','userid','dateline','visible'),
-      'forum' => array('forumid','description','displayorder','title','description','displayorder'),
-      'subscribethread' => array('userid','threadid')
+      'usergroup'=> array('usergroupid','title','description'),
+      //'visitormessage'
    );
    
    /**
