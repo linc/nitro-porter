@@ -108,9 +108,8 @@ class Vbulletin extends ExportController {
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
       $Now = time();
       
-      // Attachments
-      $this->_ExportMedia();
-      
+      // Testing attachments
+//      $this->_ExportMedia();
 //      $Ex->EndExport();
 //      return;
   
