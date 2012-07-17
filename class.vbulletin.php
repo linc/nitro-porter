@@ -33,7 +33,8 @@
  * @package VanillaPorter
  */
 class Vbulletin extends ExportController {
-   public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', f.filedataid,'.', f.extension) as Path";
+   //public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', f.filedataid,'.', f.extension) as Path";
+   public $AttachSelect = "concat('/attachments/', left(f.filehash, 2), '/', f.filehash, '_', f.attachmentid,'.', f.extension) as Path";
    public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
    
    static $Permissions = array(
@@ -105,10 +106,11 @@ class Vbulletin extends ExportController {
       
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
-      
       $Now = time();
       
-//      $this->_ExportMedia();
+      // Attachments
+      $this->_ExportMedia();
+      
 //      $Ex->EndExport();
 //      return;
   
@@ -226,7 +228,7 @@ class Vbulletin extends ExportController {
          'displayorder'=>array('Column'=>'Sort', 'Type'=>'int'),
          'parentid'=>'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select f.*, left(title,30) as Name
+      $Ex->ExportTable('Category', "select f.*, title as Name
          from :_forum f
          where 1 = 1 $ForumWhere", $Category_Map);
       
@@ -516,7 +518,7 @@ class Vbulletin extends ExportController {
          $Sql = "select 
             f.filedata, 
             {$this->AttachSelect}
-            from :_filedata f";
+            from :_attachment f"; // :_filedata
          $Ex->ExportBlobs($Sql, 'filedata', 'Path');
       }
       
@@ -613,7 +615,7 @@ class Vbulletin extends ExportController {
 
          union all
 
-         select a.attachmentid, a.filename, $Extension $AttachColumnsString a.userid,
+         select a.attachmentid, a.filename, $Extension $AttachColumnsString, a.userid,
             'local' as StorageMethod, 
             'comment' as ForeignTable,
             a.postid as ForeignID,
