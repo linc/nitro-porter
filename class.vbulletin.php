@@ -2,24 +2,23 @@
 /**
  * vBulletin exporter tool.
  * 
- * This will migrate all vBulletin data for 3.x and 4.x forums. It even 
- * accounts for attachments created during 2.x and moved to 3.x.
+ * This will migrate all vBulletin data for 3.x and 4.x forums. 
+ * It migrates all attachments from 2.x and later.
  *
  * Supports the FileUpload, ProfileExtender, and Signature plugins.
  * All vBulletin data appropriate for those plugins will be prepared
  * and transferred.
  *
- * MIGRATING FILES:
- * 
- * 1) Avatars should be moved to the filesystem prior to export if they
- * are stored in the database. Copy all the avatar_* files from
- * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
- * IMPORTANT: Make /userpics writable by the server BEFORE IMPORTING.
- * 
- * 2) Attachments should likewise be moved to the filesystem prior to
- * export. Copy all attachments from vBulletin's attachments folder to 
- * Vanilla's /upload folder without changing the internal folder structure.
- * IMPORTANT: Enable the FileUpload plugin BEFORE IMPORTING.
+ * To export only 1 category, add 'forumid=#' parameter to the URL.
+ * To extract avatars stored in database, add 'avatars=1' parameter to the URL.
+ * To extract attachments stored in db, add 'attachments=1' parameter to the URL.
+ * To stop the export after only extracting files, add 'noexport=1' param to the URL.
+ *
+ * TO MIGRATE FILES, BEFORE IMPORTING YOU MUST:
+ * 1) Copy entire 'customavatars' folder into Vanilla's /upload folder.
+ * 2) Copy entire 'attachments' folder into Vanilla's / upload folder.
+ * 3) Make BOTH folders writable by the server.
+ * 4) Enable the FileUpload plugin. (Media table must be present.)
  *
  * @copyright Vanilla Forums Inc. 2010
  * @author Matt Lincoln Russell lincoln@icrontic.com
@@ -32,41 +31,45 @@
  *
  * @package VanillaPorter
  */
-class Vbulletin extends ExportController {
-   //public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', f.filedataid,'.', f.extension) as Path";
-   //public $AttachSelect = "concat('/attachments/', left(f.filehash, 2), '/', f.filehash, '_', f.attachmentid,'.', f.extension) as Path";
+class Vbulletin extends ExportController {   
+   /* @var string SQL fragment to build new path to attachments. */
+   public $AttachSelect = '';
+   
+   /* @var string SQL fragment to build new path to user photo. */
    public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
    
+   /* @var array Default permissions to map. */
    static $Permissions = array(
    
-   'genericpermissions' => array(
-       1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
-       2 => 'Garden.Profiles.Edit',
-       1024 => 'Plugins.Signatures.Edit'
-       ),
-   
-   'forumpermissions' => array(
-       1 => 'Vanilla.Discussions.View',
-       16 => 'Vanilla.Discussions.Add',
-       64 => 'Vanilla.Comments.Add',
-       4096 => 'Plugins.Attachments.Download',
-       8192 => 'Plugins.Attachments.Upload'),
-   
-   'adminpermissions' => array(
-       1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
-       2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
-//       4 => 'Garden.Settings.Manage',),
-       ),
-   
-   'wolpermissions' => array(
-       16 => 'Plugins.WhosOnline.ViewHidden')
+      'genericpermissions' => array(
+          1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
+          2 => 'Garden.Profiles.Edit',
+          1024 => 'Plugins.Signatures.Edit'
+          ),
+      
+      'forumpermissions' => array(
+          1 => 'Vanilla.Discussions.View',
+          16 => 'Vanilla.Discussions.Add',
+          64 => 'Vanilla.Comments.Add',
+          4096 => 'Plugins.Attachments.Download',
+          8192 => 'Plugins.Attachments.Upload'
+          ),
+      
+      'adminpermissions' => array(
+          1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
+          2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
+//          4 => 'Garden.Settings.Manage',),
+          ),
+      
+//      'wolpermissions' => array(
+//          16 => 'Plugins.WhosOnline.ViewHidden')
    );
    
    static $Permissions2 = array();
    
    /** @var array Required tables => columns. Commented values are optional. */
    protected $SourceTables = array(
-      //'attachments'
+      //'attachment'
       //'contenttype'
       //'customavatar'
       'deletionlog' => array('type','primaryid'),
@@ -78,6 +81,7 @@ class Vbulletin extends ExportController {
       //'pmreceipt'
       //'pmtext'
       'post' => array('postid','threadid','pagetext','userid','dateline','visible'),
+      //'setting'
       'subscribethread' => array('userid','threadid'),
       'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost','visible'),
       //'threadread'
@@ -96,22 +100,26 @@ class Vbulletin extends ExportController {
     * @param ExportModel $Ex
     */
    protected function ForumExport($Ex) {
+      // Allow limited export of 1 category via ?forumid=ID
       $ForumID = $this->Param('forumid');
       if ($ForumID)
          $ForumWhere = ' and t.forumid '.(strpos($ForumID, ', ') === FALSE ? "= $ForumID" : "in ($ForumID)");
       else
          $ForumWhere = '';
       
+      // Determine the character set
       $CharacterSet = $Ex->GetCharacterSet('post');
       if ($CharacterSet)
          $Ex->CharacterSet = $CharacterSet;
       
+      // Optionally extract files from the database
       $this->ExportBlobs(
          $this->Param('attachments'),
          $this->Param('avatars'),
          $ForumWhere
       );
       
+      // End the process if that's all we wanted
       if ($this->Param('noexport'))
          return;
       
@@ -136,7 +144,8 @@ class Vbulletin extends ExportController {
          'ipaddress' => 'LastIPAddress'
       );
       
-      if ($UseFieAvatar = $this->GetConfig('usefileavatar'))
+      // Use file avatar or the result of our blob export?
+      if ($this->GetConfig('usefileavatar'))
          $User_Map['filephoto'] = 'Photo';
       else
          $User_Map['customphoto'] = 'Photo';
@@ -521,6 +530,14 @@ class Vbulletin extends ExportController {
       
    }
    
+   /**
+    * Converts database blobs into files.
+    *
+    * Creates /attachments and /customavatars folders in the same directory as the export file.
+    *
+    * @param bool $Attachments Whether to move attachments.
+    * @param bool $CustomAvatars Whether to move avatars.
+    */
    function ExportBlobs($Attachments = TRUE, $CustomAvatars = TRUE) {
       $Ex = $this->Ex;
       
@@ -541,9 +558,13 @@ class Vbulletin extends ExportController {
          $Sql = str_replace('u.userid', 'a.userid', $Sql);
          $Ex->ExportBlobs($Sql, 'filedata', 'customphoto', 80);
       }
-      
    }
    
+   /**
+    * Export the attachments as Media.
+    *
+    * In vBulletin 4.x, the filedata table was introduced.
+    */
    function ExportMedia() {
       $Ex = $this->Ex;
       
@@ -605,7 +626,7 @@ class Vbulletin extends ExportController {
          }
       }
 
-      // A) Do NOT grab every field to avoid potential 'filedata' blob.
+      // A) Do NOT grab every field to avoid potential 'filedata' blob in 3.x.
       // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
       // C) We lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
 
@@ -701,23 +722,13 @@ class Vbulletin extends ExportController {
    }
    
    /**
-    * Create Photo path from avatar data.
-    * 
-    * @access public
-    * @see ExportModel::_ExportTable
-    * 
-    * @param string $Value Ignored.
-    * @param string $Field Ignored.
-    * @param array $Row Contents of the current attachment record.
-    * @return string Path to avatar if one exists, or blank if none.
+    * Determine if this usergroup could likely sign in to forum based on its name.
+    *
+    * @param $Value
+    * @param $Field
+    * @param $Row
+    * @return bool
     */
-//   function BuildAvatar($Value, $Field, $Row) {
-//      if ($Row['avatarrevision'] > 0)
-//         return 'userpics/avatar' . $Row['userid'] . '_' . $Row['avatarrevision'] . '.gif';
-//      else
-//         return '';
-//   }
-   
    function SignInPermission($Value, $Field, $Row) {
       $Result = TRUE;
       if (stripos($Row['title'], 'unregistered') !== FALSE)
@@ -728,8 +739,14 @@ class Vbulletin extends ExportController {
       return $Result;
    }
    
+   /**
+    * Retrieve a value from the vBulletin setting table.
+    *
+    * @param string $Name Variable for which we want the value.
+    * @return mixed Value or FALSE if not found.
+    */
    function GetConfig($Name) {
-      $Sql = "select * from :_setting where varname = 'usefileavatar'";
+      $Sql = "select * from :_setting where varname = '$Name'";
       $Result = $this->Ex->Query($Sql, TRUE);
       if ($Row = mysql_fetch_assoc($Result)) {
          return $Row['value'];
@@ -737,6 +754,12 @@ class Vbulletin extends ExportController {
       return FALSE;
    }
    
+   /**
+    * @param $Value
+    * @param $Field
+    * @param $Row
+    * @return bool
+    */
    function FilterPermissions($Value, $Field, $Row) {
       if (!isset(self::$Permissions2[$Field]))
          return 0;
@@ -748,6 +771,10 @@ class Vbulletin extends ExportController {
       return $Value;
    }
    
+   /**
+    * @param $ColumnGroups
+    * @param $Map
+    */
    function AddPermissionColumns($ColumnGroups, &$Map) {
       $Permissions2 = array();
       
