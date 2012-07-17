@@ -501,7 +501,7 @@ class Vbulletin extends ExportController {
       
       // Media
       if ($Ex->Exists('attachment')) {
-         $this->_ExportMedia();
+         $this->ExportMedia();
       }
       
       // End
@@ -533,7 +533,7 @@ class Vbulletin extends ExportController {
       
    }
    
-   function _ExportMedia() {
+   function ExportMedia() {
       $Ex = $this->Ex;
       
       if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
@@ -567,11 +567,11 @@ class Vbulletin extends ExportController {
             on t.firstpostid = a.contentid and a.contenttypeid = 1
          where a.contentid > 0", $Media_Map);
       } else {
-         $this->_ExportMediaOld();
+         $this->ExportMediaOld();
       }
    }
    
-   function _ExportMediaOld() {   
+   function ExportMediaOld() {   
       $Ex = $this->Ex;
       
       $Media_Map = array(
