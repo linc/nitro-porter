@@ -128,7 +128,7 @@ class Vbulletin extends ExportController {
       $Now = time();
       
       // Testing attachments
-//      $this->_ExportMedia();
+//      $this->ExportMedia();
 //      $Ex->EndExport();
 //      return;
   
@@ -234,7 +234,7 @@ class Vbulletin extends ExportController {
          }
       }
       # Get signatures
-      $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Sig', signatureparsed from :_sigparsed");
+      $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Plugin.Signatures.Sig', signatureparsed from :_sigparsed");
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select * from VbulletinUserMeta');
       $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
