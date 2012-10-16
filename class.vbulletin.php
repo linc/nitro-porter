@@ -546,7 +546,7 @@ class Vbulletin extends ExportController {
          $Sql = "select 
             f.filedata, 
             concat('attachments/', f.userid, '/', $Identity, '.attach') as Path
-            from :_attachment f"; // :_filedata
+            from :_filedata f"; // :_filedata OR :_attachment depending on version; needs detection & fix.
          $Ex->ExportBlobs($Sql, 'filedata', 'Path');
       }
       
