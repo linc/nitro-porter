@@ -3064,7 +3064,7 @@ class Vbulletin extends ExportController {
          
          $Ex->ExportTable('Media', "select 
             case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
-            case when t.threadid is not null then t.threadid else a.contenttypeid end as ForeignID,
+            case when t.threadid is not null then t.threadid else a.contentid end as ForeignID,
             FROM_UNIXTIME(a.dateline) as DateInserted,
             'local' as StorageMethod,
             a.*,
