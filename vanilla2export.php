@@ -13,7 +13,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.8');
+define('APPLICATION_VERSION', '1.6.9');
 
 if(defined('DEBUG'))
    error_reporting(E_ALL);
@@ -3007,9 +3007,16 @@ class Vbulletin extends ExportController {
       if ($Attachments) {
          $Identity = ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) ? 'f.filedataid' : 'f.attachmentid';
          $Sql = "select 
-            f.filedata, 
-            concat('attachments/', f.userid, '/', $Identity, '.attach') as Path
-            from :_filedata f"; // :_filedata OR :_attachment depending on version; needs detection & fix.
+               f.filedata, 
+               concat('attachments/', f.userid, '/', $Identity, '.attach') as Path
+               from ";
+         
+         // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
+         if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE)
+            $Sql .= ":_filedata f";
+         else
+            $Sql .= ":_attachment f"; 
+         
          $Ex->ExportBlobs($Sql, 'filedata', 'Path');
       }
       
