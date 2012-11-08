@@ -7,7 +7,6 @@
 
 /** Generic controller implemented by forum-specific ones */
 abstract class ExportController {
-
    /** @var array Database connection info */
    protected $DbInfo = array();
 
@@ -50,7 +49,7 @@ abstract class ExportController {
          $Ex->DestDb = $this->Param('destdb', NULL);
          $Ex->TestMode = $this->Param('test', FALSE);
 
-         $Ex->UseStreaming = $this->UseStreaming;
+         $Ex->UseStreaming = FALSE; //$this->UseStreaming;
          // Test src tables' existence structure
          $Msg = $Ex->VerifySource($this->SourceTables);
          if($Msg === true) {
@@ -58,13 +57,18 @@ abstract class ExportController {
             $Ex->UseCompression(TRUE);
             $Ex->FilenamePrefix = $this->DbInfo['dbname'];
             set_time_limit(60*60);
+            
+//            ob_start();
             $this->ForumExport($Ex);
+//            $Errors = ob_get_clean();
+            
+            $Msg = $Ex->Comments;
 
             // Write the results.
             if($Ex->UseStreaming)
                exit;
             else
-               ViewExportResult($Ex->Comments, 'Info', $Ex->Path);
+               ViewExportResult($Msg, 'Info', $Ex->Path);
          }
          else
             ViewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo)); // Back to form with error
@@ -109,7 +113,7 @@ abstract class ExportController {
          }
          else {
             mysql_close($C);
-            $Result = 'Could not find database &ldquo;'.$this->DbInfo['dbname'].'&rdquo;.';
+            $Result = "Could not find database '{$this->DbInfo['dbname']}'.";
          }
       }
       else

@@ -11,9 +11,9 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.6');
+define('APPLICATION_VERSION', '1.7');
 
-if(defined('DEBUG'))
+if(TRUE || defined('DEBUG'))
    error_reporting(E_ALL);
 else
    error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
@@ -36,30 +36,39 @@ $Supported = array(
 );
 
 // Support Files
-include('class.exportmodel.php');
-include('views.php');
-include('class.exportcontroller.php');
+include_once 'class.exportmodel.php';
+include_once 'views.php';
+include_once 'class.exportcontroller.php';
+include_once 'functions.php';
 
-include('class.vanilla1.php');
-include('class.vanilla2.php');
-include('class.vbulletin.php');
-include('class.phpbb2.php');
-include('class.phpbb3.php');
-include('class.bbpress.php');
-include('class.simplepress.php');
-include('class.smf.php');
-include('class.punbb.php');
+include_once 'class.vanilla1.php';
+include_once 'class.vanilla2.php';
+include_once 'class.vbulletin.php';
+include_once 'class.phpbb2.php';
+include_once 'class.phpbb3.php';
+include_once 'class.bbpress.php';
+include_once 'class.simplepress.php';
+include_once 'class.smf.php';
+include_once 'class.punbb.php';
+include_once 'class.kunena.php';
+
+// Include any misc porters that haven't been included yet.
+$Paths = glob(dirname(__FILE__).'/class.*.php');
+foreach ($Paths as $Path) {
+   include_once $Path;
+}
+
+include_once 'functions.commandline.php';
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '')
    date_default_timezone_set('America/Montreal');
 
-
 if (PHP_SAPI == 'cli')
    define('CONSOLE', TRUE);
 
 if (defined('CONSOLE')) {
-   ParseCommandLine($argv);
+   ParseCommandLine();
 }
 
 if (isset($_GET['type'])) {
@@ -90,6 +99,7 @@ if (defined('CONSOLE'))
 
 function ErrorHandler() {
    echo "Error";
+   die();
 }
 
 set_error_handler("ErrorHandler");
@@ -108,52 +118,6 @@ function FormatMemorySize($Bytes, $Precision = 1) {
 
    $Result = round($Bytes, $Precision).$Units[$Pow];
    return $Result;
-}
-
-function ParseCommandLine($Argv) {
-   global $Supported;
-
-   $Args = array(
-       'type' => 'The type of forum being exported ('.implode(', ', array_keys($Supported)).').',
-       'prefix' => 'The database table prefix.',
-       'dbhost' => 'The database host.',
-       'dbname' => 'The database name.',
-       'dbuser' => 'The database user.',
-       'dbpass' => 'The database password.',
-       'savefile' => 'Whether or not to save the file.');
-
-   $Script = $Argv[0];
-   unset($Argv[0]);
-
-   if (count($Argv) == 0) {
-      echo "usage: php $Script parm1=value ...\n";
-      foreach ($Args as $Name => $Help) {
-         echo " $Name: $Help\n";
-      }
-
-      die();
-   }
-
-   $Errors = 0;
-   foreach ($Argv as $Arg) {
-      $Parts = explode('=', $Arg, 2);
-      if (count($Parts) < 2) {
-         echo "Malformed argument $Arg.\n";
-         $Errors++;
-         continue;
-      }
-
-      list($Name, $Value) = $Parts;
-
-      $_POST[$Name] = $Value;
-      unset($Args[$Name]);
-   }
-   if (count($Args) > 0) {
-      $Errors++;
-      echo "Missing arguments: ".implode(', ', array_keys($Args));
-   }
-   if ($Errors)
-      die("\n$Errors error(s)\n");
 }
 
 /** 

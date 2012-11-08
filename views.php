@@ -65,18 +65,21 @@ function ViewNoPermission($msg) {
  * Form: Database connection info
  */
 function ViewForm($Data) {
-   if (defined('CONSOLE')) {
-      echo $msg;
-      return;
-   }
-
-
    $forums = GetValue('Supported', $Data, array());
    $msg = GetValue('Msg', $Data, '');
    $Info = GetValue('Info', $Data, '');
    $CanWrite = GetValue('CanWrite', $Data, NULL);
+   
    if($CanWrite === NULL)
       $CanWrite = TestWrite();
+   if (!$CanWrite) {
+      $msg = 'The porter does not have write permission to write to this folder. You need to give the porter permission to create files so that it can generate the export file.'.$msg;
+   }
+   
+   if (defined('CONSOLE')) {
+      echo $msg."\n";
+      return;
+   }
 
    PageHeader(); ?>
    <div class="Info">
@@ -106,32 +109,24 @@ function ViewForm($Data) {
             </li>
             <li>
                <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span></label>
-               <input class="InputBox" type="text" name="prefix" value="<?php echo urlencode(GetValue('prefix')) != '' ? urlencode(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
+               <input class="InputBox" type="text" name="prefix" value="<?php echo htmlspecialchars(GetValue('prefix')) != '' ? htmlspecialchars(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>" id="ForumPrefix" />
             </li>
             <li>
                <label>Database Host <span>Usually "localhost".</span></label>
-               <input class="InputBox" type="text" name="dbhost" value="<?php echo urlencode(GetValue('dbhost', '', 'localhost')) ?>" />
+               <input class="InputBox" type="text" name="dbhost" value="<?php echo htmlspecialchars(GetValue('dbhost', '', 'localhost')) ?>" />
             </li>
             <li>
                <label>Database Name</label>
-               <input class="InputBox" type="text" name="dbname" value="<?php echo urlencode(GetValue('dbname')) ?>" />
+               <input class="InputBox" type="text" name="dbname" value="<?php echo htmlspecialchars(GetValue('dbname')) ?>" />
             </li>
             <li>
                <label>Database Username</label>
-               <input class="InputBox" type="text" name="dbuser" value="<?php echo urlencode(GetValue('dbuser')) ?>" />
+               <input class="InputBox" type="text" name="dbuser" value="<?php echo htmlspecialchars(GetValue('dbuser')) ?>" />
             </li>
             <li>
                <label>Database Password</label>
                <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>" />
             </li>
-            <?php if($CanWrite): ?>
-            <li>
-               <label>
-                  <input class="CheckBox" type="checkbox" id="savefile" name="savefile" value="savefile" <?php if(GetValue('savefile')) echo 'checked="checked"'; ?> />
-                  Save the export file to the server
-               </label>
-            </li>
-            <?php endif; ?>
          </ul>
          <div class="Button">
             <input class="Button" type="submit" value="Begin Export" />
@@ -159,6 +154,13 @@ function ViewForm($Data) {
  * Message: Result of export
  */
 function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
+   if (defined('CONSOLE')) {
+      foreach($Msgs as $Msg) {
+         
+      }
+      return;
+   }
+   
    PageHeader();
    if($Msgs) {
       // TODO: Style this a bit better.
