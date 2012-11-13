@@ -13,7 +13,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.6.6');
+define('APPLICATION_VERSION', '1.6.9');
 
 if(defined('DEBUG'))
    error_reporting(E_ALL);
@@ -58,6 +58,7 @@ class ExportModel {
    const NULL = '\N';
    const QUOTE = '"';
 
+   public $CaptureOnly = FALSE;
 
    /** @var array Any comments that have been written during the export. */
    public $Comments = array();
@@ -67,11 +68,18 @@ class ExportModel {
 
    /** @var string The charcter set to set as the connection anytime the database connects. */
    public $CharacterSet = 'utf8';
+   
+   /**
+    * @var int The chunk size when exporting large tables.
+    */
+   public $ChunkSize = 100000;
 
    /** @var array **/
    public $CurrentRow = NULL;
 
    public $Destination = 'file';
+   
+   public $DestPrefix = 'GDN_z';
 
    /** @var object File pointer */
    protected $_File = NULL;
@@ -80,8 +88,6 @@ class ExportModel {
    public $FilenamePrefix = '';
 
    public $_Host;
-
-   protected $_Limit = 20000;
 
    /** @var object PDO instance */
    protected $_PDO = NULL;
@@ -98,23 +104,37 @@ class ExportModel {
    public $Prefix = '';
 
    public $Queries = array();
+   
+   protected $_QueryStructures = array();
 
    /** @var string The path to the source of the export in the case where a file is being converted. */
    public $SourcePath = '';
+   
+   /**
+    * @var string 
+    */
+   public $SourcePrefix = '';
+   
+   public $ScriptCreateTable = TRUE;
 
    /**
     * @var array Strucutes that define the format of the export tables.
     */
    protected $_Structures = array(
       'Activity' => array(
+            'ActivityType' => 'varchar(20)',
             'ActivityUserID' => 'int',
             'RegardingUserID' => 'int',
+            'NotifyUserID' => 'int',
+            'HeadlineFormat' => 'varchar(255)',
             'Story' => 'text',
             'InsertUserID' => 'int',
-            'DateInserted' => 'datetime'),
+            'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)'),
       'Category' => array(
             'CategoryID' => 'int',
             'Name' => 'varchar(30)',
+            'UrlCode' => 'varchar(255)',
             'Description' => 'varchar(250)',
             'ParentCategoryID' => 'int',
             'DateInserted' => 'datetime',
@@ -137,6 +157,7 @@ class ExportModel {
             'Score' => 'float'),
       'Conversation' => array(
             'ConversationID' => 'int',
+            'Subject' => 'varchar(255)',
             'FirstMessageID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
@@ -148,7 +169,8 @@ class ExportModel {
             'Body' => 'text',
             'Format' => 'varchar(20)',
             'InsertUserID' => 'int',
-            'DateInserted' => 'datetime'),
+            'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)'),
       'Discussion' => array(
             'DiscussionID' => 'int',
             'Name' => 'varchar(100)',
@@ -178,7 +200,9 @@ class ExportModel {
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime',
             'ForeignID' => 'int',
-            'ForeignTable' => 'varchar(24)'
+            'ForeignTable' => 'varchar(24)',
+            'ImageWidth' => 'int',
+            'ImageHeight' => 'int'
           ),
       'Permission' => array(
             'RoleID' => 'int',
@@ -207,8 +231,11 @@ class ExportModel {
             'UserID' => 'int',
             'Name' => 'varchar(20)',
             'Email' => 'varchar(200)',
-            'Password' => 'varbinary(34)',
+            'Password' => 'varbinary(100)',
+            'HashMethod' => 'varchar(10)',
             //'Gender' => array('m', 'f'),
+            'Title' => 'varchar(100)',
+            'Location' => 'varchar(100)',
             'Score' => 'float',
             'InviteUserID' => 'int',
             'HourOffset' => 'int',
@@ -221,6 +248,7 @@ class ExportModel {
             'DateLastActive' => 'datetime',
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)',
+            'LastIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
             'Banned' => 'tinyint',
             'ShowEmail' => 'tinyint'),
@@ -233,6 +261,7 @@ class ExportModel {
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
+            'Deleted' => 'tinyint(1)',
             'LastMessageID' => 'int'),
       'UserDiscussion' => array(
             'UserID' => 'int',
@@ -250,6 +279,8 @@ class ExportModel {
    );
 
    public $TestMode = FALSE;
+   
+   public $TestLimit = 10;
 
    /**
     * @var bool Whether or not to use compression when creating the file.
@@ -281,13 +312,19 @@ class ExportModel {
 
       $fp = $this->_OpenFile();
 
-      fwrite($fp, 'Vanilla Export: '.$this->Version());
+      $Comment = 'Vanilla Export: '.$this->Version();
+      
       if($Source)
-         fwrite($fp, self::DELIM.' Source: '.$Source);
+         $Comment .= self::DELIM.' Source: '.$Source;
       foreach ($Header as $Key => $Value) {
-         fwrite($fp, self::DELIM." $Key: $Value");
+         $Comment .= self::DELIM." $Key: $Value";
       }
-      fwrite($fp, self::NEWLINE.self::NEWLINE);
+      
+      if ($this->CaptureOnly)
+         $this->Comment($Comment);
+      else
+         fwrite($fp, $Comment.self::NEWLINE.self::NEWLINE);
+     
       $this->Comment('Export Started: '.date('Y-m-d H:i:s'));
 
       return $fp;
@@ -299,7 +336,14 @@ class ExportModel {
     * @param bool $Echo Whether or not to echo the message in addition to writing it to the file.
     */
    public function Comment($Message, $Echo = TRUE) {
-      fwrite($this->_File, self::COMMENT.' '.str_replace(self::NEWLINE, self::NEWLINE.self::COMMENT.' ', $Message).self::NEWLINE);
+      if ($this->Destination == 'file')
+         $Char = self::COMMENT;
+      else
+         $Char = '--';
+         
+      $Comment = $Char.' '.str_replace(self::NEWLINE, self::NEWLINE.self::COMMENT.' ', $Message).self::NEWLINE;
+      
+      fwrite($this->_File, $Comment);
       if($Echo)
          $this->Comments[] = $Message;
    }
@@ -314,6 +358,14 @@ class ExportModel {
       $this->Comment('Export Completed: '.date('Y-m-d H:i:s'));
       $this->Comment(sprintf('Elapsed Time: %s', self::FormatElapsed($this->TotalTime)));
 
+      if ($this->TestMode || $this->Controller->Param('dumpsql') || $this->CaptureOnly) {
+         $Queries = implode("\n\n", $this->Queries);
+         if ($this->Destination == 'database')
+            fwrite($this->_File, $Queries);
+         else
+            $this->Comment($Queries, TRUE);
+      }
+      
       if($this->UseStreaming) {
          //ob_flush();
       } else {
@@ -323,10 +375,7 @@ class ExportModel {
             fclose($this->_File);
       }
 
-      if ($this->TestMode || $this->Controller->Param('dumpsql')) {
-         $Queries = '<pre>'.implode("\n\n", $this->Queries).'</pre>';
-         $this->Comment($Queries, TRUE);
-      }
+      
    }
 
    /**
@@ -352,8 +401,86 @@ class ExportModel {
       $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
       fwrite($this->_File, self::NEWLINE);
    }
+   
+   protected function _ExportTableImport($TableName, $Query, $Mappings = array()) {
+      // Backup the settings.
+      $DestinationBak = $this->Destination;
+      $this->Destination = 'file';
+      
+      $_FileBak = $this->_File;
+      $Path = dirname(__FILE__).'/'.$TableName.'.csv';
+      $this->Comment("Exporting To: $Path");
+      $fp = fopen($Path, 'wb');
+      $this->_File = $fp;
+      
+      // First export the file to a file.
+      $this->_ExportTable($TableName, $Query, $Mappings, array('NoEndline' => TRUE));
+      
+      // Now define a table to import into.
+      $this->_CreateExportTable($TableName, $Query, $Mappings);
+      
+      // Now load the data.
+      $Sql = "load data local infile '$Path' into table {$this->DestDb}.{$this->DestPrefix}$TableName
+         character set utf8
+         columns terminated by ','
+         optionally enclosed by '\"'
+         escaped by '\\\\'
+         lines terminated by '\\n'
+         ignore 2 lines";
+      $this->Query($Sql);
+      
+      // Restore the settings.
+      $this->Destination = $DestinationBak;
+      $this->_File = $_FileBak;
+   }
+   
+   public function ExportBlobs($Sql, $BlobColumn, $PathColumn, $Thumbnail = FALSE) {
+      $Result = $this->Query($Sql);
+      if (!$Result) {
+         die("Sql error: $Sql");
+      }
+      
+      while ($Row = mysql_fetch_assoc($Result)) {
+         // vBulletin attachment hack (can't do this in MySQL)
+         if (strpos($Row[$PathColumn], '.attach') && strpos($Row[$PathColumn], 'attachments/') !== FALSE) {
+            $PathParts = explode('/', $Row[$PathColumn]); // 3 parts
+            
+            // Split up the userid into a path, digit by digit
+            $n = strlen($PathParts[1]);
+            $DirParts = array();
+            for($i = 0; $i < $n; $i++) {
+               $DirParts[] = $PathParts[1]{$i};
+            }
+            $PathParts[1] = implode('/', $DirParts);
+            
+            // Rebuild full path
+            $Row[$PathColumn] = implode('/', $PathParts);
+         }
+         
+         // Build path
+         $Path = dirname(__FILE__).'/'.$Row[$PathColumn];
+         if (!file_exists(dirname($Path))) {
+            $R = mkdir(dirname($Path), 0777, TRUE); 
+            if (!$R)
+               die("Could not create ".dirname($Path));
+         }
+         
+         $PicPath = str_replace('/avat', '/pavat', $Path);
+         $fp = fopen($PicPath, 'wb');
+         fwrite($fp, $Row[$BlobColumn]);
+         fclose($fp);
+         
+         if ($Thumbnail) {
+            if ($Thumbnail === TRUE)
+               $Thumbnail = 50;
+            
+            $ThumbPath = str_replace('/avat', '/navat', $Path);
+            $this->GenerateThumbnail($PicPath, $ThumbPath, $Thumbnail, $Thumbnail);
+         }
+      }
+   }
 
-   protected function _ExportTable($TableName, $Query, $Mappings = array()) {
+   protected function _ExportTable($TableName, $Query, $Mappings = array(), $Options = array()) {
       $fp = $this->_File;
 
       // Make sure the table is valid for export.
@@ -368,12 +495,21 @@ class ExportModel {
          $this->_ExportTableDB($TableName, $Query, $Mappings);
          return;
       }
+      
+      // Check for a chunked query.
+      $Query = str_replace('{from}', -2000000000, $Query);
+      $Query = str_replace('{to}', 2000000000, $Query);
+      
+      if (strpos($Query, '{from}') !== FALSE) {
+         $this->_ExportTableDBChunked($TableName, $Query, $Mappings);
+         return;
+      }
 
       // If we are in test mode then limit the query.
-      if ($this->TestMode) {
+      if ($this->TestMode && $this->TestLimit) {
          $Query = rtrim($Query, ';');
          if (stripos($Query, 'select') !== FALSE && stripos($Query, 'limit') === FALSE) {
-            $Query .= ' limit 10';
+            $Query .= " limit {$this->TestLimit}";
          }
       }
 
@@ -395,7 +531,7 @@ class ExportModel {
          }
       }
 
-      $Data = $this->Query($Query, $IDName, $LastID, $this->_Limit);
+      $Data = $this->Query($Query);
       $Mb = function_exists('mb_detect_encoding');
 
       // Loop through the data and write it to the file.
@@ -432,7 +568,7 @@ class ExportModel {
                if (array_key_exists($Field, $Row)) {
                   // The column has an exact match in the export.
                   $Value = $Row[$Field];
-               } elseif (array_key_exists($Field, $Mappings)) {
+               } elseif (array_key_exists($Field, $Mappings) && isset($Row[$Mappings[$Field]])) {
                   // The column is mapped.
                   $Value = $Row[$Mappings[$Field]];
                } else {
@@ -485,18 +621,20 @@ class ExportModel {
          mysql_free_result($Data);
       unset($Data);
 
-      // Write an empty line to signify the end of the table.
-      fwrite($fp, self::NEWLINE);
+      if (!isset($Options['NoEndline'])) {
+         // Write an empty line to signify the end of the table.
+         fwrite($fp, self::NEWLINE);
+      }
+      
       mysql_close();
 
       return $RowCount;
    }
-
-   protected function _ExportTableDB($TableName, $Query, $Mappings = array()) {
-      $DestDb = '';
-      if (isset($this->DestDb))
-         $DestDb = $this->DestDb.'.';
-
+   
+   protected function _CreateExportTable($TableName, $Query, $Mappings = array()) {
+      if (!$this->ScriptCreateTable)
+         return;
+      
       // Limit the query to grab any additional columns.
       $QueryStruct = rtrim($Query, ';').' limit 1';
       $Structure = $this->_Structures[$TableName];
@@ -519,39 +657,114 @@ class ExportModel {
          break;
       }
       mysql_close($Data);
+      
+      // Build the create table statement.
+      $ColumnDefs = array();
+      foreach ($ExportStructure as $ColumnName => $Type) {
+         $ColumnDefs[] = "`$ColumnName` $Type";
+      }
+      $DestDb = '';
+      if (isset($this->DestDb))
+         $DestDb = $this->DestDb.'.';
+      
+      $this->Query("drop table if exists {$DestDb}{$this->DestPrefix}$TableName");
+      $CreateSql = "create table {$DestDb}{$this->DestPrefix}$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
+      
+      $this->Query($CreateSql);
+   }
+
+   protected function _ExportTableDB($TableName, $Query, $Mappings = array()) {
+      if ($this->HasFilter($Mappings) || strpos($Query, 'union all') !== FALSE) {
+         $this->_ExportTableImport($TableName, $Query, $Mappings);
+         return;
+      }
+      
+      // Check for a chunked query.
+      if (strpos($Query, '{from}') !== FALSE) {
+         $this->_ExportTableDBChunked($TableName, $Query, $Mappings);
+         return;
+      }
+      
+      $DestDb = '';
+      if (isset($this->DestDb))
+         $DestDb = $this->DestDb.'.';
+
+      // Limit the query to grab any additional columns.
+      $QueryStruct = $this->GetQueryStructure($Query, $TableName);
+      $Structure = $this->_Structures[$TableName];
+      
+      $ExportStructure = $this->GetExportStructure($QueryStruct, $Structure, $Mappings);
+
+      $Mappings = array_flip($Mappings);
 
       // Build the create table statement.
       $ColumnDefs = array();
       foreach ($ExportStructure as $ColumnName => $Type) {
          $ColumnDefs[] = "`$ColumnName` $Type";
       }
-      $this->Query("drop table if exists {$DestDb}GDN_z$TableName");
-      $CreateSql = "create table {$DestDb}GDN_z$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
-      $this->Query($CreateSql);
+      if ($this->ScriptCreateTable) {
+         $this->Query("drop table if exists {$DestDb}{$this->DestPrefix}$TableName");
+         $CreateSql = "create table {$DestDb}{$this->DestPrefix}$TableName (\n  ".implode(",\n  ", $ColumnDefs)."\n) engine=innodb";
+         $this->Query($CreateSql);
+      }
 
       $Query = rtrim($Query, ';');
       // Build the insert statement.
-      if ($this->TestMode) {
-         $Query .= ' limit 10';
+      if ($this->TestMode && $this->TestLimit) {
+         $Query .= " limit {$this->TestLimit}";
       }
+      
+//      echo $Query."\n\n\n";
+//      die();
+//      print_r(ParseSelect($Query));
 
       $InsertColumns = array();
       $SelectColumns = array();
-      foreach ($ExportStructure as $ColumnName => $Type) {
-         $InsertColumns[] = "`$ColumnName`";
-         
+      foreach ($ExportStructure as $ColumnName => $Type) {         
+         $InsertColumns[] = '`'.$ColumnName.'`';
          if (isset($Mappings[$ColumnName])) {
-            $SelectColumns[] = "`{$Mappings[$ColumnName]}`";
+            $SelectColumns[$ColumnName] = $Mappings[$ColumnName];
          } else {
-            $SelectColumns[] = "`{$ColumnName}`";
+            $SelectColumns[$ColumnName] = $ColumnName;
          }
       }
+//      print_r($SelectColumns);
+      
+      $Query = ReplaceSelect($Query, $SelectColumns);
 
-      $InsertSql = "insert {$DestDb}GDN_z$TableName"
+      $InsertSql = "replace {$DestDb}{$this->DestPrefix}$TableName"
          ." (\n  ".implode(",\n   ", $InsertColumns)."\n)\n"
-         ."select \n  ".implode(",\n  ", $SelectColumns)."\n"
-         ."from (\n  ".str_replace("\n", "\n  ", $Query)."\n) q";
+         .$Query;
+      
+//      die($InsertSql);
       $this->Query($InsertSql);
+   }
+   
+   protected function _ExportTableDBChunked($TableName, $Query, $Mappings = array()) {
+      // Grab the table name from the first from.
+      if (preg_match('`\sfrom\s([^\s]+)`', $Query, $Matches)) {
+         $From = $Matches[1];
+      } else {
+         trigger_error("Could not figure out table for $TableName chunking.", E_USER_WARNING);
+         return;
+      }
+      
+      $Sql = "show table status like '{$From}';";
+      $R = $this->Query($Sql, TRUE);
+      $Row = mysql_fetch_assoc($R);
+      mysql_free_result($R);
+      $Max = $Row['Auto_increment'];
+      
+      if (!$Max)
+         $Max = 2000000;
+      
+      for ($i = 0; $i < $Max; $i += $this->ChunkSize) {
+         $From = $i;
+         $To = $From + $this->ChunkSize - 1;
+         
+         $Sql = str_replace(array('{from}', '{to}'), array($From, $To), $Query);
+         $this->_ExportTableDB($TableName, $Sql, $Mappings);
+      }
    }
    
    public function FixPermissionColumns($Columns) {
@@ -608,6 +821,61 @@ class ExportModel {
          $Value = self::NULL;
       }
       return $Value;
+   }
+   
+   public function GenerateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
+      list($WidthSource, $HeightSource, $Type) = getimagesize($Path);
+      
+      $XCoord = 0;
+      $YCoord = 0;
+      $HeightDiff = $HeightSource - $Height;
+      $WidthDiff = $WidthSource - $Width;
+      if ($WidthDiff > $HeightDiff) {
+         // Crop the original width down
+         $NewWidthSource = round(($Width * $HeightSource) / $Height);
+
+         // And set the original x position to the cropped start point.
+         $XCoord = round(($WidthSource - $NewWidthSource) / 2);
+         $WidthSource = $NewWidthSource;
+      } else {
+         // Crop the original height down
+         $NewHeightSource = round(($Height * $WidthSource) / $Width);
+
+         // And set the original y position to the cropped start point.
+         $YCoord = round(($HeightSource - $NewHeightSource) / 2);
+         $HeightSource = $NewHeightSource;
+      }
+      
+      switch ($Type) {
+            case 1:
+               $SourceImage = imagecreatefromgif($Path);
+            break;
+         case 2:
+               $SourceImage = imagecreatefromjpeg($Path);
+            break;
+         case 3:
+            $SourceImage = imagecreatefrompng($Path);
+            imagealphablending($SourceImage, TRUE);
+            break;
+      }
+      
+      $TargetImage = imagecreatetruecolor($Width, $Height);
+      imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource, $HeightSource);
+      imagedestroy($SourceImage);
+      
+      switch ($Type) {
+         case 1:
+            imagegif($TargetImage, $ThumbPath);
+            break;
+         case 2:
+            imagejpeg($TargetImage, $ThumbPath);
+            break;
+         case 3:
+            imagepng($TargetImage, $ThumbPath);
+            break;
+      }
+      imagedestroy($TargetImage);
+//      die('</pre>foo');
    }
 
    public function GetCharacterSet($Table) {
@@ -743,6 +1011,25 @@ class ExportModel {
 
       return $ExportStructure;
    }
+   
+   public function GetQueryStructure($Query, $Key = FALSE) {
+      $QueryStruct = rtrim($Query, ';').' limit 1';
+      if (!$Key)
+         $Key = md5($QueryStruct);
+      if (isset($this->_QueryStructures[$Key]))
+         return $this->_QueryStructures[$Key];
+      
+      $R = $this->Query($QueryStruct, TRUE);
+      $i = 0;
+      $Result = array();
+      while ($i < mysql_num_fields($R)) {
+         $Meta = mysql_fetch_field($R, $i);
+         $Result[$Meta->name] = $Meta->table;
+         $i++;
+      }
+      $this->_QueryStructures[$Key] = $Result;
+      return $Result;
+   }
 
    protected function _GetTableHeader($Structure, $GlobalStructure) {
       $TableHeader = '';
@@ -759,11 +1046,46 @@ class ExportModel {
       return $TableHeader;
    }
    
+   public function HasFilter(&$Mappings) {
+      foreach ($Mappings as $Column => $Info) {
+         if (is_array($Info) && isset($Info['Filter'])) {
+            return TRUE;
+         }
+      }
+      return FALSE;
+   }
+   
    /**
     * Decode the HTML out of a value.
     */
    public function HTMLDecoder($Value) {
-      return html_entity_decode($Value, ENT_COMPAT, 'UTF-8');
+      return html_entity_decode($Value, ENT_QUOTES, 'UTF-8');
+   }
+   
+   public function HTMLDecoderDb($TableName, $ColumnName, $PK) {
+      $Common = array('&amp;' => '&', '&lt;' => '<', '&gt;' => '>', '&apos;' => "'", '&quot;' => '"', '&#39;' => "'");
+      foreach ($Common as $From => $To) {
+         $FromQ = mysql_escape_string($From);
+         $ToQ = mysql_escape_string($To);
+         $Sql = "update :_{$TableName} set $ColumnName = replace($ColumnName, '$FromQ', '$ToQ') where $ColumnName like '%$FromQ%'";
+         
+         $this->Query($Sql);
+      }
+      
+      // Now decode the remaining rows.
+      $Sql = "select * from :_$TableName where $ColumnName like '%&%;%'";
+      $Result = $this->Query($Sql, TRUE);
+      while ($Row = mysql_fetch_assoc($Result)) {
+         $From = $Row[$ColumnName];
+         $To = $this->HTMLDecoder($From);
+         
+         if ($From != $To) {
+            $ToQ = mysql_escape_string($To);
+            $Sql = "update :_{$TableName} set $ColumnName = '$ToQ' where $PK = {$Row[$PK]}";
+            $this->Query($Sql, TRUE);
+         }
+      }
+      
    }
 
     /**
@@ -816,8 +1138,19 @@ class ExportModel {
       if (isset($this->_LastResult) && is_resource($this->_LastResult))
          mysql_free_result($this->_LastResult);
       $Query = str_replace(':_', $this->Prefix, $Query); // replace prefix.
+      if ($this->SourcePrefix) {
+         $Query = preg_replace("`\b{$this->SourcePrefix}`", $this->Prefix, $Query); // replace prefix.
+      }
+      
       $Query = rtrim($Query, ';').';';
-      $this->Queries[] = $Query;
+      
+      if (!preg_match('`limit 1;$`', $Query))
+         $this->Queries[] = $Query;
+         
+      if ($this->Destination == 'database' && $this->CaptureOnly) {
+         if (!preg_match('`^\s*select|show|describe`', $Query))
+            return 'SKIPPED';
+      }
 
       $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
@@ -831,10 +1164,22 @@ class ExportModel {
       }
 
       if ($Result === FALSE) {
+         echo '<pre>', htmlspecialchars($Query), '</pre>';
          trigger_error(mysql_error($Connection));
       }
       
       return $Result;
+   }
+   
+   public function QueryN($SqlList) {
+      if (!is_array($SqlList))
+         $SqlList = explode(';', $SqlList);
+      
+      foreach ($SqlList as $Sql) {
+         $Sql = trim($Sql);
+         if ($Sql)
+            $this->Query($Sql);
+      }
    }
    
    public function SetConnection($Host = NULL, $Username = NULL, $Password = NULL, $DbName = NULL) {
@@ -853,6 +1198,17 @@ class ExportModel {
    public function Structures() {
       return $this->_Structures;
    }
+   
+   public function TimestampToDate($Value) {
+      if ($Value == NULL)
+         return NULL;
+      else
+         return gmdate('Y-m-d H:i:s', $Value);
+   }
+   
+   public function TimestampToDateDb($Value) {
+      
+   }
 
    /**
     * Whether or not to use compression on the output file.
@@ -863,7 +1219,7 @@ class ExportModel {
       if($Value !== NULL)
          $this->_UseCompression = $Value;
 
-      return $this->_UseCompression && !$this->UseStreaming && function_exists('gzopen');
+      return $this->_UseCompression && $this->Destination == 'file' && !$this->UseStreaming && function_exists('gzopen');
    }
 
    /**
@@ -886,23 +1242,47 @@ class ExportModel {
     *  - array: The names of the missing columns if one or more columns don't exist.
     */
    public function Exists($Table, $Columns = array()) {
-      $Desc = $this->Query('describe :_'.$Table);
-      if ($Desc === false)
-         return false;
-
+      static $_Exists = array();
+      
+      if (!isset($_Exists[$Table])) {
+         $Result = $this->Query("show table status like ':_$Table'", TRUE);
+         if (!$Result) {
+            $_Exists[$Table] = FALSE;
+         } elseif (!mysql_fetch_assoc($Result)) {
+            $_Exists[$Table] = FALSE;
+         } else {
+            mysql_free_result($Result);
+            $Desc = $this->Query('describe :_'.$Table);
+            if ($Desc === false) {
+               $_Exists[$Table] = FALSE;
+            } else {
+               if (is_string($Desc))
+                  die($Desc);
+               
+               $Cols = array();
+               while (($TD = mysql_fetch_assoc($Desc)) !== false) {
+                  $Cols[$TD['Field']] = $TD;
+               }
+               mysql_free_result($Desc);
+               $_Exists[$Table] = $Cols;
+            }
+         }
+      }
+      
+      if ($_Exists[$Table] == FALSE)
+         return FALSE;
+      
+      $Columns = (array)$Columns;
+      
       if (count($Columns) == 0)
          return true;
       
-      $Cols = array();
       $Missing = array();
-      while (($TD = mysql_fetch_assoc($Desc)) !== false) {
-         $Cols[] = $TD['Field'];
-      }
+      $Cols = array_keys($_Exists[$Table]);
       foreach ($Columns as $Column) {
          if (!in_array($Column, $Cols))
             $Missing[] = $Column;
       }
-      mysql_free_result($Desc);
       return count($Missing) == 0 ? true : $Missing;
    }
 
@@ -994,6 +1374,14 @@ class ExportModel {
       fwrite($fp, 'Table: '.$TableName.self::NEWLINE);
       fwrite($fp, $TableHeader.self::NEWLINE);
       
+   }
+   
+   public static function FileExtension($ColumnName) {
+      return "right($ColumnName, instr(reverse($ColumnName), '.'))";
+   }
+   
+   public function UrlDecode($Value) {
+      return urldecode($Value);
    }
 }
 ?><?php
@@ -2077,24 +2465,23 @@ class Vanilla2 extends ExportController {
 /**
  * vBulletin exporter tool.
  * 
- * This will migrate all vBulletin data for 3.x and 4.x forums. It even 
- * accounts for attachments created during 2.x and moved to 3.x.
+ * This will migrate all vBulletin data for 3.x and 4.x forums. 
+ * It migrates all attachments from 2.x and later.
  *
  * Supports the FileUpload, ProfileExtender, and Signature plugins.
  * All vBulletin data appropriate for those plugins will be prepared
  * and transferred.
  *
- * MIGRATING FILES:
- * 
- * 1) Avatars should be moved to the filesystem prior to export if they
- * are stored in the database. Copy all the avatar_* files from
- * vBulletin's /customavatars folder to Vanilla's /upload/userpics.
- * IMPORTANT: Make /userpics writable by the server BEFORE IMPORTING.
- * 
- * 2) Attachments should likewise be moved to the filesystem prior to
- * export. Copy all attachments from vBulletin's attachments folder to 
- * Vanilla's /upload folder without changing the internal folder structure.
- * IMPORTANT: Enable the FileUpload plugin BEFORE IMPORTING.
+ * To export only 1 category, add 'forumid=#' parameter to the URL.
+ * To extract avatars stored in database, add 'avatars=1' parameter to the URL.
+ * To extract attachments stored in db, add 'attachments=1' parameter to the URL.
+ * To stop the export after only extracting files, add 'noexport=1' param to the URL.
+ *
+ * TO MIGRATE FILES, BEFORE IMPORTING YOU MUST:
+ * 1) Copy entire 'customavatars' folder into Vanilla's /upload folder.
+ * 2) Copy entire 'attachments' folder into Vanilla's / upload folder.
+ * 3) Make BOTH folders writable by the server.
+ * 4) Enable the FileUpload plugin. (Media table must be present.)
  *
  * @copyright Vanilla Forums Inc. 2010
  * @author Matt Lincoln Russell lincoln@icrontic.com
@@ -2107,47 +2494,67 @@ class Vanilla2 extends ExportController {
  *
  * @package VanillaPorter
  */
-class Vbulletin extends ExportController {
+class Vbulletin extends ExportController {   
+   /* @var string SQL fragment to build new path to attachments. */
+   public $AttachSelect = '';
+   
+   /* @var string SQL fragment to build new path to user photo. */
+   public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
+   
+   /* @var array Default permissions to map. */
    static $Permissions = array(
    
-   'genericpermissions' => array(
-       1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
-       2 => 'Garden.Profiles.Edit',
-       1024 => 'Plugins.Signatures.Edit'
-       ),
-   
-   'forumpermissions' => array(
-       1 => 'Vanilla.Discussions.View',
-       16 => 'Vanilla.Discussions.Add',
-       64 => 'Vanilla.Comments.Add',
-       4096 => 'Plugins.Attachments.Download',
-       8192 => 'Plugins.Attachments.Upload'),
-   
-   'adminpermissions' => array(
-       1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
-       2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
-//       4 => 'Garden.Settings.Manage',),
-       ),
-   
-   'wolpermissions' => array(
-       16 => 'Plugins.WhosOnline.ViewHidden')
+      'genericpermissions' => array(
+          1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
+          2 => 'Garden.Profiles.Edit',
+          1024 => 'Plugins.Signatures.Edit'
+          ),
+      
+      'forumpermissions' => array(
+          1 => 'Vanilla.Discussions.View',
+          16 => 'Vanilla.Discussions.Add',
+          64 => 'Vanilla.Comments.Add',
+          4096 => 'Plugins.Attachments.Download',
+          8192 => 'Plugins.Attachments.Upload'
+          ),
+      
+      'adminpermissions' => array(
+          1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
+          2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
+//          4 => 'Garden.Settings.Manage',),
+          ),
+      
+//      'wolpermissions' => array(
+//          16 => 'Plugins.WhosOnline.ViewHidden')
    );
    
    static $Permissions2 = array();
    
-   /** @var array Required tables => columns */
+   /** @var array Required tables => columns. Commented values are optional. */
    protected $SourceTables = array(
+      //'attachment'
+      //'contenttype'
+      //'customavatar'
+      'deletionlog' => array('type','primaryid'),
+      //'filedata'
+      'forum' => array('forumid','description','displayorder','title','description','displayorder'),
+      'phrase' => array('varname','text','product','fieldname','varname'),
+      //'pm'
+      //'pmgroup'
+      //'pmreceipt'
+      //'pmtext'
+      'post' => array('postid','threadid','pagetext','userid','dateline','visible'),
+      //'setting'
+      'subscribethread' => array('userid','threadid'),
+      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost','visible'),
+      //'threadread'
       'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
          'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid',
          'usertitle', 'homepage', 'aim', 'icq', 'yahoo', 'msn', 'skype', 'styleid', 'avatarid'),
-      'usergroup'=> array('usergroupid','title','description'),
+      //'userban'
       'userfield' => array('userid'),
-      'phrase' => array('varname','text','product','fieldname','varname'),
-      'thread' => array('threadid','forumid','postuserid','title','open','sticky','dateline','lastpost','visible'),
-      'deletionlog' => array('type','primaryid'),
-      'post' => array('postid','threadid','pagetext','userid','dateline','visible'),
-      'forum' => array('forumid','description','displayorder','title','description','displayorder'),
-      'subscribethread' => array('userid','threadid')
+      'usergroup'=> array('usergroupid','title','description'),
+      //'visitormessage'
    );
    
    /**
@@ -2156,8 +2563,37 @@ class Vbulletin extends ExportController {
     * @param ExportModel $Ex
     */
    protected function ForumExport($Ex) {
+      // Allow limited export of 1 category via ?forumid=ID
+      $ForumID = $this->Param('forumid');
+      if ($ForumID)
+         $ForumWhere = ' and t.forumid '.(strpos($ForumID, ', ') === FALSE ? "= $ForumID" : "in ($ForumID)");
+      else
+         $ForumWhere = '';
+      
+      // Determine the character set
+      $CharacterSet = $Ex->GetCharacterSet('post');
+      if ($CharacterSet)
+         $Ex->CharacterSet = $CharacterSet;
+      
+      // Optionally extract files from the database
+      $this->ExportBlobs(
+         $this->Param('attachments'),
+         $this->Param('avatars'),
+         $ForumWhere
+      );
+      
+      // End the process if that's all we wanted
+      if ($this->Param('noexport'))
+         return;
+      
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
+      $Now = time();
+      
+      // Testing attachments
+//      $this->ExportMedia();
+//      $Ex->EndExport();
+//      return;
   
       // Users
       $User_Map = array(
@@ -2168,16 +2604,31 @@ class Vbulletin extends ExportController {
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
          'salt'=>'char(3)',
-         'avatarrevision' => array('Column' => 'Photo', 'Filter' => array($this, 'BuildAvatar'))
+         'ipaddress' => 'LastIPAddress'
       );
-      $Ex->ExportTable('User', "select *,
+      
+      // Use file avatar or the result of our blob export?
+      if ($this->GetConfig('usefileavatar'))
+         $User_Map['filephoto'] = 'Photo';
+      else
+         $User_Map['customphoto'] = 'Photo';
+      
+      $Ex->ExportTable('User', "select u.*,
 				concat(`password`, salt) as password2,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
-            FROM_UNIXTIME(lastactivity) as DateUpdated
-         from :_user", $User_Map);  // ":_" will be replace by database prefix
+            FROM_UNIXTIME(lastactivity) as DateUpdated,
+            case when avatarrevision > 0 then concat('userpics/avatar', u.userid, '_', 'avatarrevision', '.gif') else null end  as filephoto,
+            {$this->AvatarSelect},
+            case when ub.userid is not null then 1 else 0 end as Banned,
+            'vbulletin' as HashMethod
+         from :_user u
+         left join :_customavatar a
+         	on u.userid = a.userid
+         left join :_userban ub
+       	 	on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
       
       // Roles
       $Role_Map = array(
@@ -2214,7 +2665,7 @@ class Vbulletin extends ExportController {
       // Permissions.
       $Permissions_Map = array(
           'usergroupid' => 'RoleID',
-          'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, SignInPermission)),
+          'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'SignInPermission')),
           'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
           'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
       );
@@ -2246,7 +2697,7 @@ class Vbulletin extends ExportController {
          }
       }
       # Get signatures
-      $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Sig', signatureparsed from :_sigparsed");
+      $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Plugin.Signatures.Sig', signatureparsed from :_sigparsed");
       # Export from our tmp table and drop
       $Ex->ExportTable('UserMeta', 'select * from VbulletinUserMeta');
       $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
@@ -2255,12 +2706,13 @@ class Vbulletin extends ExportController {
       $Category_Map = array(
          'forumid'=>'CategoryID',
          'description'=>'Description',
-         'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
+         'Name'=>array('Column'=>'Name'), //,'Filter'=>array($Ex, 'HTMLDecoder')),
          'displayorder'=>array('Column'=>'Sort', 'Type'=>'int'),
          'parentid'=>'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select f.*, left(title,30) as Name
-         from :_forum f", $Category_Map);
+      $Ex->ExportTable('Category', "select f.*, title as Name
+         from :_forum f
+         where 1 = 1 $ForumWhere", $Category_Map);
       
       // Discussions
       $Discussion_Map = array(
@@ -2270,10 +2722,19 @@ class Vbulletin extends ExportController {
          'postuserid2'=>'UpdateUserID',
          'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
 			'Format'=>'Format',
-         'views'=>'CountViews'
+         'views'=>'CountViews',
+         'ipaddress' => 'InsertIPAddress'
       );
+      
+      if ($Ex->Destination == 'database') {
+         // Remove the filter from the title so that this doesn't take too long.
+         $Ex->HTMLDecoderDb('thread', 'title', 'threadid');
+         unset($Discussion_Map['title']['Filter']);
+      }
+      
       $Ex->ExportTable('Discussion', "select t.*,
 				t.postuserid as postuserid2,
+            p.ipaddress,
             p.pagetext as Body,
 				'BBCode' as Format,
             replycount+1 as CountComments, 
@@ -2286,14 +2747,16 @@ class Vbulletin extends ExportController {
             left join :_deletionlog d on (d.type='thread' and d.primaryid=t.threadid)
 				left join :_post p on p.postid = t.firstpostid
          where d.primaryid is null
-            and t.visible = 1", $Discussion_Map);
+            and t.visible = 1
+            $ForumWhere", $Discussion_Map);
       
       // Comments
       $Comment_Map = array(
          'postid' => 'CommentID',
          'threadid' => 'DiscussionID',
          'pagetext' => 'Body',
-			'Format' => 'Format'
+			'Format' => 'Format',
+         'ipaddress' => 'InsertIPAddress'
       );
       $Ex->ExportTable('Comment', "select p.*,
 				'BBCode' as Format,
@@ -2302,11 +2765,14 @@ class Vbulletin extends ExportController {
          FROM_UNIXTIME(p.dateline) as DateInserted,
             FROM_UNIXTIME(p.dateline) as DateUpdated
          from :_post p
-				inner join :_thread t on p.threadid = t.threadid
-            left join :_deletionlog d on (d.type='post' and d.primaryid=p.postid)
+         inner join :_thread t 
+            on p.threadid = t.threadid
+         left join :_deletionlog d 
+            on (d.type='post' and d.primaryid=p.postid)
          where p.postid <> t.firstpostid 
             and d.primaryid is null
-            and p.visible = 1", $Comment_Map);
+            and p.visible = 1
+            $ForumWhere", $Comment_Map);
       
       // UserDiscussion
       $Ex->ExportTable('UserDiscussion', "select 
@@ -2327,13 +2793,17 @@ class Vbulletin extends ExportController {
       // Activity (from visitor messages in vBulletin 3.8+)
       if ($Ex->Exists('visitormessage')) {
          $Activity_Map = array(
-            'postuserid'=>'ActivityUserID',
-            'userid'=>'RegardingUserID',
+            'postuserid'=>'RegardingUserID',
+            'userid'=>'ActivityUserID',
             'pagetext'=>'Story',
-            'postuserid'=>'InsertUserID'
          );
          $Ex->ExportTable('Activity', "select *, 
-   			   FROM_UNIXTIME(dateline) as DateInserted
+               '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
+               FROM_UNIXTIME(dateline) as DateInserted,
+               INET_NTOA(ipaddress) as InsertIPAddress,
+               postuserid as InsertUserID,
+               -1 as NotifiyUserID,
+               'WallPost' as ActivityType
    			from :_visitormessage
    			where state='visible'", $Activity_Map);
       }
@@ -2514,26 +2984,115 @@ class Vbulletin extends ExportController {
       
       // Media
       if ($Ex->Exists('attachment')) {
-         $Media_Map = array(
-            'attachmentid' => 'MediaID',
-            'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-            'filesize' => 'Size',
-            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
-            'userid' => 'InsertUserID'
+         $this->ExportMedia();
+      }
+      
+      // End
+      $Ex->EndExport();
+      
+      
+   }
+   
+   /**
+    * Converts database blobs into files.
+    *
+    * Creates /attachments and /customavatars folders in the same directory as the export file.
+    *
+    * @param bool $Attachments Whether to move attachments.
+    * @param bool $CustomAvatars Whether to move avatars.
+    */
+   function ExportBlobs($Attachments = TRUE, $CustomAvatars = TRUE) {
+      $Ex = $this->Ex;
+      
+      if ($Attachments) {
+         $Identity = ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) ? 'f.filedataid' : 'f.attachmentid';
+         $Sql = "select 
+               f.filedata, 
+               concat('attachments/', f.userid, '/', $Identity, '.attach') as Path
+               from ";
+         
+         // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
+         if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE)
+            $Sql .= ":_filedata f";
+         else
+            $Sql .= ":_attachment f"; 
+         
+         $Ex->ExportBlobs($Sql, 'filedata', 'Path');
+      }
+      
+      if ($CustomAvatars) {
+         $Sql = "select 
+               a.filedata, 
+               {$this->AvatarSelect}
+            from :_customavatar a
+            ";
+         $Sql = str_replace('u.userid', 'a.userid', $Sql);
+         $Ex->ExportBlobs($Sql, 'filedata', 'customphoto', 80);
+      }
+   }
+   
+   /**
+    * Export the attachments as Media.
+    *
+    * In vBulletin 4.x, the filedata table was introduced.
+    */
+   function ExportMedia() {
+      $Ex = $this->Ex;
+      
+      $Media_Map = array(
+         'attachmentid' => 'MediaID',
+         'filename' => 'Name',
+         'filesize' => 'Size',
+         'userid' => 'InsertUserID',
+         'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
+         'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath'))
          );
-         // Test if hash field exists from 2.x
-         $SelectHash = '';
-         if ($Ex->Exists('attachment', array('hash')) === true)
-            $SelectHash = 'a.hash,';
          
-         // A) Do NOT grab every field to avoid potential 'filedata' blob.
-         // B) We must left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
-         // C) We lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
+      // Add hash fields if they exist (from 2.x)
+      $AttachColumns = array('hash', 'filehash');
+      $Missing = $Ex->Exists('attachment', $AttachColumns);
+      $AttachColumnsString = '';
+      foreach ($AttachColumns as $ColumnName) {
+         if (in_array($ColumnName, $Missing)) {
+            $AttachColumnsString .= ", null as $ColumnName";
+         } else {
+            $AttachColumnsString .= ", a.$ColumnName";
+         }
+      }
+      
+      // Do the export
+      if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
+         // Exporting 4.x with 'filedata' table.
+         $Media_Map['width'] = 'ImageWidth';
+         $Media_Map['height'] = 'ImageHeight';
          
-         // First comment attachments => 'Discussion' foreign key
+         // Build an index to join on.
+         $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
+         
+         $Ex->ExportTable('Media', "select 
+            case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
+            case when t.threadid is not null then t.threadid else a.contentid end as ForeignID,
+            FROM_UNIXTIME(a.dateline) as DateInserted,
+            'local' as StorageMethod,
+            a.*,
+            f.extension, f.filesize $AttachColumnsString,
+            f.width, f.height
+         from :_attachment a
+         join :_contenttype ct
+            on a.contenttypeid = ct.contenttypeid
+         join :_filedata f
+            on f.filedataid = a.filedataid
+         left join :_thread t
+            on t.firstpostid = a.contentid and a.contenttypeid = 1
+         where a.contentid > 0", $Media_Map);
+      } else {
+         // Exporting 3.x without 'filedata' table.
+         // Do NOT grab every field to avoid 'filedata' blob in 3.x.
+         // Left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
+         // Lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
+         $Extension = ExportModel::FileExtension('a.filename');
          $Ex->ExportTable('Media',
-            "select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
+            "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
                'local' as StorageMethod, 
                'discussion' as ForeignTable,
                t.threadid as ForeignID,
@@ -2543,10 +3102,10 @@ class Vbulletin extends ExportController {
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
             where a.attachmentid > 0
-         
+   
             union all
-         
-            select a.attachmentid, a.filename, a.extension, a.filesize, a.filehash, $SelectHash a.userid,
+   
+            select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
                'local' as StorageMethod, 
                'comment' as ForeignTable,
                a.postid as ForeignID,
@@ -2557,11 +3116,8 @@ class Vbulletin extends ExportController {
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
             where p.postid <> t.firstpostid and  a.attachmentid > 0
-            ", $Media_Map);
+            ", $Media_Map);         
       }
-      
-      // End
-      $Ex->EndExport();
    }
    
    /**
@@ -2573,11 +3129,7 @@ class Vbulletin extends ExportController {
     *
     * In vBulletin 2.x, files were stored as an md5 hash in the root
     * attachment directory with a '.file' extension. Existing files were not 
-    * changed when upgrading to 3.x so older forums will need those too.
-    *
-    * This assumes the user is going to copy their entire attachments directory
-    * into Vanilla's /uploads folder and then use our custom plugin to convert
-    * file extensions.
+    * moved when upgrading to 3.x so older forums will need those too.
     *
     * @access public
     * @see ExportModel::_ExportTable
@@ -2590,7 +3142,7 @@ class Vbulletin extends ExportController {
    function BuildMediaPath($Value, $Field, $Row) {
       if (isset($Row['hash']) && $Row['hash'] != '') { 
          // Old school! (2.x)
-         return $Row['hash'].'.file';//.$Row['extension'];
+         $FilePath = $Row['hash'].'.file';//.$Row['extension'];
       }
       else { // Newer than 3.0
          // Build user directory path
@@ -2599,8 +3151,14 @@ class Vbulletin extends ExportController {
          for($i = 0; $i < $n; $i++) {
             $DirParts[] = $Row['userid']{$i};
          }
-         return implode('/', $DirParts).'/'.$Row['attachmentid'].'.attach';//.$Row['extension'];
+         
+         // 3.x uses attachmentid, 4.x uses filedataid
+         $Identity = (isset($Row['filedataid'])) ? $Row['filedataid'] : $Row['attachmentid'];
+         
+         $FilePath = implode('/', $DirParts).'/'.$Identity.'.attach';
       }
+      
+      return 'attachments/'.$FilePath;
    }
    
    /**
@@ -2626,23 +3184,13 @@ class Vbulletin extends ExportController {
    }
    
    /**
-    * Create Photo path from avatar data.
-    * 
-    * @access public
-    * @see ExportModel::_ExportTable
-    * 
-    * @param string $Value Ignored.
-    * @param string $Field Ignored.
-    * @param array $Row Contents of the current attachment record.
-    * @return string Path to avatar if one exists, or blank if none.
+    * Determine if this usergroup could likely sign in to forum based on its name.
+    *
+    * @param $Value
+    * @param $Field
+    * @param $Row
+    * @return bool
     */
-   function BuildAvatar($Value, $Field, $Row) {
-      if ($Row['avatarrevision'] > 0)
-         return 'userpics/avatar' . $Row['userid'] . '_' . $Row['avatarrevision'] . '.gif';
-      else
-         return '';
-   }
-   
    function SignInPermission($Value, $Field, $Row) {
       $Result = TRUE;
       if (stripos($Row['title'], 'unregistered') !== FALSE)
@@ -2653,6 +3201,27 @@ class Vbulletin extends ExportController {
       return $Result;
    }
    
+   /**
+    * Retrieve a value from the vBulletin setting table.
+    *
+    * @param string $Name Variable for which we want the value.
+    * @return mixed Value or FALSE if not found.
+    */
+   function GetConfig($Name) {
+      $Sql = "select * from :_setting where varname = '$Name'";
+      $Result = $this->Ex->Query($Sql, TRUE);
+      if ($Row = mysql_fetch_assoc($Result)) {
+         return $Row['value'];
+      }
+      return FALSE;
+   }
+   
+   /**
+    * @param $Value
+    * @param $Field
+    * @param $Row
+    * @return bool
+    */
    function FilterPermissions($Value, $Field, $Row) {
       if (!isset(self::$Permissions2[$Field]))
          return 0;
@@ -2664,6 +3233,10 @@ class Vbulletin extends ExportController {
       return $Value;
    }
    
+   /**
+    * @param $ColumnGroups
+    * @param $Map
+    */
    function AddPermissionColumns($ColumnGroups, &$Map) {
       $Permissions2 = array();
       
@@ -2671,7 +3244,7 @@ class Vbulletin extends ExportController {
          foreach ($Columns as $Mask => $ColumnArray) {
             $ColumnArray = (array)$ColumnArray;
             foreach ($ColumnArray as $Column) {
-               $Map[$Column] = array('Column' => $Column, 'Type' => 'tinyint(1)', 'Filter' => array($this, FilterPermissions));
+               $Map[$Column] = array('Column' => $Column, 'Type' => 'tinyint(1)', 'Filter' => array($this, 'FilterPermissions'));
                
                $Permissions2[$Column] = array($ColumnGroup, $Mask);
             }
