@@ -41,7 +41,7 @@ $Supported['vbulletin']['CommandLine'] = array(
 class Vbulletin extends ExportController {   
    public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', a.attachmentid,'.', f.extension) as Path";
    /* @var string SQL fragment to build new path to attachments. */
-   public $AttachSelect = '';
+//   public $AttachSelect = '';
    
    /* @var string SQL fragment to build new path to user photo. */
    public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
