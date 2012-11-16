@@ -1456,7 +1456,7 @@ class ExportModel {
       foreach ($ExportStructure as $Field => $Type) {
          // Get the value of the export.
          $Value = NULL;
-         if (isset($Row[$RevMappings[$Field]['Column']])) {
+         if (isset($RevMappings[$Field]) && isset($Row[$RevMappings[$Field]['Column']])) {
             // The column is mapped.
             $Value = $Row[$RevMappings[$Field]['Column']];
          } elseif (array_key_exists($Field, $Row)) {
