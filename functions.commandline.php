@@ -6,7 +6,7 @@ $GlobalOptions = array(
    'user' => array('The username of the database.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
    'password' => array('The password to use when connecting to the server.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
    'type' => array('The type of forum to export from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type'),
-   'prefix' => array('The table prefix in the database.', 'Field' => 'prefix', 'Default' => ''),
+   'prefix' => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => ''),
    'help' => array('Show help.')
 );
 
@@ -98,8 +98,7 @@ function ValidateCommandLine($Values, $Options) {
       $Types = V('Types', $Row);
       
       if ($Types && !in_array($Type, $Types)) {
-         echo "Skipping $LongCode\n";
-         
+//         echo "Skipping $LongCode\n";
          continue;
       }
       
