@@ -156,14 +156,16 @@ class WebWiz extends ExportController {
           
           );
       $Ex->ExportTable('Discussion', "
-      select 
-         th.Author_ID,
-         th.Message,
-         'Html' as Format,
-         t.*
-      from tblTopic t
-      join tblThread th
-         on t.Start_Thread_ID = th.Thread_ID", $Discussion_Map);
+         select 
+            th.Author_ID,
+            th.Message,
+            th.Message_Date,
+            th.IP_addr,
+            'Html' as Format,
+            t.*
+         from tblTopic t
+         join tblThread th
+            on t.Start_Thread_ID = th.Thread_ID", $Discussion_Map);
       
       // Comment.
       $Comment_Map = array(
