@@ -1,7 +1,7 @@
 <?php
 
 $GlobalOptions = array(
-   'host' => array('Host to connect to (IP address or hostname).', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbhost'),
+   'host' => array('Host to connect to (IP address or hostname).', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbhost', 'Default' => '127.0.0.1'),
    'dbname' => array('The name of the database.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbname'),
    'user' => array('The username of the database.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
    'password' => array('The password to use when connecting to the server.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
