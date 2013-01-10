@@ -135,8 +135,6 @@ class Vbulletin extends ExportController {
          return;
       }
       
-      
-      
       // Check to see if there is a max date.
       $MinDate = $this->Param('mindate');
       if ($MinDate) {
@@ -237,7 +235,7 @@ class Vbulletin extends ExportController {
 //      return;
 
       // UserMeta
-      $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
+//      $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
       # Standard vB user data
 //      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
 //      foreach($UserFields as $Field => $InsertAs)
@@ -257,10 +255,23 @@ class Vbulletin extends ExportController {
 //         }
 //      }
       # Get signatures
-      $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Plugin.Signatures.Sig', signatureparsed from :_sigparsed");
-      # Export from our tmp table and drop
-      $Ex->ExportTable('UserMeta', 'select * from VbulletinUserMeta');
-      $Ex->Query("DROP TABLE IF EXISTS VbulletinUserMeta");
+      $Sql = "
+         select
+            userid as UserID,
+            'Plugin.Signatures.Sig' as Name,
+            signature as Value
+         from :_usertextfield
+         where nullif(signature, '') is not null
+
+         union
+
+         select
+            userid,
+            'Plugin.Signatures.Format',
+            'BBCode'
+         from :_usertextfield
+         where nullif(signature, '') is not null";
+      $Ex->ExportTable('UserMeta', $Sql);
 
 
       // Ranks.
@@ -269,16 +280,23 @@ class Vbulletin extends ExportController {
          'title' => 'Name',
          'title2' => 'Label',
          'minposts' => array('Column' => 'Attributes', 'Filter' => function($Value) {
-            return array(
+            $Result = array(
                 'Criteria' => array(
                     'CountPosts' => $Value
                   )
                 );
+            
+            return serialize($Result);
+         }),
+         'level' => array('Column' => 'Level', 'Filter' => function($Value) {
+            static $Level = 1;
+            return $Level++;
          })
       );
       $Ex->ExportTable('Rank', "
-         select ut.*, ut.title as title2
-         from :_usertitle ut", $Rank_Map);
+         select ut.*, ut.title as title2, 0 as level
+         from :_usertitle ut
+         order by ut.minposts", $Rank_Map);
 
 
       // Categories
@@ -421,7 +439,7 @@ class Vbulletin extends ExportController {
                FROM_UNIXTIME(dateline) as DateInserted,
                INET_NTOA(ipaddress) as InsertIPAddress,
                postuserid as InsertUserID,
-               -1 as NotifiyUserID,
+               -1 as NotifyUserID,
                'BBCode' as Format,
                'WallPost' as ActivityType
    			from :_visitormessage
@@ -435,14 +453,14 @@ class Vbulletin extends ExportController {
       
       // Media
       if ($Ex->Exists('attachment')) {
-         $this->_ExportMedia($MinDiscussionID);
+         $this->ExportMedia($MinDiscussionID);
       }
       
       // End
       $Ex->EndExport();
    }
    
-   function _ExportConversations($MinDate) {
+   protected function _ExportConversations($MinDate) {
       $Ex = $this->Ex;
       
       if ($MinDate) {
@@ -646,7 +664,7 @@ class Vbulletin extends ExportController {
     * @param bool $Attachments Whether to move attachments.
     * @param bool $CustomAvatars Whether to move avatars.
     */
-   function ExportBlobs($Attachments = TRUE, $CustomAvatars = TRUE) {
+   public function ExportBlobs($Attachments = TRUE, $CustomAvatars = TRUE) {
       $Ex = $this->Ex;
       
       if ($Attachments) {
@@ -681,7 +699,7 @@ class Vbulletin extends ExportController {
     *
     * In vBulletin 4.x, the filedata table was introduced.
     */
-   function ExportMedia() {
+   public function ExportMedia($MinDiscussionID = FALSE) {
       $Ex = $this->Ex;
       
       if ($MinDiscussionID) {
@@ -768,7 +786,8 @@ class Vbulletin extends ExportController {
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
             where p.postid <> t.firstpostid and  a.attachmentid > 0
-            ", $Media_Map);         
+            ", $Media_Map);
+       }
    }
    
    function _ExportPolls() {
@@ -843,7 +862,6 @@ class Vbulletin extends ExportController {
       $Ex->ExportTable('PollVote',
          "select pv.*, pollid * 1000 + voteoption as optionid
          from :_pollvote pv", $PollVote_Map);
-      }
    }
    
    /**
