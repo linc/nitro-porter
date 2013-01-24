@@ -165,14 +165,14 @@ class SMF extends ExportController {
       );
       $Ex->ExportTable('Media', 
       "select a.*,
-         concat('attachments/', a.filename as Path,
+         concat('attachments/', a.filename) as Path,
          concat('attachments/', b.filename) as ThumbPath,
-         'Comment' as ForeignTable
+         if(t.ID_TOPIC is null, 'Comment', 'Discussion') as ForeignTable
        from :_attachments a
-       join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+       left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+       left join :_topics t on a.ID_MSG = t.ID_FIRST_MSG
        where a.attachmentType = 0
-         and a.ID_MSG > 0;
-       ", $Media_Map);
+         and a.ID_MSG > 0;", $Media_Map);
 
     // Conversations need a bit more conversion so execute a series of queries for that.
     $Ex->Query('create table :_smfpmto (
