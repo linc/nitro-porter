@@ -52,7 +52,7 @@ class SMF extends ExportController {
             from_unixtime(lastLogin) as DateLastActive,
             from_unixtime(lastLogin) as DateUpdated,
             concat('sha1$', lower(memberName), '$', passwd) as `password`,
-            if(m.avatar <> '', m.avatar, a.filename) as Photo
+            if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
          from :_members m
          left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ", $User_Map);
 
@@ -159,14 +159,14 @@ class SMF extends ExportController {
        $Media_Map = array(
          'ID_ATTACH' => 'MediaID',
          'ID_MSG' => 'ForeignID',
-         'filename' => 'Path',
          'size' => 'Size',
          'height' => 'ImageHeight',
          'width' => 'ImageWidth'
       );
       $Ex->ExportTable('Media', 
       "select a.*,
-         b.filename as ThumbPath,
+         concat('attachments/', a.filename as Path,
+         concat('attachments/', b.filename) as ThumbPath,
          'Comment' as ForeignTable
        from :_attachments a
        join :_attachments b on b.ID_ATTACH = a.ID_THUMB
