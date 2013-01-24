@@ -39,7 +39,7 @@ class SMF extends ExportController {
          'DateInserted'=>'DateInserted',
          'timeOffset'=>'HourOffset',
          'posts'=>'CountComments',
-         'avatar'=>'Photo',
+         //'avatar'=>'Photo',
          'birthdate'=>'DateOfBirth',
          'DateFirstVisit'=>'DateFirstVisit',
          'DateLastActive'=>'DateLastActive',
@@ -51,8 +51,10 @@ class SMF extends ExportController {
             from_unixtime(dateRegistered) as DateFirstVisit,
             from_unixtime(lastLogin) as DateLastActive,
             from_unixtime(lastLogin) as DateUpdated,
-            concat('sha1$', lower(memberName), '$', passwd) as `password`
-         from :_members", $User_Map);
+            concat('sha1$', lower(memberName), '$', passwd) as `password`,
+            if(m.avatar <> '', m.avatar, a.filename) as Photo
+         from :_members m
+         left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ", $User_Map);
 
       // Roles
       $Role_Map = array(
@@ -152,6 +154,25 @@ class SMF extends ExportController {
 		 join :_topics t on m.ID_TOPIC = t.ID_TOPIC
 		 where m.ID_MSG <> t.ID_FIRST_MSG;
        ", $Comment_Map);
+       
+       // Media
+       $Media_Map = array(
+         'ID_ATTACH' => 'MediaID',
+         'ID_MSG' => 'ForeignID',
+         'filename' => 'Path',
+         'size' => 'Size',
+         'height' => 'ImageHeight',
+         'width' => 'ImageWidth'
+      );
+      $Ex->ExportTable('Media', 
+      "select a.*,
+         b.filename as ThumbPath,
+         'Comment' as ForeignTable
+       from :_attachments a
+       join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+       where a.attachmentType = 0
+         and a.ID_MSG > 0;
+       ", $Media_Map);
 
     // Conversations need a bit more conversion so execute a series of queries for that.
     $Ex->Query('create table :_smfpmto (
