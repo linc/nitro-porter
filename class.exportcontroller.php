@@ -50,6 +50,7 @@ abstract class ExportController {
       $Msg = $this->TestDatabase();
       if($Msg === true) {
          // Create db object
+         $Ex = &$this->Ex;
 
          // Test src tables' existence structure
          $Msg = $Ex->VerifySource($this->SourceTables);
