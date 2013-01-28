@@ -7,6 +7,7 @@ $GlobalOptions = array(
    'password' => array('The password to use when connecting to the server.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
    'type' => array('The type of forum to export from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type'),
    'prefix' => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => ''),
+   'cdn' => array('The prefix to be applied to uploaded file links.', 'Field' => 'cdn', 'Sx' => ':', 'Default' => ''),
    'help' => array('Show help.')
 );
 

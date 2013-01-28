@@ -29,6 +29,14 @@ abstract class ExportController {
    public function __construct() {
       $this->HandleInfoForm();
    }
+   
+   public function CdnPrefix() {
+      $Cdn = rtrim($this->Param('cdn', ''), '/');
+      if ($Cdn)
+         $Cdn .= '/';
+      
+      return $Cdn;
+   }
 
    /**
     * Logic for export process
