@@ -153,7 +153,8 @@ class ExportModel {
             'Score' => 'float',
             'Closed' => 'tinyint',
             'Announce' => 'tinyint',
-            'Sink' => 'tinyint'),
+            'Sink' => 'tinyint',
+            'Type' => 'varchar(20)'),
       'Media' => array(
             'MediaID' => 'int',
             'Name' => 'varchar(255)',
@@ -170,6 +171,9 @@ class ExportModel {
           ),
       'Permission' => array(
             'RoleID' => 'int',
+            'JunctionTable' => 'varchar(100)',
+            'JunctionColumn' => 'varchar(100)',
+            'JunctionID' => 'int',
             '_Permissions' => 'varchar(255)',
             'Garden.SignIn.Allow' => 'tinyint',
             'Garden.Activity.View' => 'tinyint',
@@ -366,6 +370,7 @@ class ExportModel {
       $this->EndTime = microtime(TRUE);
       $this->TotalTime = $this->EndTime - $this->BeginTime;
 
+      $this->Comment($this->Path);
       $this->Comment('Export Completed: '.date('Y-m-d H:i:s'));
       $this->Comment(sprintf('Elapsed Time: %s', self::FormatElapsed($this->TotalTime)));
 
@@ -465,6 +470,8 @@ class ExportModel {
             $Row[$PathColumn] = implode('/', $PathParts);
          }
          
+         $Path = $Row[$PathColumn];
+         
          // Build path
          if (!file_exists(dirname($Path))) {
             $R = mkdir(dirname($Path), 0777, TRUE); 
@@ -549,7 +556,7 @@ class ExportModel {
             
             if($FirstQuery) {
                // Get the export structure.
-               $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+               $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings, $TableName);
                $RevMappings = $this->FlipMappings($Mappings);
                $this->WriteBeginTable($fp, $TableName, $ExportStructure);
 
@@ -647,7 +654,7 @@ class ExportModel {
          $Row = (array)$Row;
 
          // Get the export structure.
-         $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings);
+         $ExportStructure = $this->GetExportStructure($Row, $Structure, $Mappings, $TableName);
 
          break;
       }
@@ -688,7 +695,7 @@ class ExportModel {
       $QueryStruct = $this->GetQueryStructure($Query, $TableName);
       $Structure = $this->_Structures[$TableName];
       
-      $ExportStructure = $this->GetExportStructure($QueryStruct, $Structure, $Mappings);
+      $ExportStructure = $this->GetExportStructure($QueryStruct, $Structure, $Mappings, $TableName);
 
       $Mappings = $this->FlipMappings($Mappings);
 
@@ -973,7 +980,7 @@ class ExportModel {
       return $Prefix;
    }
 
-   public function GetExportStructure($Row, $TableOrStructure, &$Mappings) {
+   public function GetExportStructure($Row, $TableOrStructure, &$Mappings, $TableName = '_') {
       $ExportStructure = array();
       
       if (is_string($TableOrStructure))
@@ -1036,10 +1043,17 @@ class ExportModel {
             continue;
          }
          
-         if (!isset($Options['Column']))
+         if (!isset($Options['Column'])) {
+            trigger_error("No column for $TableName(source).$Source.", E_USER_NOTICE);
             continue;
+         }
          
          $DestColumn = $Options['Column'];
+         
+         if (!array_key_exists($Source, $Row) && !isset($Options['Type'])) {
+            trigger_error("No column for $TableName(source).$Source.", E_USER_NOTICE);
+         }
+         
          if (isset($ExportStructure[$DestColumn]))
             continue;
 
@@ -1047,8 +1061,10 @@ class ExportModel {
             $DestType = $Structure[$DestColumn];
          elseif (isset($Options['Type']))
             $DestType = $Options['Type'];
-         else
+         else {
+            trigger_error("No column for $TableName.$DestColumn.", E_USER_NOTICE);
             continue;
+         }
 
          $ExportStructure[$DestColumn] = $DestType;
          $Mappings[$Source] = $DestColumn;
@@ -1142,7 +1158,10 @@ class ExportModel {
             $this->Query($Sql, TRUE);
          }
       }
-      
+   }
+   
+   public function NotFilter($Value) {
+      return (int)(!$Value);
    }
 
     /**
@@ -1512,8 +1531,30 @@ class ExportModel {
       return "right($ColumnName, instr(reverse($ColumnName), '.'))";
    }
    
+   public function ForceIP4($ip) {
+      if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m))
+         $ip = $m[1];
+      else
+         $ip = null;
+      
+      return $ip;
+   }
+   
    public function UrlDecode($Value) {
       return urldecode($Value);
    }
+}
+
+ function TimestampToDate($Value) {
+   if ($Value == NULL)
+      return NULL;
+   else
+      return gmdate('Y-m-d H:i:s', $Value);
+}
+
+function long2ipf($Value) {
+   if (!$Value)
+      return NULL;
+   return long2ip($Value);
 }
 ?>

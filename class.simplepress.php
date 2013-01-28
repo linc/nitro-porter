@@ -140,7 +140,8 @@ end as _Permissions
          'topic_name'=>'Name',
 			'Format'=>'Format',
          'topic_date'=>'DateInserted',
-         'topic_pinned'=>'Announce'
+         'topic_pinned'=>'Announce',
+         'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
       );
       $Ex->ExportTable('Discussion', "select t.*,
 				'Html' as Format

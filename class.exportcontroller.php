@@ -39,6 +39,14 @@ abstract class ExportController {
       $Ex->TestMode = $this->Param('test', FALSE);
       $Ex->UseStreaming = FALSE; //$this->UseStreaming;
    }
+   
+   public function CdnPrefix() {
+      $Cdn = rtrim($this->Param('cdn', ''), '/');
+      if ($Cdn)
+         $Cdn .= '/';
+      
+      return $Cdn;
+   }
 
    /**
     * Logic for export process
