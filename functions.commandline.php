@@ -6,6 +6,7 @@ $GlobalOptions = array(
    'user' => array('The username of the database.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
    'password' => array('The password to use when connecting to the server.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
    'type' => array('The type of forum to export from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type'),
+   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
    'prefix' => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => ''),
    'cdn' => array('The prefix to be applied to uploaded file links.', 'Field' => 'cdn', 'Sx' => ':', 'Default' => ''),
    'help' => array('Show help.')

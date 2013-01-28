@@ -28,7 +28,6 @@
 
 $Supported['vbulletin']['CommandLine'] = array(
     'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
-    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::'),
     'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
     'mindate' => array('A date to import from.')
     );

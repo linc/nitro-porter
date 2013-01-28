@@ -180,4 +180,13 @@ function SelectString($Parsed) {
    $Result = "select\n  $Select\nfrom $From";
    return $Result;
 }
-?>
+
+function CombinePaths($Paths, $Delimiter = '/') {
+   if (is_array($Paths)) {
+      $MungedPath = implode($Delimiter, $Paths);
+      $MungedPath = str_replace(array($Delimiter.$Delimiter.$Delimiter, $Delimiter.$Delimiter), array($Delimiter, $Delimiter), $MungedPath);
+      return str_replace(array('http:/', 'https:/'), array('http://', 'https://'), $MungedPath);
+   } else {
+      return $Paths;
+   }
+}
