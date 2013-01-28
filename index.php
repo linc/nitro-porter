@@ -82,12 +82,20 @@ if (isset($_GET['type'])) {
    }
 }
 
+$Method = 'DoExport';
+if ($_POST['avatars'])
+   $Method = 'DoAvatars';
+
 // Instantiate the appropriate controller or display the input page.
 if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
    // Mini-Factory
    $class = ucwords($_POST['type']);
    $Controller = new $class();
-   $Controller->DoExport();
+   if (!method_exists($Controller, $Method)) {
+      echo "This datasource type does not support {$Method}.\n";
+      exit();
+   }
+   $Controller->$Method();
 }
 else {
    $CanWrite = TestWrite();
@@ -97,8 +105,8 @@ else {
 if (defined('CONSOLE'))
    echo "\n";
 
-function ErrorHandler() {
-   echo "Error";
+function ErrorHandler($errno, $errstr) {
+   echo "Error: ({$errno}) {$errstr}\n";
    die();
 }
 
@@ -133,4 +141,3 @@ function TestWrite() {
    }
    else return false;
 }
-?>

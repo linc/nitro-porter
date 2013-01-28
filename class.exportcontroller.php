@@ -28,6 +28,16 @@ abstract class ExportController {
     */
    public function __construct() {
       $this->HandleInfoForm();
+
+      $Ex = new ExportModel;
+      $Ex->Controller = $this;
+      $this->Ex = $Ex;
+      $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
+      $Ex->Prefix = $this->DbInfo['prefix'];
+      $Ex->Destination = $this->Param('dest', 'file');
+      $Ex->DestDb = $this->Param('destdb', NULL);
+      $Ex->TestMode = $this->Param('test', FALSE);
+      $Ex->UseStreaming = FALSE; //$this->UseStreaming;
    }
 
    /**
@@ -40,16 +50,7 @@ abstract class ExportController {
       $Msg = $this->TestDatabase();
       if($Msg === true) {
          // Create db object
-         $Ex = new ExportModel;
-         $Ex->Controller = $this;
-         $this->Ex = $Ex;
-         $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
-         $Ex->Prefix = $this->DbInfo['prefix'];
-         $Ex->Destination = $this->Param('dest', 'file');
-         $Ex->DestDb = $this->Param('destdb', NULL);
-         $Ex->TestMode = $this->Param('test', FALSE);
 
-         $Ex->UseStreaming = FALSE; //$this->UseStreaming;
          // Test src tables' existence structure
          $Msg = $Ex->VerifySource($this->SourceTables);
          if($Msg === true) {
