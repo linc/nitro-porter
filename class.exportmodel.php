@@ -1552,6 +1552,10 @@ class ExportModel {
       return gmdate('Y-m-d H:i:s', $Value);
 }
 
+function HTMLDecoder($Value) {
+   return html_entity_decode($Value, ENT_QUOTES, 'UTF-8');
+}
+
 function long2ipf($Value) {
    if (!$Value)
       return NULL;
