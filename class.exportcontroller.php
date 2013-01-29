@@ -28,16 +28,15 @@ abstract class ExportController {
     */
    public function __construct() {
       $this->HandleInfoForm();
-
-      $Ex = new ExportModel;
-      $Ex->Controller = $this;
-      $this->Ex = $Ex;
-      $Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
-      $Ex->Prefix = $this->DbInfo['prefix'];
-      $Ex->Destination = $this->Param('dest', 'file');
-      $Ex->DestDb = $this->Param('destdb', NULL);
-      $Ex->TestMode = $this->Param('test', FALSE);
-      $Ex->UseStreaming = FALSE; //$this->UseStreaming;
+      
+      $this->Ex = new ExportModel;
+      $this->Ex->Controller = $this;
+      $this->Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'], $this->DbInfo['dbname']);
+      $this->Ex->Prefix = $this->DbInfo['prefix'];
+      $this->Ex->Destination = $this->Param('dest', 'file');
+      $this->Ex->DestDb = $this->Param('destdb', NULL);
+      $this->Ex->TestMode = $this->Param('test', FALSE);
+      $this->Ex->UseStreaming = FALSE; //$this->UseStreaming;
    }
    
    public function CdnPrefix() {
@@ -57,28 +56,26 @@ abstract class ExportController {
       // Test connection
       $Msg = $this->TestDatabase();
       if($Msg === true) {
-         // Create db object
-         $Ex = &$this->Ex;
 
          // Test src tables' existence structure
-         $Msg = $Ex->VerifySource($this->SourceTables);
+         $Msg = $this->Ex->VerifySource($this->SourceTables);
          if($Msg === true) {
             // Good src tables - Start dump
-            $Ex->UseCompression(TRUE);
-            $Ex->FilenamePrefix = $this->DbInfo['dbname'];
+            $this->Ex->UseCompression(TRUE);
+            $this->Ex->FilenamePrefix = $this->DbInfo['dbname'];
             set_time_limit(60*60);
             
 //            ob_start();
-            $this->ForumExport($Ex);
+            $this->ForumExport($this->Ex);
 //            $Errors = ob_get_clean();
             
-            $Msg = $Ex->Comments;
+            $Msg = $this->Ex->Comments;
 
             // Write the results.
-            if($Ex->UseStreaming)
+            if($this->Ex->UseStreaming)
                exit;
             else
-               ViewExportResult($Msg, 'Info', $Ex->Path);
+               ViewExportResult($Msg, 'Info', $this->Ex->Path);
          }
          else
             ViewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo)); // Back to form with error
