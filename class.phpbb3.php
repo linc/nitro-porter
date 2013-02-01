@@ -56,7 +56,7 @@ class Phpbb3 extends ExportController {
       );
       $Ex->ExportTable('User', "select *,
             case user_avatar_type 
-               when 1 then concat('phpbb/', '$Px', user_avatar) 
+               when 1 then concat('phpbb/', '$Px', '_', user_id, substr(user_photo from locate('.', user_photo))) 
                else null end as photo,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
             FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
