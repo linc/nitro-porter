@@ -81,7 +81,6 @@ class Vanilla1 extends ExportController {
          'PERMISSION_CLOSE_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Close', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_EDIT_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_EDIT_COMMENTS' => array('Column' => 'Vanilla.Comments.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
-         'PERMISSION_ADD_CATEGORIES' => array('Column' => 'Vanilla.Categories.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_APPROVE_APPLICANTS' => array('Column' => 'Garden.Applicants.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_EDIT_USERS' => array('Column' => 'Garden.Users.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_MANAGE_REGISTRATION' => array('Column' => 'Garden.Registration.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),

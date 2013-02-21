@@ -64,7 +64,7 @@ class Vbulletin extends ExportController {
       
       'adminpermissions' => array(
           1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
-          2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Categories.Manage', 'Vanilla.Settings.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
+          2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
 //          4 => 'Garden.Settings.Manage',),
           ),
       
@@ -690,6 +690,16 @@ class Vbulletin extends ExportController {
             ";
          $Sql = str_replace('u.userid', 'a.userid', $Sql);
          $Ex->ExportBlobs($Sql, 'filedata', 'customphoto', 80);
+      }
+      
+      // Export the group icons no matter what.
+      if ($Attachments || $CustomAvatars && $Ex->Exists('socialgroupicon', 'thumbnail_filedata')) {
+         $Sql = "
+            select
+               i.filedata,
+               concat('vb/groupicons/', i.groupid, '.', i.extension) as path
+            from :_socialgroupicon i";
+         $Ex->ExportBlobs($Sql, 'filedata', 'path');
       }
    }
    

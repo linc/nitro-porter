@@ -32,7 +32,6 @@ class WebWiz extends ExportController {
 //          'can_access_admin' => 'Garden.Settings.Manage',
 //          'can_admin_members' => 'Garden.Users.Edit',
 //          'can_moderate_comments' => 'Garden.Moderation.Manage',
-//          'can_edit_categories' => 'Vanilla.Categories.Manage',
 //          'can_view_profiles' => 'Garden.Profiles.View',
 //          'can_post_comments' => 'Vanilla.Comments.Add',
 //          'can_view_online_system' => 'Vanilla.Discussions.View',
