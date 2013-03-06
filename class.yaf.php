@@ -1,6 +1,6 @@
 <?php
 /**
- * Invision Powerboard exporter tool
+ * YetAnotherForum.NET exporter tool
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license Proprietary
