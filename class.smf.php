@@ -46,7 +46,7 @@ class SMF extends ExportController {
          'DateUpdated'=>'DateUpdated'
       );
       $Ex->ExportTable('User', "
-         select *,
+         select m.*,
             from_unixtime(dateRegistered) as DateInserted,
             from_unixtime(dateRegistered) as DateFirstVisit,
             from_unixtime(lastLogin) as DateLastActive,
