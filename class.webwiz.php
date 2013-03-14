@@ -70,7 +70,7 @@ class WebWiz extends ExportController {
           'Login_IP' => 'LastIPAddress',
           'Banned' => 'Banned',
           'Join_date' => array('Column' => 'DateInserted'),
-          'last_visit' => array('Column' => 'DateLastActive'),
+          'Last_visit' => array('Column' => 'DateLastActive'),
           'Location' => array('Column' => 'Location', 'Filter' => array($Ex, 'HTMLDecoder')),
           'DOB' => 'DateOfBirth',
           'Show_email' => 'ShowEmail'
@@ -159,7 +159,7 @@ class WebWiz extends ExportController {
          select 
             th.Author_ID,
             th.Message,
-            th.Message_Date,
+            th.Message_date,
             th.IP_addr,
             'Html' as Format,
             t.*
