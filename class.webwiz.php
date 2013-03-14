@@ -79,7 +79,7 @@ class WebWiz extends ExportController {
          select
             concat(Salt, '$', Password) as Password2,
             case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
-            case when Avatar like 'http%' then Avatar when length(coalesce(Avatar, '')) > 0 then concat('webwiz/', Avatar) else null end as Photo2,
+         case when Avatar like 'http%' then Avatar when Avatar > '' then concat('webwiz/', Avatar) else null end as Photo2,
             'webwiz' as HashMethod,
             u.*
          from tblAuthor u
@@ -209,8 +209,7 @@ class WebWiz extends ExportController {
             g.Title
          from tblPMMessage pm
          join z_pmgroup g
-            on pm.PM_ID = g.Group_ID;
-         ", $Conversation_Map);
+            on pm.PM_ID = g.Group_ID;", $Conversation_Map);
       
       // User Conversation.
       $UserConversation_Map = array(
