@@ -1021,8 +1021,16 @@ class ExportModel {
             $DestColumn = $Column;
             $DestType = $Structure[$Column];
             
+            // Verify column doesn't exist in Mapping array's Column element
+            $MappingExists = FALSE;
+            foreach ($Mappings as $TestMapping) {
+               if (is_array($TestMapping) && array_key_exists('Column', $TestMapping) && ($TestMapping['Column'] == $Column))
+                  $MappingExists = TRUE;
+            }
+            
             // Also add the column to the mapping.
-            $Mappings[$Column] = $DestColumn;
+            if (!$MappingExists)
+               $Mappings[$Column] = $DestColumn;
          } else {
             $DestColumn = '';
             $DestType = '';
