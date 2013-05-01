@@ -8,6 +8,8 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+ 
+$Supported['SMF'] = array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_');
 
 class SMF extends ExportController {
 

@@ -6,6 +6,8 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+ 
+$Supported['SimplePress'] = array('name'=>'SimplePress 1.*', 'prefix' => 'wp_');
 
 class SimplePress extends ExportController {
 

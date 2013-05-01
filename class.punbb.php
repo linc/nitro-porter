@@ -7,6 +7,8 @@
  * @package VanillaPorter
  */
 
+$Supported['punbb'] = array('name'=>'PunBB 1.*', 'prefix' => 'punbb_');
+
 class Punbb extends ExportController {
 
    /** @var array Required tables => columns */  

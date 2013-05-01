@@ -19,21 +19,9 @@ else
    error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
 ini_set('display_errors', 'on');
 ini_set('track_errors', 1);
- 
-global $Supported;
 
 /** @var array Supported forum packages: classname => array(name, prefix) */
-$Supported = array(
-   'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
-   'vanilla2' => array('name'=> 'Vanilla 2.*', 'prefix'=>'GDN_'),
-   'vbulletin' => array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_'),
-   'phpbb2' => array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_'),
-   'phpbb3' => array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_'),
-   'bbPress' => array('name'=>'bbPress 1.*', 'prefix' => 'bb_'),
-   'SimplePress' => array('name'=>'SimplePress 1.*', 'prefix' => 'wp_'),
-   'SMF' => array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_'),
-   'punbb' => array('name'=>'PunBB 1.*', 'prefix' => 'punbb_')
-);
+global $Supported;
 
 // Support Files
 include_once 'class.exportmodel.php';
@@ -41,18 +29,13 @@ include_once 'views.php';
 include_once 'class.exportcontroller.php';
 include_once 'functions.php';
 
-include_once 'class.vanilla1.php';
-include_once 'class.vanilla2.php';
-include_once 'class.vbulletin.php';
-include_once 'class.phpbb2.php';
-include_once 'class.phpbb3.php';
-include_once 'class.bbpress.php';
-include_once 'class.simplepress.php';
-include_once 'class.smf.php';
-include_once 'class.punbb.php';
-include_once 'class.kunena.php';
+// Set Vanilla to appear first in the list.
+$Supported = array(
+   'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
+   'vanilla2' => array('name'=> 'Vanilla 2.*', 'prefix'=>'GDN_')
+);
 
-// Include any misc porters that haven't been included yet.
+// Include individual software porters.
 $Paths = glob(dirname(__FILE__).'/class.*.php');
 foreach ($Paths as $Path) {
    include_once $Path;
