@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
 
-$Supported['drupal'] = array('name'=> 'Drupal', 'prefix'=>'');
+$Supported['drupal'] = array('name'=> 'Drupal 6', 'prefix'=>'');
  
 class Drupal extends ExportController {
 
@@ -61,14 +61,15 @@ class Drupal extends ExportController {
       // Roles.
       $Role_Map = array(
           'rid' => 'RoleID',
-          'name' => 'Name'
-          );
+          'name' => 'Name');
       $Ex->ExportTable('Role', "select r.* from :_role r", $Role_Map);
       
       // User Role.
       $UserRole_Map = array(
           'uid' => 'UserID',
           'rid' => 'RoleID');
+      $Ex->ExportTable('UserRole', "
+         select * from :_users_roles", $UserRole_Map);
       
       // Categories (sigh)
       $Category_Map = array(
@@ -86,6 +87,7 @@ class Drupal extends ExportController {
       $Discussion_Map = array(
           'nid' => 'DiscussionID',
           'title' => 'Name',
+          'body' => 'Body',
           'uid' => 'InsertUserID',
           'created' => array('Column' => 'DateInserted', 'Filter' => $T2D),
           'DateUpdated' => array('Column' => 'DateUpdated', 'Filter' => $T2D),
@@ -93,13 +95,38 @@ class Drupal extends ExportController {
           'tid' => 'CategoryID'
       );
       $Ex->ExportTable('Discussion', "
-         select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid
-         from forum f
-         join node n
-            on f.nid = n.nid", $Discussion_Map);
-      
+         select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
+         from nodeforum f
+         left join node n
+            on f.nid = n.nid
+         left join node_revisions r
+            on r.nid = n.nid", $Discussion_Map);
+            
       // Comments.
       $Comment_Map = array(
+          'cid' => 'CommentID',
+          'uid' => 'InsertUserID',
+          'body' => array('Column' => 'Body'),
+          'hostname' => 'InsertIPAddress',
+          'created' => array('Column' => 'DateInserted', 'Filter' => $T2D)
+      );
+      $Ex->ExportTable('Comment', "
+         select
+            n.created,
+            n.uid,
+            r.body,
+            c.nid as DiscussionID,
+            n.title,
+            'Html' as Format,
+            nullif(n.changed, n.created) as DateUpdated
+         from node n
+         left join node_comments c 
+            on c.cid = n.nid
+         left join node_revisions r
+            on r.nid = n.nid", $Comment_Map);
+      
+      // Comments.
+      /*$Comment_Map = array(
           'cid' => 'CommentID',
           'nid' => 'DiscussionID',
           'uid' => 'InsertUserID',
@@ -114,9 +141,9 @@ class Drupal extends ExportController {
          from comments c
          join node n
             on c.nid = n.nid", $Comment_Map);
-      
+      */
       // Media.
-      $Media_Map = array(
+      /*$Media_Map = array(
           'fid' => 'MediaID',
           'nid' => 'ForeignID',
           'filename' => 'Name',
@@ -136,6 +163,7 @@ class Drupal extends ExportController {
          join node n
             on f.nid = n.nid
          where n.type = 'forum'", $Media_Map);
+      */
       
       $Ex->EndExport();
    }
