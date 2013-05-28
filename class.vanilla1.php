@@ -81,12 +81,9 @@ class Vanilla1 extends ExportController {
          'PERMISSION_CLOSE_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Close', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_EDIT_DISCUSSIONS' => array('Column' => 'Vanilla.Discussions.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_EDIT_COMMENTS' => array('Column' => 'Vanilla.Comments.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
-         'PERMISSION_APPROVE_APPLICANTS' => array('Column' => 'Garden.Applicants.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
+         'PERMISSION_APPROVE_APPLICANTS' => array('Column' => 'Garden.Moderation.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
          'PERMISSION_EDIT_USERS' => array('Column' => 'Garden.Users.Edit', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
-         'PERMISSION_MANAGE_REGISTRATION' => array('Column' => 'Garden.Registration.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
-         'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array('Column' => 'Garden.Settings.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
-         'PERMISSION_MANAGE_EXTENSIONS' => array('Column' => 'Garden.Plugins.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool')),
-         'PERMISSION_MANAGE_THEMES' => array('Column' => 'Garden.Themes.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool'))
+         'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array('Column' => 'Garden.Settings.Manage', 'Type' => 'tinyint', 'Filter' => array($this, 'ForceBool'))
       );
       $Ex->ExportTable('Permission', "select * from :_Role", $Permission_Map);
 
