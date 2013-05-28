@@ -13,7 +13,8 @@ $GlobalOptions = array(
 );
 
 // Go through all of the supported types and add them to the type description.
-$GlobalOptions['type']['Values'] = array_keys($Supported);
+if (isset($Supported))
+   $GlobalOptions['type']['Values'] = array_keys($Supported);
 
 function GetAllCommandLineOptions($Sections = FALSE) {
    global $GlobalOptions, $Supported;
@@ -62,7 +63,16 @@ function GetOptCodes($Options) {
    return array($ShortCodes, $LongCodes);
 }
 
-function ParseCommandLine() {
+function parseCommandLine($Options = NULL, $Files = NULL) {
+   global $GlobalOptions, $Supported, $argv;
+   
+   if (isset($Options))
+      $GlobalOptions = $Options;
+   if (!isset($GlobalOptions))
+      $GlobalOptions = array();
+   if (!isset($Supported))
+      $Supported = array();
+   
    $CommandOptions = GetAllCommandLineOptions();
    list($ShortCodes, $LongCodes) = GetOptCodes($CommandOptions);
    
@@ -77,13 +87,33 @@ function ParseCommandLine() {
    
    $Opts = ValidateCommandLine($Opts, $CommandOptions);
    
-   if ($Opts === FALSE)
+   if (is_array($Files)) {
+      $Opts2 = array();
+      foreach ($Files as $Name) {
+         $Value = array_pop($argv);
+         if (!$Value) {
+            echo "Missing required parameter: $Name";
+         } else {
+            $Opts2[$Name] = $Value;
+         }
+      }
+      if ($Opts2) {
+         if ($Opts === FALSE)
+            $Opts = $Opts2;
+         else
+            $Opts = array_merge($Opts, $Opts2);
+      }
+   }
+   
+   if ($Opts === FALSE) {
       die();
+   }
    
    $_POST = $Opts;
+   return $Opts;
 }
 
-function ValidateCommandLine($Values, $Options) {
+function validateCommandLine($Values, $Options) {
    $Errors = array();
    $Result = array();
    
@@ -151,7 +181,7 @@ function ValidateCommandLine($Values, $Options) {
    return $Result;
 }
 
-function WriteCommandLineHelp($Options = NULL, $Section = '') {
+function writeCommandLineHelp($Options = NULL, $Section = '') {
    if ($Options === NULL) {
       $Options = GetAllCommandLineOptions(TRUE);
       foreach ($Options as $Section => $Options) {
