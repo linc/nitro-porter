@@ -64,7 +64,7 @@ class Vbulletin extends ExportController {
       
       'adminpermissions' => array(
           1 => array('Garden.Moderation.Manage', 'Vanilla.Discussions.Announce', 'Vanilla.Discussions.Close', 'Vanilla.Discussions.Delete', 'Vanilla.Comments.Delete', 'Vanilla.Comments.Edit', 'Vanilla.Discussions.Edit', 'Vanilla.Discussions.Sink', 'Garden.Activity.Delete', 'Garden.Users.Add', 'Garden.Users.Edit', 'Garden.Users.Approve', 'Garden.Users.Delete', 'Garden.Applicants.Manage'),
-          2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Routes.Manage', 'Garden.Registration.Manage', 'Garden.Messages.Manage', 'Garden.Email.Manage', 'Vanilla.Spam.Manage', 'Garden.Plugins.Manage', 'Garden.Applications.Manage', 'Garden.Themes.Manage', 'Garden.Roles.Manage')
+          2 => array('Garden.Settings.View', 'Garden.Settings.Manage', 'Garden.Messages.Manage', 'Vanilla.Spam.Manage')
 //          4 => 'Garden.Settings.Manage',),
           ),
       
