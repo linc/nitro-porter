@@ -8,6 +8,8 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+ 
+$Supported['SMF'] = array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_');
 
 class SMF extends ExportController {
 
@@ -46,7 +48,7 @@ class SMF extends ExportController {
          'DateUpdated'=>'DateUpdated'
       );
       $Ex->ExportTable('User', "
-         select *,
+         select m.*,
             from_unixtime(dateRegistered) as DateInserted,
             from_unixtime(dateRegistered) as DateFirstVisit,
             from_unixtime(lastLogin) as DateLastActive,

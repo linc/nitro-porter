@@ -6,6 +6,9 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+ 
+$Supported['bbPress'] = array('name'=>'bbPress 1.*', 'prefix' => 'bb_');
+
 class BbPress extends ExportController {
    /** @var array Required tables => columns */
    protected $SourceTables = array(

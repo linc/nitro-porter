@@ -41,8 +41,8 @@ class Kunena extends ExportController {
             coalesce(ku.banned, 0) as banned,
             ku.birthdate,
             !ku.hideemail as showemail
-         FROM jos_users u 
-         left join jos_kunena_users ku 
+         FROM :_users u 
+         left join :_kunena_users ku 
             on ku.userid = u.id", $User_Map);
       
       // Role.
@@ -50,7 +50,7 @@ class Kunena extends ExportController {
          'rank_id'=>'RoleID',
          'rank_title'=>'Name',
       );
-      $Ex->ExportTable('Role', "select * from jos_kunena_ranks", $Role_Map);
+      $Ex->ExportTable('Role', "select * from :_kunena_ranks", $Role_Map);
       
       // UserRole.
       $UserRole_Map = array(
@@ -58,7 +58,7 @@ class Kunena extends ExportController {
           'rank' => 'RoleID');
       $Ex->ExportTable('UserRole', "
          select *
-         from jos_users u", $UserRole_Map);
+         from :_users u", $UserRole_Map);
       
       // Permission.
 //      $Ex->ExportTable('Permission',
@@ -78,7 +78,7 @@ class Kunena extends ExportController {
           
       );
       $Ex->ExportTable('Category', "
-         select * from jos_kunena_categories", $Category_Map);
+         select * from :_kunena_categories", $Category_Map);
       
       // Discussion.
       $Discussion_Map = array(
@@ -100,8 +100,8 @@ class Kunena extends ExportController {
             t.*,
             txt.message,
             'BBCode' as Format
-         from jos_kunena_messages t
-         left join jos_kunena_messages_text txt
+         from :_kunena_messages t
+         left join :_kunena_messages_text txt
             on t.id = txt.mesid
          where t.thread = t.id", $Discussion_Map);
       
@@ -122,8 +122,8 @@ class Kunena extends ExportController {
             t.*,
             txt.message,
             'BBCode' as Format
-         from jos_kunena_messages t
-         left join jos_kunena_messages_text txt
+         from :_kunena_messages t
+         left join :_kunena_messages_text txt
             on t.id = txt.mesid
          where t.thread <> t.id", $Comment_Map);
       
@@ -133,7 +133,7 @@ class Kunena extends ExportController {
           'userid' => 'UserID');
       $Ex->ExportTable('UserDiscussion', "
          select t.*, 1 as Bookmarked
-         from jos_kunena_subscriptions t", $UserDiscussion_Map);
+         from :_kunena_subscriptions t", $UserDiscussion_Map);
       
       // Media.
       $Media_Map = array(
@@ -153,8 +153,8 @@ class Kunena extends ExportController {
             'local' as StorageMethod,
             case when m.id = m.thread then 'discussion' else 'comment' end as ForeignTable,
             m.time
-         from jos_kunena_attachments a
-         join jos_kunena_messages m
+         from :_kunena_attachments a
+         join :_kunena_messages m
             on m.id = a.mesid", $Media_Map);
       
       $Ex->EndExport();

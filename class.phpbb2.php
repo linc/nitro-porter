@@ -6,6 +6,8 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+ 
+ $Supported['phpbb2'] = array('name'=>'phpBB 2.*', 'prefix' => 'phpbb_');
 
 class Phpbb2 extends ExportController {
 
