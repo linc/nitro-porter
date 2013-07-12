@@ -44,7 +44,11 @@ class Vbulletin extends ExportController {
 //   public $AttachSelect = '';
    
    /* @var string SQL fragment to build new path to user photo. */
-   public $AvatarSelect = "case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))) else null end as customphoto";
+   public $AvatarSelect = "case
+      when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
+      when av.avatarpath is not null then av.avatarpath
+      else null
+      end as customphoto";
    
    /* @var array Default permissions to map. */
    static $Permissions = array(
@@ -179,13 +183,18 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated,
-            case when avatarrevision > 0 then concat('userpics/avatar', u.userid, '_', 'avatarrevision', '.gif') else null end  as filephoto,
+            case when avatarrevision > 0 then concat('userpics/avatar', u.userid, '_', 'avatarrevision', '.gif')
+                 when av.avatarpath is not null then av.avatarpath
+                 else null
+                 end as filephoto,
             {$this->AvatarSelect},
             case when ub.userid is not null then 1 else 0 end as Banned,
             'vbulletin' as HashMethod
          from :_user u
          left join :_customavatar a
          	on u.userid = a.userid
+         left join :_avatar av
+         	on u.avatarid = av.avatarid
          left join :_userban ub
        	 	on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
       
