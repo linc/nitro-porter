@@ -190,3 +190,4 @@ function CombinePaths($Paths, $Delimiter = '/') {
       return $Paths;
    }
 }
+?>
