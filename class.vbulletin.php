@@ -143,6 +143,8 @@ class Vbulletin extends ExportController {
       }
       $Now = time();
       
+      $cdn = $this->Param('cdn', '');
+      
       // Grab all of the ranks.
       $Ranks = $Ex->Get("select * from :_usertitle order by minposts desc", 'usertitleid');
       
@@ -179,7 +181,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated,
-            case when avatarrevision > 0 then concat('userpics/avatar', u.userid, '_', 'avatarrevision', '.gif') else null end  as filephoto,
+            case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', 'avatarrevision', '.gif') else null end  as filephoto,
             {$this->AvatarSelect},
             case when ub.userid is not null then 1 else 0 end as Banned,
             'vbulletin' as HashMethod
