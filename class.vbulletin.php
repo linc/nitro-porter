@@ -185,7 +185,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastvisit) as DateLastActive,
             FROM_UNIXTIME(joindate) as DateInserted,
             FROM_UNIXTIME(lastactivity) as DateUpdated,
-            case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', 'avatarrevision', '.gif') else null end  as filephoto,
+            case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
                  when av.avatarpath is not null then av.avatarpath
                  else null
                  end as filephoto,
