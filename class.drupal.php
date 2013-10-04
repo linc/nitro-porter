@@ -123,7 +123,8 @@ class Drupal extends ExportController {
          left join node_comments c 
             on c.cid = n.nid
          left join node_revisions r
-            on r.nid = n.nid", $Comment_Map);
+            on r.nid = n.nid
+         where n.type = 'comment'", $Comment_Map);
       
       // Comments.
       /*$Comment_Map = array(
