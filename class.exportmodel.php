@@ -276,6 +276,16 @@ class ExportModel {
             'UserID' => 'int',
             'Name' => 'varchar(255)',
             'Value' => 'text'),
+      'UserNote' => array(
+            'UserNoteID' => 'int',
+            'Type' => 'varchar(10)',
+            'UserID' => 'int',
+            'Body' => 'text',
+            'Format' => 'varchar(10)',
+            'InsertUserID' => 'int',
+            'DateInserted' => 'datetime',
+            'InsertIPAddress' => 'varchar(15)'
+         ),
       'UserRole' => array(
             'UserID' => 'int',
             'RoleID' => 'int')

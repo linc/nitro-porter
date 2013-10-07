@@ -39,11 +39,12 @@ class Phpbb3 extends ExportController {
       
       // Begin
       $Ex->BeginExport('', 'phpBB 3.*', array('HashMethod' => 'phpBB'));
-
+      
       // Users.
       
       // Grab the avatar salt.
       $Px = $Ex->GetValue("select config_value from phpbb_config where config_name = 'avatar_salt'", '');
+      $cdn = $this->Param('cdn', '');
       
       $User_Map = array(
          'user_id' => 'UserID',
@@ -58,7 +59,7 @@ class Phpbb3 extends ExportController {
       );
       $Ex->ExportTable('User', "select *,
             case user_avatar_type 
-               when 1 then concat('phpbb/', '$Px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
+               when 1 then concat('$cdn', 'phpbb/', '$Px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
                else null end as photo,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
             FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
@@ -72,6 +73,8 @@ class Phpbb3 extends ExportController {
          'group_desc'=>'Description'
       );
       $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
+      
+      $this->ExportUserNotes();
       
       // Ranks.
       $Rank_Map = array(
@@ -404,9 +407,40 @@ join z_pmgroup g
 from :_attachments a
 join :_topics t
   on a.topic_id = t.topic_id", $Media_Map);
-
+      
       // End
       $Ex->EndExport();
+   }
+   
+   protected function ExportUserNotes() {
+      $Ex = $this->Ex;
+      
+      // User notes.
+      $UserNote_Map = array(
+         'log_id' => array('Column' => 'UserNoteID', 'Type' => 'int'),
+         'user_id' => array('Column' => 'InsertUserID', 'Type' => 'int'),
+         'reportee_id' => array('Column' => 'UserID', 'Type' => 'int'),
+         'log_ip' => array('Column' => 'InsertIPAddress', 'Type' => 'varchar(15)'),
+         'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => array($Ex, TimestampToDate)),
+         'log_operation' => array('Column' => 'Type', 'Type' => 'varchar(10)', 'Filter' => function($value) {
+            switch (strtoupper($value)) {
+               case 'LOG_USER_WARNING_BODY':
+                  return 'warning';
+               default:
+                  return 'note';
+            }
+         }),
+         'format' => array('Column' => 'Format', 'Type' => 'varchar(20)'),
+         'log_data' => array('Column' => 'Body', 'Type' => 'text', 'Filter' => function($value) {
+            $value = @unserialize($value);
+            return array_pop($value);
+         })
+      );
+      $Ex->ExportTable('UserNote',
+         "select l.*, 'Text' as format
+         from :_log l
+         where reportee_id > 0
+            and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')", $UserNote_Map);
    }
 
    public function RemoveBBCodeUIDs($r, $Field = '', $Row = '') {
