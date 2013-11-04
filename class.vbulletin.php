@@ -448,6 +448,7 @@ class Vbulletin extends ExportController {
          $Ex->ExportTable('Activity', "select *, 
                '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
                FROM_UNIXTIME(dateline) as DateInserted,
+               FROM_UNIXTIME(dateline) as DateUpdated,
                INET_NTOA(ipaddress) as InsertIPAddress,
                postuserid as InsertUserID,
                -1 as NotifyUserID,
