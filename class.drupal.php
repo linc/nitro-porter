@@ -28,7 +28,7 @@ class Drupal extends ExportController {
       $T2D = array($Ex, 'TimestampToDate');
 
       // Begin
-      $Ex->BeginExport('', 'Dupal');
+      $Ex->BeginExport('', 'Drupal');
       
       // Users
       $User_Map = array(
