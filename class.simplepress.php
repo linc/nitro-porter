@@ -119,7 +119,7 @@ end as _Permissions
             f.forum_name,
             f.forum_seq,
             f.forum_desc,
-            f.forum_slug,
+            lower(f.forum_slug) as forum_slug,
             case when f.parent = 0 then f.group_id + 1000 else f.parent end as parent_id
          from wp_sfforums f
 

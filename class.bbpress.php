@@ -73,6 +73,7 @@ class BbPress extends ExportController {
          'left_order'=>'Sort'
       );
       $Ex->ExportTable('Category', "select *,
+         lower(form_slug) as form_slug,
          nullif(forum_parent,0) as ParentCategoryID
          from :_forums", $Category_Map);
 
