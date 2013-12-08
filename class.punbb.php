@@ -108,7 +108,7 @@ class Punbb extends ExportController {
         forum_desc,
         disp_position,
         cat_id * 1000 as parent_id
-      from punbb_forums f
+      from :_forums f
       union
 
       select
@@ -117,7 +117,7 @@ class Punbb extends ExportController {
         '',
         disp_position,
         null
-      from punbb_categories", $Category_Map);
+      from :_categories", $Category_Map);
       
       // Discussion.
       $Discussion_Map = array(
@@ -140,10 +140,10 @@ class Punbb extends ExportController {
         from_unixtime(p.edited) as DateUpdated, 
         eu.id as UpdateUserID,
         'BBCode' as Format
-      from punbb_topics t
-      left join punbb_posts p
+      from :_topics t
+      left join :_posts p
         on t.first_post_id = p.id
-      left join punbb_users eu
+      left join :_users eu
         on eu.username = p.edited_by", $Discussion_Map);
       
       // Comment.
@@ -160,10 +160,10 @@ class Punbb extends ExportController {
         from_unixtime(p.posted) as DateInserted,
         from_unixtime(p.edited) as DateUpdated, 
         eu.id as UpdateUserID
-      from punbb_topics t
-      join punbb_posts p
+      from :_topics t
+      join :_posts p
         on t.id = p.topic_id
-      left join punbb_users eu
+      left join :_users eu
         on eu.username = p.edited_by
       where p.id <> t.first_post_id;", $Comment_Map);
       
