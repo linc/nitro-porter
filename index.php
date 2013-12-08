@@ -11,7 +11,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.8.2');
+define('APPLICATION_VERSION', '1.9.0');
 
 if(TRUE || defined('DEBUG'))
    error_reporting(E_ALL);
@@ -36,10 +36,12 @@ $Supported = array(
 );
 
 // Include individual software porters.
+// MAKESKIPSTART
 $Paths = glob(dirname(__FILE__).'/class.*.php');
 foreach ($Paths as $Path) {
    include_once $Path;
 }
+// MAKESKIPEND
 
 include_once 'functions.commandline.php';
 

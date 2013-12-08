@@ -502,3 +502,5 @@ class Xenforo extends ExportController {
    }
 
 }
+
+?>

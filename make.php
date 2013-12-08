@@ -3,7 +3,7 @@
 header('Content-Type: text/plain');
 
 // Make the final vanilla2export.php file from the other sources.
-$Path = dirname(__FILE__).'/make/vanilla2export.php';
+$Path = dirname(__FILE__).'/vanilla2export.php';
 
 if (file_exists($Path)) {
    $r = unlink($Path);
@@ -26,7 +26,19 @@ echo "Make Complete.\n";
 
 /// Functions ///
 function AddFile($fp, $Filename) {
+   // Recursively build file
    $Contents = GetFile($Filename);
+
+   // Include individual software porters (undo MAKESKIP)
+   $Paths = glob('class.*.php');
+   $Exporters = '';
+   foreach ($Paths as $Path) {
+      if (strstr($Path, 'export') === FALSE)
+         $Exporters .= GetFile($Path);
+   }
+   $Contents = str_replace('// [EXPORTERS]', ' ?>'.$Exporters.'<?php ', $Contents);
+
+   // Write the all-in-one file
    fwrite($fp, $Contents);
 }
 
@@ -35,6 +47,9 @@ function GetFile($Filename, $EndPhp = FALSE) {
    echo "Including file $Path\n";
 
    $Contents = file_get_contents($Path);
+
+   // MAKESKIP
+   $Contents = preg_replace('/MAKESKIPSTART(.*)MAKESKIPEND/s', '[EXPORTERS]', $Contents);
 
    // Inline any stylesheet includes.
    $Contents = preg_replace_callback('/<link.*?href=[\'"](.*?)[\'"].*?\/>/i', 'ReplaceStyleCallback', $Contents);
