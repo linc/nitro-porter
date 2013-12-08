@@ -180,7 +180,7 @@ class Mbox extends ExportController {
     */
    public function ParseBody($Body) {
       $Body = preg_replace('#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#', '', $Body);
-      $Body = preg_replace('#\vFrom: ([a-zA-Z0-9_-]*)@(.*)#s', '', $Body);
+      $Body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $Body);
       $Body = explode("____________", $Body);
       $Body = explode("----- Original Message -----", $Body[0]);
       return trim($Body[0]);
