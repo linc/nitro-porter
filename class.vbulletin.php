@@ -12,6 +12,8 @@
  * To export only 1 category, add 'forumid=#' parameter to the URL.
  * To extract avatars stored in database, add 'avatars=1' parameter to the URL.
  * To extract attachments stored in db, add 'attachments=1' parameter to the URL.
+ * To extract all usermeta data (title, skype, custom profile fields, etc),
+ *    add 'usermeta=1' parameter to the URL.
  * To stop the export after only extracting files, add 'noexport=1' param to the URL.
  *
  * TO MIGRATE FILES, BEFORE IMPORTING YOU MUST:
@@ -246,26 +248,30 @@ class Vbulletin extends ExportController {
 //      return;
 
       // UserMeta
-//      $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
-      # Standard vB user data
-//      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'aim' => 'AIM', 'icq' => 'ICQ', 'yahoo' => 'Yahoo', 'msn' => 'MSN', 'skype' => 'Skype', 'styleid' => 'StyleID');
-//      foreach($UserFields as $Field => $InsertAs)
-//         $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
-//      # Dynamic vB user data (userfield)
-//      $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
-//      if (is_resource($ProfileFields)) {
-//         $ProfileQueries = array();
-//         while ($Field = @mysql_fetch_assoc($ProfileFields)) {
-//            $Column = str_replace('_title', '', $Field['varname']);
-//            $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
-//            $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
-//               select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
-//         }
-//         foreach ($ProfileQueries as $Query) {
-//            $Ex->Query($Query);
-//         }
-//      }
-      # Get signatures
+      if ($this->Param('attachments')) {
+         $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
+         # Standard vB user data
+         $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'skype' => 'Skype', 'styleid' => 'StyleID');
+         foreach($UserFields as $Field => $InsertAs)
+            $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
+         # Dynamic vB user data (userfield)
+         $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
+         if (is_resource($ProfileFields)) {
+            $ProfileQueries = array();
+            while ($Field = @mysql_fetch_assoc($ProfileFields)) {
+               $Column = str_replace('_title', '', $Field['varname']);
+               $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
+               $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
+                  select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
+            }
+            foreach ($ProfileQueries as $Query) {
+               $Ex->Query($Query);
+            }
+         }
+      }
+
+
+      // Signatures
       $Sql = "
          select
             userid as UserID,
@@ -285,7 +291,7 @@ class Vbulletin extends ExportController {
       $Ex->ExportTable('UserMeta', $Sql);
 
 
-      // Ranks.
+      // Ranks
       $Rank_Map = array(
          'usertitleid' => 'RankID',
          'title' => 'Name',
