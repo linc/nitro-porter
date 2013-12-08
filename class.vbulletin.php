@@ -89,7 +89,7 @@ class Vbulletin extends ExportController {
       'deletionlog' => array('type','primaryid'),
       //'filedata'
       'forum' => array('forumid','description','displayorder','title','description','displayorder'),
-      'phrase' => array('varname','text','product','fieldname','varname'),
+      //'phrase' => array('varname','text','product','fieldname','varname'),
       //'pm'
       //'pmgroup'
       //'pmreceipt'
