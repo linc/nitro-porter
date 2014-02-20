@@ -69,11 +69,11 @@ class BbPress extends ExportController {
          'forum_id'=>'CategoryID',
          'forum_name'=>'Name',
          'forum_desc'=>'Description',
-         'form_slug'=>'UrlCode',
+         'forum_slug'=>'UrlCode',
          'left_order'=>'Sort'
       );
       $Ex->ExportTable('Category', "select *,
-         lower(form_slug) as form_slug,
+         lower(forum_slug) as forum_slug,
          nullif(forum_parent,0) as ParentCategoryID
          from :_forums", $Category_Map);
 
@@ -96,9 +96,8 @@ class BbPress extends ExportController {
       $Comment_Map = array(
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
-         'post_text' => 'Body',
+         'post_text' => array('Column'=>'Body', 'Filter'=>'bbPressTrim'),
 			'Format' => 'Format',
-         'Body' => array('Column'=>'Body','Filter'=>'bbPressTrim'),
          'poster_id' => 'InsertUserID',
          'post_time' => 'DateInserted'
       );
