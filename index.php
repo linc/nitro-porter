@@ -68,7 +68,7 @@ if (isset($_GET['type'])) {
 }
 
 $Method = 'DoExport';
-if (isset($_POST['avatars']) && $_POST['avatars'])
+if (isset($_POST['doavatars']) && $_POST['doavatars'])
    $Method = 'DoAvatars';
 
 // Instantiate the appropriate controller or display the input page.

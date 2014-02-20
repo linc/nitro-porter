@@ -30,28 +30,28 @@
 
 $Supported['vbulletin'] = array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_');
 $Supported['vbulletin']['CommandLine'] = array(
-    'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
-    'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
-    'mindate' => array('A date to import from.')
-    );
+   'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
+   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
+   'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
+   'mindate' => array('A date to import from.')
+);
 
 /**
  * vBulletin-specific extension of generic ExportController.
  *
  * @package VanillaPorter
  */
-class Vbulletin extends ExportController {   
-   public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', a.attachmentid,'.', f.extension) as Path";
+class Vbulletin extends ExportController {
    /* @var string SQL fragment to build new path to attachments. */
-//   public $AttachSelect = '';
-   
+   public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', a.attachmentid,'.', f.extension) as Path";
+
    /* @var string SQL fragment to build new path to user photo. */
    public $AvatarSelect = "case
       when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
       when av.avatarpath is not null then av.avatarpath
       else null
       end as customphoto";
-   
+
    /* @var array Default permissions to map. */
    static $Permissions = array(
    
@@ -704,7 +704,8 @@ class Vbulletin extends ExportController {
       if ($CustomAvatars) {
          $Sql = "select 
                a.filedata, 
-               {$this->AvatarSelect}
+               case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
+                  else null end as customphoto
             from :_customavatar a
             ";
          $Sql = str_replace('u.userid', 'a.userid', $Sql);
