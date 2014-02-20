@@ -13,3 +13,6 @@ _notes
 .buildpath
 .idea
 vanilla2export.php
+attachments/*
+custom*
+*.sql
