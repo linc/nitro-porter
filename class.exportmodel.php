@@ -868,36 +868,41 @@ class ExportModel {
          $YCoord = round(($HeightSource - $NewHeightSource) / 2);
          $HeightSource = $NewHeightSource;
       }
-      
-      switch ($Type) {
+
+      try {
+         switch ($Type) {
+               case 1:
+                  $SourceImage = imagecreatefromgif($Path);
+               break;
+            case 2:
+                  $SourceImage = imagecreatefromjpeg($Path);
+               break;
+            case 3:
+               $SourceImage = imagecreatefrompng($Path);
+               imagealphablending($SourceImage, TRUE);
+               break;
+         }
+
+         $TargetImage = imagecreatetruecolor($Width, $Height);
+         imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource, $HeightSource);
+         imagedestroy($SourceImage);
+
+         switch ($Type) {
             case 1:
-               $SourceImage = imagecreatefromgif($Path);
-            break;
-         case 2:
-               $SourceImage = imagecreatefromjpeg($Path);
-            break;
-         case 3:
-            $SourceImage = imagecreatefrompng($Path);
-            imagealphablending($SourceImage, TRUE);
-            break;
+               imagegif($TargetImage, $ThumbPath);
+               break;
+            case 2:
+               imagejpeg($TargetImage, $ThumbPath);
+               break;
+            case 3:
+               imagepng($TargetImage, $ThumbPath);
+               break;
+         }
+         imagedestroy($TargetImage);
       }
-      
-      $TargetImage = imagecreatetruecolor($Width, $Height);
-      imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource, $HeightSource);
-      imagedestroy($SourceImage);
-      
-      switch ($Type) {
-         case 1:
-            imagegif($TargetImage, $ThumbPath);
-            break;
-         case 2:
-            imagejpeg($TargetImage, $ThumbPath);
-            break;
-         case 3:
-            imagepng($TargetImage, $ThumbPath);
-            break;
+      catch (Exception $e) {
+         echo "Could not generate a thumnail for ".$TargetImage;
       }
-      imagedestroy($TargetImage);
 //      die('</pre>foo');
    }
    
