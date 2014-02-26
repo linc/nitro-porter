@@ -163,6 +163,7 @@ class Vbulletin extends ExportController {
          'referrerid'=>'InviteUserID',
          'timezoneoffset'=>'HourOffset',
          'ipaddress' => 'LastIPAddress',
+         'ipaddress2' => 'InsertIPAddress',
          'usertitle' => 'Title',
          'posts' => array('Column' => 'RankID', 'Filter' => function($Value) use ($Ranks) {
             // Look  up the posts in the ranks table.
@@ -181,6 +182,7 @@ class Vbulletin extends ExportController {
          $User_Map['customphoto'] = 'Photo';
       
       $Ex->ExportTable('User', "select u.*,
+            ipaddress as ipaddress2,
 				concat(`password`, salt) as password2,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
