@@ -42,8 +42,8 @@ class Mbox extends ExportController {
       // Temporary user table
       $Ex->Query('create table :_mbox_user (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
       $Result = $Ex->Query('select Sender from :_mbox group by Sender', TRUE);
-      // Parse name & email out - strip quotes, <, >
-      // Build ref array
+
+      // Users, pt 1: Build ref array; Parse name & email out - strip quotes, <, >
       $Users = array();
       while ($Row = mysql_fetch_assoc($Result)) {
          // Most senders are "Name <Email>"
@@ -59,11 +59,20 @@ class Mbox extends ExportController {
             $Name  = $Name[0];
          }
          $Email = $this->ParseEmail($Row['Sender']);
+
+         // Compile by unique email
+         $Users[$Email] = $Name;
+      }
+
+      // Users, pt 2: loop thru unique emails
+      foreach ($Users as $Email => $Name) {
          $Ex->Query('insert into :_mbox_user (Name, Email)
             values ("'.mysql_real_escape_string($Name).'", "'.mysql_real_escape_string($Email).'")');
          $UserID = mysql_insert_id();
+         // Overwrite user list with new UserID instead of name
          $Users[$Email] = $UserID;
       }
+
 
       // Temporary category table
       $Ex->Query('create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
@@ -77,6 +86,7 @@ class Mbox extends ExportController {
          $CategoryID = mysql_insert_id();
          $Categories[$Row["Folder"]] = $CategoryID;
       }
+
 
       // Temporary post table
       $Ex->Query('create table :_mbox_post (PostID int AUTO_INCREMENT, DiscussionID int,
