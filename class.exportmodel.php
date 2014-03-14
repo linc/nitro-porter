@@ -1258,7 +1258,7 @@ class ExportModel {
       
       $Sql = rtrim($Sql, ';').';';
       
-      $Connection = mysql_connect($this->_Host, $this->_Username, $this->_Password);
+      $Connection = @mysql_connect($this->_Host, $this->_Username, $this->_Password);
       mysql_select_db($this->_DbName);
       mysql_query("set names {$this->CharacterSet}");
       
