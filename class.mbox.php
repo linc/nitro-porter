@@ -10,7 +10,8 @@
  * Set the max size on all fields to 255 (in the addon’s preferences)
  * Reading an mbox file with Thunderbird:
  *    https://www.google.com/url?q=https%3A%2F%2Fcommons.lbl.gov%2Fdisplay%2F~jwelcher%40lbl.gov%2FReading%2Ban%2Bmbox%2Bfile%2Bwith%2BThunderbird&sa=D&sntz=1&usg=AFQjCNGs5UFFhrHvGPbfwOZUdeVjmu_XAQ
- * Export all messages in each mbox to CSV file. Watch status bar at bottom of Thunderbird for progress.
+ * Right click each mbox -> ImportExportTools -> "Export all messages in this folder" -> "Spreadsheet (CSV)".
+ *    Watch status bar at bottom of Thunderbird for progress.
  * Import settings: Escape is “ (double quote) ONLY
  * Import all CSVs to 1 table named ‘mbox’ with text fields:
  *    Subject, Sender, Body, Date, Folder (manually set to name of each mbox)
