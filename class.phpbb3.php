@@ -421,7 +421,7 @@ join :_topics t
          'user_id' => array('Column' => 'InsertUserID', 'Type' => 'int'),
          'reportee_id' => array('Column' => 'UserID', 'Type' => 'int'),
          'log_ip' => array('Column' => 'InsertIPAddress', 'Type' => 'varchar(15)'),
-         'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => array($Ex, TimestampToDate)),
+         'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => array($Ex, 'TimestampToDate')),
          'log_operation' => array('Column' => 'Type', 'Type' => 'varchar(10)', 'Filter' => function($value) {
             switch (strtoupper($value)) {
                case 'LOG_USER_WARNING_BODY':
