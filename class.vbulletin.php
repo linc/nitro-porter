@@ -33,7 +33,8 @@ $Supported['vbulletin']['CommandLine'] = array(
    'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
    'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
-   'mindate' => array('A date to import from.')
+   'mindate' => array('A date to import from.'),
+   'forumid' => array('Only export 1 forum')
 );
 
 /**
@@ -379,7 +380,7 @@ class Vbulletin extends ExportController {
 				'BBCode' as Format,
             replycount+1 as CountComments, 
             convert(ABS(open-1),char(1)) as Closed, 
-            convert(sticky,char(1)) as Announce,
+            if(convert(sticky,char(1))>0,2,0) as Announce,
             FROM_UNIXTIME(t.dateline) as DateInserted,
             FROM_UNIXTIME(lastpost) as DateUpdated,
             FROM_UNIXTIME(lastpost) as DateLastComment
