@@ -85,7 +85,7 @@ function ViewForm($Data) {
    <div class="Info">
       Welcome to the Vanilla Porter, an application for exporting your forum to the Vanilla 2 import format.
       For help using this application, 
-      <a href="http://vanillaforums.com/blog/help-topics/importing-data" style="text-decoration:underline;">see these instructions</a>.
+      <a href="http://docs.vanillaforums.com/developers/importing/porter" style="text-decoration:underline;">see these instructions</a>.
    </div>
 <form action="<?php echo $_SERVER['PHP_SELF'].'?'.http_build_query($_GET); ?>" method="post">
       <input type="hidden" name="step" value="info" />
