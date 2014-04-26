@@ -11,7 +11,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '1.9.1');
+define('APPLICATION_VERSION', '2.0.0');
 
 if(TRUE || defined('DEBUG'))
    error_reporting(E_ALL);
