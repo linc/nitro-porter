@@ -68,8 +68,8 @@ if (isset($_GET['type'])) {
 }
 
 $Method = 'DoExport';
-if (isset($_POST['doavatars']) && $_POST['doavatars'])
-   $Method = 'DoAvatars';
+//if (isset($_POST['doavatars']) && $_POST['doavatars'])
+   //$Method = 'DoAvatars';
 
 // Instantiate the appropriate controller or display the input page.
 if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {

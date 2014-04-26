@@ -1,6 +1,8 @@
 <?php
 /**
- * Invision Powerboard exporter tool
+ * Invision Powerboard exporter tool.
+ *
+ * To export avatars, provide ?avatars=1&folder=/path/to/avatars
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license Proprietary
@@ -10,29 +12,24 @@
 $Supported['ipb'] = array('name' => 'Invision Powerboard (IPB) 3.*', 'prefix'=>'ibf_');
 $Supported['ipb']['CommandLine'] = array(
    'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder'),
-   'source' => array('Source user table.', 'Sx' => ':', 'Field' => 'sourcetable')
+   'source' => array('Source user table.', 'Sx' => ':', 'Field' => 'sourcetable'),
+   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
 );
 
 class IPB extends ExportController {
-   
    /**
     * Export avatars into vanilla-compatibles names
-    * 
     */
    public function DoAvatars() {
-      
       // Source table
-      
       $SourceTable = GetValue('sourcetable', $_POST, 'profile_portal');
       
       // Check source folder
-
-      $SourceFolder = $_POST['folder'];
+      $SourceFolder = $this->Param('folder');
       if (!is_dir($SourceFolder))
-         trigger_error("Source avatar folder '{$_POST['folder']}' does not exist.");
+         trigger_error("Source avatar folder '{$SourceFolder}' does not exist.");
       
       // Set up a target folder
-         
       $TargetFolder = CombinePaths(array($SourceFolder, 'ipb'));
       if (!is_dir($SourceFolder)) {
          @$Made = mkdir($TargetFolder, 0777, TRUE);
@@ -167,6 +164,11 @@ class IPB extends ExportController {
       
       // Begin
       $Ex->BeginExport('', 'IPB 3.*', array('HashMethod' => 'ipb'));
+
+      // Export avatars
+      if ($this->Param('avatars')) {
+         $this->DoAvatars();
+      }
       
       if ($Ex->Exists('members', 'member_id') === TRUE) {
          $MemberID = 'member_id';

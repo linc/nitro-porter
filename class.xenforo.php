@@ -1,7 +1,8 @@
 <?php
-
 /**
- * xenforo exporter tool
+ * Xenforo exporter tool.
+ *
+ * To export avatars, provide ?avatars=1&folder=/path/to/avatars
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
@@ -9,7 +10,8 @@
  */
 $Supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
 $Supported['xenforo']['CommandLine'] = array(
-   'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder')
+   'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder'),
+   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
 );
 
 class Xenforo extends ExportController {
@@ -22,18 +24,15 @@ class Xenforo extends ExportController {
    
    /**
     * Export avatars into vanilla-compatibles names
-    * 
     */
    public function DoAvatars() {
       
       // Check source folder
-
-      $this->SourceFolder = $_POST['folder'];
+      $this->SourceFolder = $this->Param('folder');
       if (!is_dir($this->SourceFolder))
          trigger_error("Source avatar folder '{$this->SourceFolder}' does not exist.");
       
       // Set up a target folder
-         
       $this->TargetFolder = CombinePaths(array($this->SourceFolder, 'xf'));
       if (!is_dir($this->TargetFolder)) {
          @$Made = mkdir($this->TargetFolder, 0777, TRUE);
@@ -136,6 +135,11 @@ class Xenforo extends ExportController {
 //      $Ex->UseCompression(FALSE);
       // Begin
       $Ex->BeginExport('', 'xenforo', array('HashMethod' => 'xenforo'));
+
+      // Export avatars
+      if ($this->Param('avatars')) {
+         $this->DoAvatars();
+      }
 
       // Users.
       $User_Map = array(
