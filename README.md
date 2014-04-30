@@ -1,5 +1,5 @@
 The [official release](http://vanillaforums.org/addon/porter-core
-) is a single file. View the [official documentation](docs.vanillaforums.com/developers/importing) for important usage notes. This repository is for developers.
+) is a single file. View the [official documentation](http://docs.vanillaforums.com/developers/importing) for important usage notes. This repository is for developers.
 
 You can alternatively upload this entire folder to your web server if you want to use the latest bleeding-edge version or develop your own format. To do so, access it via `index.php` and ignore `vanilla2export.php` (the compiled version) entirely.
 
