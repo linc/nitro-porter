@@ -458,6 +458,10 @@ join :_topics t
       $regex = '`<!-- [a-z] --><a\s+class="[^"]+"\s+href="([^"]+)">([^<]+)</a><!-- [a-z] -->`';
       $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
 
+      // Allow mailto: links w/o a class.
+      $regex = '`<!-- [a-z] --><a\s+href="mailto:([^"]+)">([^<]+)</a><!-- [a-z] -->`i';
+      $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
+
       $r = str_replace(array('&quot;', '&#39;', '&#58;', 'Â', '&#46;', '&amp;'), array('"', "'", ':', '', '.', '&'), $r);
       return $r;
    }
