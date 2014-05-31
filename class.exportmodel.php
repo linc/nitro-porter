@@ -288,7 +288,16 @@ class ExportModel {
          ),
       'UserRole' => array(
             'UserID' => 'int',
-            'RoleID' => 'int')
+            'RoleID' => 'int'),
+      'Ban' => array(
+            'BanID' => 'int',
+            'BanType' => 'varchar(50)',
+            'BanValue' => 'varchar(50)',
+            'Notes' => 'varchar(255)',
+            'CountUsers' => 'int',
+            'CountBlockRegistrations' => 'int',
+            'InsertUserID' => 'int',
+            'DateInserted' => 'datetime')
    );
 
    public $TestMode = FALSE;
