@@ -389,6 +389,7 @@ join z_pmgroup g
       $Ex->Query('drop table if exists z_pmgroup;');
 
       // Media.
+      $cdn = $this->Param('cdn', '');
       $Media_Map = array(
           'attach_id' => 'MediaID',
           'real_filename' => 'Name',
@@ -400,7 +401,7 @@ join z_pmgroup g
       "select
   case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
   case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
-  concat ('FileUpload/', a.physical_filename) as Path,
+  concat ('$cdn','FileUpload/', a.physical_filename) as Path,
   FROM_UNIXTIME(a.filetime) as DateInserted,
   'local' as StorageMethod,
   a.*
