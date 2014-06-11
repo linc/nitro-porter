@@ -63,8 +63,11 @@ class Phpbb3 extends ExportController {
                else null end as photo,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
             FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
-            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted
-         from phpbb_users", $User_Map);  // ":_" will be replace by database prefix
+            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted,
+            ban_userid is not null as Banned
+         from :_users
+            left join phpbb_banlist bl ON (ban_userid = user_id)
+         ", $User_Map);  // ":_" will be replace by database prefix
 
       // Roles
       $Role_Map = array(
@@ -408,7 +411,9 @@ join z_pmgroup g
 from :_attachments a
 join :_topics t
   on a.topic_id = t.topic_id", $Media_Map);
-      
+
+      $this->ExportBanList();
+
       // End
       $Ex->EndExport();
    }
@@ -444,6 +449,20 @@ join :_topics t
             and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')", $UserNote_Map);
    }
 
+    /**
+     * Export email and ip ban list.
+     */
+    public function ExportBanList() {
+      $Ex = $this->Ex;
+      $Ex->ExportTable('Ban',
+         "select bl.*, ban_id as BanID, if (ban_ip='', 'Email', 'IpAddress') as BanType,
+             if(ban_ip='', ban_email, ban_ip) as BanValue,
+             Concat('Imported ban. ', ban_give_reason) as Notes,
+             NOW() as DateInserted
+         from :_banlist bl
+         where bl.ban_userid = 0 and (ban_ip!='' or ban_email!='')");
+    }
+
    public function RemoveBBCodeUIDs($r, $Field = '', $Row = '') {
       if (!$r)
          return $r;
@@ -457,6 +476,10 @@ join :_topics t
       $r = preg_replace('#<!\-\- s(.*?) \-\-><img src="\{SMILIES_PATH\}\/.*? \/><!\-\- s\1 \-\->#', '\1', $r);
       // Remove links.
       $regex = '`<!-- [a-z] --><a\s+class="[^"]+"\s+href="([^"]+)">([^<]+)</a><!-- [a-z] -->`';
+      $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
+
+      // Allow mailto: links w/o a class.
+      $regex = '`<!-- [a-z] --><a\s+href="mailto:([^"]+)">([^<]+)</a><!-- [a-z] -->`i';
       $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
 
       $r = str_replace(array('&quot;', '&#39;', '&#58;', 'Â', '&#46;', '&amp;'), array('"', "'", ':', '', '.', '&'), $r);
