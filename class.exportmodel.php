@@ -297,7 +297,35 @@ class ExportModel {
             'CountUsers' => 'int',
             'CountBlockRegistrations' => 'int',
             'InsertUserID' => 'int',
-            'DateInserted' => 'datetime')
+            'DateInserted' => 'datetime'),
+      'Group' => array(
+            'GroupID' => 'int',
+            'Name' => 'varchar(255)',
+            'Description' => 'text',
+            'Format' => 'varchar(10)',
+            'CategoryID' => 'int',
+            'Icon' => 'varchar(255)',
+            'Banner' => 'varchar(255)',
+            'Privacy' => 'varchar(255)',
+            'Registration' => 'varchar(255)',
+            'Visibility' => 'varchar(255)',
+            'CountMembers' => 'int',
+            'CountDiscussions' => 'int',
+            'DateLastComment' => 'datetime',
+            'DateInserted' => 'datetime',
+            'InsertUserID' => 'int',
+            'DateUpdated' => 'datetime',
+            'UpdateUserID' => 'int',
+            'Attributes' => 'text'
+      ),
+      'UserGroup' => array(
+            'UserGroupID' => 'int',
+            'GroupID' => 'int',
+            'UserID' => 'int',
+            'DateInserted' => 'datetime',
+            'InsertUserID' => 'int',
+            'Role' => 'varchar(255)'
+      )
    );
 
    public $TestMode = FALSE;
@@ -948,7 +976,7 @@ class ExportModel {
       // Grab the character set from the database.
       $Data = $this->Query("show collation like '$Collation'");
       if (!$Data)
-         return $False;
+         return FALSE;
       if ($CollationRow = mysql_fetch_assoc($Data)) {
          $CharacterSet = $CollationRow['Charset'];
          return $CharacterSet;
