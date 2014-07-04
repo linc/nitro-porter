@@ -1560,9 +1560,10 @@ class ExportModel {
          // Format the value for writing.
          if (is_null($Value)) {
             $Value = self::NULL;
-         } elseif (is_numeric($Value)) {
+         } elseif (is_integer($Value)) {
             // Do nothing, formats as is.
-         } elseif (is_string($Value)) {
+            // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
+         } elseif (is_string($Value) || is_numeric($Value)) {
             // Check to see if there is a callback filter.
             if (!isset($RevMappings[$Field])) {
                //$Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
