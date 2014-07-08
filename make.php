@@ -33,7 +33,7 @@ function AddFile($fp, $Filename) {
    $Paths = glob('class.*.php');
    $Exporters = '';
    foreach ($Paths as $Path) {
-      if (strstr($Path, 'export') === FALSE)
+      if (strstr($Path, 'export') === FALSE && strstr($Path, 'skeleton') === FALSE)
          $Exporters .= GetFile($Path);
    }
    $Contents = str_replace('// [EXPORTERS]', ' ?>'.$Exporters.'<?php ', $Contents);
