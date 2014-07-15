@@ -364,21 +364,32 @@ class Vbulletin5 extends Vbulletin {
 
 
       // Media
-      /*$Media_Map = array(
-         'nodeid'=>'MediaID',
-         'filename'=>'Name',
+      $Media_Map = array(
+         'nodeid' => 'MediaID',
+         'filename' => 'Name',
+         'Type' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
+         'Path' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+         'ThumbPath' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'BuildMediaPath')),
          //path
       );
-
       $Ex->ExportTable('Media', "select a.*,
-         c.class
+         filename as Type,
+         filename as Path,
+         filename as ThumbPath,
+         FROM_UNIXTIME(f.dateline) as DateInserted,
+         n.userid as InsertUserID,
+         '1' as ImageHeight,
+         '1' as ImageWidth,
+         n.parentid as ForeignID,
+         if(n2.parentid in (".implode(',',$CategoryIDs)."),'discussion','comment') as ForeignTable
       from :_attach a
          left join :_node n on n.nodeid = a.nodeid
          left join :_filedata f on f.filedataid = a.filedataid
-         left join :_contenttype c on n.contenttypeid = c.contenttypeid
+         left join :_node n2 on n.parentid = n2.nodeid
       where a.visible = 1
       ", $Media_Map);
-      */
+      // left join :_contenttype c on n.contenttypeid = c.contenttypeid
+
 
       // Conversations.
       $Conversation_Map = array(
