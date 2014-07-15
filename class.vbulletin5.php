@@ -425,7 +425,7 @@ class Vbulletin5 extends Vbulletin {
       // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
       $Ex->ExportTable('UserConversation',
          "select s.*
-          from sentto s
+          from :_sentto s
           ;", $UserConversation_Map);
 
 
