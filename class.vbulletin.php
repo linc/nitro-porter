@@ -165,7 +165,9 @@ class Vbulletin extends ExportController {
          'timezoneoffset'=>'HourOffset',
          'ipaddress' => 'LastIPAddress',
          'ipaddress2' => 'InsertIPAddress',
-         'usertitle' => 'Title',
+         'usertitle' => array('Column' => 'Title', 'Filter' => function($Value) {
+               return trim(strip_tags(str_replace('&nbsp;', ' ', $Value)));
+            }),
          'posts' => array('Column' => 'RankID', 'Filter' => function($Value) use ($Ranks) {
             // Look  up the posts in the ranks table.
             foreach ($Ranks as $RankID => $Row) {
