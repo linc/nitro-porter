@@ -239,7 +239,7 @@ join z_pmgroup g
       // Coversation Messages.
       $ConversationMessage_Map = array(
           'privmsgs_id' => 'MessageID',
-          'group_id' => 'ConversationID',
+          'groupid' => 'ConversationID',
           'privmsgs_text' => array('Column' => 'Body', 'Filter'=>array($this, 'RemoveBBCodeUIDs')),
           'privmsgs_from_userid' => 'InsertUserID'
       );
