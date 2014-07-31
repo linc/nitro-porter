@@ -53,9 +53,9 @@ class SlugName extends ExportController {
       // Here, 'HTMLDecoder' is a method in ExportModel. Check there for available filters.
       // Assume no filter is needed and only use one if you encounter issues.
       $User_Map = array(
-          'Author_ID' => 'UserID',
-          'Username' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
-          );
+         'Author_ID' => 'UserID',
+         'Username' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+      );
       // This is the query that the x_Map array above will be mapped against.
       // Therefore, our select statement must cover all the "source" columns.
       // It's frequently necessary to add joins, where clauses, and more to get the data we want.
@@ -69,8 +69,8 @@ class SlugName extends ExportController {
       // The Vanilla roles table will be wiped by any import. If your current platform doesn't have roles,
       // you can hard code new ones into the select statement. See Vanilla's defaults for a good example.
       $Role_Map = array(
-          'Group_ID' => 'RoleID',
-          'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
+         'Group_ID' => 'RoleID',
+         'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
       );
       $Ex->ExportTable('Role', "
          select *
@@ -81,8 +81,8 @@ class SlugName extends ExportController {
       // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
       // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
       $UserRole_Map = array(
-          'Author_ID' => 'UserID',
-          'Group_ID' => 'RoleID',
+         'Author_ID' => 'UserID',
+         'Group_ID' => 'RoleID',
       );
       $Ex->ExportTable('UserRole', "
          select u.*
@@ -111,8 +111,8 @@ class SlugName extends ExportController {
       // Don't worry about rebuilding the TreeLeft & TreeRight properties. Vanilla can fix this afterward
       // if you just get the Sort and ParentIDs correct.
       $Category_Map = array(
-          'Forum_ID' => 'CategoryID',
-          'Forum_name' => 'Name',
+         'Forum_ID' => 'CategoryID',
+         'Forum_name' => 'Name',
       );
       $Ex->ExportTable('Category', "
          select *
@@ -122,11 +122,11 @@ class SlugName extends ExportController {
       // Discussion.
       // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
       $Discussion_Map = array(
-          'Topic_ID' => 'DiscussionID',
-          'Forum_ID' => 'CategoryID',
-          'Author_ID' => 'InsertUserID',
-          'Subject' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
-          );
+         'Topic_ID' => 'DiscussionID',
+         'Forum_ID' => 'CategoryID',
+         'Author_ID' => 'InsertUserID',
+         'Subject' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+      );
       // It's easier to convert between Unix time and MySQL datestamps during the db query.
       $Ex->ExportTable('Discussion', "
          select *,
@@ -139,17 +139,17 @@ class SlugName extends ExportController {
       // This is where big migrations are going to get bogged down.
       // Be sure you have indexes created for any columns you are joining on.
       $Comment_Map = array(
-          'Thread_ID' => 'CommentID',
-          'Topic_ID' => 'DiscussionID',
-          'Author_ID' => 'InsertUserID',
-          'IP_addr' => 'InsertIPAddress',
-          'Message' => array('Column' => 'Body'),
-          'Format' => 'Format',
-          'Message_date' => array('Column' => 'DateInserted')
+         'Thread_ID' => 'CommentID',
+         'Topic_ID' => 'DiscussionID',
+         'Author_ID' => 'InsertUserID',
+         'IP_addr' => 'InsertIPAddress',
+         'Message' => array('Column' => 'Body'),
+         'Format' => 'Format',
+         'Message_date' => array('Column' => 'DateInserted')
       );
       $Ex->ExportTable('Comment', "
-        select th.*
-        from :_tblThread th", $Comment_Map);
+         select th.*
+         from :_tblThread th", $Comment_Map);
       
       // UserDiscussion.
       // This is the table for assigning bookmarks/subscribed threads.
