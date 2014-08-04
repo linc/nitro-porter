@@ -34,7 +34,8 @@ $Supported['vbulletin']['CommandLine'] = array(
    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
    'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
    'mindate' => array('A date to import from.'),
-   'forumid' => array('Only export 1 forum')
+   'forumid' => array('Only export 1 forum'),
+   'ipbanlist' => array('Import IP ban list.  Default: no.')
 );
 
 /**
@@ -141,7 +142,6 @@ class Vbulletin extends ExportController {
          $Ex->EndExport();
          return;
       }
-      
       // Check to see if there is a max date.
       $MinDate = $this->Param('mindate');
       if ($MinDate) {
@@ -478,7 +478,47 @@ class Vbulletin extends ExportController {
       if ($Ex->Exists('attachment')) {
          $this->ExportMedia($MinDiscussionID);
       }
-      
+
+      // IP Ban list
+      $IpBanlist = $this->Param('ipbanlist');
+      if ($IpBanlist) {
+
+         $Ex->Query("DROP TABLE IF EXISTS `ipbanlist` ");
+         $Ex->Query("CREATE TABLE `ipbanlist` (
+            `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+            `ipaddress` varchar(50) DEFAULT NULL,
+           PRIMARY KEY (`id`),
+           UNIQUE KEY `ipaddress` (`ipaddress`)
+
+         ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+
+         $Result = $Ex->Query("select value from :_setting where varname = 'banip'");
+         $Row = mysql_fetch_assoc($Result);
+
+         if ($Row) {
+            $InsertSql = 'INSERT IGNORE INTO `ipbanlist` (`ipaddress`) values ';
+            $IpString = str_replace("\r", "", $Row['value']);
+            $IPs = explode("\n", $IpString);
+            foreach ($IPs as $IP) {
+               $IP = trim($IP);
+               if (empty($IP)) {
+                  continue;
+               }
+               $InsertSql .= '(\'' . mysql_real_escape_string($IP) . '\'), ';
+            }
+            $InsertSql = substr($InsertSql, 0, -2);
+            $Ex->Query($InsertSql);
+
+            $Ban_Map = array();
+            $Ex->ExportTable('Ban',
+               "select 'IPAddress' as BanType, ipaddress as BanValue, 'Imported ban' as Notes, NOW() as DateInserted
+                  FROM `ipbanlist`",
+               $Ban_Map);
+
+         }
+      }
+
+
       // End
       $Ex->EndExport();
    }
