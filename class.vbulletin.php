@@ -483,20 +483,20 @@ class Vbulletin extends ExportController {
       $IpBanlist = $this->Param('ipbanlist');
       if ($IpBanlist) {
 
-         $Ex->Query("DROP TABLE IF EXISTS `ipbanlist` ");
-         $Ex->Query("CREATE TABLE `ipbanlist` (
+         $Ex->Query("DROP TABLE IF EXISTS `z_ipbanlist` ");
+         $Ex->Query("CREATE TABLE `z_ipbanlist` (
             `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
             `ipaddress` varchar(50) DEFAULT NULL,
            PRIMARY KEY (`id`),
            UNIQUE KEY `ipaddress` (`ipaddress`)
 
-         ) ENGINE=InnoDB DEFAULT CHARSET=latin1");
+         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
          $Result = $Ex->Query("select value from :_setting where varname = 'banip'");
          $Row = mysql_fetch_assoc($Result);
 
          if ($Row) {
-            $InsertSql = 'INSERT IGNORE INTO `ipbanlist` (`ipaddress`) values ';
+            $InsertSql = 'INSERT IGNORE INTO `z_ipbanlist` (`ipaddress`) values ';
             $IpString = str_replace("\r", "", $Row['value']);
             $IPs = explode("\n", $IpString);
             foreach ($IPs as $IP) {
@@ -514,6 +514,8 @@ class Vbulletin extends ExportController {
                "select 'IPAddress' as BanType, ipaddress as BanValue, 'Imported ban' as Notes, NOW() as DateInserted
                   FROM `ipbanlist`",
                $Ban_Map);
+
+            $Ex->Query('DROP table if exists `z_ipbanlist` ');
 
          }
       }
