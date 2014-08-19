@@ -731,17 +731,19 @@ class Vbulletin extends ExportController {
     */
    public function ExportBlobs($Attachments = TRUE, $CustomAvatars = TRUE) {
       $Ex = $this->Ex;
+      $Extension = ExportModel::FileExtension('a.filename');
       
       if ($Attachments) {
          $Identity = ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) ? 'f.filedataid' : 'f.attachmentid';
          $Sql = "select 
-               f.filedata, 
-               concat('attachments/', f.userid, '/', $Identity, '.attach') as Path
+               f.filedata,
+               $Extension as extension,
+               concat('attachments/', f.userid, '/', $Identity, '.', lower(extension)) as Path
                from ";
          
          // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
          if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE)
-            $Sql .= ":_filedata f";
+            $Sql .= ":_filedata f left join :_attach a on a.filedataid = f.filedataid";
          else
             $Sql .= ":_attachment f"; 
          
@@ -790,7 +792,9 @@ class Vbulletin extends ExportController {
          'filesize' => 'Size',
          'userid' => 'InsertUserID',
          'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-         'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath'))
+         'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+         'height' => array('Column' => 'ImageHeight', 'Filter' => array($this, 'BuildMediaDimension')),
+         'width' => array('Column' => 'ImageWidth', 'Filter' => array($this, 'BuildMediaDimension')),
          );
          
       // Add hash fields if they exist (from 2.x)
@@ -808,9 +812,6 @@ class Vbulletin extends ExportController {
       // Do the export
       if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
          // Exporting 4.x with 'filedata' table.
-         $Media_Map['width'] = 'ImageWidth';
-         $Media_Map['height'] = 'ImageHeight';
-         
          // Build an index to join on.
          $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
          
@@ -843,8 +844,8 @@ class Vbulletin extends ExportController {
                'discussion' as ForeignTable,
                t.threadid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
-               '1' as ImageHeight,
-               '1' as ImageWidth
+               '1' as height,
+               '1' as width
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
             where a.attachmentid > 0
@@ -856,8 +857,8 @@ class Vbulletin extends ExportController {
                'comment' as ForeignTable,
                a.postid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
-               '1' as ImageHeight,
-               '1' as ImageWidth
+               '1' as height,
+               '1' as width
             from :_post p
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
@@ -962,7 +963,7 @@ class Vbulletin extends ExportController {
    function BuildMediaPath($Value, $Field, $Row) {
       if (isset($Row['hash']) && $Row['hash'] != '') { 
          // Old school! (2.x)
-         $FilePath = $Row['hash'].'.file';//.$Row['extension'];
+         $FilePath = $Row['hash'].'.'.$Row['extension'];
       }
       else { // Newer than 3.0
          // Build user directory path
@@ -974,11 +975,32 @@ class Vbulletin extends ExportController {
          
          // 3.x uses attachmentid, 4.x uses filedataid
          $Identity = (isset($Row['filedataid'])) ? $Row['filedataid'] : $Row['attachmentid'];
-         
-         $FilePath = implode('/', $DirParts).'/'.$Identity.'.attach';
+
+         // If we're exporting blobs, simplify the folder structure.
+         // Otherwise, we need to preserve vBulletin's eleventy subfolders.
+         $Separator = ($this->Param('attachments', false)) ? '' : '/';
+         $FilePath = implode($Separator, $DirParts).'/'.$Identity.'.'.$Row['extension'];
       }
+
+      // Use 'cdn' parameter to define path prefix, ex: ?cdn=~cf/
+      $Cdn = $this->Param('cdn', '');
       
-      return 'attachments/'.$FilePath;
+      return $Cdn.'attachments/'.$FilePath;
+   }
+
+   /**
+    * Don't allow image dimensions to creep in for non-images.
+    *
+    * @param $Value
+    * @param $Field
+    * @param $Row
+    */
+   function BuildMediaDimension($Value, $Field, $Row) {
+      // Non-images get no height/width
+      if (stristr($Row['extension'], array('jpg','gif','png')) === false)
+         return null;
+
+      return $Value;
    }
    
    /**
@@ -993,11 +1015,24 @@ class Vbulletin extends ExportController {
     * @return string Extension or accurate MIME type.
     */
    function BuildMimeType($Value, $Field, $Row) {
-      switch ($Value) {
+      switch (strtolower($Value)) {
          case 'jpg':
          case 'gif':
          case 'png':
             $Value = 'image/'.$Value;
+            break;
+         case 'pdf':
+         case 'zip':
+            $Value = 'application/'.$Value;
+            break;
+         case 'doc':
+            $Value = 'application/msword';
+            break;
+         case 'xls':
+            $Value = 'application/vnd.ms-excel';
+            break;
+         case 'txt':
+            $Value = 'text/plain';
             break;
       }
       return $Value;

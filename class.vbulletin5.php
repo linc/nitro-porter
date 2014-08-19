@@ -367,20 +367,25 @@ class Vbulletin5 extends Vbulletin {
       $Media_Map = array(
          'nodeid' => 'MediaID',
          'filename' => 'Name',
-         'Type' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-         'Path' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
-         'ThumbPath' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'BuildMediaPath')),
-         //path
+         'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
+         'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+         'ThumbPath2' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'BuildMediaPath')),
+         'width' => 'ImageWidth',
+         'height' => 'ImageHeight',
+         'filesize' => 'Size',
       );
       $Ex->ExportTable('Media', "select a.*,
-         filename as Type,
-         filename as Path,
-         filename as ThumbPath,
+         filename as Path2,
+         filename as ThumbPath2,
          FROM_UNIXTIME(f.dateline) as DateInserted,
-         n.userid as InsertUserID,
-         '1' as ImageHeight,
-         '1' as ImageWidth,
+         f.userid as userid,
+         f.userid as InsertUserID,
+         if (f.width,f.width,1) as width,
+         if (f.height,f.height,1) as height,
          n.parentid as ForeignID,
+         f.extension,
+         f.filesize,
+         'local' as StorageMethod,
          if(n2.parentid in (".implode(',',$CategoryIDs)."),'discussion','comment') as ForeignTable
       from :_attach a
          left join :_node n on n.nodeid = a.nodeid
