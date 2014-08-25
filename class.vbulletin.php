@@ -512,7 +512,7 @@ class Vbulletin extends ExportController {
             $Ban_Map = array();
             $Ex->ExportTable('Ban',
                "select 'IPAddress' as BanType, ipaddress as BanValue, 'Imported ban' as Notes, NOW() as DateInserted
-                  FROM `ipbanlist`",
+                  FROM `z_ipbanlist`",
                $Ban_Map);
 
             $Ex->Query('DROP table if exists `z_ipbanlist` ');
