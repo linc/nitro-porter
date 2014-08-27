@@ -22,6 +22,9 @@
  * 3) Make BOTH folders writable by the server.
  * 4) Enable the FileUpload plugin. (Media table must be present.)
  *
+ * attachmentpath - Command line option to fix / check files are on disk.  Files named .attach are renamed
+ * to the proper name and missing files are reported in missing-files.txt.
+ *
  * @copyright Vanilla Forums Inc. 2010
  * @author Matt Lincoln Russell lincoln@icrontic.com
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
@@ -35,7 +38,8 @@ $Supported['vbulletin']['CommandLine'] = array(
    'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
    'mindate' => array('A date to import from.'),
    'forumid' => array('Only export 1 forum'),
-   'ipbanlist' => array('Import IP ban list.  Default: no.')
+   'ipbanlist' => array('Import IP ban list.  Default: no.'),
+   'attachmentpath' => array('Fullpath to attachments on disk.  Files will be renamed.', 'Sx' => '::')
 );
 
 /**
@@ -130,7 +134,6 @@ class Vbulletin extends ExportController {
       
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
-      
       $this->ExportBlobs(
          $this->Param('attachments'),
          $this->Param('avatars'),
@@ -631,7 +634,6 @@ class Vbulletin extends ExportController {
         case when title like 'Re: %' then trim(substring(title, 4)) else title end as title2
       from :_pmtext pm
       $MinWhere;");
-
       $Ex->Query('create index z_idx_pmtext on z_pmtext (pmtextid);');
 
       $Ex->Query('update z_pmtext pm
@@ -785,7 +787,6 @@ class Vbulletin extends ExportController {
       } else {
          $DiscussionWhere = '';
       }
-      
       $Media_Map = array(
          'attachmentid' => 'MediaID',
          'filename' => 'Name',
@@ -808,14 +809,15 @@ class Vbulletin extends ExportController {
             $AttachColumnsString .= ", a.$ColumnName";
          }
       }
-      
       // Do the export
       if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === TRUE) {
          // Exporting 4.x with 'filedata' table.
          // Build an index to join on.
-         $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
-         
-         $Ex->ExportTable('Media', "select 
+         $Result = $Ex->Query('show index from :_thread where Key_name = "ix_thread_firstpostid"');
+         if (!$Result) {
+            $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
+         }
+         $MediaSql = "select
             case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
             case when t.threadid is not null then t.threadid else a.contentid end as ForeignID,
             FROM_UNIXTIME(a.dateline) as DateInserted,
@@ -831,16 +833,17 @@ class Vbulletin extends ExportController {
          left join :_thread t
             on t.firstpostid = a.contentid and a.contenttypeid = 1
          where a.contentid > 0
-            $DiscussionWhere", $Media_Map);
+            $DiscussionWhere";
+         $Ex->ExportTable('Media', $MediaSql, $Media_Map);
+
       } else {
          // Exporting 3.x without 'filedata' table.
          // Do NOT grab every field to avoid 'filedata' blob in 3.x.
          // Left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
          // Lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
          $Extension = ExportModel::FileExtension('a.filename');
-         $Ex->ExportTable('Media',
-            "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-               'local' as StorageMethod, 
+         $MediaSql = "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
+               'local' as StorageMethod,
                'discussion' as ForeignTable,
                t.threadid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
@@ -849,11 +852,11 @@ class Vbulletin extends ExportController {
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
             where a.attachmentid > 0
-   
+
             union all
-   
+
             select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-               'local' as StorageMethod, 
+               'local' as StorageMethod,
                'comment' as ForeignTable,
                a.postid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
@@ -863,8 +866,64 @@ class Vbulletin extends ExportController {
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
             where p.postid <> t.firstpostid and  a.attachmentid > 0
-            ", $Media_Map);
+            ";
+         $Ex->ExportTable('Media', $MediaSql, $Media_Map);
        }
+
+      // files named .attach need to be named properly.
+      // file needs to be renamed and db updated.
+      // if its an images; we need to include .thumb
+      $attachmentPath = $this->Param('attachmentpath');
+      if ($attachmentPath) {
+         $missingFiles = array();
+         if (is_dir($attachmentPath)) {
+            $Ex->Comment("Checking files");
+            $Result = $Ex->Query($MediaSql);
+            while ($row = mysql_fetch_assoc($Result)) {
+               $filePath = $this->BuildMediaPath('', '' , $row);
+               $cdn = $this->Param('cdn', '');
+
+               if (!empty($cdn)) {
+                  $filePath = str_replace($cdn, '', $filePath);
+               }
+               $fullPath = $attachmentPath . $filePath;
+               if (file_exists($fullPath)) {
+                  continue;
+               }
+
+               //check if named .attach
+               $p = explode('.', $fullPath);
+               $attachFilename = str_replace(end($p), 'attach', $fullPath);
+               if (file_exists($attachFilename)) {
+                  // rename file
+                  echo "Rename: $attachFilename to $fullPath\n";
+                  continue;
+               }
+
+               //check if md5 hash in root
+               if (GetValue('hash', $row)) {
+                  $md5Filename = $attachmentPath . $row['hash'] . '.' . $row['extension'];
+                  if (file_exists($md5Filename)) {
+                     // rename file
+                     echo "Rename: $md5Filename to $fullPath\n";
+                     continue;
+                  }
+               }
+
+               $missingFiles[] = $filePath;
+
+            }
+         } else {
+            $Ex->Comment('Attachment Path not found');
+         }
+         $totalMissingFiles = count($missingFiles);
+         if ($totalMissingFiles > 0) {
+            $Ex->Comment('Missing files detected.  See ./missing_files.txt for full list.');
+            $Ex->Comment(sprintf('Total missing files %d', $totalMissingFiles));
+            file_put_contents('missing-files.txt', implode("\n", $missingFiles));
+         }
+
+      }
    }
    
    function _ExportPolls() {
@@ -997,8 +1056,15 @@ class Vbulletin extends ExportController {
     */
    function BuildMediaDimension($Value, $Field, $Row) {
       // Non-images get no height/width
-      if (stristr($Row['extension'], array('jpg','gif','png')) === false)
+      $Ex = $this->Ex;
+      if ($Ex->Exists('attachment', array('extension'))) {
+         $extension = $Row['extension'];
+      } else {
+         $extension = end(explode('.', $Row['filename']));
+      }
+      if (in_array(strtolower($extension), array('jpg','gif','png','jpeg'))) {
          return null;
+      }
 
       return $Value;
    }
