@@ -896,7 +896,7 @@ class Vbulletin extends ExportController {
                $attachFilename = str_replace(end($p), 'attach', $fullPath);
                if (file_exists($attachFilename)) {
                   // rename file
-                  echo "Rename: $attachFilename to $fullPath\n";
+                  rename($attachFilename, $fullPath);
                   continue;
                }
 
@@ -905,7 +905,7 @@ class Vbulletin extends ExportController {
                   $md5Filename = $attachmentPath . $row['hash'] . '.' . $row['extension'];
                   if (file_exists($md5Filename)) {
                      // rename file
-                     echo "Rename: $md5Filename to $fullPath\n";
+                     rename($md5Filename, $fullPath);
                      continue;
                   }
                }
