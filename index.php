@@ -11,7 +11,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '2.0.2');
+define('APPLICATION_VERSION', '2.0.3');
 
 if(TRUE || defined('DEBUG'))
    error_reporting(E_ALL);
@@ -37,7 +37,7 @@ $Supported = array(
 
 // Include individual software porters.
 // MAKESKIPSTART
-$Paths = glob(dirname(__FILE__).'/class.*.php');
+$Paths = glob(dirname(__FILE__).'/packages/class.*.php');
 foreach ($Paths as $Path) {
    include_once $Path;
 }

@@ -30,11 +30,10 @@ function AddFile($fp, $Filename) {
    $Contents = GetFile($Filename);
 
    // Include individual software porters (undo MAKESKIP)
-   $Paths = glob('class.*.php');
+   $Paths = glob('packages/class.*.php');
    $Exporters = '';
    foreach ($Paths as $Path) {
-      if (strstr($Path, 'export') === FALSE && strstr($Path, 'skeleton') === FALSE)
-         $Exporters .= GetFile($Path);
+      $Exporters .= GetFile($Path);
    }
    $Contents = str_replace('// [EXPORTERS]', ' ?>'.$Exporters.'<?php ', $Contents);
 
