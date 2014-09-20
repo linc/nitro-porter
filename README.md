@@ -7,7 +7,7 @@ Vanilla Porter is a nifty tool for exporting your old & busted forum into a fres
 
 ### Requirements
 
-Porter requires PHP 5.2+ and a connection to your existing database. That's it! 
+Porter requires PHP 5.3+ and a connection to your existing database. That's it! 
 
 ### Getting started
 
