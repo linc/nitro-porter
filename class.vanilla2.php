@@ -27,6 +27,7 @@ class Vanilla2 extends ExportController {
           'Permission',
           'Role',
           'User',
+          'UserComment',
           'UserConversation',
           'UserDiscussion',
           'UserMeta',
