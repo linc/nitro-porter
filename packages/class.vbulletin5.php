@@ -1,6 +1,10 @@
 <?php
 /**
- * vBulletin 5 Connect exporter tool
+ * vBulletin 5 Connect exporter tool.
+ *
+ * Add this 301 route to sidestep vB4->5 upgrade category redirects.
+ *    Expression: forumdisplay\.php\?([0-9]+)-([a-zA-Z0-9-_]+)
+ *    Target: /categories/$2
  *
  * @copyright Vanilla Forums Inc. 2014
  * @license Proprietary
