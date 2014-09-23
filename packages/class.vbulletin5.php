@@ -319,7 +319,9 @@ class Vbulletin5 extends Vbulletin {
          left join :_contenttype c on n.contenttypeid = c.contenttypeid
          left join :_nodeview v on v.nodeid = n.nodeid
          left join :_text t on t.nodeid = n.nodeid
-      where c.class = 'Text' and parentid in (".implode(',',$CategoryIDs).")
+      where c.class = 'Text'
+         and n.showpublished = 1
+         and parentid in (".implode(',',$CategoryIDs).")
       ", $Discussion_Map);
 
 
@@ -351,7 +353,9 @@ class Vbulletin5 extends Vbulletin {
       from :_node n
          left join :_contenttype c on n.contenttypeid = c.contenttypeid
          left join :_text t on t.nodeid = n.nodeid
-      where c.class = 'Text'  and parentid not in (".implode(',',$CategoryIDs).")
+      where c.class = 'Text'
+         and n.showpublished = 1
+         and parentid not in (".implode(',',$CategoryIDs).")
       ", $Comment_Map);
 
 
