@@ -1,14 +1,35 @@
-**DO NOT USE PORTER FOR UPGRADING VANILLA 2**. It is for migrating from other incompatible forum platforms.
+Vanilla Porter
+==============
 
-The [official release](http://vanillaforums.org/addon/porter-core
-) is a single file. View the [official documentation](http://docs.vanillaforums.com/developers/importing) for important usage notes. **This repository is for developers**.
+Vanilla Porter is a nifty tool for exporting your old & busted forum into a fresh Vanilla Forum. It will create a zipped text file that can be imported directly to Vanilla via the Dashboard.
 
-You can alternatively upload this entire folder to your web server if you want to use the latest bleeding-edge version or develop your own format. To do so, access it via `index.php` and ignore `vanilla2export.php` (the compiled version) entirely.
+**Do NOT user Vanilla Porter for UPGRADING**. It is for _migrating_ from other forums, including the incompatible Vanilla 1.x series.
 
-### Roll your own
+### Requirements
 
-To create a new export format, add a new file in the format "class.yournewformatname.php" which will automatically be added to the dropdown list of export options. Copy one of the existing classes as an example / starting place. We recommend using a simpler one for this like SMF.
+Porter requires PHP 5.3+ and a connection to your existing database. That's it! 
+
+### Getting started
+
+Please use the [official release](http://vanillaforums.org/addon/porter-core
+), which is a single file. View the [official documentation](http://docs.vanillaforums.com/developers/importing) for important usage notes.
+
+If you have a PHP-based forum (vBulletin, phpBB, etc) you can likely drop this right on your server and run it from there. For more complicated arrangements (like jForum, i.e. a Java environment), we suggest exporting your database to a PHP/MySQL server and running it there.
+
+### Roll your own!
+
+To support a new forum source, copy "class.skeleton.php", rename it to your platform, put it in the `packages` folder, and follow its inline documentation. 
+
+You can run Vanilla Porter via `index.php` which will use the source files rather than the single-file official release. This makes it easier to keep it up-to-date and debug problems.
+
+Send us a pull request when it's ready, and sign our [contributor's agreement](http://vanillaforums.org/contributors) (requires a vanillaforums.org forum account).
 
 ### Command line support
 
-Porter can run via the command line. Execute the `index.php` file with the `--help` flag for a full list of options. For developers with very large databases or ones still in production, we recommend running your export from the command line on your localhost environment with a copy of the database.
+Porter can run via the command line. Execute the `index.php` file with the `--help` flag for a full list of options. 
+
+For developers with very large databases or ones still in production, we recommend running your export from the command line on your localhost environment with a copy of the database. It just makes life easier.
+
+### Building a release
+
+Run `make.php`, which will build a single file named `vanilla2export.php`. Easy peasy.
