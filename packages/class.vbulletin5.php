@@ -1,6 +1,10 @@
 <?php
 /**
- * vBulletin 5 Connect exporter tool
+ * vBulletin 5 Connect exporter tool.
+ *
+ * Add this 301 route to sidestep vB4->5 upgrade category redirects.
+ *    Expression: forumdisplay\.php\?([0-9]+)-([a-zA-Z0-9-_]+)
+ *    Target: /categories/$2
  *
  * @copyright Vanilla Forums Inc. 2014
  * @license Proprietary
@@ -319,7 +323,9 @@ class Vbulletin5 extends Vbulletin {
          left join :_contenttype c on n.contenttypeid = c.contenttypeid
          left join :_nodeview v on v.nodeid = n.nodeid
          left join :_text t on t.nodeid = n.nodeid
-      where c.class = 'Text' and parentid in (".implode(',',$CategoryIDs).")
+      where c.class = 'Text'
+         and n.showpublished = 1
+         and parentid in (".implode(',',$CategoryIDs).")
       ", $Discussion_Map);
 
 
@@ -351,7 +357,9 @@ class Vbulletin5 extends Vbulletin {
       from :_node n
          left join :_contenttype c on n.contenttypeid = c.contenttypeid
          left join :_text t on t.nodeid = n.nodeid
-      where c.class = 'Text'  and parentid not in (".implode(',',$CategoryIDs).")
+      where c.class = 'Text'
+         and n.showpublished = 1
+         and parentid not in (".implode(',',$CategoryIDs).")
       ", $Comment_Map);
 
 
