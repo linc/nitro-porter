@@ -315,6 +315,7 @@ class Vbulletin5 extends Vbulletin {
 
       $Ex->ExportTable('Discussion', "select n.*,
          t.rawtext,
+         'BBCode' as Format,
          FROM_UNIXTIME(publishdate) as DateInserted,
          v.count as CountViews,
          convert(ABS(open-1),char(1)) as Closed,
@@ -353,6 +354,7 @@ class Vbulletin5 extends Vbulletin {
 
       $Ex->ExportTable('Comment', "select n.*,
          t.rawtext,
+         'BBCode' as Format,
          FROM_UNIXTIME(publishdate) as DateInserted
       from :_node n
          left join :_contenttype c on n.contenttypeid = c.contenttypeid
