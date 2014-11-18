@@ -1,23 +1,25 @@
 <?php
 /**
- * @copyright Vanilla Forums Inc. 2010
+ * @copyright Vanilla Forums Inc. 2010-2015
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 
-/** Generic controller implemented by forum-specific ones */
+/**
+ * Generic controller implemented by forum-specific ones.
+ */
 abstract class ExportController {
+
    /** @var array Database connection info */
    protected $DbInfo = array();
 
    /** @var array Required tables, columns set per exporter */
    protected $SourceTables = array();
 
+   /** @var bool Whether to stream result; deprecated. */
    protected $UseStreaming = FALSE;
 
-   /**
-    * @var ExportModel
-    */
+   /** @var ExportModel */
    protected $Ex = NULL;
 
    /** Forum-specific export routine */
@@ -38,7 +40,12 @@ abstract class ExportController {
       $this->Ex->TestMode = $this->Param('test', FALSE);
       $this->Ex->UseStreaming = FALSE; //$this->UseStreaming;
    }
-   
+
+   /**
+    * Set CDN file prefix if one is given.
+    *
+    * @return string
+    */
    public function CdnPrefix() {
       $Cdn = rtrim($this->Param('cdn', ''), '/');
       if ($Cdn)
@@ -48,7 +55,7 @@ abstract class ExportController {
    }
 
    /**
-    * Logic for export process
+    * Logic for export process.
     */
    public function DoExport() {
       global $Supported;
@@ -85,7 +92,7 @@ abstract class ExportController {
    }
 
    /**
-    * User submitted db connection info
+    * User submitted db connection info.
     */
    public function HandleInfoForm() {
       $this->DbInfo = array(
@@ -98,6 +105,13 @@ abstract class ExportController {
       $this->UseStreaming = array_key_exists('savefile', $_POST) ? FALSE : TRUE;
    }
 
+   /**
+    * Retrieve a parameter passed to the export process.
+    *
+    * @param string $Name
+    * @param mixed $Default Fallback value.
+    * @return mixed Value of the parameter.
+    */
    public function Param($Name, $Default = FALSE) {
       if (isset($_POST[$Name]))
          return $_POST[$Name];
@@ -108,7 +122,9 @@ abstract class ExportController {
    }
 
    /**
-    * Test database connection info
+    * Test database connection info.
+    *
+    * @return string|bool True on success, message on failure.
     */
    public function TestDatabase() {
       // Connection

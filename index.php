@@ -11,7 +11,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '2.0.4');
+define('APPLICATION_VERSION', '2.0.5');
 
 if(TRUE || defined('DEBUG'))
    error_reporting(E_ALL);
@@ -28,6 +28,8 @@ include_once 'class.exportmodel.php';
 include_once 'views.php';
 include_once 'class.exportcontroller.php';
 include_once 'functions.php';
+include_once 'functions.filter.php';
+include_once 'structure.php';
 
 // Set Vanilla to appear first in the list.
 $Supported = array(
