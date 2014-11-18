@@ -229,3 +229,14 @@ div.Info li {
 .Info .DownloadLink {
    padding: 10px 0 100px;
 }
+
+/* Feature table */
+.Info dl { }
+.Info dt {
+   float: left;
+   clear: left;
+   width: 200px;
+}
+.Info dt, dd {
+   border-bottom: 1px solid #E2F4FF;
+}

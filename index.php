@@ -38,6 +38,7 @@ include_once 'functions/render-functions.php';
 include_once 'functions/filter-functions.php';
 include_once 'functions/commandline-functions.php';
 include_once 'functions/structure-functions.php';
+include_once 'functions/feature-functions.php';
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");
@@ -63,7 +64,11 @@ if (defined('CONSOLE')) {
 
 // Instantiate the appropriate controller or display the input page.
 $Method = 'DoExport';
-if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
+if (isset($_REQUEST['features']) && isset($_REQUEST['type'])) {
+   $Set = (isset($_POST['cloud'])) ? array('core','addons','cloud') : false;
+   ViewFeatureTable($_REQUEST['type'], $Set);
+}
+elseif (isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
    // Mini-Factory
    $class = ucwords($_POST['type']);
    $Controller = new $class();

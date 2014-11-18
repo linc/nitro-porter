@@ -41,6 +41,26 @@ $Supported['vbulletin']['CommandLine'] = array(
    'ipbanlist' => array('Import IP ban list.  Default: no.'),
    'attachmentpath' => array('Fullpath to attachments on disk.  Files will be renamed.', 'Sx' => '::')
 );
+$Supported['vbulletin']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 'Requires additional steps.',
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'UserWall'        => 1,
+   'UserNotes'       => 1,
+   'Bookmarks'       => 1,
+   'Tags'            => 1,
+   'Signatures'      => 1,
+   'Badges'          => 1,
+   'Ranks'           => 1,
+   'Polls'           => 1,
+   'Groups'          => 1,
+);
 
 /**
  * vBulletin-specific extension of generic ExportController.

@@ -170,4 +170,45 @@ function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
    }
    PageFooter();
 }
+
+/**
+ *
+ *
+ * @param string $Platform
+ * @param bool $Set
+ */
+function ViewFeatureTable($Platform, $Set = FALSE) {
+   global $Supported;
+   if (!isset($Supported[$Platform]['features'])) {
+      echo "<p>Feature table not supported for ".$Platform."</p>";
+      return;
+   }
+   $AvailableFeatures = $Supported[$Platform]['features'];
+   $Set = VanillaFeatures($Set);
+
+   PageHeader();
+
+   echo '<div class="Info">';
+   echo '<h2>'.$Supported[$Platform]['name'].'</h2>';
+   echo '<dl>';
+
+   foreach ($Set as $Feature => $Trash) {
+      $Status = 'No';
+      if (isset($AvailableFeatures[$Feature])) {
+          if ($AvailableFeatures[$Feature] === 1) {
+            $Status = 'Yes';
+          }
+          elseif ($AvailableFeatures[$Feature]) {
+            $Status = $AvailableFeatures[$Feature];
+          }
+      }
+
+      echo '
+      <dt>'.$Feature.'</dt>
+      <dd>'.$Status.'</dd>';
+   }
+   echo '</dl>';
+
+   PageFooter();
+}
 ?>
