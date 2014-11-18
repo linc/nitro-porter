@@ -107,7 +107,7 @@ end as _Permissions
       // Categories
       $Category_Map = array(
          'forum_id' => 'CategoryID',
-         'forum_name' => array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
+         'forum_name' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
          'forum_desc' => 'Description',
          'forum_seq' => 'Sort',
          'form_slug' => 'UrlCode',

@@ -216,7 +216,7 @@ class Xenforo extends ExportController {
                return $Value ? $Value : NULL;
             }),
          'display_order' => 'Sort',
-         'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => array($Ex, 'NotFilter'))
+         'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
       );
       $Ex->ExportTable('Category', "
          select n.*
@@ -232,7 +232,7 @@ class Xenforo extends ExportController {
          'user_id' => 'InsertUserID',
          'post_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
          'sticky' => 'Announce',
-         'discussion_open' => array('Column' => 'Closed', 'Filter' => array($Ex, 'NotFilter')),
+         'discussion_open' => array('Column' => 'Closed', 'Filter' => 'NotFilter'),
          'last_post_date' => array('Column' => 'DateLastComment', 'Filter' => 'TimestampToDate'),
          'message' => 'Body',
          'format' => 'Format',

@@ -326,11 +326,11 @@ class Vbulletin extends ExportController {
 
       // Categories
       $Category_Map = array(
-         'forumid'=>'CategoryID',
-         'description'=>'Description',
-         'Name'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
-         'displayorder'=>array('Column'=>'Sort', 'Type'=>'int'),
-         'parentid'=>'ParentCategoryID'
+         'forumid' => 'CategoryID',
+         'description' => 'Description',
+         'Name' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
+         'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
+         'parentid' => 'ParentCategoryID'
       );
       $Ex->ExportTable('Category', "select f.*, title as Name
          from :_forum f
@@ -359,13 +359,13 @@ class Vbulletin extends ExportController {
       
       // Discussions
       $Discussion_Map = array(
-         'threadid'=>'DiscussionID',
-         'forumid'=>'CategoryID',
-         'postuserid'=>'InsertUserID',
-         'postuserid2'=>'UpdateUserID',
-         'title'=>array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
-			'Format'=>'Format',
-         'views'=>'CountViews',
+         'threadid' => 'DiscussionID',
+         'forumid' => 'CategoryID',
+         'postuserid' => 'InsertUserID',
+         'postuserid2' => 'UpdateUserID',
+         'title' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
+			'Format' => 'Format',
+         'views' => 'CountViews',
          'ipaddress' => 'InsertIPAddress'
       );
       
@@ -936,7 +936,7 @@ class Vbulletin extends ExportController {
          'question' => 'Name',
          'threadid' => 'DiscussionID',
          'anonymous' => 'Anonymous',
-         'dateline' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+         'dateline' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
          'postuserid' => 'InsertUserID'
        );
       $Ex->ExportTable('Poll',
@@ -954,7 +954,7 @@ class Vbulletin extends ExportController {
          'pollid' => 'PollID',
          'body' => 'Body', // calc
          'sort' => 'Sort', // calc
-         'dateline' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+         'dateline' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
          'postuserid' => 'InsertUserID'
       );
       $Sql = "select 
@@ -993,7 +993,7 @@ class Vbulletin extends ExportController {
       $PollVote_Map = array(
           'userid' => 'UserID',
           'optionid' => 'PollOptionID',
-          'votedate' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate'))
+          'votedate' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
       );
       $Ex->ExportTable('PollVote',
          "select pv.*, pollid * 1000 + voteoption as optionid

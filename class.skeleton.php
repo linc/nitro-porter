@@ -54,7 +54,7 @@ class SlugName extends ExportController {
       // Assume no filter is needed and only use one if you encounter issues.
       $User_Map = array(
          'Author_ID' => 'UserID',
-         'Username' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+         'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
       );
       // This is the query that the x_Map array above will be mapped against.
       // Therefore, our select statement must cover all the "source" columns.
@@ -125,7 +125,7 @@ class SlugName extends ExportController {
          'Topic_ID' => 'DiscussionID',
          'Forum_ID' => 'CategoryID',
          'Author_ID' => 'InsertUserID',
-         'Subject' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+         'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
       );
       // It's easier to convert between Unix time and MySQL datestamps during the db query.
       $Ex->ExportTable('Discussion', "

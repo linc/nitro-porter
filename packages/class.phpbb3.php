@@ -48,7 +48,7 @@ class Phpbb3 extends ExportController {
       
       $User_Map = array(
          'user_id' => 'UserID',
-         'username' => array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
+         'username' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
          'user_password' => 'Password',
          'user_email' => 'Email',
          'user_timezone' => 'HourOffset',
@@ -151,7 +151,7 @@ class Phpbb3 extends ExportController {
       // Categories
       $Category_Map = array(
          'forum_id'=>'CategoryID',
-         'forum_name' => array('Column'=>'Name','Filter'=>array($Ex, 'HTMLDecoder')),
+         'forum_name' => array('Column' => 'Name','Filter'=> 'HTMLDecoder'),
          'forum_desc'=>'Description',
          'left_id'=>'Sort'
       );
@@ -167,7 +167,7 @@ class Phpbb3 extends ExportController {
          'topic_title'=>'Name',
 			'Format'=>'Format',
          'topic_views'=>'CountViews',
-         'topic_first_post_id'=>array('Column'=>'FirstCommentID','Type'=>'int'),
+         'topic_first_post_id' => array('Column' => 'FirstCommentID','Type' => 'int'),
          'type' => 'Type'
       );
       $Ex->ExportTable('Discussion', "select t.*,
@@ -188,7 +188,7 @@ class Phpbb3 extends ExportController {
          'post_text' => array('Column'=>'Body','Filter'=>array($this, 'RemoveBBCodeUIDs')),
 			'Format' => 'Format',
          'poster_id' => 'InsertUserID',
-         'poster_ip' => array('Column' => 'InsertIPAddress', 'Filter' => array($Ex, 'ForceIP4')),
+         'poster_ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'ForceIP4'),
          'post_edit_user' => 'UpdateUserID'
       );
       $Ex->ExportTable('Comment', "select p.*,
@@ -301,7 +301,7 @@ set pm.groupid = g.groupid;");
          'poll_id' => 'PollID',
          'poll_title' => 'Name',
          'topic_id' => 'DiscussionID',
-         'topic_time' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+         'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
          'topic_poster' => 'InsertUserID',
          'anonymous' => 'Anonymous');
       $Ex->ExportTable('Poll', "
@@ -320,7 +320,7 @@ set pm.groupid = g.groupid;");
          'poll_option_text' => 'Body',
          'format' => 'Format',
          'poll_option_total' => 'CountVotes',
-         'topic_time' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+         'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
          'topic_poster' => 'InsertUserID'
          );
       $Ex->ExportTable('PollOption', "
@@ -427,7 +427,7 @@ join :_topics t
          'user_id' => array('Column' => 'InsertUserID', 'Type' => 'int'),
          'reportee_id' => array('Column' => 'UserID', 'Type' => 'int'),
          'log_ip' => array('Column' => 'InsertIPAddress', 'Type' => 'varchar(15)'),
-         'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => array($Ex, 'TimestampToDate')),
+         'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => 'TimestampToDate'),
          'log_operation' => array('Column' => 'Type', 'Type' => 'varchar(10)', 'Filter' => function($value) {
             switch (strtoupper($value)) {
                case 'LOG_USER_WARNING_BODY':

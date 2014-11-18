@@ -181,12 +181,12 @@ class IPB extends ExportController {
          $MemberID => 'UserID',
          'members_display_name' => array('Column' => 'Name', 'Filter' => 'HtmlDecoder'),
          'email' => 'Email',
-         'joined' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
-         'firstvisit' => array('Column' => 'DateFirstVisit', 'SourceColumn' => 'joined', 'Filter' => array($Ex, 'TimestampToDate')),
+         'joined' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+         'firstvisit' => array('Column' => 'DateFirstVisit', 'SourceColumn' => 'joined', 'Filter' => 'TimestampToDate'),
          'ip_address' => 'InsertIPAddress',
          'title' => 'Title',
          'time_offset' => 'HourOffset',
-         'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($Ex, 'TimestampToDate')),
+         'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'TimestampToDate'),
          'member_banned' => 'Banned',
          'Photo' => 'Photo',
          'title' => 'Title',
@@ -377,9 +377,9 @@ class IPB extends ExportController {
           'description' => array('Column' => 'SubName', 'Type' => 'varchar(255)'),
           'forum_id' => 'CategoryID',
           'starter_id' => 'InsertUserID',
-          'start_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'start_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'ip_address' => 'InsertIPAddress',
-          'edit_time' => array('Column' => 'DateUpdated', 'Filter' => array($Ex, 'TimestampToDate')),
+          'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
 //          'last_post' => array('Column' => 'DateLastPost', 'Filter' => array($Ex, 'TimestampToDate')),
           'posts' => 'CountComments',
           'views' => 'CountViews',
@@ -412,8 +412,8 @@ class IPB extends ExportController {
           'topic_id' => 'DiscussionID',
           'author_id' => 'InsertUserID',
           'ip_address' => 'InsertIPAddress',
-          'post_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
-          'edit_time' => array('Column' => 'DateUpdated', 'Filter' => array($Ex, 'TimestampToDate')),
+          'post_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+          'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
           'post' => 'Body'
           );
       $Sql = "
@@ -434,7 +434,7 @@ class IPB extends ExportController {
           'atype_mimetype' => 'Type',
           'attach_file' => 'Name',
           'attach_path' => 'Path',
-          'attach_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'attach_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'attach_member_id' => 'InsertUserID',
           'attach_filesize' => 'Size',
           'ForeignID' => 'ForeignID',
@@ -614,7 +614,7 @@ EOT;
       $Conversation_Map = array(
           'groupid' => 'ConversationID',
           'title2' => 'Subject',
-          'mt_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'mt_from_id' => 'InsertUserID'
           );
       $Sql = "select
@@ -631,7 +631,7 @@ join tmp_conversation tc
       $ConversationMessage_Map = array(
           'msg_id' => 'MessageID',
           'groupid' => 'ConversationID',
-          'msg_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'msg_post' => 'Body',
           'Format' => 'Format',
           'msg_author_id' => 'InsertUserID',
@@ -677,7 +677,7 @@ drop table tmp_group;");
       // Converations.
       $Conversation_Map = array(
           'mt_id' => 'ConversationID',
-          'mt_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'mt_title' => 'Subject',
           'mt_starter_id' => 'InsertUserID'
           );
@@ -689,7 +689,7 @@ drop table tmp_group;");
       $ConversationMessage_Map = array(
           'msg_id' => 'MessageID',
           'msg_topic_id' => 'ConversationID',
-          'msg_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'msg_post' => 'Body',
           'Format' => 'Format',
           'msg_author_id' => 'InsertUserID',
@@ -732,18 +732,20 @@ drop table tmp_group;");
             $Source = $Info['SourceColumn'];
          else
             $Source = $Column;
-         
-         switch ($Filter[1]) {
-            case 'HTMLDecoder':
-               $this->Ex->HTMLDecoderDb($Table, $Column, $PK);
-               unset($Map[$Column]['Filter']);
-               break;
-            case 'TimestampToDate':
-               $Selects[] = "from_unixtime($Source) as {$Column}_Date";
-               
-               unset($Map[$Column]);
-               $Map[$Column.'_Date'] = $Info['Column'];
-               break;
+
+         if (!is_array($Filter)) {
+            switch ($Filter) {
+               case 'HTMLDecoder':
+                  $this->Ex->HTMLDecoderDb($Table, $Column, $PK);
+                  unset($Map[$Column]['Filter']);
+                  break;
+               case 'TimestampToDate':
+                  $Selects[] = "from_unixtime($Source) as {$Column}_Date";
+
+                  unset($Map[$Column]);
+                  $Map[$Column.'_Date'] = $Info['Column'];
+                  break;
+            }
          }
       }
       

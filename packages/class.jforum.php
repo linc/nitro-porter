@@ -150,7 +150,7 @@ class Jforum extends ExportController {
          'forum_id' => 'CategoryID',
          'user_id' => 'InsertUserID',
          'topic_time' => 'DateInserted',
-         'topic_title' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+         'topic_title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
          'topic_views' => 'CountViews',
          'topic_replies' => 'CountComments',
          'topic_status' => 'Closed',

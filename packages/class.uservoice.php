@@ -27,7 +27,7 @@ class UserVoice extends ExportController {
       // User.
       $User_Map = array(
          'LastActivity' => array('Column' => 'DateLastActive'),          
-         'UserName' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+         'UserName' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
          'CreateDate' => array('Column' => 'DateInserted'),  
       );
       $Ex->ExportTable('User', "
@@ -84,8 +84,8 @@ class UserVoice extends ExportController {
          'IsLocked' => 'Closed',
          'MostRecentPostAuthorID' => 'LastCommentUserID',
          'MostRecentPostID' => 'LastCommentID',
-         'Subject' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
-         'Body' => array('Column' => 'Body', 'Filter' => array($Ex, 'HTMLDecoder')),      
+         'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+         'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
          'IPAddress' => 'InsertIPAddress'    
       );
       $Ex->ExportTable('Discussion', "
@@ -106,7 +106,7 @@ class UserVoice extends ExportController {
          'ThreadID' => 'DiscussionID',
          'UserID' => 'InsertUserID',
          'IPAddress' => 'InsertIPAddress',
-         'Body' => array('Column' => 'Body', 'Filter' => array($Ex, 'HTMLDecoder')),
+         'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
          'PostDate' => 'DateInserted'
       );
       $Ex->ExportTable('Comment', "
@@ -191,7 +191,7 @@ class UserVoice extends ExportController {
             
             //$PicPath = str_replace('/avat', '/pavat', $PhotoPath);
             $ThumbPath = str_replace('/pavat', '/navat', $PhotoPath);
-            $this->Ex->GenerateThumbnail($PhotoPath, $ThumbPath, $Thumbnail, $Thumbnail);
+            GenerateThumbnail($PhotoPath, $ThumbPath, $Thumbnail, $Thumbnail);
          }
          $Count++;
       }

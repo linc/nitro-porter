@@ -85,13 +85,13 @@ class Kunena extends ExportController {
           'id' => 'DiscussionID',
           'catid' => 'CategoryID',
           'userid' => 'InsertUserID',
-          'subject' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
-          'time' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+          'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'ip' => 'InsertIPAddress',
           'locked' => 'Closed',
           'hits' => 'CountViews',
           'modified_by' => 'UpdateUserID',
-          'modified_time' => array('Column' => 'DateUpdated', 'Filter' => array($Ex, 'TimestampToDate')),
+          'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
           'message' => 'Body',
           'Format' => 'Format'
           );
@@ -110,10 +110,10 @@ class Kunena extends ExportController {
           'id' => 'CommentID',
           'thread' => 'DiscussionID',
           'userid' => 'InsertUserID',
-          'time' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           'ip' => 'InsertIPAddress',
           'modified_by' => 'UpdateUserID',
-          'modified_time' => array('Column' => 'DateUpdated', 'Filter' => array($Ex, 'TimestampToDate')),
+          'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
           'message' => 'Body',
           'Format' => 'Format'
           );
@@ -141,10 +141,10 @@ class Kunena extends ExportController {
           'mesid' => 'ForeignID',
           'userid' => 'InsertUserID',
           'size' => 'Size',
-          'path2' => array('Column' => 'Path', 'Filter' => array($Ex, 'UrlDecode')),
+          'path2' => array('Column' => 'Path', 'Filter' => 'UrlDecode'),
           'filetype' => 'Type',
-          'filename' => array('Column' => 'Name', 'Filter' => array($Ex, 'UrlDecode')),
-          'time' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
+          'filename' => array('Column' => 'Name', 'Filter' => 'UrlDecode'),
+          'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
           );
       $Ex->ExportTable('Media', "
          select

@@ -60,17 +60,17 @@ class WebWiz extends ExportController {
       // User.
       $User_Map = array(
           'Author_ID' => 'UserID',
-          'Username' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
-          'Real_name' => array('Column' => 'FullName', 'Type' => 'varchar(50)', 'Filter' => array($Ex, 'HTMLDecoder')),
+          'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+          'Real_name' => array('Column' => 'FullName', 'Type' => 'varchar(50)', 'Filter' => 'HTMLDecoder'),
           'Password2' => 'Password',
           'Gender2' => 'Gender',
           'Author_email' => 'Email',
-          'Photo2' => array('Column' => 'Photo', 'Filter' => array($Ex, 'HTMLDecoder')),
+          'Photo2' => array('Column' => 'Photo', 'Filter' => 'HTMLDecoder'),
           'Login_IP' => 'LastIPAddress',
           'Banned' => 'Banned',
           'Join_date' => array('Column' => 'DateInserted'),
           'Last_visit' => array('Column' => 'DateLastActive'),
-          'Location' => array('Column' => 'Location', 'Filter' => array($Ex, 'HTMLDecoder')),
+          'Location' => array('Column' => 'Location', 'Filter' => 'HTMLDecoder'),
           'DOB' => 'DateOfBirth',
           'Show_email' => 'ShowEmail'
           );
@@ -145,7 +145,7 @@ class WebWiz extends ExportController {
           'Topic_ID' => 'DiscussionID',
           'Forum_ID' => 'CategoryID',
           'Author_ID' => 'InsertUserID',
-          'Subject' => array('Column' => 'Name', 'Filter' => array($Ex, 'HTMLDecoder')),
+          'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
           'IP_addr' => 'InsertIPAddress',
           'Message' => array('Column' => 'Body'),
           'Format' => 'Format',
