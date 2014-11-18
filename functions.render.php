@@ -1,15 +1,14 @@
 <?php
 /**
- * Views for Vanilla 2 export tools
+ * Views for Vanilla 2 export tools.
  *
- * @copyright Vanilla Forums Inc. 2010
+ * @copyright Vanilla Forums Inc. 2010-2015
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
- 
-   
+
 /**
- * HTML header
+ * HTML header.
  */
 function PageHeader() {
    echo '<?xml version="1.0" encoding="UTF-8"?>';
@@ -32,9 +31,8 @@ function PageHeader() {
    <?php
 }
 
-   
 /**
- * HTML footer
+ * HTML footer.
  */
 function PageFooter() {
    ?>
@@ -45,9 +43,8 @@ function PageFooter() {
 
 }
 
-   
 /**
- * Message: Write permission fail
+ * Message: Write permission fail.
  */
 function ViewNoPermission($msg) {
    PageHeader(); ?>
@@ -60,14 +57,12 @@ function ViewNoPermission($msg) {
    <?php PageFooter();
 }
 
-   
 /**
- * Form: Database connection info
+ * Form: Database connection info.
  */
 function ViewForm($Data) {
    $forums = GetValue('Supported', $Data, array());
    $msg = GetValue('Msg', $Data, '');
-   $Info = GetValue('Info', $Data, '');
    $CanWrite = GetValue('CanWrite', $Data, NULL);
    
    if($CanWrite === NULL)
@@ -149,37 +144,30 @@ function ViewForm($Data) {
    <?php PageFooter();
 }
 
-
 /**
- * Message: Result of export
+ * Message: Result of export.
  */
 function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
    if (defined('CONSOLE')) {
-      foreach($Msgs as $Msg) {
-         
-      }
       return;
    }
    
    PageHeader();
-   if($Msgs) {
-      // TODO: Style this a bit better.
+
+   if ($Path) {
+      echo "<p class=\"DownloadLink\">Success! <a href=\"$Path\"><b>Download exported file</b></a></p>";
+   }
+
+   if ($Msgs) {
       echo "<div class=\"$Class\">";
+       echo "<p>Really boring export logs follow:</p>\n";
       foreach($Msgs as $Msg) {
          echo "<p>$Msg</p>\n";
       }
+
+      echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
       echo "</div>";
-      if($Path)
-         echo "<a href=\"$Path\"><b>Download $Path</b></a>";
    }
    PageFooter();
-}
-
-function GetValue($Key, $Collection = NULL, $Default = '') {
-   if(!$Collection)
-      $Collection = $_POST;
-   if(array_key_exists($Key, $Collection))
-      return $Collection[$Key];
-   return $Default;
 }
 ?>

@@ -226,3 +226,6 @@ div.Info li {
    font-size: 9pt;
    font-weight: normal;
 }
+.Info .DownloadLink {
+   padding: 10px 0 100px;
+}

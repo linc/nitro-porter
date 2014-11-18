@@ -1,6 +1,19 @@
 <?php
 
 /**
+ * Error handler.
+ *
+ * @param $errno
+ * @param $errstr
+ */
+function ErrorHandler($errno, $errstr) {
+   if (defined(DEBUG) || ($errno != E_DEPRECATED && $errno != E_USER_DEPRECATED)) {
+      echo "Error: ({$errno}) {$errstr}\n";
+      die();
+   }
+}
+
+/**
  * Debug echo tool.
  *
  * @param $Var
@@ -8,6 +21,52 @@
  */
 function decho($Var, $Prefix = 'debug') {
    echo '<pre><b>'.$Prefix.'</b>: '.htmlspecialchars(print_r($Var, TRUE)).'</pre>';
+}
+
+/**
+ * Write out a value passed as bytes to its most readable format.
+ */
+function FormatMemorySize($Bytes, $Precision = 1) {
+   $Units = array('B', 'K', 'M', 'G', 'T');
+
+   $Bytes = max((int)$Bytes, 0);
+   $Pow = floor(($Bytes ? log($Bytes) : 0) / log(1024));
+   $Pow = min($Pow, count($Units) - 1);
+
+   $Bytes /= pow(1024, $Pow);
+
+   $Result = round($Bytes, $Precision).$Units[$Pow];
+   return $Result;
+}
+
+/**
+ * Test filesystem permissions.
+ */
+function TestWrite() {
+   // Create file
+   $file = 'vanilla2test.txt';
+   @touch($file);
+   if(is_writable($file)) {
+      @unlink($file);
+      return true;
+   }
+   else return false;
+}
+
+/**
+ *
+ *
+ * @param $Key
+ * @param null $Collection
+ * @param string $Default
+ * @return string
+ */
+function GetValue($Key, $Collection = NULL, $Default = '') {
+   if(!$Collection)
+      $Collection = $_POST;
+   if(array_key_exists($Key, $Collection))
+      return $Collection[$Key];
+   return $Default;
 }
 
 /**
