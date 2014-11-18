@@ -68,7 +68,7 @@ class SMF extends ExportController {
       // UserRoles
       $UserRole_Map = array(
          'ID_MEMBER'=>'UserID',
-		 'ID_GROUP'=>'RoleID'
+       'ID_GROUP'=>'RoleID'
       );
       $Ex->ExportTable('UserRole', "select * from :_members", $UserRole_Map);
 
@@ -78,27 +78,27 @@ class SMF extends ExportController {
       );
 
       $Ex->ExportTable('Category',
-	  "
+     "
       select
         (`ID_CAT` + 1000000) as `CategoryID`,
         `name` as `Name`,
-		'' as `Description`,
-		null as `ParentCategoryID`,
+      '' as `Description`,
+      null as `ParentCategoryID`,
         `catOrder` as `Sort`
       from :_categories
 
-	  union
+     union
 
       select
         b.`ID_BOARD` as `CategoryID`,
 
         b.`name` as `Name`,
-		  b.`description` as `Description`,
-		(CASE WHEN b.`ID_PARENT` = 0 THEN (`ID_CAT` + 1000000) ELSE `ID_PARENT` END) as `ParentCategoryID`,
+        b.`description` as `Description`,
+      (CASE WHEN b.`ID_PARENT` = 0 THEN (`ID_CAT` + 1000000) ELSE `ID_PARENT` END) as `ParentCategoryID`,
         b.`boardOrder` as `Sort`
       from :_boards b
 
-	  ", $Category_Map);
+     ", $Category_Map);
 
       // Discussions
       $Discussion_Map = array(
@@ -135,9 +135,9 @@ class SMF extends ExportController {
        join :_messages as m on t.ID_FIRST_MSG = m.ID_MSG
        join :_messages as m_end on t.ID_LAST_MSG = m_end.ID_MSG
 
-		 -- where t.spam = 0 AND m.spam = 0;
+       -- where t.spam = 0 AND m.spam = 0;
 
-		 ", $Discussion_Map);
+       ", $Discussion_Map);
 
       // Comments
       $Comment_Map = array(
@@ -153,8 +153,8 @@ class SMF extends ExportController {
          from_unixtime(m.posterTime) AS DateInserted,
          'BBCode' as Format
        from :_messages m
-		 join :_topics t on m.ID_TOPIC = t.ID_TOPIC
-		 where m.ID_MSG <> t.ID_FIRST_MSG;
+       join :_topics t on m.ID_TOPIC = t.ID_TOPIC
+       where m.ID_MSG <> t.ID_FIRST_MSG;
        ", $Comment_Map);
        
        // Media
@@ -269,14 +269,14 @@ join :_smfgroups g
   on pm.subject2 = g.subject2 and pm.to_ids = g.to_ids
 set pm.group_id = g.id');
 
-	 // Conversation.
-	 $Conv_Map = array(
-		'id' => 'ConversationID',
-		'from_id' => 'InsertUserID',
-		'DateInserted' => 'DateInserted',
+    // Conversation.
+    $Conv_Map = array(
+      'id' => 'ConversationID',
+      'from_id' => 'InsertUserID',
+      'DateInserted' => 'DateInserted',
       'subject2' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
-	 );
-	 $Ex->ExportTable('Conversation',
+    );
+    $Ex->ExportTable('Conversation',
 "select
   pm.group_id,
   pm.from_id,
@@ -287,15 +287,15 @@ join :_personal_messages pm2
   on pm.id = pm2.ID_PM
 where pm.id = pm.group_id", $Conv_Map);
 
-	 // ConversationMessage.
-	 $ConvMessage_Map = array(
-		'id' => 'MessageID',
-		'group_id' => 'ConversationID',
-		'DateInserted' => 'DateInserted',
-		'from_id' => 'InsertUserID',
-		'body' => array('Column'=>'Body')
-	 );
-	 $Ex->ExportTable('ConversationMessage',
+    // ConversationMessage.
+    $ConvMessage_Map = array(
+      'id' => 'MessageID',
+      'group_id' => 'ConversationID',
+      'DateInserted' => 'DateInserted',
+      'from_id' => 'InsertUserID',
+      'body' => array('Column'=>'Body')
+    );
+    $Ex->ExportTable('ConversationMessage',
 "select
   pm.id,
   pm.group_id,
@@ -307,13 +307,13 @@ from :_smfpm pm
 join :_personal_messages pm2
   on pm.id = pm2.ID_PM", $ConvMessage_Map);
 
-	 // UserConversation.
-	 $UserConv_Map = array(
-		'to_id' => 'UserID',
-		'group_id' => 'ConversationID',
+    // UserConversation.
+    $UserConv_Map = array(
+      'to_id' => 'UserID',
+      'group_id' => 'ConversationID',
       'deleted' => 'Deleted'
-	 );
-	 $Ex->ExportTable('UserConversation',
+    );
+    $Ex->ExportTable('UserConversation',
 
 "select
    pm.group_id,

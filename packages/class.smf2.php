@@ -136,9 +136,9 @@ class SMF2 extends ExportController {
        join :_messages as m on t.id_first_msg = m.id_msg
        join :_messages as m_end on t.id_last_msg = m_end.id_msg
 
-		 -- where t.spam = 0 AND m.spam = 0;
+       -- where t.spam = 0 AND m.spam = 0;
 
-		 ", $Discussion_Map);
+       ", $Discussion_Map);
 
         // Comments
         $Comment_Map = array(

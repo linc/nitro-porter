@@ -133,11 +133,11 @@ class Vbulletin5 extends Vbulletin {
             case when ub.userid is not null then 1 else 0 end as Banned
          from :_user u
          left join :_customavatar a
-         	on u.userid = a.userid
+            on u.userid = a.userid
          left join :_avatar av
-         	on u.avatarid = av.avatarid
+            on u.avatarid = av.avatarid
          left join :_userban ub
-       	 	on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
+              on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
       //ipdata - contains all IP records for user actions: view,visit,register,logon,logoff
 
 

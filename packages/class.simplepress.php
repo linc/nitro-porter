@@ -74,9 +74,9 @@ class SimplePress extends ExportController {
       $Ex->ExportTable('Permission', "select
             usergroup_id as RoleID,
 case
-	when usergroup_name like 'Guest%' then 'View'
-	when usergroup_name like 'Member%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
-	when usergroup_name like 'Mod%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage'
+   when usergroup_name like 'Guest%' then 'View'
+   when usergroup_name like 'Member%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
+   when usergroup_name like 'Mod%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage'
 end as _Permissions
          from wp_sfusergroups
          
@@ -140,13 +140,13 @@ end as _Permissions
          'forum_id'=>'CategoryID',
          'user_id'=>'InsertUserID',
          'topic_name'=>'Name',
-			'Format'=>'Format',
+         'Format'=>'Format',
          'topic_date'=>'DateInserted',
          'topic_pinned'=>'Announce',
          'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
       );
       $Ex->ExportTable('Discussion', "select t.*,
-				'Html' as Format
+            'Html' as Format
          from :_sftopics t", $Discussion_Map);
       
       if ($Ex->Exists('sftags')) {
@@ -169,13 +169,13 @@ end as _Permissions
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
          'post_content' => 'Body',
-			'Format' => 'Format',
+         'Format' => 'Format',
          'user_id' => 'InsertUserID',
          'post_date' => 'DateInserted',
          'poster_ip' => 'InsertIPAddress'
       );
       $Ex->ExportTable('Comment', "select p.*,
-				'Html' as Format
+            'Html' as Format
          from :_sfposts p", $Comment_Map);
 
       // Conversation.

@@ -189,7 +189,7 @@ class Vbulletin extends ExportController {
       
       $Ex->ExportTable('User', "select u.*,
             ipaddress as ipaddress2,
-				concat(`password`, salt) as password2,
+            concat(`password`, salt) as password2,
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -204,11 +204,11 @@ class Vbulletin extends ExportController {
             'vbulletin' as HashMethod
          from :_user u
          left join :_customavatar a
-         	on u.userid = a.userid
+            on u.userid = a.userid
          left join :_avatar av
-         	on u.avatarid = av.avatarid
+            on u.avatarid = av.avatarid
          left join :_userban ub
-       	 	on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
+              on u.userid = ub.userid and ub.liftdate <= now() ", $User_Map);  // ":_" will be replace by database prefix
       
       // Roles
       $Role_Map = array(
@@ -364,7 +364,7 @@ class Vbulletin extends ExportController {
          'postuserid' => 'InsertUserID',
          'postuserid2' => 'UpdateUserID',
          'title' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
-			'Format' => 'Format',
+         'Format' => 'Format',
          'views' => 'CountViews',
          'ipaddress' => 'InsertIPAddress'
       );
@@ -379,10 +379,10 @@ class Vbulletin extends ExportController {
          $MinDiscussionWhere = "and t.threadid > $MinDiscussionID";
       
       $Ex->ExportTable('Discussion', "select t.*,
-				t.postuserid as postuserid2,
+            t.postuserid as postuserid2,
             p.ipaddress,
             p.pagetext as Body,
-				'BBCode' as Format,
+            'BBCode' as Format,
             replycount+1 as CountComments, 
             convert(ABS(open-1),char(1)) as Closed, 
             if(convert(sticky,char(1))>0,2,0) as Announce,
@@ -391,7 +391,7 @@ class Vbulletin extends ExportController {
             FROM_UNIXTIME(lastpost) as DateLastComment
          from :_thread t
             left join :_deletionlog d on (d.type='thread' and d.primaryid=t.threadid)
-				left join :_post p on p.postid = t.firstpostid
+            left join :_post p on p.postid = t.firstpostid
          where d.primaryid is null
             and t.visible = 1
             $MinDiscussionWhere
@@ -402,7 +402,7 @@ class Vbulletin extends ExportController {
          'postid' => 'CommentID',
          'threadid' => 'DiscussionID',
          'pagetext' => 'Body',
-			'Format' => 'Format',
+         'Format' => 'Format',
          'ipaddress' => 'InsertIPAddress'
       );
       
@@ -410,7 +410,7 @@ class Vbulletin extends ExportController {
          $MinDiscussionWhere = "and p.threadid > $MinDiscussionID";
       
       $Ex->ExportTable('Comment', "select p.*,
-				'BBCode' as Format,
+            'BBCode' as Format,
             p.userid as InsertUserID,
             p.userid as UpdateUserID,
          FROM_UNIXTIME(p.dateline) as DateInserted,
@@ -468,8 +468,8 @@ class Vbulletin extends ExportController {
                -1 as NotifyUserID,
                'BBCode' as Format,
                'WallPost' as ActivityType
-   			from :_visitormessage
-   			where state='visible'
+            from :_visitormessage
+            where state='visible'
                $MinDiscussionWhere", $Activity_Map);
       }
 

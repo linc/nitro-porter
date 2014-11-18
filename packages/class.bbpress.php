@@ -83,12 +83,12 @@ class BbPress extends ExportController {
          'forum_id'=>'CategoryID',
          'topic_poster'=>'InsertUserID',
          'topic_title'=>'Name',
-			'Format'=>'Format',
+         'Format'=>'Format',
          'topic_start_time'=>'DateInserted',
          'topic_sticky'=>'Announce'
       );
       $Ex->ExportTable('Discussion', "select t.*,
-				'Html' as Format,
+            'Html' as Format,
             case t.topic_open when 0 then 1 else 0 end as Closed
          from :_topics t", $Discussion_Map);
 
@@ -97,12 +97,12 @@ class BbPress extends ExportController {
          'post_id' => 'CommentID',
          'topic_id' => 'DiscussionID',
          'post_text' => array('Column'=>'Body', 'Filter'=>'bbPressTrim'),
-			'Format' => 'Format',
+         'Format' => 'Format',
          'poster_id' => 'InsertUserID',
          'post_time' => 'DateInserted'
       );
       $Ex->ExportTable('Comment', "select p.*,
-				'Html' as Format
+            'Html' as Format
          from :_posts p", $Comment_Map);
 
       // Conversations.
@@ -204,16 +204,16 @@ function bb_code_trick_reverse( $text ) {
 }
 
 function bb_decodeit( $matches ) {
-	$text = $matches[2];
-	$trans_table = array_flip(get_html_translation_table(HTML_ENTITIES));
-	$text = strtr($text, $trans_table);
-	$text = str_replace('<br />', '<coded_br />', $text);
-	$text = str_replace('<p>', '<coded_p>', $text);
-	$text = str_replace('</p>', '</coded_p>', $text);
-	$text = str_replace(array('&#38;','&amp;'), '&', $text);
-	$text = str_replace('&#39;', "'", $text);
-	if ( '<pre><code>' == $matches[1] )
-		$text = "\n$text\n";
-	return "`$text`";
+   $text = $matches[2];
+   $trans_table = array_flip(get_html_translation_table(HTML_ENTITIES));
+   $text = strtr($text, $trans_table);
+   $text = str_replace('<br />', '<coded_br />', $text);
+   $text = str_replace('<p>', '<coded_p>', $text);
+   $text = str_replace('</p>', '</coded_p>', $text);
+   $text = str_replace(array('&#38;','&amp;'), '&', $text);
+   $text = str_replace('&#39;', "'", $text);
+   if ( '<pre><code>' == $matches[1] )
+      $text = "\n$text\n";
+   return "`$text`";
 }
 ?>

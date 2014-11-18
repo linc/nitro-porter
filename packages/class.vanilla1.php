@@ -60,10 +60,10 @@ class Vanilla1 extends ExportController {
       $ZeroRoleID++;
 
       /*
-		    'RoleID' => 'int', 
-		    'Name' => 'varchar(100)', 
-		    'Description' => 'varchar(200)'
-		 */
+          'RoleID' => 'int', 
+          'Name' => 'varchar(100)', 
+          'Description' => 'varchar(200)'
+       */
       $Role_Map = array(
          'RoleID'=>'RoleID',
          'Name'=>'Name',
@@ -89,9 +89,9 @@ class Vanilla1 extends ExportController {
 
       // UserRoles
       /*
-		    'UserID' => 'int', 
-		    'RoleID' => 'int'
-		 */
+          'UserID' => 'int', 
+          'RoleID' => 'int'
+       */
       $UserRole_Map = array(
          'UserID' => 'UserID', 
          'RoleID'=> 'RoleID'
@@ -108,7 +108,7 @@ class Vanilla1 extends ExportController {
           'InsertUserID' => 'int', 
           'DateUpdated' => 'datetime', 
           'UpdateUserID' => 'int'
-		 */
+       */
       $Category_Map = array(
          'CategoryID' => 'CategoryID', 
          'Name' => 'Name',
@@ -118,19 +118,19 @@ class Vanilla1 extends ExportController {
       
       // Discussions
       /*
-		    'DiscussionID' => 'int', 
-		    'Name' => 'varchar(100)', 
-		    'CategoryID' => 'int', 
-		    'Body' => 'text', 
-		    'Format' => 'varchar(20)', 
-		    'DateInserted' => 'datetime', 
-		    'InsertUserID' => 'int', 
-		    'DateUpdated' => 'datetime', 
-		    'UpdateUserID' => 'int', 
-		    'Score' => 'float', 
-		    'Announce' => 'tinyint', 
-		    'Closed' => 'tinyint'
-		 */
+          'DiscussionID' => 'int', 
+          'Name' => 'varchar(100)', 
+          'CategoryID' => 'int', 
+          'Body' => 'text', 
+          'Format' => 'varchar(20)', 
+          'DateInserted' => 'datetime', 
+          'InsertUserID' => 'int', 
+          'DateUpdated' => 'datetime', 
+          'UpdateUserID' => 'int', 
+          'Score' => 'float', 
+          'Announce' => 'tinyint', 
+          'Closed' => 'tinyint'
+       */
       $Discussion_Map = array(
          'DiscussionID' => 'DiscussionID', 
          'Name' => 'Name',
@@ -159,16 +159,16 @@ class Vanilla1 extends ExportController {
       
       // Comments
       /*
-		    'CommentID' => 'int', 
-		    'DiscussionID' => 'int', 
-		    'DateInserted' => 'datetime', 
-		    'InsertUserID' => 'int', 
-		    'DateUpdated' => 'datetime', 
-		    'UpdateUserID' => 'int', 
-		    'Format' => 'varchar(20)', 
-		    'Body' => 'text', 
-		    'Score' => 'float'
-		 */
+          'CommentID' => 'int', 
+          'DiscussionID' => 'int', 
+          'DateInserted' => 'datetime', 
+          'InsertUserID' => 'int', 
+          'DateUpdated' => 'datetime', 
+          'UpdateUserID' => 'int', 
+          'Format' => 'varchar(20)', 
+          'Body' => 'text', 
+          'Score' => 'float'
+       */
       $Comment_Map = array(
          'CommentID' => 'CommentID',
          'DiscussionID' => 'DiscussionID',

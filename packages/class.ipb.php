@@ -244,7 +244,7 @@ class IPB extends ExportController {
                  $Select
                  from ibf_members m
                  left join ibf_profile_portal p
-                 	on m.$MemberID = p.pp_member_id
+                    on m.$MemberID = p.pp_member_id
                  $From";
       }
       $this->ClearFilters('members', $User_Map, $Sql, 'm');
@@ -391,9 +391,9 @@ class IPB extends ExportController {
       select 
          t.*,
          case 
-         	when t.description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', t.description, '</div>', p.post)
-         	when t.description <> '' then t.description
-         	else p.post
+            when t.description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', t.description, '</div>', p.post)
+            when t.description <> '' then t.description
+            else p.post
          end as post,
          case when t.state = 'closed' then 1 else 0 end as closed,
          'IPB' as Format,
@@ -444,21 +444,21 @@ class IPB extends ExportController {
           'img_height' => 'ImageHeight'
       );
       $Sql = "select 
-	a.*, 
+   a.*, 
    concat('~cf/ipb/a.attach_location') as attach_path,
-	ty.atype_mimetype,
-	case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
-	case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
-	case a.attach_img_width when 0 then a.attach_thumb_width else a.attach_img_width end as img_width,
-	case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height,
-	'local' as StorageMethod
+   ty.atype_mimetype,
+   case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
+   case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
+   case a.attach_img_width when 0 then a.attach_thumb_width else a.attach_img_width end as img_width,
+   case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height,
+   'local' as StorageMethod
 from ibf_attachments a
 join ibf_posts p
-	on a.attach_rel_id = p.pid and a.attach_rel_module = 'post'
+   on a.attach_rel_id = p.pid and a.attach_rel_module = 'post'
 join ibf_topics t
-	on t.tid = p.topic_id
+   on t.tid = p.topic_id
 left join ibf_attachments_type ty
-	on a.attach_ext = ty.atype_extension";
+   on a.attach_ext = ty.atype_extension";
       $this->ClearFilters('Media', $Media_Map, $Sql);
       $Ex->ExportTable('Media', $Sql, $Media_Map);
       
@@ -476,69 +476,69 @@ left join ibf_attachments_type ty
       
       $Sql = <<<EOT
 create table tmp_to (
-	id int,
-	userid int,
-	primary key (id, userid)
+   id int,
+   userid int,
+   primary key (id, userid)
 );
 
 truncate table tmp_to;
 
 insert ignore tmp_to (
-	id,
-	userid
+   id,
+   userid
 )
 select
-	mt_id,
-	mt_from_id
+   mt_id,
+   mt_from_id
 from ibf_message_topics;
 
 insert ignore tmp_to (
-	id,
-	userid
+   id,
+   userid
 )
 select
-	mt_id,
-	mt_to_id
+   mt_id,
+   mt_to_id
 from ibf_message_topics;
 
 create table tmp_to2 (
-	id int primary key,
-	userids varchar(255)
+   id int primary key,
+   userids varchar(255)
 );
 truncate table tmp_to2;
 
 insert tmp_to2 (
-	id,
-	userids
+   id,
+   userids
 )
 select
-	id,
-	group_concat(userid order by userid)
+   id,
+   group_concat(userid order by userid)
 from tmp_to
 group by id;
 
 create table tmp_conversation (
-	id int primary key,
-	title varchar(255),
-	title2 varchar(255),
-	userids varchar(255),
-	groupid int
+   id int primary key,
+   title varchar(255),
+   title2 varchar(255),
+   userids varchar(255),
+   groupid int
 );
 
 replace tmp_conversation (
-	id,
-	title,
-	title2,
-	userids
+   id,
+   title,
+   title2,
+   userids
 )
 select 
-	mt_id,
-	mt_title,
-	mt_title,
-	t2.userids
+   mt_id,
+   mt_title,
+   mt_title,
+   t2.userids
 from ibf_message_topics t
 join tmp_to2 t2
-	on t.mt_id = t2.id;
+   on t.mt_id = t2.id;
 
 update tmp_conversation
 set title2 = trim(right(title2, length(title2) - 3))
@@ -581,21 +581,21 @@ set title2 = trim(right(title2, length(title2) - 5))
 where title2 like 'Sent:%';
 
 create table tmp_group (
-	title2 varchar(255),
-	userids varchar(255),
-	groupid int,
-	primary key (title2, userids)
+   title2 varchar(255),
+   userids varchar(255),
+   groupid int,
+   primary key (title2, userids)
 );
 
 replace tmp_group (
-	title2,
-	userids,
-	groupid
+   title2,
+   userids,
+   groupid
 )
 select
-	title2,
-	userids,
-	min(id)
+   title2,
+   userids,
+   min(id)
 from tmp_conversation
 group by title2, userids;
 
@@ -604,7 +604,7 @@ create index tidx_conversation on tmp_conversation(title2, userids);
 
 update tmp_conversation c
 join tmp_group g
-	on c.title2 = g.title2 and c.userids = g.userids
+   on c.title2 = g.title2 and c.userids = g.userids
 set c.groupid = g.groupid;
 EOT;
       
@@ -618,12 +618,12 @@ EOT;
           'mt_from_id' => 'InsertUserID'
           );
       $Sql = "select
-	mt.*,
+   mt.*,
    tc.title2,
-	tc.groupid
+   tc.groupid
 from ibf_message_topics mt
 join tmp_conversation tc
-	on mt.mt_id = tc.id";
+   on mt.mt_id = tc.id";
       $this->ClearFilters('Conversation', $Conversation_Map, $Sql);
       $Ex->ExportTable('Conversation', $Sql, $Conversation_Map);
       
@@ -638,15 +638,15 @@ join tmp_conversation tc
           'msg_ip_address' => 'InsertIPAddress'
           );
       $Sql = "select
-	tx.*,
-	tc.title2,
-	tc.groupid,
-	'IPB' as Format
+   tx.*,
+   tc.title2,
+   tc.groupid,
+   'IPB' as Format
 from ibf_message_text tx
 join ibf_message_topics mt
    on mt.mt_msg_id = tx.msg_id
 join tmp_conversation tc
-	on mt.mt_id = tc.id";
+   on mt.mt_id = tc.id";
       $this->ClearFilters('ConversationMessage', $ConversationMessage_Map, $Sql);
       $Ex->ExportTable('ConversationMessage', $Sql, $ConversationMessage_Map);
       
@@ -656,11 +656,11 @@ join tmp_conversation tc
           'groupid' => 'ConversationID'
           );
       $Sql = "select distinct
-	g.groupid,
-	t.userid
+   g.groupid,
+   t.userid
 from tmp_to t
 join tmp_group g
-	on g.groupid = t.id";
+   on g.groupid = t.id";
       $Ex->ExportTable('UserConversation', $Sql, $UserConversation_Map);
       
       $Ex->QueryN("

@@ -22,7 +22,7 @@ function PageHeader() {
 </head>
 <body>
 <div id="Frame">
-	<div id="Content">
+   <div id="Content">
       <div class="Title">
          <h1>
             <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla" />
