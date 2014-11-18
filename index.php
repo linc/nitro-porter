@@ -27,17 +27,17 @@ if (PHP_SAPI == 'cli') {
    define('CONSOLE', TRUE);
 }
 
-/** @var array Supported forum packages: classname => array(name, prefix) */
+/** @var array Supported forum packages: classname => array(name, prefix, features) */
 global $Supported;
 
 // Support Files
 include_once 'class.exportmodel.php';
 include_once 'class.exportcontroller.php';
-include_once 'functions.php';
-include_once 'functions.render.php';
-include_once 'functions.filter.php';
-include_once 'functions.commandline.php';
-include_once 'functions.structure.php';
+include_once 'functions/core-functions.php';
+include_once 'functions/render-functions.php';
+include_once 'functions/filter-functions.php';
+include_once 'functions/commandline-functions.php';
+include_once 'functions/structure-functions.php';
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");
@@ -50,7 +50,7 @@ $Supported = array(
 
 // Include individual software porters.
 // MAKESKIPSTART
-$Paths = glob(dirname(__FILE__).'/packages/class.*.php');
+$Paths = glob(dirname(__FILE__).'/packages/*.php');
 foreach ($Paths as $Path) {
    include_once $Path;
 }

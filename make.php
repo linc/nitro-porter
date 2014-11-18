@@ -30,7 +30,7 @@ function AddFile($fp, $Filename) {
    $Contents = GetFile($Filename);
 
    // Include individual software porters (undo MAKESKIP)
-   $Paths = glob('packages/class.*.php');
+   $Paths = glob('packages/*.php');
    $Exporters = '';
    foreach ($Paths as $Path) {
       $Exporters .= GetFile($Path);

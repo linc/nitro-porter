@@ -17,7 +17,7 @@ function PageHeader() {
 <html>
 <head>
    <title>Vanilla Porter - Forum Export Tool</title>
-   <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+   <link rel="stylesheet" type="text/css" href="../style.css" media="screen" />
 </head>
 <body>
 <div id="Frame">
