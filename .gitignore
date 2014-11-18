@@ -16,3 +16,4 @@ vanilla2export.php
 attachments/*
 custom*
 *.sql
+*.log
