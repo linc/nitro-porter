@@ -26,7 +26,7 @@ class Vbulletin5 extends Vbulletin {
       'contenttype' => array('contenttypeid','class'),
       'node' => array('nodeid','description','title','description','userid','publishdate'),
       'text' => array('nodeid','rawtext'),
-      'user' => array('userid','username','password','email','referrerid','timezoneoffset','posts','salt',
+      'user' => array('userid','username','email','referrerid','timezoneoffset','posts',
          'birthday_search','joindate','lastvisit','lastactivity','membergroupids','usergroupid','usertitle', 'avatarid'),
       'userfield' => array('userid'),
       'usergroup'=> array('usergroupid','title','description'),
@@ -106,9 +106,20 @@ class Vbulletin5 extends Vbulletin {
       else
          $User_Map['customphoto'] = 'Photo';
 
+      // vBulletin 5.1 changes the hash to crypt(md5(password), hash).
+      // Switches from password & salt to token (and scheme & secret).
+      // The scheme appears to be crypt()'s default and secret looks uselessly redundant.
+      if ($Ex->Exists('user', 'token') !== true) {
+         $PasswordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
+      } else {
+         // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
+         $PasswordSQL = "replace(token, ' ', '') as password2,
+         case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
+      }
+
       $Ex->ExportTable('User', "select u.*,
             ipaddress as ipaddress2,
-				concat(`password`, salt) as password2,
+            $PasswordSQL
             DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
             FROM_UNIXTIME(joindate) as DateFirstVisit,
             FROM_UNIXTIME(lastvisit) as DateLastActive,
@@ -119,8 +130,7 @@ class Vbulletin5 extends Vbulletin {
                  else null
                  end as filephoto,
             {$this->AvatarSelect},
-            case when ub.userid is not null then 1 else 0 end as Banned,
-            'vbulletin' as HashMethod
+            case when ub.userid is not null then 1 else 0 end as Banned
          from :_user u
          left join :_customavatar a
          	on u.userid = a.userid
