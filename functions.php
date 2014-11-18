@@ -20,62 +20,61 @@ function decho($Var, $Prefix = 'debug') {
  * @return bool
  */
 function GenerateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
-      list($WidthSource, $HeightSource, $Type) = getimagesize($Path);
+   list($WidthSource, $HeightSource, $Type) = getimagesize($Path);
 
-      $XCoord = 0;
-      $YCoord = 0;
-      $HeightDiff = $HeightSource - $Height;
-      $WidthDiff = $WidthSource - $Width;
-      if ($WidthDiff > $HeightDiff) {
-         // Crop the original width down
-         $NewWidthSource = round(($Width * $HeightSource) / $Height);
+   $XCoord = 0;
+   $YCoord = 0;
+   $HeightDiff = $HeightSource - $Height;
+   $WidthDiff = $WidthSource - $Width;
+   if ($WidthDiff > $HeightDiff) {
+      // Crop the original width down
+      $NewWidthSource = round(($Width * $HeightSource) / $Height);
 
-         // And set the original x position to the cropped start point.
-         $XCoord = round(($WidthSource - $NewWidthSource) / 2);
-         $WidthSource = $NewWidthSource;
-      } else {
-         // Crop the original height down
-         $NewHeightSource = round(($Height * $WidthSource) / $Width);
+      // And set the original x position to the cropped start point.
+      $XCoord = round(($WidthSource - $NewWidthSource) / 2);
+      $WidthSource = $NewWidthSource;
+   } else {
+      // Crop the original height down
+      $NewHeightSource = round(($Height * $WidthSource) / $Width);
 
-         // And set the original y position to the cropped start point.
-         $YCoord = round(($HeightSource - $NewHeightSource) / 2);
-         $HeightSource = $NewHeightSource;
-      }
+      // And set the original y position to the cropped start point.
+      $YCoord = round(($HeightSource - $NewHeightSource) / 2);
+      $HeightSource = $NewHeightSource;
+   }
 
-      try {
-         switch ($Type) {
-               case 1:
-                  $SourceImage = imagecreatefromgif($Path);
-               break;
-            case 2:
-                  $SourceImage = imagecreatefromjpeg($Path);
-               break;
-            case 3:
-               $SourceImage = imagecreatefrompng($Path);
-               imagealphablending($SourceImage, TRUE);
-               break;
-         }
-
-         $TargetImage = imagecreatetruecolor($Width, $Height);
-         imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource, $HeightSource);
-         imagedestroy($SourceImage);
-
-         switch ($Type) {
+   try {
+      switch ($Type) {
             case 1:
-               imagegif($TargetImage, $ThumbPath);
-               break;
-            case 2:
-               imagejpeg($TargetImage, $ThumbPath);
-               break;
-            case 3:
-               imagepng($TargetImage, $ThumbPath);
-               break;
-         }
-         imagedestroy($TargetImage);
+               $SourceImage = imagecreatefromgif($Path);
+            break;
+         case 2:
+               $SourceImage = imagecreatefromjpeg($Path);
+            break;
+         case 3:
+            $SourceImage = imagecreatefrompng($Path);
+            imagealphablending($SourceImage, TRUE);
+            break;
       }
-      catch (Exception $e) {
-         echo "Could not generate a thumnail for ".$TargetImage;
+
+      $TargetImage = imagecreatetruecolor($Width, $Height);
+      imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource, $HeightSource);
+      imagedestroy($SourceImage);
+
+      switch ($Type) {
+         case 1:
+            imagegif($TargetImage, $ThumbPath);
+            break;
+         case 2:
+            imagejpeg($TargetImage, $ThumbPath);
+            break;
+         case 3:
+            imagepng($TargetImage, $ThumbPath);
+            break;
       }
+      imagedestroy($TargetImage);
+   }
+   catch (Exception $e) {
+      echo "Could not generate a thumnail for ".$TargetImage;
    }
 }
 
