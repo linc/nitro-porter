@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
  
-$Supported['SimplePress'] = array('name'=>'SimplePress 1.*', 'prefix' => 'wp_');
+$Supported['SimplePress'] = array('name'=>'SimplePress 1', 'prefix' => 'wp_');
 
 class SimplePress extends ExportController {
 

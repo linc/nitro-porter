@@ -9,7 +9,7 @@
  * @package VanillaPorter
  */
  
-$Supported['SMF'] = array('name'=>'SMF (Simple Machines) 1.*', 'prefix' => 'smf_');
+$Supported['SMF'] = array('name'=>'Simple Machines 1', 'prefix' => 'smf_'); // SMF
 
 class SMF extends ExportController {
 

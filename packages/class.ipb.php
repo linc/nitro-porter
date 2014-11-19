@@ -9,7 +9,7 @@
  * @package VanillaPorter
  */
 
-$Supported['ipb'] = array('name' => 'Invision Powerboard (IPB) 3.*', 'prefix'=>'ibf_');
+$Supported['ipb'] = array('name' => 'IP.Board 3', 'prefix'=>'ibf_'); // IPB
 $Supported['ipb']['CommandLine'] = array(
    'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder'),
    'source' => array('Source user table.', 'Sx' => ':', 'Field' => 'sourcetable'),

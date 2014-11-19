@@ -22,7 +22,7 @@
  * @package VanillaPorter
  */
  
-$Supported['Mbox'] = array('name'=>'Mbox (Mailbox)', 'prefix' => '');
+$Supported['Mbox'] = array('name'=>'.mbox files', 'prefix' => '');
 
 class Mbox extends ExportController {
 

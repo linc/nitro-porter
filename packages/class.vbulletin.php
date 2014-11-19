@@ -31,7 +31,7 @@
  * @package VanillaPorter
  */
 
-$Supported['vbulletin'] = array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_');
+$Supported['vbulletin'] = array('name'=>'vBulletin 3 & 4', 'prefix'=>'vb_');
 $Supported['vbulletin']['CommandLine'] = array(
    'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),

@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
 
-$Supported['phpbb3'] = array('name'=>'phpBB 3.*', 'prefix' => 'phpbb_');
+$Supported['phpbb3'] = array('name'=>'phpBB 3', 'prefix' => 'phpbb_');
 
 class Phpbb3 extends ExportController {
 

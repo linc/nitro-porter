@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
  
-$Supported['bbPress'] = array('name'=>'bbPress 1.*', 'prefix' => 'bb_');
+$Supported['bbPress'] = array('name'=>'bbPress 1', 'prefix' => 'bb_');
 
 class BbPress extends ExportController {
    /** @var array Required tables => columns */

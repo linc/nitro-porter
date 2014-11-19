@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
 
-$Supported['punbb'] = array('name'=>'PunBB 1.*', 'prefix' => 'punbb_');
+$Supported['punbb'] = array('name'=>'PunBB 1', 'prefix' => 'punbb_');
 
 class Punbb extends ExportController {
 

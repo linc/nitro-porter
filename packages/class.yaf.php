@@ -7,7 +7,7 @@
  * @package VanillaPorter
  */
 
-$Supported['yaf'] = array('name'=> 'YAF.NET (Yet Another Forum)', 'prefix'=>'yaf_');
+$Supported['yaf'] = array('name'=> 'YAF.NET', 'prefix'=>'yaf_'); // (Yet Another Forum)
 
 class Yaf extends ExportController {
    static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
