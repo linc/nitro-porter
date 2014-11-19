@@ -172,19 +172,13 @@ function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
 }
 
 /**
- *
+ * Output a definition list of features for a single platform.
  *
  * @param string $Platform
- * @param bool $Set
+ * @param array $Features
  */
-function ViewFeatureTable($Platform, $Set = FALSE) {
+function ViewFeatureList($Platform, $Features = array()) {
    global $Supported;
-   if (!isset($Supported[$Platform]['features'])) {
-      echo "<p>Feature table not supported for ".$Platform."</p>";
-      return;
-   }
-   $AvailableFeatures = $Supported[$Platform]['features'];
-   $Set = VanillaFeatures($Set);
 
    PageHeader();
 
@@ -192,23 +186,50 @@ function ViewFeatureTable($Platform, $Set = FALSE) {
    echo '<h2>'.$Supported[$Platform]['name'].'</h2>';
    echo '<dl>';
 
-   foreach ($Set as $Feature => $Trash) {
-      $Status = 'No';
-      if (isset($AvailableFeatures[$Feature])) {
-          if ($AvailableFeatures[$Feature] === 1) {
-            $Status = 'Yes';
-          }
-          elseif ($AvailableFeatures[$Feature]) {
-            $Status = $AvailableFeatures[$Feature];
-          }
-      }
-
+   foreach ($Features as $Feature => $Trash) {
       echo '
-      <dt>'.$Feature.'</dt>
-      <dd>'.$Status.'</dd>';
+      <dt>'.FeatureName($Feature).'</dt>
+      <dd>'.FeatureStatus($Platform, $Feature).'</dd>';
    }
    echo '</dl>';
 
+   PageFooter();
+}
+
+/**
+ * Output a table of features per all platforms.
+ *
+ * @param array $Features
+ */
+function ViewFeatureTable($Features = array()) {
+   global $Supported;
+   $Platforms = array_keys($Supported);
+
+   PageHeader();
+   echo '<h2>Data currently supported per platform</h2>';
+   echo '<table class="Features"><thead><tr>';
+
+   // Header row of labels for each platform
+   echo '<th><i>Feature</i></th>';
+   foreach ($Platforms as $Slug) {
+      echo '<th class="Platform"><div><span>'.$Supported[$Slug]['name'].'</span></div></th>';
+   }
+
+   echo '</tr></thead><tbody>';
+
+   // Checklist of features per platform.
+   foreach ($Features as $Feature => $Trash) {
+      // Name
+      echo '<tr><td class="FeatureName">'.FeatureName($Feature).'</td>';
+
+      // Status per platform.
+      foreach ($Platforms as $Platform) {
+         echo '<td>'.FeatureStatus($Platform, $Feature, FALSE).'</td>';
+      }
+      echo '</tr>';
+   }
+
+   echo '</tbody></table>';
    PageFooter();
 }
 ?>

@@ -230,7 +230,7 @@ div.Info li {
    padding: 10px 0 100px;
 }
 
-/* Feature table */
+/* Feature list */
 .Info dl { }
 .Info dt {
    float: left;
@@ -239,4 +239,36 @@ div.Info li {
 }
 .Info dt, dd {
    border-bottom: 1px solid #E2F4FF;
+}
+
+/* Feature table */
+table.Features {
+   padding: 0 0 50px;
+   margin: 0 auto;
+}
+table.Features td {
+   padding: 2px 9px;
+   border-right: 1px solid #E2F4FF;
+}
+.FeatureName {
+   text-align: left;
+}
+
+/* Feature table column headings */
+th.Platform {
+  /* Something you can count on */
+  height: 140px;
+  white-space: nowrap;
+}
+th.Platform > div {
+  transform:
+    /* Magic Numbers */
+    translate(25px, 51px)
+    /* 45 is really 360 - 45 */
+    rotate(315deg);
+  width: 30px;
+}
+th.Platform > div > span {
+  border-bottom: 1px solid #E2F4FF;
+  padding: 5px 5px;
 }

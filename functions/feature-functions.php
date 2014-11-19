@@ -5,7 +5,50 @@
  * @package VanillaPorter
  */
 
+/**
+ * Get the data support status for a single platform feature.
+ *
+ * @param $Platform
+ * @param $Feature
+ * @return string
+ */
+function FeatureStatus($Platform, $Feature, $Notes = TRUE) {
+   global $Supported;
 
+   if (!isset($Supported[$Platform]['features'])) {
+      return '<span class="No">No</span>';
+   }
+
+   $Available = $Supported[$Platform]['features'];
+
+   // Calculate feature availability.
+   $Status = '<span class="No">No</span>';
+   if (isset($Available[$Feature])) {
+       if ($Available[$Feature] === 1) {
+         $Status = '<span class="Yes">Yes</span>';
+       }
+       elseif ($Available[$Feature]) {
+         if ($Notes) {
+            $Status = $Available[$Feature];
+         }
+         else {
+            $Status = '<span class="Notes">???</span>'; // Make this a link
+         }
+       }
+   }
+
+   return $Status;
+}
+
+/**
+ * Insert spaces into a CamelCaseName => Camel Case Name.
+ *
+ * @param $Feature
+ * @return string
+ */
+function FeatureName($Feature) {
+   return ltrim(preg_replace('/[A-Z]/', ' $0', $Feature));
+}
 
 /**
  * Define what data can be successfully ported to Vanilla.
