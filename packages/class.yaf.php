@@ -224,7 +224,7 @@ class Yaf extends ExportController {
          $Method = self::$PasswordFormats[$Method];
       else
          $Method = 'sha1';
-      $Result = "$Method$$Salt$$Hash$";
+      $Result = $Method.'$'.$Salt.'$'.$Hash.'$';
       return $Result;
    }
    
