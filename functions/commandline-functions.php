@@ -1,15 +1,16 @@
 <?php
 
 $GlobalOptions = array(
-   'host' => array('Host to connect to (IP address or hostname).', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbhost', 'Default' => '127.0.0.1'),
-   'dbname' => array('The name of the database.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbname'),
-   'user' => array('The username of the database.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
-   'password' => array('The password to use when connecting to the server.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
-   'type' => array('The type of forum to export from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type'),
-   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
-   'prefix' => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => ''),
-   'cdn' => array('The prefix to be applied to uploaded file links.', 'Field' => 'cdn', 'Sx' => ':', 'Default' => ''),
-   'help' => array('Show help.')
+   'type'      => array('Type of forum we\'re freeing you from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type', 'Short' => 't'),
+   'dbname'    => array('Database name.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbname', 'Short' => 'n'),
+   'user'      => array('Database connection username.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
+   'password'  => array('Database connection password.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
+   'host'      => array('IP address or hostname to connect to. Default is 127.0.0.1.', 'Sx' => ':', 'Field' => 'dbhost', 'Short' => 'h', 'Default' => '127.0.0.1'),
+   'prefix'    => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => '', 'Short' => 'x'),
+   'avatars'   => array('Enables exporting avatars from the database if supported.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
+   'cdn'       => array('Prefix to be applied to file paths.', 'Field' => 'cdn', 'Sx' => ':', 'Short' => 'c', 'Default' => ''),
+   'files'     => array('Enables exporting attachments from database if supported.', 'Sx' => '::', 'Short' => 'f', 'Default' => ''),
+   'help'      => array('Show this help, duh.', 'Short' => 'h')
 );
 
 // Go through all of the supported types and add them to the type description.
@@ -190,26 +191,31 @@ function writeCommandLineHelp($Options = NULL, $Section = '') {
       return;
    }
    
-   echo "$Section\n\n";
+   echo "$Section\n";
    foreach ($Options as $Longname => $Options) {
-      echo "  ";
+      $Output = "  ";
       
       if (isset($Options['Short']))
-         echo '-'.$Options['Short'].', ';
+         $Output .= '-'.$Options['Short'].', ';
       
-      echo "--$Longname";
-      
-      if (!V('Req', $Options))
-         echo ' (Optional)';
-      
-      echo "\n    {$Options[0]}\n";
+      $Output .= "--$Longname";
+
+      // Align our descriptions by passing
+      $Output = str_pad($Output, 18, ' ');
+
+      if (V('Req', $Options))
+         $Output .= 'Required. ';
+
+      $Output .= "{$Options[0]}\n";
       
       if ($Values = V('Values', $Options)) {
-         echo '    Valid Values: '.implode(', ', $Values)."\n";
+         $Output .= '    Valid Values: '.implode(', ', $Values)."\n";
       }
       
-      echo "\n";
+      echo $Output;
    }
+
+   echo "\n";
 }
 
 function V($Name, $Array, $Default = NULL) {

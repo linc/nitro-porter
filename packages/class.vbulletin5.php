@@ -13,11 +13,7 @@
 
 $Supported['vbulletin5'] = array('name'=> 'vBulletin 5 Connect', 'prefix'=>'vb_');
 $Supported['vbulletin5']['CommandLine'] = array(
-   'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
-   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
    //'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
-   //'mindate' => array('A date to import from.'),
-   //'forumid' => array('Only export 1 forum')
 );
 
 class Vbulletin5 extends Vbulletin {
@@ -38,13 +34,6 @@ class Vbulletin5 extends Vbulletin {
     * @param ExportModel $Ex 
     */
    public function ForumExport($Ex) {
-      // Allow limited export of 1 category via ?forumid=ID
-      $ForumID = $this->Param('forumid');
-      if ($ForumID)
-         $ForumWhere = ' and n.nodeid '.(strpos($ForumID, ', ') === FALSE ? "= $ForumID" : "in ($ForumID)");
-      else
-         $ForumWhere = '';
-
       // Determine the character set
       $CharacterSet = $Ex->GetCharacterSet('nodes');
       if ($CharacterSet)
@@ -53,9 +42,8 @@ class Vbulletin5 extends Vbulletin {
       $Ex->BeginExport('', 'vBulletin 5 Connect');
 
       $this->ExportBlobs(
-         $this->Param('attachments'),
-         $this->Param('avatars'),
-         $ForumWhere
+         $this->Param('files'),
+         $this->Param('avatars')
       );
 
       if ($this->Param('noexport')) {
@@ -63,14 +51,6 @@ class Vbulletin5 extends Vbulletin {
          $Ex->EndExport();
          return;
       }
-
-      // Check to see if there is a max date.
-      $MinDate = $this->Param('mindate');
-      if ($MinDate) {
-         $MinDate = strtotime($MinDate);
-         $Ex->Comment("Min topic date ($MinDate): ".date('c', $MinDate));
-      }
-      $Now = time();
 
       $cdn = $this->Param('cdn', '');
 
@@ -187,27 +167,25 @@ class Vbulletin5 extends Vbulletin {
 
 
       // UserMeta
-      if ($this->Param('attachments')) {
-         $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
-         # Standard vB user data
-         $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'skype' => 'Skype', 'styleid' => 'StyleID');
-         foreach($UserFields as $Field => $InsertAs)
-            $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
-         # Dynamic vB user data (userfield)
-         $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
-         if (is_resource($ProfileFields)) {
-            $ProfileQueries = array();
-            while ($Field = @mysql_fetch_assoc($ProfileFields)) {
-               $Column = str_replace('_title', '', $Field['varname']);
-               $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
-               $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
-                  select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
-            }
-            foreach ($ProfileQueries as $Query) {
-               $Ex->Query($Query);
-            }
+      /*$Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
+      # Standard vB user data
+      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'skype' => 'Skype', 'styleid' => 'StyleID');
+      foreach($UserFields as $Field => $InsertAs)
+         $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
+      # Dynamic vB user data (userfield)
+      $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
+      if (is_resource($ProfileFields)) {
+         $ProfileQueries = array();
+         while ($Field = @mysql_fetch_assoc($ProfileFields)) {
+            $Column = str_replace('_title', '', $Field['varname']);
+            $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
+            $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
+               select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
          }
-      }
+         foreach ($ProfileQueries as $Query) {
+            $Ex->Query($Query);
+         }
+      }*/
 
 
       // Ranks
@@ -236,6 +214,10 @@ class Vbulletin5 extends Vbulletin {
 
 
       /// Signatures
+      // usertextfields.signature
+
+      // Ignore
+      // usertextfields.ignorelist
 
       /// Notes
 
