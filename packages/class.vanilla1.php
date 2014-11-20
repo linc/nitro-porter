@@ -7,6 +7,18 @@
  * @package VanillaPorter
  */
 
+$Supported['vanilla1']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Attachments'     => 1,
+   'PrivateMessages' => 1,
+   'Passwords'       => 1,
+   'Bookmarks'       => 1,
+);
+
 class Vanilla1 extends ExportController {
 
    /** @var array Required tables => columns */  

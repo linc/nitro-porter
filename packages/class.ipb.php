@@ -15,6 +15,19 @@ $Supported['ipb']['CommandLine'] = array(
    'source' => array('Source user table.', 'Sx' => ':', 'Field' => 'sourcetable'),
    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
 );
+$Supported['ipb']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'Signatures'      => 1,
+   'Passwords'       => 1,
+);
 
 class IPB extends ExportController {
    /**

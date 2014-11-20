@@ -8,6 +8,16 @@
  */
  
 $Supported['SimplePress'] = array('name'=>'SimplePress 1', 'prefix' => 'wp_');
+$Supported['SimplePress']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'Passwords'       => 1,
+);
 
 class SimplePress extends ExportController {
 

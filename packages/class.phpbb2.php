@@ -7,7 +7,16 @@
  * @package VanillaPorter
  */
  
- $Supported['phpbb2'] = array('name'=>'phpBB 2', 'prefix' => 'phpbb_');
+$Supported['phpbb2'] = array('name'=>'phpBB 2', 'prefix' => 'phpbb_');
+$Supported['phpbb2']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'PrivateMessages' => 1,
+   'Passwords'       => 1,
+);
 
 class Phpbb2 extends ExportController {
 

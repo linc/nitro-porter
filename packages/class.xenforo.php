@@ -13,6 +13,18 @@ $Supported['xenforo']['CommandLine'] = array(
    'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder'),
    'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
 );
+$Supported['xenforo']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Passwords'       => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'Signatures'      => 1,
+);
 
 class Xenforo extends ExportController {
    

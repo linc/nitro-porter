@@ -10,6 +10,18 @@
 
 // Add to the $Supported array so it appears in the dropdown menu. Uncomment next line.
 $Supported['jforum'] = array('name'=> 'jforum', 'prefix'=>'jforum_');
+$Supported['jforum']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'PrivateMessages' => 1,
+   'Bookmarks'       => 1,
+   'Signatures'      => 1,
+
+);
 
 class Jforum extends ExportController {
    /**

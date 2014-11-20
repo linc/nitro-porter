@@ -8,6 +8,17 @@
  */
 
 $Supported['kunena'] = array('name'=> 'Joomla Kunena', 'prefix'=>'jos_');
+$Supported['kunena']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 1,
+   'Bookmarks'       => 1,
+   'Passwords'       => 1,
+);
 
 class Kunena extends ExportController {
    /**

@@ -8,6 +8,17 @@
  */
 
 $Supported['yaf'] = array('name'=> 'YAF.NET', 'prefix'=>'yaf_'); // (Yet Another Forum)
+$Supported['yaf']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'PrivateMessages' => 1,
+   'Signatures'      => 1,
+   'Ranks'           => 1,
+   'Passwords'       => 1,
+);
 
 class Yaf extends ExportController {
    static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');

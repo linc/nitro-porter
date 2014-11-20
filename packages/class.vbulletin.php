@@ -48,18 +48,16 @@ $Supported['vbulletin']['features'] = array(
    'Categories'      => 1,
    'Roles'           => 1,
    'Avatars'         => 1,
-   'Attachments'     => 'Requires additional steps.',
+   'Attachments'     => 1,
    'PrivateMessages' => 1,
    'Permissions'     => 1,
    'UserWall'        => 1,
    'UserNotes'       => 1,
    'Bookmarks'       => 1,
-   'Tags'            => 1,
+   'Passwords'       => 1,
    'Signatures'      => 1,
-   'Badges'          => 1,
    'Ranks'           => 1,
    'Polls'           => 1,
-   'Groups'          => 1,
 );
 
 /**
