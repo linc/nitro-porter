@@ -207,12 +207,13 @@ function ViewFeatureTable($Features = array()) {
 
    PageHeader();
    echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
+   echo '<p>Click any platform name for details.</p>';
    echo '<table class="Features"><thead><tr>';
 
    // Header row of labels for each platform
    echo '<th><i>Feature</i></th>';
    foreach ($Platforms as $Slug) {
-      echo '<th class="Platform"><div><span>'.$Supported[$Slug]['name'].'</span></div></th>';
+      echo '<th class="Platform"><div><span><a href="?features=1&type='.$Slug.'">'.$Supported[$Slug]['name'].'</a></span></div></th>';
    }
 
    echo '</tr></thead><tbody>';

@@ -235,10 +235,12 @@ div.Info li {
 .Info dt {
    float: left;
    clear: left;
-   width: 200px;
+   width: 180px;
+
 }
 .Info dt, dd {
    border-bottom: 1px solid #E2F4FF;
+   height: 30px;
 }
 
 /* Feature table */
