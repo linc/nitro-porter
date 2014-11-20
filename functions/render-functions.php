@@ -206,7 +206,7 @@ function ViewFeatureTable($Features = array()) {
    $Platforms = array_keys($Supported);
 
    PageHeader();
-   echo '<h2>Data currently supported per platform</h2>';
+   echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
    echo '<table class="Features"><thead><tr>';
 
    // Header row of labels for each platform
