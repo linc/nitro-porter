@@ -78,9 +78,11 @@ function ViewForm($Data) {
 
    PageHeader(); ?>
    <div class="Info">
-      Welcome to the Vanilla Porter, an application for exporting your forum to the Vanilla 2 import format.
-      For help using this application, 
-      <a href="http://docs.vanillaforums.com/developers/importing/porter" style="text-decoration:underline;">see these instructions</a>.
+      Howdy, stranger! Glad to see you headed our way.
+      For help,
+      <a href="http://docs.vanillaforums.com/developers/importing/porter" style="text-decoration:underline;" target="_blank">peek at the docs</a>.
+      To see what data we can grab from your platform,
+      <a href="?features=1" style="text-decoration:underline;">see this table</a>.
    </div>
 <form action="<?php echo $_SERVER['PHP_SELF'].'?'.http_build_query($_GET); ?>" method="post">
       <input type="hidden" name="step" value="info" />
@@ -207,7 +209,7 @@ function ViewFeatureTable($Features = array()) {
 
    PageHeader();
    echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
-   echo '<p>Click any platform name for details.</p>';
+   echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>.</p>';
    echo '<table class="Features"><thead><tr>';
 
    // Header row of labels for each platform
