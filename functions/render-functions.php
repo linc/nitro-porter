@@ -78,9 +78,11 @@ function ViewForm($Data) {
 
    PageHeader(); ?>
    <div class="Info">
-      Welcome to the Vanilla Porter, an application for exporting your forum to the Vanilla 2 import format.
-      For help using this application, 
-      <a href="http://docs.vanillaforums.com/developers/importing/porter" style="text-decoration:underline;">see these instructions</a>.
+      Howdy, stranger! Glad to see you headed our way.
+      For help,
+      <a href="http://docs.vanillaforums.com/developers/importing/porter" style="text-decoration:underline;" target="_blank">peek at the docs</a>.
+      To see what data we can grab from your platform,
+      <a href="?features=1" style="text-decoration:underline;">see this table</a>.
    </div>
 <form action="<?php echo $_SERVER['PHP_SELF'].'?'.http_build_query($_GET); ?>" method="post">
       <input type="hidden" name="step" value="info" />
@@ -168,6 +170,69 @@ function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
       echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
       echo "</div>";
    }
+   PageFooter();
+}
+
+/**
+ * Output a definition list of features for a single platform.
+ *
+ * @param string $Platform
+ * @param array $Features
+ */
+function ViewFeatureList($Platform, $Features = array()) {
+   global $Supported;
+
+   PageHeader();
+
+   echo '<div class="Info">';
+   echo '<h2>'.$Supported[$Platform]['name'].'</h2>';
+   echo '<dl>';
+
+   foreach ($Features as $Feature => $Trash) {
+      echo '
+      <dt>'.FeatureName($Feature).'</dt>
+      <dd>'.FeatureStatus($Platform, $Feature).'</dd>';
+   }
+   echo '</dl>';
+
+   PageFooter();
+}
+
+/**
+ * Output a table of features per all platforms.
+ *
+ * @param array $Features
+ */
+function ViewFeatureTable($Features = array()) {
+   global $Supported;
+   $Platforms = array_keys($Supported);
+
+   PageHeader();
+   echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
+   echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>.</p>';
+   echo '<table class="Features"><thead><tr>';
+
+   // Header row of labels for each platform
+   echo '<th><i>Feature</i></th>';
+   foreach ($Platforms as $Slug) {
+      echo '<th class="Platform"><div><span><a href="?features=1&type='.$Slug.'">'.$Supported[$Slug]['name'].'</a></span></div></th>';
+   }
+
+   echo '</tr></thead><tbody>';
+
+   // Checklist of features per platform.
+   foreach ($Features as $Feature => $Trash) {
+      // Name
+      echo '<tr><td class="FeatureName">'.FeatureName($Feature).'</td>';
+
+      // Status per platform.
+      foreach ($Platforms as $Platform) {
+         echo '<td>'.FeatureStatus($Platform, $Feature, FALSE).'</td>';
+      }
+      echo '</tr>';
+   }
+
+   echo '</tbody></table>';
    PageFooter();
 }
 ?>

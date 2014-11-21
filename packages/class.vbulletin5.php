@@ -15,6 +15,19 @@ $Supported['vbulletin5'] = array('name'=> 'vBulletin 5 Connect', 'prefix'=>'vb_'
 $Supported['vbulletin5']['CommandLine'] = array(
    //'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
 );
+$Supported['vbulletin5']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 1,
+   'PrivateMessages' => 1,
+   'Bookmarks'       => 1,
+   'Ranks'           => 1,
+   'Passwords'       => 1,
+);
 
 class Vbulletin5 extends Vbulletin {
    /** @var array Required tables => columns. */

@@ -31,7 +31,7 @@
  * @package VanillaPorter
  */
 
-$Supported['vbulletin'] = array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_');
+$Supported['vbulletin'] = array('name'=>'vBulletin 3 & 4', 'prefix'=>'vb_');
 // Commented commands are still supported, if you really want to use them.
 $Supported['vbulletin']['CommandLine'] = array(
    //'noexport' => array('Exports only the blobs.', 'Sx' => '::'),
@@ -39,6 +39,24 @@ $Supported['vbulletin']['CommandLine'] = array(
    //'forumid' => array('Only export 1 forum'),
    //'ipbanlist' => array('Export IP ban list, which is a terrible idea.'),
    'filepath' => array('Full path of file attachments to be renamed.', 'Sx' => '::')
+);
+$Supported['vbulletin']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'UserWall'        => 1,
+   'UserNotes'       => 1,
+   'Bookmarks'       => 1,
+   'Passwords'       => 1,
+   'Signatures'      => 1,
+   'Ranks'           => 1,
+   'Polls'           => 1,
 );
 
 /**

@@ -6,6 +6,23 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+
+ $Supported['vanilla2']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'UserWall'        => 1,
+   'UserNotes'       => 1,
+   'Bookmarks'       => 1,
+   'Signatures'      => 1,
+   'Passwords'       => 1,
+);
  
 class Vanilla2 extends ExportController {
 

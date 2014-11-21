@@ -7,9 +7,15 @@
  * @package VanillaPorter
  */
 
-$Supported['agp'] = array('name'=> 'ASP Playground (AGP)', 'prefix'=>'pgd_');
+$Supported['apg'] = array('name'=> 'ASP Playground', 'prefix'=>'pgd_');
+$Supported['apg']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+);
 
-class Agp extends ExportController {   
+class APG extends ExportController {
    /**
     * @param ExportModel $Ex 
     */

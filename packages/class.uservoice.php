@@ -8,6 +8,17 @@
  */
 
 $Supported['uservoice'] = array('name'=> 'User Voice', 'prefix'=>'cs_');
+$Supported['uservoice']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Bookmarks'       => 1,
+   'Signatures'      => 1,
+   'Passwords'       => 1,
+);
 
 class UserVoice extends ExportController {
    /**

@@ -38,14 +38,15 @@ include_once 'functions/render-functions.php';
 include_once 'functions/filter-functions.php';
 include_once 'functions/commandline-functions.php';
 include_once 'functions/structure-functions.php';
+include_once 'functions/feature-functions.php';
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");
 
 // Set Vanilla to appear first in the list.
 $Supported = array(
-   'vanilla1' => array('name'=> 'Vanilla 1.*', 'prefix'=>'LUM_'),
-   'vanilla2' => array('name'=> 'Vanilla 2.*', 'prefix'=>'GDN_')
+   'vanilla1' => array('name'=> 'Vanilla 1', 'prefix'=>'LUM_'),
+   'vanilla2' => array('name'=> 'Vanilla 2', 'prefix'=>'GDN_')
 );
 
 // Include individual software porters.
@@ -63,8 +64,20 @@ if (defined('CONSOLE')) {
 
 // Instantiate the appropriate controller or display the input page.
 $Method = 'DoExport';
-if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
-   // Mini-Factory
+if (isset($_REQUEST['features'])) {
+   // Feature list or table.
+   $Set = (isset($_REQUEST['cloud'])) ? array('core','addons','cloud') : false;
+   $Set = VanillaFeatures($Set);
+
+   if (isset($_REQUEST['type'])) {
+      ViewFeatureList($_REQUEST['type'], $Set);
+   }
+   else {
+      ViewFeatureTable($Set);
+   }
+}
+elseif (isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
+   // Mini-Factory for conducting exports.
    $class = ucwords($_POST['type']);
    $Controller = new $class();
    if (!method_exists($Controller, $Method)) {
@@ -74,10 +87,12 @@ if(isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
    $Controller->$Method();
 }
 else {
+   // Show the web UI to start an export.
    $CanWrite = TestWrite();
    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
 }
 
 // Console output should end in newline.
-if (defined('CONSOLE'))
+if (defined('CONSOLE')) {
    echo "\n";
+}

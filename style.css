@@ -39,7 +39,7 @@ div.Title p {
 }
 
 h1 {
-   font-family: Arial, Helvetica, Verdana;
+   font-family: Helvetica, Arial, Verdana;
    color: #02455B;
    width: 568px;
    margin: 0 auto;
@@ -228,4 +228,65 @@ div.Info li {
 }
 .Info .DownloadLink {
    padding: 10px 0 100px;
+}
+
+/* Feature list */
+.Info dl { }
+.Info dt {
+   float: left;
+   clear: left;
+   width: 180px;
+
+}
+.Info dt, dd {
+   border-bottom: 1px solid #E2F4FF;
+   height: 30px;
+}
+
+/* Feature table */
+table.Features {
+   padding: 0 0 50px;
+   margin: 0 auto;
+}
+table.Features td {
+   padding: 2px 12px;
+   border-right: 1px solid #E2F4FF;
+   border-bottom: 1px dashed #E2F4FF;
+}
+.FeatureName {
+   text-align: left;
+}
+.No {
+   color: darkred;
+   font-width: bold;
+   font-size: 1.2em;
+}
+.Yes {
+   color: limegreen;
+   text-shadow: 0px 1px #555;
+   font-width: bold;
+   font-size: 1.2em;
+}
+.FeatureTitle {
+   margin-bottom: 0;
+}
+
+/* Feature table column headings */
+th.Platform {
+  /* Something you can count on */
+  height: 140px;
+  white-space: nowrap;
+  font-weight: normal;
+}
+th.Platform > div {
+  transform:
+    /* Magic Numbers */
+    translate(25px, 51px)
+    /* 45 is really 360 - 45 */
+    rotate(315deg);
+  width: 30px;
+}
+th.Platform > div > span {
+  border-bottom: 1px solid #E2F4FF;
+  padding: 5px 4px;
 }

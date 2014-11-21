@@ -9,10 +9,23 @@
  * @package VanillaPorter
  */
 
-$Supported['ipb'] = array('name' => 'Invision Powerboard (IPB) 3.*', 'prefix'=>'ibf_');
+$Supported['ipb'] = array('name' => 'IP.Board 3', 'prefix'=>'ibf_'); // IPB
 $Supported['ipb']['CommandLine'] = array(
    'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
    'source' => array('Source user table: profile_portal (default) or member_extra.', 'Sx' => ':', 'Field' => 'sourcetable'),
+);
+$Supported['ipb']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Attachments'     => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'Signatures'      => 1,
+   'Passwords'       => 1,
 );
 
 class IPB extends ExportController {

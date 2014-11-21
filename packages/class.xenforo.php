@@ -12,6 +12,18 @@ $Supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
 $Supported['xenforo']['CommandLine'] = array(
    'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
 );
+$Supported['xenforo']['features'] = array(
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Avatars'         => 1,
+   'Passwords'       => 1,
+   'PrivateMessages' => 1,
+   'Permissions'     => 1,
+   'Signatures'      => 1,
+);
 
 class Xenforo extends ExportController {
    
