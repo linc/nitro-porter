@@ -202,6 +202,12 @@ function VanillaStructure() {
             'UserID' => 'varchar(11)',
             'Attributes' => 'text'
             ),
+      'UserComment' => array(
+            'UserID' => 'int',
+            'CommentID' => 'int',
+            'Score' => 'float',
+            'DateLastViewed' => 'datetime'
+            ),
       'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
