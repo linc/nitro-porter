@@ -10,8 +10,7 @@
  */
 $Supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
 $Supported['xenforo']['CommandLine'] = array(
-   'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder'),
-   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
+   'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
 );
 $Supported['xenforo']['features'] = array(
    'Comments'        => 1,
@@ -40,7 +39,7 @@ class Xenforo extends ExportController {
    public function DoAvatars() {
       
       // Check source folder
-      $this->SourceFolder = $this->Param('folder');
+      $this->SourceFolder = $this->Param('avatarpath');
       if (!is_dir($this->SourceFolder))
          trigger_error("Source avatar folder '{$this->SourceFolder}' does not exist.");
       
