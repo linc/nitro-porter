@@ -91,7 +91,7 @@ function VanillaFeatureSet($Section) {
    switch ($Section) {
       case 'addon':
          $Set = array(
-            //'Tags'            => 0,
+            'Tags'            => 0,
 
             );
          break;
