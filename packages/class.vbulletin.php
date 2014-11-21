@@ -22,7 +22,7 @@
  * 3) Make BOTH folders writable by the server.
  * 4) Enable the FileUpload plugin. (Media table must be present.)
  *
- * attachmentpath - Command line option to fix / check files are on disk.  Files named .attach are renamed
+ * filepath - Command line option to fix / check files are on disk.  Files named .attach are renamed
  * to the proper name and missing files are reported in missing-files.txt.
  *
  * @copyright Vanilla Forums Inc. 2010
@@ -32,14 +32,13 @@
  */
 
 $Supported['vbulletin'] = array('name'=>'vBulletin 3.* and 4.*', 'prefix'=>'vb_');
+// Commented commands are still supported, if you really want to use them.
 $Supported['vbulletin']['CommandLine'] = array(
-   'attachments' => array('Whether or not to export attachments.', 'Sx' => '::'),
-   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
-   'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
-   'mindate' => array('A date to import from.'),
-   'forumid' => array('Only export 1 forum'),
-   'ipbanlist' => array('Import IP ban list.  Default: no.'),
-   'attachmentpath' => array('Fullpath to attachments on disk.  Files will be renamed.', 'Sx' => '::')
+   //'noexport' => array('Exports only the blobs.', 'Sx' => '::'),
+   'mindate' => array('A date to import from. Like selective amnesia.'),
+   //'forumid' => array('Only export 1 forum'),
+   //'ipbanlist' => array('Export IP ban list, which is a terrible idea.'),
+   'filepath' => array('Full path of file attachments to be renamed.', 'Sx' => '::')
 );
 
 /**
@@ -135,7 +134,7 @@ class Vbulletin extends ExportController {
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
       $this->ExportBlobs(
-         $this->Param('attachments'),
+         $this->Param('files'),
          $this->Param('avatars'),
          $ForumWhere
       );
@@ -256,25 +255,23 @@ class Vbulletin extends ExportController {
 //      return;
 
       // UserMeta
-      if ($this->Param('attachments')) {
-         $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
-         # Standard vB user data
-         $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'skype' => 'Skype', 'styleid' => 'StyleID');
-         foreach($UserFields as $Field => $InsertAs)
-            $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
-         # Dynamic vB user data (userfield)
-         $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
-         if (is_resource($ProfileFields)) {
-            $ProfileQueries = array();
-            while ($Field = @mysql_fetch_assoc($ProfileFields)) {
-               $Column = str_replace('_title', '', $Field['varname']);
-               $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
-               $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
-                  select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
-            }
-            foreach ($ProfileQueries as $Query) {
-               $Ex->Query($Query);
-            }
+      $Ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
+      # Standard vB user data
+      $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'skype' => 'Skype', 'styleid' => 'StyleID');
+      foreach($UserFields as $Field => $InsertAs)
+         $Ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
+      # Dynamic vB user data (userfield)
+      $ProfileFields = $Ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
+      if (is_resource($ProfileFields)) {
+         $ProfileQueries = array();
+         while ($Field = @mysql_fetch_assoc($ProfileFields)) {
+            $Column = str_replace('_title', '', $Field['varname']);
+            $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
+            $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
+               select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
+         }
+         foreach ($ProfileQueries as $Query) {
+            $Ex->Query($Query);
          }
       }
 
@@ -873,7 +870,7 @@ class Vbulletin extends ExportController {
       // files named .attach need to be named properly.
       // file needs to be renamed and db updated.
       // if its an images; we need to include .thumb
-      $attachmentPath = $this->Param('attachmentpath');
+      $attachmentPath = $this->Param('filepath');
       if ($attachmentPath) {
          $missingFiles = array();
          if (is_dir($attachmentPath)) {
@@ -1037,7 +1034,7 @@ class Vbulletin extends ExportController {
 
          // If we're exporting blobs, simplify the folder structure.
          // Otherwise, we need to preserve vBulletin's eleventy subfolders.
-         $Separator = ($this->Param('attachments', false)) ? '' : '/';
+         $Separator = ($this->Param('files', false)) ? '' : '/';
          $FilePath = implode($Separator, $DirParts).'/'.$Identity.'.'.$Row['extension'];
       }
 

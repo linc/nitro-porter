@@ -2,7 +2,7 @@
 /**
  * Invision Powerboard exporter tool.
  *
- * To export avatars, provide ?avatars=1&folder=/path/to/avatars
+ * To export avatars, provide ?avatars=1&avatarpath=/path/to/avatars
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license Proprietary
@@ -11,9 +11,8 @@
 
 $Supported['ipb'] = array('name' => 'Invision Powerboard (IPB) 3.*', 'prefix'=>'ibf_');
 $Supported['ipb']['CommandLine'] = array(
-   'folder' => array('Location of source avatars.', 'Sx' => ':', 'Field' => 'folder'),
-   'source' => array('Source user table.', 'Sx' => ':', 'Field' => 'sourcetable'),
-   'avatars' => array('Whether or not to export avatars.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
+   'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
+   'source' => array('Source user table: profile_portal (default) or member_extra.', 'Sx' => ':', 'Field' => 'sourcetable'),
 );
 
 class IPB extends ExportController {
@@ -22,10 +21,10 @@ class IPB extends ExportController {
     */
    public function DoAvatars() {
       // Source table
-      $SourceTable = GetValue('sourcetable', $_POST, 'profile_portal');
+      $SourceTable = $this->Param('source', 'profile_portal');
       
       // Check source folder
-      $SourceFolder = $this->Param('folder');
+      $SourceFolder = $this->Param('avatarpath');
       if (!is_dir($SourceFolder))
          trigger_error("Source avatar folder '{$SourceFolder}' does not exist.");
       
