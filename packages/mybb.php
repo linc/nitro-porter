@@ -10,14 +10,14 @@
 
 $Supported['mybb'] = array('name'=> 'MyBB', 'prefix'=>'mybb_');
 $Supported['mybb']['features'] = array(
-   'Comments'        => 0,
-   'Discussions'     => 0,
-   'Users'           => 0,
-   'Categories'      => 0,
-   'Roles'           => 0,
-   'Passwords'       => 0,
-   'Avatars'         => 0,
-   'Bookmarks'       => 0,
+   'Comments'        => 1,
+   'Discussions'     => 1,
+   'Users'           => 1,
+   'Categories'      => 1,
+   'Roles'           => 1,
+   'Passwords'       => 1,
+   'Avatars'         => 1,
+   'Bookmarks'       => 1,
 );
 
 class MyBB extends ExportController {
