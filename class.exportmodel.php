@@ -127,31 +127,50 @@ class ExportModel {
     *
     * @param string $Path The path to the export file.
     * @param string $Source The source program that created the export. This may be used by the import routine to do additional processing.
+    * @param array $Header
+    * @return resource Pointer to the file created.
     */
    public function BeginExport($Path = '', $Source = '', $Header = array()) {
       $this->Comments = array();
       $this->BeginTime = microtime(TRUE);
 
-      if($Path)
+      // Allow us to define where the output file goes.
+      if ($Path) {
          $this->Path = $Path;
-      if(!$this->Path)
-         $this->Path = 'export_'.($this->FilenamePrefix ? $this->FilenamePrefix.'_' : '').date('Y-m-d_His').'.txt'.($this->UseCompression() ? '.gz' : '');
+      }
+      elseif ($this->Controller->Param('destpath')) {
+         $this->Path = $this->Controller->Param('destpath');
+         if (strstr($this->Path, '/') !== FALSE && substr($this->Path, 1, -1) != '/') {
+            // We're using slash paths but didn't include a final slash.
+            $this->Path .= '/';
+         }
+      }
 
+      // Allow the $Path parameter to override this default naming.
+      if (!$Path) {
+         $this->Path .= 'export_'.($this->FilenamePrefix ? $this->FilenamePrefix.'_' : '').date('Y-m-d_His').'.txt'.($this->UseCompression() ? '.gz' : '');
+      }
+
+      // Start the file pointer.
       $fp = $this->_OpenFile();
 
+      // Build meta info about where this file came from.
       $Comment = 'Vanilla Export: '.$this->Version();
-      
-      if($Source)
+      if ($Source) {
          $Comment .= self::DELIM.' Source: '.$Source;
+      }
       foreach ($Header as $Key => $Value) {
          $Comment .= self::DELIM." $Key: $Value";
       }
-      
-      if ($this->CaptureOnly)
+
+      // Add meta info to the output.
+      if ($this->CaptureOnly) {
          $this->Comment($Comment);
-      else
+      }
+      else {
          fwrite($fp, $Comment.self::NEWLINE.self::NEWLINE);
-     
+      }
+
       $this->Comment('Export Started: '.date('Y-m-d H:i:s'));
 
       return $fp;

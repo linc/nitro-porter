@@ -79,10 +79,14 @@ abstract class ExportController {
             $Msg = $this->Ex->Comments;
 
             // Write the results.
-            if($this->Ex->UseStreaming)
+            if($this->Ex->UseStreaming) {
                exit;
-            else
-               ViewExportResult($Msg, 'Info', $this->Ex->Path);
+            }
+            else {
+               // Send no path if we don't know where it went.
+               $RelativePath = ($this->Param('destpath', FALSE)) ? FALSE : $this->Ex->Path;
+               ViewExportResult($Msg, 'Info', $RelativePath);
+            }
          }
          else
             ViewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo)); // Back to form with error
