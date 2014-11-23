@@ -1,6 +1,6 @@
 <?php
 /**
- * [Platform] exporter tool.
+ * SampleName exporter tool.
  *
  * @copyright Vanilla Forums Inc. 2010-2014
  * @license GNU GPL2
@@ -9,9 +9,13 @@
  */
 
 // Add to the $Supported array so it appears in the dropdown menu. Uncomment next line.
-//$Supported['slugname'] = array('name'=> 'Proper Platform Name', 'prefix'=>'x_');
+//$Supported['samplename'] = array('name'=> 'Proper Platform Name', 'prefix'=>'x_');
 
-class SlugName extends ExportController {
+// Optionally, add the features you are supporting. Set all values to 1 or a string for support notes.
+// See functions/feature-functions.php VanillaFeatureSet() for array keys.
+//$Supported['samplename']['features'] = array('Users' => 1);
+
+class SampleName extends ExportController {
    /**
     * You can use this to require certain tables and columns be present.
     *
@@ -41,7 +45,7 @@ class SlugName extends ExportController {
          $Ex->CharacterSet = $CharacterSet;
 
       // Reiterate the platform name here to be included in the porter file header.
-      $Ex->BeginExport('', 'Proper Platform Name');
+      $Ex->BeginExport('', 'Proper Platform Name Goes Here');
 
       // It's usually a good idea to do the porting in the approximate order laid out here.
 

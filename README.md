@@ -18,7 +18,7 @@ If you have a PHP-based forum (vBulletin, phpBB, etc) you can likely drop this r
 
 ### Roll your own!
 
-To support a new forum source, copy "class.skeleton.php", rename it to your platform, put it in the `packages` folder, and follow its inline documentation. 
+To support a new forum source, copy "sample_package.php", rename it to your platform, put it in the `packages` folder, and follow its inline documentation.
 
 You can run Vanilla Porter via `index.php` which will use the source files rather than the single-file official release. This makes it easier to keep it up-to-date and debug problems.
 
