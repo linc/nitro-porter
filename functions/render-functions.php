@@ -148,19 +148,25 @@ function ViewForm($Data) {
 
 /**
  * Message: Result of export.
+ *
+ * @param array $Msgs Comments / logs from the export.
+ * @param string $Class CSS class for wrapper.
+ * @param string|bool $Path Path to file for download, or false.
  */
-function ViewExportResult($Msgs = '', $Class = 'Info', $Path = '') {
+function ViewExportResult($Msgs = array(), $Class = 'Info', $Path = FALSE) {
    if (defined('CONSOLE')) {
       return;
    }
    
    PageHeader();
 
+   echo "<p class=\"DownloadLink\">Success!";
    if ($Path) {
-      echo "<p class=\"DownloadLink\">Success! <a href=\"$Path\"><b>Download exported file</b></a></p>";
+      " <a href=\"$Path\"><b>Download exported file</b></a>";
    }
+   echo "</p>";
 
-   if ($Msgs) {
+   if (count($Msgs)) {
       echo "<div class=\"$Class\">";
        echo "<p>Really boring export logs follow:</p>\n";
       foreach($Msgs as $Msg) {

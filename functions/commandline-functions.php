@@ -1,15 +1,17 @@
 <?php
 
 $GlobalOptions = array(
+   // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o
    'type'      => array('Type of forum we\'re freeing you from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type', 'Short' => 't'),
    'dbname'    => array('Database name.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbname', 'Short' => 'n'),
    'user'      => array('Database connection username.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
    'password'  => array('Database connection password.', 'Sx' => '::', 'Field' => 'dbpass', 'Short' => 'p', 'Default' => ''),
-   'host'      => array('IP address or hostname to connect to. Default is 127.0.0.1.', 'Sx' => ':', 'Field' => 'dbhost', 'Short' => 'h', 'Default' => '127.0.0.1'),
+   'host'      => array('IP address or hostname to connect to. Default is 127.0.0.1.', 'Sx' => ':', 'Field' => 'dbhost', 'Short' => 'o', 'Default' => '127.0.0.1'),
    'prefix'    => array('The table prefix in the database.', 'Field' => 'prefix', 'Sx' => ':', 'Default' => '', 'Short' => 'x'),
    'avatars'   => array('Enables exporting avatars from the database if supported.', 'Sx' => '::', 'Field' => 'avatars', 'Short' => 'a', 'Default' => ''),
    'cdn'       => array('Prefix to be applied to file paths.', 'Field' => 'cdn', 'Sx' => ':', 'Short' => 'c', 'Default' => ''),
    'files'     => array('Enables exporting attachments from database if supported.', 'Sx' => '::', 'Short' => 'f', 'Default' => ''),
+   'destpath'  => array('Define destination path for the export file.', 'Sx' => '::', 'Short' => 'd', 'Default' => ''),
    'help'      => array('Show this help, duh.', 'Short' => 'h')
 );
 
