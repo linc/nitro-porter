@@ -1,0 +1,104 @@
+<?php
+/**
+ * __NAME__ exporter tool.
+ *
+ * @copyright Vanilla Forums Inc. 2010-2014
+ * @license GNU GPL2
+ * @package VanillaPorter
+ * @see functions.commandline.php for command line usage.
+ */
+
+$Supported['__NAME__'] = array('name'=> '__NAME__', 'prefix'=>'');
+$Supported['__NAME__']['features'] = array('Users' => 1);
+
+class __NAME__ extends ExportController {
+   /**
+    * Main export process.
+    *
+    * @param ExportModel $Ex
+    * @see $_Structures in ExportModel for allowed destination tables & columns.
+    */
+   public function ForumExport($Ex) {
+      // Get the characterset for the comments.
+      // Usually the comments table is the best target for this.
+      $CharacterSet = $Ex->GetCharacterSet('posts');
+      if ($CharacterSet)
+         $Ex->CharacterSet = $CharacterSet;
+
+      // Reiterate the platform name here to be included in the porter file header.
+      $Ex->BeginExport('', '__NAME__');
+
+
+      // User.
+      $User_Map = array(
+         //'Source' => 'Vanilla',
+      );
+      $Ex->ExportTable('User', "
+         select u.*
+         from :_tblUser u", $User_Map);
+
+
+      // Role.
+      $Role_Map = array(
+         //'Source' => 'Vanilla',
+      );
+      $Ex->ExportTable('Role', "
+         select *
+         from :_tblGroup", $Role_Map);
+
+
+      // User Role.
+      $UserRole_Map = array(
+         //'SourceName' => 'VanillaName',
+      );
+      $Ex->ExportTable('UserRole', "
+         select u.*
+         from :_tblAuthor u", $UserRole_Map);
+
+      
+      // Category.
+      $Category_Map = array(
+         //'SourceName' => 'VanillaName',
+      );
+      $Ex->ExportTable('Category', "
+         select *
+         from :_tblCategory c", $Category_Map);
+
+
+      // Discussion.
+      $Discussion_Map = array(
+         //'SourceName' => 'VanillaName',
+         //'SourceName' => array('Column' => 'VanillaName', 'Filter' => 'HTMLDecoder'),
+      );
+      $Ex->ExportTable('Discussion', "
+         select *,
+            FROM_UNIXTIME(Message_date) as Message_date
+         from :_tblTopic t", $Discussion_Map);
+
+
+      // Comment.
+      $Comment_Map = array(
+         //'SourceName' => 'VanillaName',
+      );
+      $Ex->ExportTable('Comment', "
+         select th.*
+         from :_tblThread th", $Comment_Map);
+
+
+      // UserDiscussion.
+
+      // Permission.
+
+      // UserMeta.
+
+      // Media.
+
+      // Conversations.
+
+      // Polls.
+
+      
+      $Ex->EndExport();
+   }
+}
+?>

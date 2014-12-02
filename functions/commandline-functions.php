@@ -1,7 +1,7 @@
 <?php
 
 $GlobalOptions = array(
-   // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o
+   // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s
    'type'      => array('Type of forum we\'re freeing you from.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'type', 'Short' => 't'),
    'dbname'    => array('Database name.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbname', 'Short' => 'n'),
    'user'      => array('Database connection username.', 'Req' => TRUE, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
@@ -12,6 +12,7 @@ $GlobalOptions = array(
    'cdn'       => array('Prefix to be applied to file paths.', 'Field' => 'cdn', 'Sx' => ':', 'Short' => 'c', 'Default' => ''),
    'files'     => array('Enables exporting attachments from database if supported.', 'Sx' => '::', 'Short' => 'f', 'Default' => ''),
    'destpath'  => array('Define destination path for the export file.', 'Sx' => '::', 'Short' => 'd', 'Default' => ''),
+   'spawn'     => array('Create a new package with this name.', 'Sx' => '::', 'Short' => 's', 'Default' => ''),
    'help'      => array('Show this help, duh.', 'Short' => 'h')
 );
 
@@ -85,6 +86,12 @@ function parseCommandLine($Options = NULL, $Files = NULL) {
    
    if (isset($Opts['help'])) {
       WriteCommandLineHelp();
+      die();
+   }
+
+   // Spawn new packages from the command line!
+   if (isset($Opts['spawn'])) {
+      SpawnPackage($Opts['spawn']);
       die();
    }
    

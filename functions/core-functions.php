@@ -282,4 +282,21 @@ function CombinePaths($Paths, $Delimiter = '/') {
       return $Paths;
    }
 }
+
+/**
+ * Take the template package, add our new name, and make a new package from it.
+ *
+ * @param string $Name
+ */
+function SpawnPackage($Name) {
+   if ($Name && strlen($Name) > 2) {
+      $Name = preg_replace('/[^A-Za-z0-9]/', '', $Name);
+      $Template = file_get_contents('tpl_package.txt');
+      file_put_contents('packages/'.$Name.'.php', str_replace('__NAME__', $Name, $Template));
+      echo "Created new package: ".$Name."\n";
+   }
+   else {
+      echo "Invalid name: 2+ alphanumeric characters only.";
+   }
+}
 ?>
