@@ -84,14 +84,15 @@ function parseCommandLine($Options = NULL, $Files = NULL) {
    
    $Opts = getopt($ShortCodes, $LongCodes);
    
-   if (isset($Opts['help'])) {
+   if (isset($Opts['help']) || isset($Opts['h'])) {
       WriteCommandLineHelp();
       die();
    }
 
    // Spawn new packages from the command line!
-   if (isset($Opts['spawn'])) {
-      SpawnPackage($Opts['spawn']);
+   if (isset($Opts['spawn']) || isset($Opts['s'])) {
+      $Name = (isset($Opts['spawn'])) ? $Opts['spawn'] : $Opts['s'];
+      SpawnPackage($Name);
       die();
    }
    
