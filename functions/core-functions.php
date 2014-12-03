@@ -289,10 +289,11 @@ function CombinePaths($Paths, $Delimiter = '/') {
  * @param string $Name
  */
 function SpawnPackage($Name) {
+
    if ($Name && strlen($Name) > 2) {
       $Name = preg_replace('/[^A-Za-z0-9]/', '', $Name);
-      $Template = file_get_contents('tpl_package.txt');
-      file_put_contents('packages/'.$Name.'.php', str_replace('__NAME__', $Name, $Template));
+      $Template = file_get_contents(__DIR__.'/../tpl_package.txt');
+      file_put_contents(__DIR__.'/../packages/'.$Name.'.php', str_replace('__NAME__', $Name, $Template));
       echo "Created new package: ".$Name."\n";
    }
    else {
