@@ -383,6 +383,7 @@ class IPB extends ExportController {
       $Ex->ExportTable('Category', "select * from ibf_forums", $Category_Map);
       
       // Discussion.
+      $Description = ($Ex->Exists('topics', array('description')) === TRUE) ? 't.description' : 'p.description';
       $Discussion_Map = array(
           'tid' => 'DiscussionID',
           'title' => 'Name',
@@ -403,8 +404,8 @@ class IPB extends ExportController {
       select 
          t.*,
          case 
-            when t.description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', t.description, '</div>', p.post)
-            when t.description <> '' then t.description
+            when $Description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', $Description, '</div>', p.post)
+            when $Description <> '' then $Description
             else p.post
          end as post,
          case when t.state = 'closed' then 1 else 0 end as closed,
