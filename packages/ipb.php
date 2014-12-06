@@ -182,7 +182,7 @@ class IPB extends ExportController {
       
       if ($Ex->Exists('members', 'member_id') === TRUE) {
          $MemberID = 'member_id';
-      } else {
+      } else {x
          $MemberID = 'id';
       }
       
@@ -412,7 +412,7 @@ class IPB extends ExportController {
          t.*,
          $DescriptionSQL as post,
          case when t.state = 'closed' then 1 else 0 end as closed,
-         'IPB' as Format,
+         'BBCode' as Format,
          p.ip_address,
          p.edit_time
       from :_topics t
@@ -435,7 +435,7 @@ class IPB extends ExportController {
       $Sql = "
       select
          p.*,
-         'IPB' as Format
+         'BBCode' as Format
       from :_posts p
       join :_topics t
          on p.topic_id = t.tid
