@@ -47,9 +47,7 @@ class IPB extends ExportController {
          @$Made = mkdir($TargetFolder, 0777, TRUE);
          if (!$Made) trigger_error("Target avatar folder '{$TargetFolder}' could not be created.");
       }
-      
-      $this->Ex->SourcePrefix = 'ibf_';
-      
+
       switch ($SourceTable) {
          case 'profile_portal':
       
@@ -58,7 +56,7 @@ class IPB extends ExportController {
                   pp_main_photo as main_photo,
                   pp_thumb_photo as thumb_photo,
                   coalesce(pp_main_photo,pp_thumb_photo,0) as photo
-               from ibf_profile_portal
+               from :_profile_portal
                where length(coalesce(pp_main_photo,pp_thumb_photo,0)) > 3
                order by pp_member_id asc");
             
@@ -69,7 +67,7 @@ class IPB extends ExportController {
             $UserList = $this->Ex->Query("select 
                   id as member_id,
                   avatar_location as photo
-               from ibf_member_extra
+               from :_member_extra
                where 
                   length(avatar_location) > 3 and
                   avatar_location <> 'noavatar'
@@ -159,7 +157,7 @@ class IPB extends ExportController {
 //      $Ex->ScriptCreateTable = FALSE;
 //      $Ex->DestPrefix = 'GDN_';
       
-      $Ex->SourcePrefix = 'ibf_';
+      $Ex->SourcePrefix = ':_';
       
       // Get the characterset for the comments.
       $CharacterSet = $Ex->GetCharacterSet('posts');
@@ -212,7 +210,7 @@ class IPB extends ExportController {
          $Select = ",concat(m.members_pass_hash, '$', m.members_pass_salt) as Password";
       } else {
          $Select = ",concat(mc.converge_pass_hash, '$', mc.converge_pass_salt) as Password";
-         $From = "left join ibf_members_converge mc
+         $From = "left join :_members_converge mc
             on m.$MemberID = mc.converge_id";
       }
       
@@ -239,8 +237,8 @@ class IPB extends ExportController {
                   end as Photo,
                   x.location
                   $Select
-                 from ibf_members m
-                 left join ibf_member_extra x
+                 from :_members m
+                 left join :_member_extra x
                   on m.$MemberID = x.id
                  $From";
       } else {
@@ -254,8 +252,8 @@ class IPB extends ExportController {
                      else concat('{$Cdn}ipb/', p.pp_main_photo)
                   end as Photo
                  $Select
-                 from ibf_members m
-                 left join ibf_profile_portal p
+                 from :_members m
+                 left join :_profile_portal p
                     on m.$MemberID = p.pp_member_id
                  $From";
       }
@@ -267,7 +265,7 @@ class IPB extends ExportController {
           'g_id' => 'RoleID',
           'g_title' => 'Name'
       );
-      $Ex->ExportTable('Role', "select * from ibf_groups", $Role_Map);
+      $Ex->ExportTable('Role', "select * from :_groups", $Role_Map);
       
       // Permissions.
       $Permission_Map = array(
@@ -291,7 +289,7 @@ class IPB extends ExportController {
             r.g_view_board as g_view_board2,
             r.g_view_board as g_view_board3,
             r.g_view_board as g_view_board4
-         from ibf_groups r", $Permission_Map);
+         from :_groups r", $Permission_Map);
       
       // User Role.
       
@@ -308,15 +306,15 @@ class IPB extends ExportController {
       $Sql = "
          select
             m.$MemberID, m.$GroupID
-         from ibf_members m";
+         from :_members m";
       
       if ($Ex->Exists('members', 'mgroup_others')) {
          $Sql .= "
             union all
             
             select m.$MemberID, g.g_id
-            from ibf_members m
-            join ibf_groups g
+            from :_members m
+            join :_groups g
                on find_in_set(g.g_id, m.mgroup_others)";
 
       }
@@ -336,7 +334,7 @@ class IPB extends ExportController {
             pp_member_id as UserID,
             'Plugin.Signatures.Sig' as Name,
             signature as Value
-         from ibf_profile_portal
+         from :_profile_portal
          where length(signature) > 1
 
          union all
@@ -345,7 +343,7 @@ class IPB extends ExportController {
             pp_member_id as UserID,
             'Plugin.Signatures.Format' as Name,
             'IPB' as Value
-         from ibf_profile_portal
+         from :_profile_portal
          where length(signature) > 1
                ";
       } elseif ($Ex->Exists('member_extra', array('id', 'signature')) === TRUE) {
@@ -354,7 +352,7 @@ class IPB extends ExportController {
             id as UserID,
             'Plugin.Signatures.Sig' as Name,
             signature as Value
-         from ibf_member_extra
+         from :_member_extra
          where length(signature) > 1
 
          union all
@@ -363,7 +361,7 @@ class IPB extends ExportController {
             id as UserID,
             'Plugin.Signatures.Format' as Name,
             'IPB' as Value
-         from ibf_member_extra
+         from :_member_extra
          where length(signature) > 1";
       } else {
          $Sql = FALSE;
@@ -380,10 +378,19 @@ class IPB extends ExportController {
           'parent_id' => 'ParentCategoryID',
           'position' => 'Sort'
           );
-      $Ex->ExportTable('Category', "select * from ibf_forums", $Category_Map);
+      $Ex->ExportTable('Category', "select * from :_forums", $Category_Map);
       
       // Discussion.
-      $Description = ($Ex->Exists('topics', array('description')) === TRUE) ? 't.description' : 'p.description';
+      $DescriptionSQL = 'p.post';
+      $HasTopicDescription = ($Ex->Exists('topics', array('description')) === TRUE);
+      if ($HasTopicDescription || $Ex->Exists('posts', array('description')) === TRUE) {
+         $Description = ($HasTopicDescription) ? 't.description' : 'p.description';
+         $DescriptionSQL = "case
+            when $Description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', $Description, '</div>', p.post)
+            when $Description <> '' then $Description
+            else p.post
+         end";
+      }
       $Discussion_Map = array(
           'tid' => 'DiscussionID',
           'title' => 'Name',
@@ -403,17 +410,13 @@ class IPB extends ExportController {
       $Sql = "
       select 
          t.*,
-         case 
-            when $Description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', $Description, '</div>', p.post)
-            when $Description <> '' then $Description
-            else p.post
-         end as post,
+         $DescriptionSQL as post,
          case when t.state = 'closed' then 1 else 0 end as closed,
          'IPB' as Format,
          p.ip_address,
          p.edit_time
-      from ibf_topics t
-      left join ibf_posts p
+      from :_topics t
+      left join :_posts p
          on t.topic_firstpost = p.pid
       where t.tid between {from} and {to}";
       $this->ClearFilters('topics', $Discussion_Map, $Sql, 't');
@@ -433,8 +436,8 @@ class IPB extends ExportController {
       select
          p.*,
          'IPB' as Format
-      from ibf_posts p
-      join ibf_topics t
+      from :_posts p
+      join :_topics t
          on p.topic_id = t.tid
       where p.pid between {from} and {to}
          and p.pid <> t.topic_firstpost";
@@ -465,12 +468,12 @@ class IPB extends ExportController {
    case a.attach_img_width when 0 then a.attach_thumb_width else a.attach_img_width end as img_width,
    case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height,
    'local' as StorageMethod
-from ibf_attachments a
-join ibf_posts p
+from :_attachments a
+join :_posts p
    on a.attach_rel_id = p.pid and a.attach_rel_module = 'post'
-join ibf_topics t
+join :_topics t
    on t.tid = p.topic_id
-left join ibf_attachments_type ty
+left join :_attachments_type ty
    on a.attach_ext = ty.atype_extension";
       $this->ClearFilters('Media', $Media_Map, $Sql);
       $Ex->ExportTable('Media', $Sql, $Media_Map);
@@ -503,7 +506,7 @@ insert ignore tmp_to (
 select
    mt_id,
    mt_from_id
-from ibf_message_topics;
+from :_message_topics;
 
 insert ignore tmp_to (
    id,
@@ -512,7 +515,7 @@ insert ignore tmp_to (
 select
    mt_id,
    mt_to_id
-from ibf_message_topics;
+from :_message_topics;
 
 create table tmp_to2 (
    id int primary key,
@@ -549,7 +552,7 @@ select
    mt_title,
    mt_title,
    t2.userids
-from ibf_message_topics t
+from :_message_topics t
 join tmp_to2 t2
    on t.mt_id = t2.id;
 
@@ -634,7 +637,7 @@ EOT;
    mt.*,
    tc.title2,
    tc.groupid
-from ibf_message_topics mt
+from :_message_topics mt
 join tmp_conversation tc
    on mt.mt_id = tc.id";
       $this->ClearFilters('Conversation', $Conversation_Map, $Sql);
@@ -655,8 +658,8 @@ join tmp_conversation tc
    tc.title2,
    tc.groupid,
    'IPB' as Format
-from ibf_message_text tx
-join ibf_message_topics mt
+from :_message_text tx
+join :_message_topics mt
    on mt.mt_msg_id = tx.msg_id
 join tmp_conversation tc
    on mt.mt_id = tc.id";
@@ -694,7 +697,7 @@ drop table tmp_group;");
           'mt_title' => 'Subject',
           'mt_starter_id' => 'InsertUserID'
           );
-      $Sql = "select * from ibf_message_topics where mt_is_deleted = 0";
+      $Sql = "select * from :_message_topics where mt_is_deleted = 0";
       $this->ClearFilters('Conversation', $Conversation_Map, $Sql);
       $Ex->ExportTable('Conversation', $Sql, $Conversation_Map);
       
@@ -711,7 +714,7 @@ drop table tmp_group;");
       $Sql = "select 
             m.*,
             'IPB' as Format
-         from ibf_message_posts m";
+         from :_message_posts m";
       $this->ClearFilters('ConversationMessage', $ConversationMessage_Map, $Sql);
       $Ex->ExportTable('ConversationMessage', $Sql, $ConversationMessage_Map);
       
@@ -724,7 +727,7 @@ drop table tmp_group;");
       $Sql = "select
          t.*,
          !map_user_active as Deleted
-      from ibf_message_topic_user_map t";
+      from :_message_topic_user_map t";
       $Ex->ExportTable('UserConversation', $Sql, $UserConversation_Map);
    }
    

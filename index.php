@@ -11,7 +11,7 @@
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '2.1.1');
+define('APPLICATION_VERSION', '2.1.2');
 
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
 ini_set('display_errors', 'on');
