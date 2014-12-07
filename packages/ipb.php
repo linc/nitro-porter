@@ -182,7 +182,7 @@ class IPB extends ExportController {
       
       if ($Ex->Exists('members', 'member_id') === TRUE) {
          $MemberID = 'member_id';
-      } else {x
+      } else {
          $MemberID = 'id';
       }
       
