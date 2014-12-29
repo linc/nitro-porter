@@ -67,4 +67,16 @@ function TimestampToDate($Value) {
       return gmdate('Y-m-d H:i:s', $Value);
 }
 
+/**
+ * Wrapper for long2ip that nulls 'false' values.
+ *
+ * @param $Value
+ * @return null|string
+ */
+function long2ipf($Value) {
+   if (!$Value)
+      return NULL;
+   return long2ip($Value);
+}
+
 ?>
