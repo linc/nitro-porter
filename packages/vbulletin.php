@@ -146,8 +146,9 @@ class Vbulletin extends ExportController {
       
       // Determine the character set
       $CharacterSet = $Ex->GetCharacterSet('post');
-      if ($CharacterSet)
+      if ($CharacterSet) {
          $Ex->CharacterSet = $CharacterSet;
+      }
       
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
@@ -343,11 +344,11 @@ class Vbulletin extends ExportController {
       $Category_Map = array(
          'forumid' => 'CategoryID',
          'description' => 'Description',
-         'Name' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
+         'Name2' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
          'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
          'parentid' => 'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select f.*, title as Name
+      $Ex->ExportTable('Category', "select f.*, title as Name2
          from :_forum f
          where 1 = 1 $ForumWhere", $Category_Map);
       
