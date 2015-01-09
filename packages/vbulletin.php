@@ -285,7 +285,7 @@ class Vbulletin extends ExportController {
          $ProfileQueries = array();
          while ($Field = @mysql_fetch_assoc($ProfileFields)) {
             $Column = str_replace('_title', '', $Field['varname']);
-            $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
+            $Name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $Field['text']);
             $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
                select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
          }
