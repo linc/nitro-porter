@@ -251,6 +251,9 @@ class Vbulletin extends ExportController {
             if($Row['membergroupids']!='') {
                $Groups = explode(',',$Row['membergroupids']);
                foreach($Groups as $GroupID) {
+                  if (!$GroupID) {
+                     continue;
+                  }
                   $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})", TRUE);
                }
             }
