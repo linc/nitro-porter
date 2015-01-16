@@ -721,6 +721,9 @@ class ExportModel {
          return FALSE;
       if ($CollationRow = mysql_fetch_assoc($Data)) {
          $CharacterSet = $CollationRow['Charset'];
+         if (!defined('PORTER_CHARACTER_SET')) {
+            define('PORTER_CHARACTER_SET', $CharacterSet);
+         }
          return $CharacterSet;
       }
       return FALSE;
