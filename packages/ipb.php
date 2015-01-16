@@ -515,7 +515,6 @@ left join :_attachments_type ty
    }
 
    protected function _ExportConversationsV2() {
-      return true;
       $Ex = $this->Ex;
 
       $Sql = <<<EOT
