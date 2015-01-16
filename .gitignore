@@ -17,3 +17,8 @@ attachments/*
 custom*
 *.sql
 *.log
+
+# Composer
+composer.lock
+vendor
+
