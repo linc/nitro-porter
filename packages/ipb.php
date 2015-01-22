@@ -436,7 +436,7 @@ class IPB extends ExportController {
       $TagDiscussion_Map = array(
          'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
       );
-      $Sql = "select TagID, '0' as CategoryID, tag_meta_parent_id as DiscussionID, t.tag_added
+      $Sql = "select TagID, '0' as CategoryID, tag_meta_id as DiscussionID, t.tag_added
         from :_core_tags t
         left join z_tag zt on t.tag_text = zt.FullName";
       $Ex->ExportTable('TagDiscussion', $Sql, $TagDiscussion_Map);
@@ -488,7 +488,7 @@ class IPB extends ExportController {
       );
       $Sql = "select
    a.*,
-   concat('~cf/ipb/a.attach_location') as attach_path,
+   concat('~cf/ipb/', a.attach_location) as attach_path,
    ty.atype_mimetype,
    case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
    case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
