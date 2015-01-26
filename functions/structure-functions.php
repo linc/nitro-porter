@@ -240,6 +240,14 @@ function VanillaStructure() {
             'UserID' => 'int',
             'RoleID' => 'int'
             ),
+      'UserTag' => array(
+            'RecordType' => 'varchar(255)',
+            'RecordID' => 'int',
+            'TypeID' => 'int',
+            'UserID' => 'int',
+            'DateInserted' => 'datetime',
+            'Total' => 'int'
+            ),
       'Ban' => array(
             'BanID' => 'int',
             'BanType' => 'varchar(50)',

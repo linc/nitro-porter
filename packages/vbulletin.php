@@ -146,8 +146,9 @@ class Vbulletin extends ExportController {
       
       // Determine the character set
       $CharacterSet = $Ex->GetCharacterSet('post');
-      if ($CharacterSet)
+      if ($CharacterSet) {
          $Ex->CharacterSet = $CharacterSet;
+      }
       
       // Begin
       $Ex->BeginExport('', 'vBulletin 3.* and 4.*');
@@ -250,6 +251,9 @@ class Vbulletin extends ExportController {
             if($Row['membergroupids']!='') {
                $Groups = explode(',',$Row['membergroupids']);
                foreach($Groups as $GroupID) {
+                  if (!$GroupID) {
+                     continue;
+                  }
                   $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})", TRUE);
                }
             }
@@ -284,7 +288,7 @@ class Vbulletin extends ExportController {
          $ProfileQueries = array();
          while ($Field = @mysql_fetch_assoc($ProfileFields)) {
             $Column = str_replace('_title', '', $Field['varname']);
-            $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
+            $Name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $Field['text']);
             $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
                select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
          }
@@ -343,11 +347,11 @@ class Vbulletin extends ExportController {
       $Category_Map = array(
          'forumid' => 'CategoryID',
          'description' => 'Description',
-         'Name' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
+         'Name2' => array('Column' => 'Name','Filter' => 'HTMLDecoder'),
          'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
          'parentid' => 'ParentCategoryID'
       );
-      $Ex->ExportTable('Category', "select f.*, title as Name
+      $Ex->ExportTable('Category', "select f.*, title as Name2
          from :_forum f
          where 1 = 1 $ForumWhere", $Category_Map);
       
