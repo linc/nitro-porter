@@ -54,7 +54,7 @@ class Nodebb extends ExportController {
     );
     $Ex->ExportTable('User', "
 
-         select uid, username, password, email, confirmed, showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'Vanilla' as hm
+         select uid, username, password, email, confirmed, showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
          from gdn_user
 
          union
@@ -792,7 +792,11 @@ class Nodebb extends ExportController {
       return null;
     }
     $reactionArray = explode(':', $reactions);
-    $attributes = 'a:1:{s:5:"React";a:1:{';
+    $arraynum = 1;
+    if ($reactionArray[0] > 0 && $reactionArray[1] > 0) {
+      $arraynum = 2;
+    }
+    $attributes = 'a:1:{s:5:"React";a:'.$arraynum.':{';
     if ($reactionArray[0] > 0) {
       $attributes .= 's:2:"Up";s:'.strlen($reactionArray[0]).':"'.$reactionArray[0].'";';
     }
