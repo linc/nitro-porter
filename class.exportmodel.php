@@ -1017,6 +1017,22 @@ class ExportModel {
    }
 
    /**
+    * Determine if an index exists in a table
+    *
+    * @param $IndexName Name of the index to verify
+    * @param $Table Name of the table the target index exists in
+    * @return bool True if index exists, false otherwise
+    */
+   public function IndexExists($IndexName, $Table) {
+      $IndexName = mysql_real_escape_string($IndexName);
+      $Table = mysql_real_escape_string($Table);
+
+      $Result = $this->Query("show index from `{$Table}` WHERE Key_name = '{$IndexName}'", TRUE);
+
+      return $Result && mysql_num_rows($Result);
+   }
+
+   /**
     *
     *
     * @return resource
