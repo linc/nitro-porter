@@ -31,9 +31,8 @@ class Nodebb extends ExportController {
      */
     protected function ForumExport($Ex) {
 
-        $Ex->BeginExport('', 'NodeBB 0.*', array('HashMethod' => 'Vanilla'));
 
-        $Ex->Query("alter table gdn_user change `email:confirmed` `confirmed` int");
+        $Ex->BeginExport('', 'NodeBB 0.*', array('HashMethod' => 'Vanilla'));
 
         // Users
         $User_Map = array(
@@ -53,7 +52,7 @@ class Nodebb extends ExportController {
 
         $Ex->ExportTable('User', "
 
-             select uid, username, password, email, confirmed, showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
+             select uid, username, password, email, `email:confirmed` as confirmed, showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
              from gdn_user
 
              ", $User_Map);
@@ -138,9 +137,15 @@ class Nodebb extends ExportController {
 
         ", $Category_Map);
 
-        $Ex->Query("create index z_idx_gdn_topic on gdn_topic(mainPid);");
-        $Ex->Query("create index z_idx_gdn_post on gdn_post(pid);");
-        $Ex->Query("create index z_idx_gdn_poll on gdn_poll(tid);");
+        if (!$Ex->IndexExists('z_idx_gdn_topic', 'gdn_topic')) {
+            $Ex->Query("create index z_idx_gdn_topic on gdn_topic(mainPid);");
+        }
+        if (!$Ex->IndexExists('z_idx_gdn_post', 'gdn_post')) {
+            $Ex->Query("create index z_idx_gdn_post on gdn_post(pid);");
+        }
+        if (!$Ex->IndexExists('z_idx_gdn_poll', 'gdn_poll')) {
+            $Ex->Query("create index z_idx_gdn_poll on gdn_poll(tid);");
+        }
 
         $Ex->Query("drop table if exists z_discussionids;");
         $Ex->Query("
@@ -392,7 +397,9 @@ class Nodebb extends ExportController {
         ", $PollVote_Map);
 
         //Tags
-        $Ex->Query("create index z_idx_gdn_topic_key on gdn_topic (_key);");
+        if (!$Ex->IndexExists('z_idx_gdn_topic_key', 'gdn_topic')) {
+            $Ex->Query("create index z_idx_gdn_topic_key on gdn_topic (_key);");
+        }
 
         $Tag_Map = array(
             'slug' => array('Column' => 'Name', 'Filter' => array($this, 'nameToSlug')),
@@ -454,6 +461,9 @@ class Nodebb extends ExportController {
         ", $TagDiscussion_Map);
 
         //Conversations
+        if (!$Ex->IndexExists('z_message_key', ':_message')) {
+            $Ex->Query("create index z_message_key on :_message(_key);");
+        }
         $Ex->Query("drop table if exists z_pmto;");
         $Ex->Query("
 
@@ -622,9 +632,15 @@ class Nodebb extends ExportController {
         ", $UserDiscussion_Map);
 
         //Reactions
-        $Ex->Query("create index z_idx_gdn_topic_mainpid on gdn_topic(mainPid);");
-        $Ex->Query("create index z_idx_gdn_uid_downvote on gdn_uid_downvote(value);");
-        $Ex->Query("create index z_idx_gdn_uid_upvote on gdn_uid_upvote(value);");
+        if (!$Ex->IndexExists('z_idx_gdn_topic_mainpid', 'gdn_topic')) {
+            $Ex->Query("create index z_idx_gdn_topic_mainpid on gdn_topic(mainPid);");
+        }
+        if (!$Ex->IndexExists('z_idx_gdn_uid_downvote', 'gdn_uid_downvote')) {
+            $Ex->Query("create index z_idx_gdn_uid_downvote on gdn_uid_downvote(value);");
+        }
+        if (!$Ex->IndexExists('z_idx_gdn_uid_upvote', 'gdn_uid_upvote')) {
+            $Ex->Query("create index z_idx_gdn_uid_upvote on gdn_uid_upvote(value);");
+        }
 
         $UserTag_Map = array(
             'tagid' => 'TagID',
