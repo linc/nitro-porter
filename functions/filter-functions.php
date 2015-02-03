@@ -72,7 +72,7 @@ function FormatUrl($Str) {
  * Decode the HTML out of a value.
  */
 function HTMLDecoder($Value) {
-   $CharacterSet =  (defined(PORTER_CHARACTER_SET)) ? PORTER_CHARACTER_SET : 'UTF-8';
+   $CharacterSet =  (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
    return html_entity_decode($Value, ENT_QUOTES, $CharacterSet);
 }
 
