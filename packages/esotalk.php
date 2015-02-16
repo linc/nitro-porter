@@ -43,7 +43,7 @@ class esotalk extends ExportController {
          'memberId' => 'UserID',
          'username' => 'Name',
          'email' => 'Email',
-         'confirmed' => 'Confirmed',
+         //'confirmed' => 'Confirmed', //requires Vanilla 2.2
          'password' => 'Password',
       );
       $Ex->ExportTable('User', "
@@ -100,7 +100,7 @@ class esotalk extends ExportController {
 
       // Discussion.
       $Discussion_Map = array(
-         'conversationID' => 'DiscussionID',
+         'conversationId' => 'DiscussionID',
          'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
          'channelId' => 'CategoryID',
          'memberId' => 'InsertUserID',
@@ -110,6 +110,7 @@ class esotalk extends ExportController {
          'lastPostMemberId' => 'LastCommentUserID',
          'content' => 'Body',
       );
+      // The body of the OP is in the post table.
       $Ex->ExportTable('Discussion', "
          select *, 'BBCode' as Format,
             FROM_UNIXTIME(startTime) as DateInserted,
@@ -129,13 +130,19 @@ class esotalk extends ExportController {
          'memberId' => 'InsertUserID',
          'editMemberId' => 'UpdateUserID',
       );
+      // Now we need to omit the comments we used as the OP.
       $Ex->ExportTable('Comment', "
          select p.*, 'BBCode' as Format,
             FROM_UNIXTIME(time) as DateInserted,
             FROM_UNIXTIME(editTime) as DateUpdated
          from :_post p
          left join :_conversation c on c.conversationId = p.conversationId
-         where c.private = 0", $Comment_Map);
+         where c.private = 0
+         and p.postId not in (select p.postId
+         	from forum_conversation c
+         	left join forum_post p on p.conversationId = c.conversationId where c.private = 0
+			   group by p.conversationId
+			   order by p.time)", $Comment_Map);
 
 
       // UserDiscussion.
