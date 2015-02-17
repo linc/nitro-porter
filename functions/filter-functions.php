@@ -77,6 +77,8 @@ function HTMLDecoder($Value) {
     switch ($CharacterSet) {
         case 'latin1':
             $CharacterSet = 'ISO-8859-1'; break;
+        case 'latin9':
+            $CharacterSet = 'ISO-8859-15'; break;
         case 'utf8':
             $CharacterSet = 'UTF-8'; break;
     }
