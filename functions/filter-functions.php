@@ -73,6 +73,14 @@ function FormatUrl($Str) {
  */
 function HTMLDecoder($Value) {
    $CharacterSet =  (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
+
+    switch ($CharacterSet) {
+        case 'latin1':
+            $CharacterSet = 'ISO-8859-1'; break;
+        case 'utf8':
+            $CharacterSet = 'UTF-8'; break;
+    }
+
    return html_entity_decode($Value, ENT_QUOTES, $CharacterSet);
 }
 
