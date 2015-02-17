@@ -27,11 +27,11 @@ function ForceDate($Value) {
  * @return string|null Valid IPv4 address or nuthin'.
  */
 function ForceIP4($ip) {
-   if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m))
+   if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m)) {
       $ip = $m[1];
-   else
+   } else {
       $ip = null;
-
+   }
    return $ip;
 }
 
@@ -95,10 +95,11 @@ function NotFilter($Value) {
  * @return null|string
  */
 function TimestampToDate($Value) {
-   if ($Value == NULL)
+   if ($Value == NULL) {
       return NULL;
-   else
+   } else {
       return gmdate('Y-m-d H:i:s', $Value);
+   }
 }
 
 /**
@@ -108,9 +109,85 @@ function TimestampToDate($Value) {
  * @return null|string
  */
 function long2ipf($Value) {
-   if (!$Value)
+   if (!$Value) {
       return NULL;
+   }
    return long2ip($Value);
+}
+
+/**
+ * Convert 'y/n' to boolean.
+ *
+ * @param $Value
+ * @return int
+ */
+function YNBool($Value) {
+   if ($Value == 'y') {
+      return 1;
+   } else {
+      return 0;
+   }
+}
+
+/**
+ * Guess the Format of the Body.
+ *
+ * @param $Value
+ * @return string
+ */
+function GuessFormat($Value) {
+   if (strpos($Value, '[') !== FALSE) {
+      return 'BBCode';
+   } elseif (strpos($Value, '<') !== FALSE) {
+      return 'Html';
+   } else {
+      return 'BBCode';
+   }
+}
+
+/**
+ * Derive mimetype from file extension.
+ *
+ * @param $Value
+ * @return string
+ */
+function MimeTypeFromExtension($Value) {
+   switch ($Value) {
+      case '.png':
+      case '.jpg':
+      case '.jpeg':
+      case '.gif':
+      case '.bmp':
+         return 'image/'.substr($Value, 1);
+      case '.zip':
+      case '.doc':
+      case '.docx':
+      case '.pdf':
+      case '.xls':
+      case '.swf':
+         return 'application/'.substr($Value, 1);
+      case '.txt':
+      case '.htm':
+      case '.html':
+         return 'text/'.substr($Value, 1);
+      case '.mov':
+      case '.avi':
+         return 'video/'.substr($Value, 1);
+   }
+}
+
+/**
+ * Change square brackets to braces.
+ *
+ * @param $Value
+ * @return mixed
+ */
+function CleanBodyBrackets($Value) {
+   if (strpos($Value, '[') !== FALSE) {
+      $Result = str_replace(array('<', '>'), array('[', ']'), $Value);
+      return $Result;
+   }
+   return $Value;
 }
 
 ?>
