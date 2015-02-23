@@ -3,14 +3,14 @@
 header('Content-Type: text/plain');
 
 // Make the final vanilla2export.php file from the other sources.
-$Path = dirname(__FILE__).'/vanilla2export.php';
+$Path = dirname(__FILE__) . '/vanilla2export.php';
 
 if (file_exists($Path)) {
-   $r = unlink($Path);
-   if (!$r) {
-      echo "Could not delete $Path.\n";
-      die();
-   }
+    $r = unlink($Path);
+    if (!$r) {
+        echo "Could not delete $Path.\n";
+        die();
+    }
 }
 
 // Open the file.
@@ -26,56 +26,56 @@ echo "Make Complete.\n";
 
 /// Functions ///
 function AddFile($fp, $Filename) {
-   // Recursively build file
-   $Contents = GetFile($Filename);
+    // Recursively build file
+    $Contents = GetFile($Filename);
 
-   // Include individual software porters (undo MAKESKIP)
-   $Paths = glob('packages/*.php');
-   $Exporters = '';
-   foreach ($Paths as $Path) {
-      $Exporters .= GetFile($Path);
-   }
-   $Contents = str_replace('// [EXPORTERS]', ' ?>'.$Exporters.'<?php ', $Contents);
+    // Include individual software porters (undo MAKESKIP)
+    $Paths = glob('packages/*.php');
+    $Exporters = '';
+    foreach ($Paths as $Path) {
+        $Exporters .= GetFile($Path);
+    }
+    $Contents = str_replace('// [EXPORTERS]', ' ?>' . $Exporters . '<?php ', $Contents);
 
-   // Write the all-in-one file
-   fwrite($fp, $Contents);
+    // Write the all-in-one file
+    fwrite($fp, $Contents);
 }
 
-function GetFile($Filename, $EndPhp = FALSE) {
-   $Path = dirname(__FILE__).'/'.$Filename;
-   echo "Including file $Path\n";
+function GetFile($Filename, $EndPhp = false) {
+    $Path = dirname(__FILE__) . '/' . $Filename;
+    echo "Including file $Path\n";
 
-   $Contents = file_get_contents($Path);
+    $Contents = file_get_contents($Path);
 
-   // MAKESKIP
-   $Contents = preg_replace('/MAKESKIPSTART(.*)MAKESKIPEND/s', '[EXPORTERS]', $Contents);
+    // MAKESKIP
+    $Contents = preg_replace('/MAKESKIPSTART(.*)MAKESKIPEND/s', '[EXPORTERS]', $Contents);
 
-   // Inline any stylesheet includes.
-   $Contents = preg_replace_callback('/<link.*?href=[\'"](.*?)[\'"].*?\/>/i', 'ReplaceStyleCallback', $Contents);
+    // Inline any stylesheet includes.
+    $Contents = preg_replace_callback('/<link.*?href=[\'"](.*?)[\'"].*?\/>/i', 'ReplaceStyleCallback', $Contents);
 
-   // Inline any includes.
-   $Contents = preg_replace_callback('/include_once [\'"](.*?)[\'"]\;/', 'ReplaceIncludeCallback', $Contents);
+    // Inline any includes.
+    $Contents = preg_replace_callback('/include_once [\'"](.*?)[\'"]\;/', 'ReplaceIncludeCallback', $Contents);
 
-   // End and begin the php context.
-   if($EndPhp) {
-      $Contents = "\n/* Contents included from $Filename */\n?>".$Contents."<?php\n";
-   }
-   
-   return $Contents;
+    // End and begin the php context.
+    if ($EndPhp) {
+        $Contents = "\n/* Contents included from $Filename */\n?>" . $Contents . "<?php\n";
+    }
+
+    return $Contents;
 }
 
 function ReplaceIncludeCallback($Matches) {
-   $Path = $Matches[1];
-   $Contents = GetFile($Path, TRUE);
-   $Result = $Contents;
+    $Path = $Matches[1];
+    $Contents = GetFile($Path, true);
+    $Result = $Contents;
 
-   return $Result;
+    return $Result;
 }
 
 function ReplaceStyleCallback($Matches) {
-   $Path = $Matches[1];
-   $Contents = file_get_contents(dirname(__FILE__).'/'.$Path);
-   $Result = "<!-- Contents included from $Path -->\n<style>\n".$Contents."\n</style>";
+    $Path = $Matches[1];
+    $Contents = file_get_contents(dirname(__FILE__) . '/' . $Path);
+    $Result = "<!-- Contents included from $Path -->\n<style>\n" . $Contents . "\n</style>";
 
-   return $Result;
+    return $Result;
 }
