@@ -87,7 +87,7 @@ class ExpressionEngine extends ExportController {
           'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($Ex, 'TimestampToDate')),
           'timezone' => 'HourOffset',
           'location' => 'Location'
-          );
+      );
       $Ex->ExportTable('User', "
          select 
             'django' as HashMethod,
@@ -97,8 +97,7 @@ class ExpressionEngine extends ExportController {
             ip_address as LastIPAddress,
             case when avatar_filename = '' then null else concat('imported/', avatar_filename) end as Photo,
             u.*
-         from forum_members u
-         ", $User_Map);
+         from forum_members u", $User_Map);
       
       
       // Role.
@@ -129,7 +128,7 @@ class ExpressionEngine extends ExportController {
             'Plugin.Signatures.Sig' as Name,
             signature as Value
          from forum_members
-         where signature <> ''");;
+         where signature <> ''");
 
 
       // Category.
@@ -158,12 +157,12 @@ class ExpressionEngine extends ExportController {
           'topic_edit_author' => 'UpdateUserID'
           );
       $Ex->ExportTable('Discussion', "
-      select 
-         case when announcement = 'y' then 1 when sticky = 'y' then 2 else 0 end as Announce,
-         case when status = 'c' then 1 else 0 end as Closed,
-         t.body as body2,
-         t.*
-      from forum_forum_topics t", $Discussion_Map);
+          select
+             case when announcement = 'y' then 1 when sticky = 'y' then 2 else 0 end as Announce,
+             case when status = 'c' then 1 else 0 end as Closed,
+             t.body as body2,
+             t.*
+          from forum_forum_topics t", $Discussion_Map);
 
 
       // Comment.
@@ -203,18 +202,6 @@ class ExpressionEngine extends ExportController {
             'local' as StorageMethod,
             a.*
          from forum_forum_attachments a", $Media_Map);
-//      'MediaID' => 'int',
-//            'Name' => 'varchar(255)',
-//            'Type' => 'varchar(128)',
-//            'Size' => 'int',
-//            'StorageMethod' => 'varchar(24)',
-//            'Path' => 'varchar(255)',
-//            'InsertUserID' => 'int',
-//            'DateInserted' => 'datetime',
-//            'ForeignID' => 'int',
-//            'ForeignTable' => 'varchar(24)',
-//            'ImageWidth' => 'int',
-//            'ImageHeight' => 'int'
       
       $Ex->EndExport();
    }
@@ -240,8 +227,7 @@ class ExpressionEngine extends ExportController {
          g.title as title2
        from forum_message_data pm
        join z_pmgroup g
-         on g.group_id = pm.message_id;
-         ", $Conversation_Map);
+         on g.group_id = pm.message_id;", $Conversation_Map);
       
       // User Conversation.
       $UserConversation_Map = array(
@@ -262,7 +248,7 @@ class ExpressionEngine extends ExportController {
           'message_body' => 'Body',
           'message_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
           'sender_id' => 'InsertUserID'
-          );
+      );
       $Ex->ExportTable('ConversationMessage', "
          select
             pm.*,
@@ -271,14 +257,6 @@ class ExpressionEngine extends ExportController {
           from forum_message_data pm
           join z_pmtext pm2
             on pm.message_id = pm2.message_id", $Message_Map);
-      
-//      array(
-//            'MessageID' => 'int',
-//            'ConversationID' => 'int',
-//            'Body' => 'text',
-//            'Format' => 'varchar(20)',
-//            'InsertUserID' => 'int',
-//            'DateInserted' => 'datetime')
    }
 
    /**
@@ -419,6 +397,5 @@ where m.message_cc <> '';");
         on pm.title2 = g.title and pm.userids = g.userids
       set pm.group_id = g.group_id;");
    }
-
 
 }
