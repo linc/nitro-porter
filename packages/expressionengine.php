@@ -30,8 +30,9 @@ class ExpressionEngine extends ExportController {
       
       // Get the characterset for the comments.
       $CharacterSet = $Ex->GetCharacterSet('forum_topics');
-      if ($CharacterSet)
+      if ($CharacterSet) {
          $Ex->CharacterSet = $CharacterSet;
+      }
       
       $Ex->BeginExport('', 'Expression Engine');
       $Ex->SourcePrefix = 'forum_';
@@ -57,8 +58,9 @@ class ExpressionEngine extends ExportController {
       );
       $Permission_Map = $Ex->FixPermissionColumns($Permission_Map);
       foreach ($Permission_Map as $Column => &$Info) {
-         if (is_array($Info) && isset($Info['Column']))
+         if (is_array($Info) && isset($Info['Column'])) {
             $Info['Filter'] = array($this, 'YNBool');
+         }
       }
       
       $Ex->ExportTable('Permission', "
