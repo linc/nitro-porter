@@ -1,7 +1,7 @@
 <?php
 /**
  * Vanilla 2 Exporter
- * 
+ *
  * This script exports other forum databases to the Vanilla 2 import format.
  * To use this script, copy it to your web server and open it in your browser.
  * If you have a large database, make the directory writable so that the export file can be saved locally and zipped.
@@ -19,12 +19,12 @@ ini_set('track_errors', 1);
 
 // Make sure a default time zone is set
 if (ini_get('date.timezone') == '') {
-   date_default_timezone_set('America/Montreal');
+    date_default_timezone_set('America/Montreal');
 }
 
 // Recognize if we're running from cli.
 if (PHP_SAPI == 'cli') {
-   define('CONSOLE', TRUE);
+    define('CONSOLE', true);
 }
 
 /** @var array Supported forum packages: classname => array(name, prefix, features) */
@@ -45,54 +45,51 @@ set_error_handler("ErrorHandler");
 
 // Set Vanilla to appear first in the list.
 $Supported = array(
-   'vanilla1' => array('name'=> 'Vanilla 1', 'prefix'=>'LUM_'),
-   'vanilla2' => array('name'=> 'Vanilla 2', 'prefix'=>'GDN_')
+    'vanilla1' => array('name' => 'Vanilla 1', 'prefix' => 'LUM_'),
+    'vanilla2' => array('name' => 'Vanilla 2', 'prefix' => 'GDN_')
 );
 
 // Include individual software porters.
 // MAKESKIPSTART
-$Paths = glob(dirname(__FILE__).'/packages/*.php');
+$Paths = glob(dirname(__FILE__) . '/packages/*.php');
 foreach ($Paths as $Path) {
-   include_once $Path;
+    include_once $Path;
 }
 // MAKESKIPEND
 
 // If running from cli, execute its command.
 if (defined('CONSOLE')) {
-   ParseCommandLine();
+    ParseCommandLine();
 }
 
 // Instantiate the appropriate controller or display the input page.
 $Method = 'DoExport';
 if (isset($_REQUEST['features'])) {
-   // Feature list or table.
-   $Set = (isset($_REQUEST['cloud'])) ? array('core','addons','cloud') : false;
-   $Set = VanillaFeatures($Set);
+    // Feature list or table.
+    $Set = (isset($_REQUEST['cloud'])) ? array('core', 'addons', 'cloud') : false;
+    $Set = VanillaFeatures($Set);
 
-   if (isset($_REQUEST['type'])) {
-      ViewFeatureList($_REQUEST['type'], $Set);
-   }
-   else {
-      ViewFeatureTable($Set);
-   }
-}
-elseif (isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
-   // Mini-Factory for conducting exports.
-   $class = ucwords($_POST['type']);
-   $Controller = new $class();
-   if (!method_exists($Controller, $Method)) {
-      echo "This datasource type does not support {$Method}.\n";
-      exit();
-   }
-   $Controller->$Method();
-}
-else {
-   // Show the web UI to start an export.
-   $CanWrite = TestWrite();
-   ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
+    if (isset($_REQUEST['type'])) {
+        ViewFeatureList($_REQUEST['type'], $Set);
+    } else {
+        ViewFeatureTable($Set);
+    }
+} elseif (isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
+    // Mini-Factory for conducting exports.
+    $class = ucwords($_POST['type']);
+    $Controller = new $class();
+    if (!method_exists($Controller, $Method)) {
+        echo "This datasource type does not support {$Method}.\n";
+        exit();
+    }
+    $Controller->$Method();
+} else {
+    // Show the web UI to start an export.
+    $CanWrite = TestWrite();
+    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
 }
 
 // Console output should end in newline.
 if (defined('CONSOLE')) {
-   echo "\n";
+    echo "\n";
 }

@@ -13,9 +13,9 @@
  * @return array
  */
 function VanillaStructure() {
-   // Adding new items without matching existing spacing costs 2 toes.
-   return array(
-      'Activity' => array(
+    // Adding new items without matching existing spacing costs 2 toes.
+    return array(
+        'Activity' => array(
             'ActivityType' => 'varchar(20)',
             'ActivityUserID' => 'int',
             'RegardingUserID' => 'int',
@@ -26,8 +26,8 @@ function VanillaStructure() {
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)'
-            ),
-      'Category' => array(
+        ),
+        'Category' => array(
             'CategoryID' => 'int',
             'Name' => 'varchar(30)',
             'UrlCode' => 'varchar(255)',
@@ -39,8 +39,8 @@ function VanillaStructure() {
             'UpdateUserID' => 'int',
             'Sort' => 'int',
             'Archived' => 'tinyint(1)'
-            ),
-      'Comment' => array(
+        ),
+        'Comment' => array(
             'CommentID' => 'int',
             'DiscussionID' => 'int',
             'DateInserted' => 'datetime',
@@ -52,8 +52,8 @@ function VanillaStructure() {
             'Format' => 'varchar(20)',
             'Body' => 'text',
             'Score' => 'float'
-            ),
-      'Conversation' => array(
+        ),
+        'Conversation' => array(
             'ConversationID' => 'int',
             'Subject' => 'varchar(255)',
             'FirstMessageID' => 'int',
@@ -61,8 +61,8 @@ function VanillaStructure() {
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int'
-            ),
-      'ConversationMessage' => array(
+        ),
+        'ConversationMessage' => array(
             'MessageID' => 'int',
             'ConversationID' => 'int',
             'Body' => 'text',
@@ -70,8 +70,8 @@ function VanillaStructure() {
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)'
-            ),
-      'Discussion' => array(
+        ),
+        'Discussion' => array(
             'DiscussionID' => 'int',
             'Name' => 'varchar(100)',
             'Body' => 'text',
@@ -91,8 +91,8 @@ function VanillaStructure() {
             'Announce' => 'tinyint',
             'Sink' => 'tinyint',
             'Type' => 'varchar(20)'
-            ),
-      'Media' => array(
+        ),
+        'Media' => array(
             'MediaID' => 'int',
             'Name' => 'varchar(255)',
             'Type' => 'varchar(128)',
@@ -105,8 +105,8 @@ function VanillaStructure() {
             'ForeignTable' => 'varchar(24)',
             'ImageWidth' => 'int',
             'ImageHeight' => 'int'
-            ),
-      'Permission' => array(
+        ),
+        'Permission' => array(
             'RoleID' => 'int',
             'JunctionTable' => 'varchar(100)',
             'JunctionColumn' => 'varchar(100)',
@@ -118,8 +118,8 @@ function VanillaStructure() {
             'Vanilla.Discussions.View' => 'tinyint',
             'Vanilla.Discussions.Add' => 'tinyint',
             'Vanilla.Comments.Add' => 'tinyint'
-            ),
-      'Poll' => array(
+        ),
+        'Poll' => array(
             'PollID' => 'int',
             'Name' => 'varchar(255)',
             'DiscussionID' => 'int',
@@ -128,8 +128,8 @@ function VanillaStructure() {
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int'
-            ),
-      'PollOption' => array(
+        ),
+        'PollOption' => array(
             'PollOptionID' => 'int',
             'PollID' => 'int',
             'Body' => 'varchar(500)',
@@ -139,37 +139,37 @@ function VanillaStructure() {
             'InsertUserID' => 'int',
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int'
-            ),
-      'PollVote' => array(
+        ),
+        'PollVote' => array(
             'UserID' => 'int',
             'PollOptionID' => 'int',
             'DateInserted' => 'datetime'
-            ),
-      'Rank' => array(
+        ),
+        'Rank' => array(
             'RankID' => 'int',
             'Name' => 'varchar(100)',
             'Level' => 'smallint',
             'Label' => 'varchar(255)',
             'Body' => 'text',
             'Attributes' => 'text'
-            ),
-      'Role' => array(
+        ),
+        'Role' => array(
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
             'Description' => 'varchar(200)',
             'CanSession' => 'tinyint'
-            ),
-      'Tag' => array(
+        ),
+        'Tag' => array(
             'TagID' => 'int',
             'Name' => 'varchar(255)',
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime'
-            ),
-      'TagDiscussion' => array(
+        ),
+        'TagDiscussion' => array(
             'TagID' => 'int',
             'DiscussionID' => 'int'
-            ),
-      'User' => array(
+        ),
+        'User' => array(
             'UserID' => 'int',
             'Name' => 'varchar(20)',
             'Email' => 'varchar(200)',
@@ -195,38 +195,38 @@ function VanillaStructure() {
             'Banned' => 'tinyint',
             'ShowEmail' => 'tinyint',
             'RankID' => 'int'
-            ),
-      'UserAuthentication' => array(
+        ),
+        'UserAuthentication' => array(
             'ForeignUserKey' => 'varchar(255)',
             'ProviderKey' => 'varchar(64)',
             'UserID' => 'varchar(11)',
             'Attributes' => 'text'
-            ),
-      'UserComment' => array(
+        ),
+        'UserComment' => array(
             'UserID' => 'int',
             'CommentID' => 'int',
             'Score' => 'float',
             'DateLastViewed' => 'datetime'
-            ),
-      'UserConversation' => array(
+        ),
+        'UserConversation' => array(
             'UserID' => 'int',
             'ConversationID' => 'int',
             'Deleted' => 'tinyint(1)',
             'LastMessageID' => 'int'
-            ),
-      'UserDiscussion' => array(
+        ),
+        'UserDiscussion' => array(
             'UserID' => 'int',
             'DiscussionID' => 'int',
             'Bookmarked' => 'tinyint',
             'DateLastViewed' => 'datetime',
             'CountComments' => 'int'
-            ),
-      'UserMeta' => array(
+        ),
+        'UserMeta' => array(
             'UserID' => 'int',
             'Name' => 'varchar(255)',
             'Value' => 'text'
-            ),
-      'UserNote' => array(
+        ),
+        'UserNote' => array(
             'UserNoteID' => 'int',
             'Type' => 'varchar(10)',
             'UserID' => 'int',
@@ -235,20 +235,20 @@ function VanillaStructure() {
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)'
-            ),
-      'UserRole' => array(
+        ),
+        'UserRole' => array(
             'UserID' => 'int',
             'RoleID' => 'int'
-            ),
-      'UserTag' => array(
+        ),
+        'UserTag' => array(
             'RecordType' => 'varchar(255)',
             'RecordID' => 'int',
             'TypeID' => 'int',
             'UserID' => 'int',
             'DateInserted' => 'datetime',
             'Total' => 'int'
-            ),
-      'Ban' => array(
+        ),
+        'Ban' => array(
             'BanID' => 'int',
             'BanType' => 'varchar(50)',
             'BanValue' => 'varchar(50)',
@@ -257,8 +257,8 @@ function VanillaStructure() {
             'CountBlockRegistrations' => 'int',
             'InsertUserID' => 'int',
             'DateInserted' => 'datetime'
-            ),
-      'Group' => array(
+        ),
+        'Group' => array(
             'GroupID' => 'int',
             'Name' => 'varchar(255)',
             'Description' => 'text',
@@ -277,16 +277,16 @@ function VanillaStructure() {
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int',
             'Attributes' => 'text'
-            ),
-      'UserGroup' => array(
+        ),
+        'UserGroup' => array(
             'UserGroupID' => 'int',
             'GroupID' => 'int',
             'UserID' => 'int',
             'DateInserted' => 'datetime',
             'InsertUserID' => 'int',
             'Role' => 'varchar(255)'
-            ),
-   );
+        ),
+    );
 }
 
 ?>

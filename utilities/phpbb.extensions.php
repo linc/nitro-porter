@@ -21,14 +21,13 @@ $Results = mysqli_query("select physical_filename as name, extension as ext from
 // Iterate thru files based on database results and rename.
 $Renamed = $Failed = 0;
 while ($Row = mysqli_fetch_array($Results)) {
-   if (file_exists($Directory.$Row['name'])) {
-      rename($Directory.$Row['name'], $Directory.$Row['physical_filename'].'.'.$Row['ext']);
-      $Renamed++;
-   }
-   else {
-      $Failed++;
-   }
+    if (file_exists($Directory . $Row['name'])) {
+        rename($Directory . $Row['name'], $Directory . $Row['physical_filename'] . '.' . $Row['ext']);
+        $Renamed++;
+    } else {
+        $Failed++;
+    }
 }
 
 // Results
-echo 'Renamed '.$Renamed.' files. '.$Failed. 'failures.';
+echo 'Renamed ' . $Renamed . ' files. ' . $Failed . 'failures.';

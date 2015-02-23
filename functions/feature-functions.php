@@ -12,34 +12,32 @@
  * @param $Feature
  * @return string
  */
-function FeatureStatus($Platform, $Feature, $Notes = TRUE) {
-   global $Supported;
+function FeatureStatus($Platform, $Feature, $Notes = true) {
+    global $Supported;
 
-   if (!isset($Supported[$Platform]['features'])) {
-      return '<span class="No">No</span>';
-   }
+    if (!isset($Supported[$Platform]['features'])) {
+        return '<span class="No">No</span>';
+    }
 
-   $Available = $Supported[$Platform]['features'];
+    $Available = $Supported[$Platform]['features'];
 
-   // Calculate feature availability.
-   $Status = '<span class="No">&#x2717;</span>';
-   if (isset($Available[$Feature])) {
-       if ($Available[$Feature] === 1) {
-         $Status = '<span class="Yes">&#x2713;</span>';
-       }
-       elseif ($Available[$Feature]) {
-         if ($Notes) {
-            // Send the text of the note
-            $Status = $Available[$Feature];
-         }
-         else {
-            // Say 'yes' for table shorthand
+    // Calculate feature availability.
+    $Status = '<span class="No">&#x2717;</span>';
+    if (isset($Available[$Feature])) {
+        if ($Available[$Feature] === 1) {
             $Status = '<span class="Yes">&#x2713;</span>';
-         }
-       }
-   }
+        } elseif ($Available[$Feature]) {
+            if ($Notes) {
+                // Send the text of the note
+                $Status = $Available[$Feature];
+            } else {
+                // Say 'yes' for table shorthand
+                $Status = '<span class="Yes">&#x2713;</span>';
+            }
+        }
+    }
 
-   return $Status;
+    return $Status;
 }
 
 /**
@@ -49,7 +47,7 @@ function FeatureStatus($Platform, $Feature, $Notes = TRUE) {
  * @return string
  */
 function FeatureName($Feature) {
-   return ltrim(preg_replace('/[A-Z]/', ' $0', $Feature));
+    return ltrim(preg_replace('/[A-Z]/', ' $0', $Feature));
 }
 
 /**
@@ -63,22 +61,21 @@ function FeatureName($Feature) {
  *
  * @return array
  */
-function VanillaFeatures($Set = FALSE) {
-   if (!$Set) {
-      $Set = array('core', 'addon');
-   }
+function VanillaFeatures($Set = false) {
+    if (!$Set) {
+        $Set = array('core', 'addon');
+    }
 
-   $Features = array();
-   if (is_array($Set)) {
-      foreach ($Set as $Section) {
-         $Features += VanillaFeatureSet($Section);
-      }
-   }
-   else {
-      $Features = VanillaFeatureSet($Set);
-   }
+    $Features = array();
+    if (is_array($Set)) {
+        foreach ($Set as $Section) {
+            $Features += VanillaFeatureSet($Section);
+        }
+    } else {
+        $Features = VanillaFeatureSet($Set);
+    }
 
-   return $Features;
+    return $Features;
 }
 
 /**
@@ -88,44 +85,45 @@ function VanillaFeatures($Set = FALSE) {
  * @return array
  */
 function VanillaFeatureSet($Section) {
-   switch ($Section) {
-      case 'addon':
-         $Set = array(
-            'Tags'            => 0,
+    switch ($Section) {
+        case 'addon':
+            $Set = array(
+                'Tags' => 0,
 
             );
-         break;
-      case 'cloud':
-         $Set = array(
-            'Badges'          => 0,
-            'Ranks'           => 0,
-            'Polls'           => 0,
-            'Groups'          => 0,
+            break;
+        case 'cloud':
+            $Set = array(
+                'Badges' => 0,
+                'Ranks' => 0,
+                'Polls' => 0,
+                'Groups' => 0,
             );
-         break;
-      case 'core':
-      default:
-         $Set = array(
-            'Comments'        => 0,
-            'Discussions'     => 0,
-            'Users'           => 0,
-            'Categories'      => 0,
-            'Roles'           => 0,
-            'Passwords'       => 0,
-            'Avatars'         => 0,
-            'PrivateMessages' => 0,
-            'Signatures'      => 0,
-            'Attachments'     => 0,
-            'Bookmarks'       => 0,
-            'Permissions'     => 0,
-            //'UserWall'        => 0,
-            'UserNotes'       => 0,
+            break;
+        case 'core':
+        default:
+            $Set = array(
+                'Comments' => 0,
+                'Discussions' => 0,
+                'Users' => 0,
+                'Categories' => 0,
+                'Roles' => 0,
+                'Passwords' => 0,
+                'Avatars' => 0,
+                'PrivateMessages' => 0,
+                'Signatures' => 0,
+                'Attachments' => 0,
+                'Bookmarks' => 0,
+                'Permissions' => 0,
+                //'UserWall'        => 0,
+                'UserNotes' => 0,
 
-            //'Emoji'           => 0,
+                //'Emoji'           => 0,
             );
-         break;
+            break;
     }
 
     return $Set;
 }
+
 ?>

@@ -7,70 +7,74 @@
  * @package VanillaPorter
  */
 
- $Supported['vanilla2']['features'] = array(
-   'Comments'        => 1,
-   'Discussions'     => 1,
-   'Users'           => 1,
-   'Categories'      => 1,
-   'Roles'           => 1,
-   'Avatars'         => 1,
-   'Attachments'     => 1,
-   'PrivateMessages' => 1,
-   'Permissions'     => 1,
-   'UserWall'        => 1,
-   'UserNotes'       => 1,
-   'Bookmarks'       => 1,
-   'Signatures'      => 1,
-   'Passwords'       => 1,
+$Supported['vanilla2']['features'] = array(
+    'Comments' => 1,
+    'Discussions' => 1,
+    'Users' => 1,
+    'Categories' => 1,
+    'Roles' => 1,
+    'Avatars' => 1,
+    'Attachments' => 1,
+    'PrivateMessages' => 1,
+    'Permissions' => 1,
+    'UserWall' => 1,
+    'UserNotes' => 1,
+    'Bookmarks' => 1,
+    'Signatures' => 1,
+    'Passwords' => 1,
 );
- 
-class Vanilla2 extends ExportController {
 
-   /** @var array Required tables => columns */  
-   protected $_SourceTables = array();
-   
-   /**
-    * @param ExportModel $Ex
-    */
-   protected function ForumExport($Ex) {
-      $Tables = array(
-          'Activity',
-          'Category',
-          'Comment',
-          'Conversation',
-          'ConversationMessage',
-          'Discussion',
-          'Media',
-          'Permission',
-          'Role',
-          'User',
-          'UserComment',
-          'UserConversation',
-          'UserDiscussion',
-          'UserMeta',
-          'UserRole');
+class Vanilla2 extends ExportController
+{
 
-      $Ex->BeginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
+    /** @var array Required tables => columns */
+    protected $_SourceTables = array();
 
-      foreach ($Tables as $TableName) {
-         $this->ExportTable($Ex, $TableName);
-      }
+    /**
+     * @param ExportModel $Ex
+     */
+    protected function ForumExport($Ex) {
+        $Tables = array(
+            'Activity',
+            'Category',
+            'Comment',
+            'Conversation',
+            'ConversationMessage',
+            'Discussion',
+            'Media',
+            'Permission',
+            'Role',
+            'User',
+            'UserComment',
+            'UserConversation',
+            'UserDiscussion',
+            'UserMeta',
+            'UserRole'
+        );
 
-      $Ex->EndExport();
-   }
+        $Ex->BeginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
 
-   /**
-    *
-    * @param ExportModel $Ex
-    * @param string $TableName
-    */
-   protected function ExportTable($Ex, $TableName) {
-      // Make sure the table exists.
-      if (!$Ex->Exists($TableName))
-         return;
+        foreach ($Tables as $TableName) {
+            $this->ExportTable($Ex, $TableName);
+        }
 
-      $Ex->ExportTable($TableName, "select * from :_{$TableName}");
-   }
-   
+        $Ex->EndExport();
+    }
+
+    /**
+     *
+     * @param ExportModel $Ex
+     * @param string $TableName
+     */
+    protected function ExportTable($Ex, $TableName) {
+        // Make sure the table exists.
+        if (!$Ex->Exists($TableName)) {
+            return;
+        }
+
+        $Ex->ExportTable($TableName, "select * from :_{$TableName}");
+    }
+
 }
+
 ?>

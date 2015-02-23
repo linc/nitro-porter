@@ -9,20 +9,21 @@
  * @package VanillaPorter
  */
 
-$Supported['smf2'] = array('name'=> 'Simple Machines 2', 'prefix' => 'smf_');
+$Supported['smf2'] = array('name' => 'Simple Machines 2', 'prefix' => 'smf_');
 $Supported['smf2']['features'] = array(
-   'Comments'        => 1,
-   'Discussions'     => 1,
-   'Users'           => 1,
-   'Categories'      => 1,
-   'Roles'           => 1,
-   'Attachments'     => 1,
-   'Bookmarks'       => 1,
-   'PrivateMessages' => 1,
-   'Passwords'       => 1,
+    'Comments' => 1,
+    'Discussions' => 1,
+    'Users' => 1,
+    'Categories' => 1,
+    'Roles' => 1,
+    'Attachments' => 1,
+    'Bookmarks' => 1,
+    'PrivateMessages' => 1,
+    'Passwords' => 1,
 );
 
-class SMF2 extends ExportController {
+class SMF2 extends ExportController
+{
 
     /** @var array Required tables => columns */
     protected $SourceTables = array(
@@ -45,19 +46,19 @@ class SMF2 extends ExportController {
 
         // Users
         $User_Map = array(
-            'id_member'=>'UserID',
-            'member_name'=>'Name',
-            'password'=>'Password',
-            'email_address'=>'Email',
-            'DateInserted'=>'DateInserted',
-            'timeOffset'=>'HourOffset',
-            'posts'=>'CountComments',
+            'id_member' => 'UserID',
+            'member_name' => 'Name',
+            'password' => 'Password',
+            'email_address' => 'Email',
+            'DateInserted' => 'DateInserted',
+            'timeOffset' => 'HourOffset',
+            'posts' => 'CountComments',
             //'avatar'=>'Photo',
             'Photo' => 'Photo',
-            'birthdate'=>'DateOfBirth',
-            'DateFirstVisit'=>'DateFirstVisit',
-            'DateLastActive'=>'DateLastActive',
-            'DateUpdated'=>'DateUpdated'
+            'birthdate' => 'DateOfBirth',
+            'DateFirstVisit' => 'DateFirstVisit',
+            'DateLastActive' => 'DateLastActive',
+            'DateUpdated' => 'DateUpdated'
         );
         $Ex->ExportTable('User', "
          select m.*,
@@ -72,15 +73,15 @@ class SMF2 extends ExportController {
 
         // Roles
         $Role_Map = array(
-            'id_group'=>'RoleID',
-            'group_name'=>'Name'
+            'id_group' => 'RoleID',
+            'group_name' => 'Name'
         );
         $Ex->ExportTable('Role', "select * from :_membergroups", $Role_Map);
 
         // UserRoles
         $UserRole_Map = array(
-            'id_member'=>'UserID',
-            'id_group'=>'RoleID'
+            'id_member' => 'UserID',
+            'id_group' => 'RoleID'
         );
         $Ex->ExportTable('UserRole', "select * from :_members", $UserRole_Map);
 
@@ -115,21 +116,23 @@ class SMF2 extends ExportController {
         // Discussions
         $Discussion_Map = array(
             'id_topic' => 'DiscussionID',
-            'subject' => array('Column'=>'Name', 'Filter' => array($this, 'DecodeNumericEntity')), //,'Filter'=>'bb2html'),
-            'body' => array('Column'=>'Body'), //,'Filter'=>'bb2html'),
-            'Format'=>'Format',
-            'id_board'=> 'CategoryID',
-            'DateInserted'=>'DateInserted',
-            'DateUpdated'=>'DateUpdated',
-            'id_member'=>'InsertUserID',
-            'DateLastComment'=>'DateLastComment',
-            'UpdateUserID'=>'UpdateUserID',
-            'locked'=>'Closed',
-            'isSticky'=>'Announce',
-            'CountComments'=>'CountComments',
-            'numViews'=>'CountViews',
-            'LastCommentUserID'=>'LastCommentUserID',
-            'id_last_msg'=>'LastCommentID'
+            'subject' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity')),
+            //,'Filter'=>'bb2html'),
+            'body' => array('Column' => 'Body'),
+            //,'Filter'=>'bb2html'),
+            'Format' => 'Format',
+            'id_board' => 'CategoryID',
+            'DateInserted' => 'DateInserted',
+            'DateUpdated' => 'DateUpdated',
+            'id_member' => 'InsertUserID',
+            'DateLastComment' => 'DateLastComment',
+            'UpdateUserID' => 'UpdateUserID',
+            'locked' => 'Closed',
+            'isSticky' => 'Announce',
+            'CountComments' => 'CountComments',
+            'numViews' => 'CountViews',
+            'LastCommentUserID' => 'LastCommentUserID',
+            'id_last_msg' => 'LastCommentID'
         );
         $Ex->ExportTable('Discussion', "
       select t.*,
@@ -156,7 +159,7 @@ class SMF2 extends ExportController {
             'id_msg' => 'CommentID',
             'id_topic' => 'DiscussionID',
             'Format' => 'Format',
-            'body' => array('Column'=>'Body'), //,'Filter'=>'bb2html'),
+            'body' => array('Column' => 'Body'), //,'Filter'=>'bb2html'),
             'id_member' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
@@ -187,7 +190,6 @@ class SMF2 extends ExportController {
              left join :_topics t on a.id_msg = t.id_first_msg
              where a.attachment_type = 0
                and a.id_msg > 0;", $Media_Map);
-
 
 
         // Conversations
@@ -255,6 +257,7 @@ class SMF2 extends ExportController {
     function DecodeNumericEntity($Text) {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
+
             return mb_decode_numericentity($Text, $convmap, 'UTF-8');
         } else {
             return $Text;
@@ -266,15 +269,19 @@ class SMF2 extends ExportController {
 
         if ($char < 0x80) {
             // to prevent insertion of control characters
-            if ($char >= 0x20)
+            if ($char >= 0x20) {
                 return htmlspecialchars(chr($char));
-            else
+            } else {
                 return "&#$char;";
-        } else if ($char < 0x80000) {
-            return chr(0xc0 | (0x1f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
+            }
         } else {
-            return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))). chr(0x80 | (0x3f & $char));
+            if ($char < 0x80000) {
+                return chr(0xc0 | (0x1f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
+            } else {
+                return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
+            }
         }
     }
 }
+
 ?>
