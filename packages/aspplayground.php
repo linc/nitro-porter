@@ -15,8 +15,7 @@ $Supported['apg']['features'] = array(
     'Categories' => 1,
 );
 
-class APG extends ExportController
-{
+class APG extends ExportController {
     /**
      * @param ExportModel $Ex
      */

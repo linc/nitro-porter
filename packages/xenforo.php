@@ -25,8 +25,7 @@ $Supported['xenforo']['features'] = array(
     'Signatures' => 1,
 );
 
-class Xenforo extends ExportController
-{
+class Xenforo extends ExportController {
 
     protected $Processed;
     protected $SourceFolder;

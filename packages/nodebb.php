@@ -24,8 +24,7 @@ $Supported['nodebb']['features'] = array(
     'Reactions' => 1
 );
 
-class Nodebb extends ExportController
-{
+class Nodebb extends ExportController {
 
     /**
      * @param ExportModel $Ex

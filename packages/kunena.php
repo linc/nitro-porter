@@ -20,8 +20,7 @@ $Supported['kunena']['features'] = array(
     'Passwords' => 1,
 );
 
-class Kunena extends ExportController
-{
+class Kunena extends ExportController {
     /**
      * @param ExportModel $Ex
      */

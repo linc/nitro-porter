@@ -23,8 +23,7 @@ $Supported['jforum']['features'] = array(
 
 );
 
-class Jforum extends ExportController
-{
+class Jforum extends ExportController {
     /**
      * You can use this to require certain tables and columns be present.
      *

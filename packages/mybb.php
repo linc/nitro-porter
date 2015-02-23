@@ -20,8 +20,7 @@ $Supported['mybb']['features'] = array(
     'Bookmarks' => 1,
 );
 
-class MyBB extends ExportController
-{
+class MyBB extends ExportController {
     /**
      * You can use this to require certain tables and columns be present.
      *

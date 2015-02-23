@@ -20,8 +20,7 @@ $Supported['uservoice']['features'] = array(
     'Passwords' => 1,
 );
 
-class UserVoice extends ExportController
-{
+class UserVoice extends ExportController {
     /**
      *
      * @param ExportModel $Ex

@@ -19,8 +19,7 @@ $Supported['SimplePress']['features'] = array(
     'Passwords' => 1,
 );
 
-class SimplePress extends ExportController
-{
+class SimplePress extends ExportController {
 
     /** @var array Required tables => columns */
     protected $SourceTables = array(

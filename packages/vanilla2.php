@@ -24,8 +24,7 @@ $Supported['vanilla2']['features'] = array(
     'Passwords' => 1,
 );
 
-class Vanilla2 extends ExportController
-{
+class Vanilla2 extends ExportController {
 
     /** @var array Required tables => columns */
     protected $_SourceTables = array();

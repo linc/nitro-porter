@@ -33,8 +33,7 @@ $Supported['ipb']['features'] = array(
     'Tags' => 1
 );
 
-class IPB extends ExportController
-{
+class IPB extends ExportController {
     /**
      * Export avatars into vanilla-compatibles names
      */

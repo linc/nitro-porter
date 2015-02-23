@@ -22,8 +22,7 @@ $Supported['smf2']['features'] = array(
     'Passwords' => 1,
 );
 
-class SMF2 extends ExportController
-{
+class SMF2 extends ExportController {
 
     /** @var array Required tables => columns */
     protected $SourceTables = array(

@@ -18,8 +18,7 @@ $Supported['toast']['features'] = array(
     'Passwords' => 1,
 );
 
-class Toast extends ExportController
-{
+class Toast extends ExportController {
     static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
 
     /**

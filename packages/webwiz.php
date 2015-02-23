@@ -20,8 +20,7 @@ $Supported['webwiz']['features'] = array(
     'Passwords' => 1,
 );
 
-class WebWiz extends ExportController
-{
+class WebWiz extends ExportController {
     /**
      *
      * @param ExportModel $Ex

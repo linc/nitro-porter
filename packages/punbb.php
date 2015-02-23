@@ -21,8 +21,7 @@ $Supported['punbb']['features'] = array(
     'Passwords' => 1,
 );
 
-class Punbb extends ExportController
-{
+class Punbb extends ExportController {
 
     /** @var array Required tables => columns */
     public $SourceTables = array();

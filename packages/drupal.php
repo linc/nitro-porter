@@ -19,8 +19,7 @@ $Supported['drupal']['features'] = array(
     'Passwords' => 1,
 );
 
-class Drupal extends ExportController
-{
+class Drupal extends ExportController {
 
     /** @var array Required tables => columns */
     protected $_SourceTables = array();

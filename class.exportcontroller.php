@@ -8,8 +8,7 @@
 /**
  * Generic controller implemented by forum-specific ones.
  */
-abstract class ExportController
-{
+abstract class ExportController {
 
     /** @var array Database connection info */
     protected $DbInfo = array();

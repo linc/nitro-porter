@@ -28,8 +28,7 @@ $Supported['vbulletin5']['features'] = array(
     'Passwords' => 1,
 );
 
-class Vbulletin5 extends Vbulletin
-{
+class Vbulletin5 extends Vbulletin {
     /** @var array Required tables => columns. */
     protected $SourceTables = array(
         'contenttype' => array('contenttypeid', 'class'),

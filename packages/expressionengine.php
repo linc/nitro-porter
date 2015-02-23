@@ -21,8 +21,7 @@ $Supported['expressionengine']['features'] = array(
     'Attachments' => 1,
 );
 
-class ExpressionEngine extends ExportController
-{
+class ExpressionEngine extends ExportController {
     /**
      *
      * @param ExportModel $Ex
@@ -65,14 +64,14 @@ class ExpressionEngine extends ExportController
         }
 
         $Ex->ExportTable('Permission', "
-         select
-            g.can_view_profiles as can_view_profiles2,
-            g.can_view_profiles as can_view_profiles3,
-            g.can_post_comments as can_post_comments2,
-            g.can_post_comments as can_sign_in,
-            case when can_access_admin = 'y' then 'all' when can_view_online_system = 'y' then 'view' end as _Permissions,
+         SELECT
+            g.can_view_profiles AS can_view_profiles2,
+            g.can_view_profiles AS can_view_profiles3,
+            g.can_post_comments AS can_post_comments2,
+            g.can_post_comments AS can_sign_in,
+            CASE WHEN can_access_admin = 'y' THEN 'all' WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
             g.*
-         from forum_member_groups g
+         FROM forum_member_groups g
       ", $Permission_Map);
 
 
@@ -90,15 +89,15 @@ class ExpressionEngine extends ExportController
             'location' => 'Location'
         );
         $Ex->ExportTable('User', "
-         select
-            'django' as HashMethod,
-            concat('sha1$$', password) as Password2,
-            case when bday_y > 1900 then concat(bday_y, '-', bday_m, '-', bday_d) else null end as DateOfBirth,
-            from_unixtime(join_date) as DateFirstVisit,
-            ip_address as LastIPAddress,
-            case when avatar_filename = '' then null else concat('imported/', avatar_filename) end as Photo,
+         SELECT
+            'django' AS HashMethod,
+            concat('sha1$$', password) AS Password2,
+            CASE WHEN bday_y > 1900 THEN concat(bday_y, '-', bday_m, '-', bday_d) ELSE NULL END AS DateOfBirth,
+            from_unixtime(join_date) AS DateFirstVisit,
+            ip_address AS LastIPAddress,
+            CASE WHEN avatar_filename = '' THEN NULL ELSE concat('imported/', avatar_filename) END AS Photo,
             u.*
-         from forum_members u", $User_Map);
+         FROM forum_members u", $User_Map);
 
 
         // Role.
@@ -108,8 +107,8 @@ class ExpressionEngine extends ExportController
             'group_description' => 'Description'
         );
         $Ex->ExportTable('Role', "
-         select *
-         from forum_member_groups", $Role_Map);
+         SELECT *
+         FROM forum_member_groups", $Role_Map);
 
 
         // User Role.
@@ -118,18 +117,18 @@ class ExpressionEngine extends ExportController
             'group_id' => 'RoleID'
         );
         $Ex->ExportTable('UserRole', "
-         select *
-         from forum_members u", $UserRole_Map);
+         SELECT *
+         FROM forum_members u", $UserRole_Map);
 
 
         // UserMeta
         $Ex->ExportTable('UserMeta', "
-         select
-            member_id as UserID,
-            'Plugin.Signatures.Sig' as Name,
-            signature as Value
-         from forum_members
-         where signature <> ''");
+         SELECT
+            member_id AS UserID,
+            'Plugin.Signatures.Sig' AS Name,
+            signature AS Value
+         FROM forum_members
+         WHERE signature <> ''");
 
 
         // Category.
@@ -141,7 +140,7 @@ class ExpressionEngine extends ExportController
             'forum_order' => 'Sort'
         );
         $Ex->ExportTable('Category', "
-         select * from forum_forums", $Category_Map);
+         SELECT * FROM forum_forums", $Category_Map);
 
 
         // Discussion.
@@ -158,12 +157,12 @@ class ExpressionEngine extends ExportController
             'topic_edit_author' => 'UpdateUserID'
         );
         $Ex->ExportTable('Discussion', "
-          select
-             case when announcement = 'y' then 1 when sticky = 'y' then 2 else 0 end as Announce,
-             case when status = 'c' then 1 else 0 end as Closed,
-             t.body as body2,
+          SELECT
+             CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
+             CASE WHEN status = 'c' THEN 1 ELSE 0 END AS Closed,
+             t.body AS body2,
              t.*
-          from forum_forum_topics t", $Discussion_Map);
+          FROM forum_forum_topics t", $Discussion_Map);
 
 
         // Comment.
@@ -179,11 +178,11 @@ class ExpressionEngine extends ExportController
             'post_edit_author' => 'UpdateUserID'
         );
         $Ex->ExportTable('Comment', "
-      select
-         'Html' as Format,
-         p.body as body2,
+      SELECT
+         'Html' AS Format,
+         p.body AS body2,
          p.*
-      from forum_forum_posts p", $Comment_Map);
+      FROM forum_forum_posts p", $Comment_Map);
 
 
         // Media.
@@ -196,13 +195,13 @@ class ExpressionEngine extends ExportController
             'filehash' => array('Column' => 'FileHash', 'Type' => 'varchar(100)')
         );
         $Ex->ExportTable('Media', "
-         select
-            concat('imported/', filename) as Path,
-            case when post_id > 0 then post_id else topic_id end as ForeignID,
-            case when post_id > 0 then 'comment' else 'discussion' end as ForeignTable,
-            'local' as StorageMethod,
+         SELECT
+            concat('imported/', filename) AS Path,
+            CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
+            CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
+            'local' AS StorageMethod,
             a.*
-         from forum_forum_attachments a", $Media_Map);
+         FROM forum_forum_attachments a", $Media_Map);
 
         $Ex->EndExport();
     }
@@ -223,12 +222,12 @@ class ExpressionEngine extends ExportController
             'message_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
         );
         $Ex->ExportTable('Conversation', "
-         select
+         SELECT
          pm.*,
-         g.title as title2
-       from forum_message_data pm
-       join z_pmgroup g
-         on g.group_id = pm.message_id;", $Conversation_Map);
+         g.title AS title2
+       FROM forum_message_data pm
+       JOIN z_pmgroup g
+         ON g.group_id = pm.message_id;", $Conversation_Map);
 
         // User Conversation.
         $UserConversation_Map = array(
@@ -236,12 +235,12 @@ class ExpressionEngine extends ExportController
             'userid' => 'UserID'
         );
         $Ex->ExportTable('UserConversation', "
-         select
+         SELECT
          g.group_id,
          t.userid
-       from z_pmto t
-       join z_pmgroup g
-         on g.group_id = t.message_id;", $UserConversation_Map);
+       FROM z_pmto t
+       JOIN z_pmgroup g
+         ON g.group_id = t.message_id;", $UserConversation_Map);
 
         // Conversation Message.
         $Message_Map = array(
@@ -252,13 +251,13 @@ class ExpressionEngine extends ExportController
             'sender_id' => 'InsertUserID'
         );
         $Ex->ExportTable('ConversationMessage', "
-         select
+         SELECT
             pm.*,
             pm2.group_id,
-            'BBCode' as Format
-          from forum_message_data pm
-          join z_pmtext pm2
-            on pm.message_id = pm2.message_id", $Message_Map);
+            'BBCode' AS Format
+          FROM forum_message_data pm
+          JOIN z_pmtext pm2
+            ON pm.message_id = pm2.message_id", $Message_Map);
     }
 
     /**
@@ -267,12 +266,12 @@ class ExpressionEngine extends ExportController
     public function _ExportConversationTemps() {
         $Ex = $this->Ex;
 
-        $Ex->Query('drop table if exists z_pmto;');
-        $Ex->Query('create table z_pmto (
-            message_id int unsigned,
-            userid int unsigned,
-            deleted tinyint(1),
-            primary key(message_id, userid)
+        $Ex->Query('DROP TABLE IF EXISTS z_pmto;');
+        $Ex->Query('CREATE TABLE z_pmto (
+            message_id INT UNSIGNED,
+            userid INT UNSIGNED,
+            deleted TINYINT(1),
+            PRIMARY KEY(message_id, userid)
             );');
 
         $Ex->Query("insert ignore z_pmto (
@@ -286,11 +285,11 @@ class ExpressionEngine extends ExportController
                 case when message_deleted = 'y' then 1 else 0 end as `deleted`
             from forum_message_copies;");
 
-        $Ex->Query("update forum_message_data
-            set message_recipients = replace(message_recipients, '|', ',');");
+        $Ex->Query("UPDATE forum_message_data
+            SET message_recipients = replace(message_recipients, '|', ',');");
 
-        $Ex->Query("update forum_message_data
-            set message_cc = replace(message_cc, '|', ',');");
+        $Ex->Query("UPDATE forum_message_data
+            SET message_cc = replace(message_cc, '|', ',');");
 
         $Ex->Query('insert ignore z_pmto (
             message_id,
@@ -325,12 +324,12 @@ class ExpressionEngine extends ExportController
                 on  FIND_IN_SET(u.member_id, m.message_cc) > 0
             where m.message_cc <> '';");
 
-        $Ex->Query("drop table if exists z_pmto2;");
+        $Ex->Query("DROP TABLE IF EXISTS z_pmto2;");
 
-        $Ex->Query("create table z_pmto2 (
-            message_id int unsigned,
-            userids varchar(250),
-            primary key (message_id)
+        $Ex->Query("CREATE TABLE z_pmto2 (
+            message_id INT UNSIGNED,
+            userids VARCHAR(250),
+            PRIMARY KEY (message_id)
             );");
 
         $Ex->Query("insert z_pmto2 (
@@ -343,13 +342,13 @@ class ExpressionEngine extends ExportController
             from z_pmto t
             group by t.message_id;");
 
-        $Ex->Query("drop table if exists z_pmtext;");
-        $Ex->Query("create table z_pmtext (
-            message_id int unsigned,
-            title varchar(250),
-            title2 varchar(250),
-            userids varchar(250),
-            group_id int unsigned
+        $Ex->Query("DROP TABLE IF EXISTS z_pmtext;");
+        $Ex->Query("CREATE TABLE z_pmtext (
+            message_id INT UNSIGNED,
+            title VARCHAR(250),
+            title2 VARCHAR(250),
+            userids VARCHAR(250),
+            group_id INT UNSIGNED
             );");
 
         $Ex->Query("insert z_pmtext (
@@ -363,18 +362,18 @@ class ExpressionEngine extends ExportController
                 case when message_subject like 'Re: %' then trim(substring(message_subject, 4)) else message_subject end as title2
             from forum_message_data;");
 
-        $Ex->Query("create index z_idx_pmtext on z_pmtext (message_id);");
+        $Ex->Query("CREATE INDEX z_idx_pmtext ON z_pmtext (message_id);");
 
-        $Ex->Query("update z_pmtext pm
-            join z_pmto2 t
-                on pm.message_id = t.message_id
-            set pm.userids = t.userids;");
+        $Ex->Query("UPDATE z_pmtext pm
+            JOIN z_pmto2 t
+                ON pm.message_id = t.message_id
+            SET pm.userids = t.userids;");
 
-        $Ex->Query("drop table if exists z_pmgroup;");
-        $Ex->Query("create table z_pmgroup (
-            group_id int unsigned,
-            title varchar(250),
-            userids varchar(250)
+        $Ex->Query("DROP TABLE IF EXISTS z_pmgroup;");
+        $Ex->Query("CREATE TABLE z_pmgroup (
+            group_id INT UNSIGNED,
+            title VARCHAR(250),
+            userids VARCHAR(250)
             );");
 
         $Ex->Query("insert z_pmgroup (
@@ -391,13 +390,13 @@ class ExpressionEngine extends ExportController
                 on pm.message_id = t2.message_id
             group by pm.title2, t2.userids;");
 
-        $Ex->Query("create index z_idx_pmgroup on z_pmgroup (title, userids);");
-        $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (group_id);");
+        $Ex->Query("CREATE INDEX z_idx_pmgroup ON z_pmgroup (title, userids);");
+        $Ex->Query("CREATE INDEX z_idx_pmgroup2 ON z_pmgroup (group_id);");
 
-        $Ex->Query("update z_pmtext pm
-            join z_pmgroup g
-                on pm.title2 = g.title and pm.userids = g.userids
-            set pm.group_id = g.group_id;");
+        $Ex->Query("UPDATE z_pmtext pm
+            JOIN z_pmgroup g
+                ON pm.title2 = g.title AND pm.userids = g.userids
+            SET pm.group_id = g.group_id;");
     }
 
 }

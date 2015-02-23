@@ -8,8 +8,7 @@
 /**
  * Object for exporting other database structures into a format that can be imported.
  */
-class ExportModel
-{
+class ExportModel {
 
     /** Character constants. */
     const COMMENT = '//';

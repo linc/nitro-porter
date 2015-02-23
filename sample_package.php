@@ -15,8 +15,7 @@
 // See functions/feature-functions.php VanillaFeatureSet() for array keys.
 //$Supported['samplename']['features'] = array('Users' => 1);
 
-class SampleName extends ExportController
-{
+class SampleName extends ExportController {
     /**
      * You can use this to require certain tables and columns be present.
      *

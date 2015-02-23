@@ -30,8 +30,7 @@ $Supported['mbox']['features'] = array(
     'Categories' => 1,
 );
 
-class Mbox extends ExportController
-{
+class Mbox extends ExportController {
 
     /** @var array Required tables => columns */
     protected $SourceTables = array(

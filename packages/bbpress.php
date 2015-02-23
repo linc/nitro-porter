@@ -18,8 +18,7 @@ $Supported['bbPress']['features'] = array(
     'Passwords' => 1,
 );
 
-class BbPress extends ExportController
-{
+class BbPress extends ExportController {
     /** @var array Required tables => columns */
     protected $SourceTables = array(
         'forums' => array(),

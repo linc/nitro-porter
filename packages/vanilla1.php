@@ -19,8 +19,7 @@ $Supported['vanilla1']['features'] = array(
     'Bookmarks' => 1,
 );
 
-class Vanilla1 extends ExportController
-{
+class Vanilla1 extends ExportController {
 
     /** @var array Required tables => columns */
     public $SourceTables = array(
