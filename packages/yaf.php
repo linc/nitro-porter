@@ -162,7 +162,7 @@ class Yaf extends ExportController {
             'MessageID' => 'CommentID',
             'TopicID' => 'DiscussionID',
             'ReplyTo' => array('Column' => 'ReplyToCommentID', 'Type' => 'int'),
-            'UseID' => 'InsertUserID',
+            'UserID' => 'InsertUserID',
             'Posted' => 'DateInserted',
             'Message' => 'Body',
             'Format' => 'Format',
