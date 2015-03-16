@@ -137,8 +137,7 @@ abstract class ExportController {
         // Connection
         if (!function_exists('mysql_connect')) {
             $Result = 'mysql_connect is an undefined function.  Verify MySQL extension is installed and enabled.';
-        }
-        elseif ($C = @mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
+        } elseif ($C = @mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
             // Database
             if (mysql_select_db($this->DbInfo['dbname'], $C)) {
                 mysql_close($C);
