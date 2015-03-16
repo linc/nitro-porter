@@ -74,15 +74,19 @@ if (isset($_REQUEST['features'])) {
     } else {
         ViewFeatureTable($Set);
     }
-} elseif (isset($_POST['type']) && array_key_exists($_POST['type'], $Supported)) {
-    // Mini-Factory for conducting exports.
-    $class = ucwords($_POST['type']);
-    $Controller = new $class();
-    if (!method_exists($Controller, $Method)) {
-        echo "This datasource type does not support {$Method}.\n";
-        exit();
+} elseif (isset($_POST['type'])) {
+    if (array_key_exists($_POST['type'], $Supported)) {
+        // Mini-Factory for conducting exports.
+        $class = ucwords($_POST['type']);
+        $Controller = new $class();
+        if (!method_exists($Controller, $Method)) {
+            echo "This datasource type does not support {$Method}.\n";
+            exit();
+        }
+        $Controller->$Method();
+    } else {
+        echo 'Invalid type specified: ' . $_POST['type'];
     }
-    $Controller->$Method();
 } else {
     // Show the web UI to start an export.
     $CanWrite = TestWrite();
