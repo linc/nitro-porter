@@ -844,7 +844,7 @@ class Vbulletin extends ExportController {
 
             // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
             if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === true) {
-                $Sql .= ":_filedata f left join :_attach a on a.filedataid = f.filedataid";
+                $Sql .= ":_filedata f left join :_attachment a on a.filedataid = f.filedataid";
             } else {
                 $Sql .= ":_attachment f";
             }
