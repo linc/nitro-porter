@@ -894,6 +894,18 @@ class Vbulletin extends ExportController {
             'userid' => 'InsertUserID',
             'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            'filethumb' => array(
+                'Column' => 'ThumbPath',
+                'Filter' => function($Value, $Field, $Row) {
+                    $MimeType = $this->BuildMimeType($Row['extension'], $Field, $Row);
+
+                    if (substr($MimeType, 0, 6) == 'image/') {
+                        return $this->BuildMediaPath($Value, $Field, $Row);
+                    } else {
+                        return null;
+                    }
+                }
+            ),
             'height' => array('Column' => 'ImageHeight', 'Filter' => array($this, 'BuildMediaDimension')),
             'width' => array('Column' => 'ImageWidth', 'Filter' => array($this, 'BuildMediaDimension')),
         );
@@ -924,7 +936,7 @@ class Vbulletin extends ExportController {
             'local' as StorageMethod,
             a.*,
             f.extension, f.filesize $AttachColumnsString,
-            f.width, f.height
+            f.width, f.height, null as filethumb
          from :_attachment a
          join :_contenttype ct
             on a.contenttypeid = ct.contenttypeid
@@ -948,7 +960,8 @@ class Vbulletin extends ExportController {
                t.threadid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
                '1' as height,
-               '1' as width
+               '1' as width,
+               null as filethumb
             from :_thread t
                left join :_attachment a ON a.postid = t.firstpostid
             where a.attachmentid > 0
