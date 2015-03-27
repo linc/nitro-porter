@@ -81,6 +81,9 @@ class ExportModel {
     /** @var array * */
     protected $_QueryStructures = array();
 
+    /** @var array Tables to limit the export to.  A full export is an empty array. */
+    public $RestrictedTables = array();
+
     /** @var string The path to the source of the export in the case where a file is being converted. */
     public $SourcePath = '';
 
@@ -253,14 +256,18 @@ class ExportModel {
      *  For a list of the export tables and columns see $this->Structure().
      */
     public function ExportTable($TableName, $Query, $Mappings = array()) {
-        $BeginTime = microtime(true);
+        if (!empty($this->RestrictedTables) && !in_array(strtolower($TableName), $this->RestrictedTables)) {
+            $this->Comment("Skipping table: $TableName");
+        } else {
+            $BeginTime = microtime(true);
 
-        $RowCount = $this->_ExportTable($TableName, $Query, $Mappings);
+            $RowCount = $this->_ExportTable($TableName, $Query, $Mappings);
 
-        $EndTime = microtime(true);
-        $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
-        $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
-        fwrite($this->File, self::NEWLINE);
+            $EndTime = microtime(true);
+            $Elapsed = self::FormatElapsed($BeginTime, $EndTime);
+            $this->Comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
+            fwrite($this->File, self::NEWLINE);
+        }
     }
 
     /**
@@ -1204,6 +1211,16 @@ class ExportModel {
                 $this->Query($Sql);
             }
         }
+    }
+
+    /**
+     * Using RestrictedTables, determine if a table should be exported or not
+     *
+     * @param string $TableName Name of the table to check
+     * @return bool True if table should be exported, false otherwise
+     */
+    public function ShouldExport($TableName) {
+        return empty($this->RestrictedTables) || in_array(strtolower($TableName), $this->RestrictedTables);
     }
 
     /**

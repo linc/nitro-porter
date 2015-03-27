@@ -40,6 +40,25 @@ abstract class ExportController {
         $this->Ex->DestDb = $this->Param('destdb', null);
         $this->Ex->TestMode = $this->Param('test', false);
         $this->Ex->UseStreaming = false; //$this->UseStreaming;
+
+        /**
+         * Selective exports
+         * 1. Get the comma-separated list of tables and turn it into an array
+         * 2. Trim off the whitespace
+         * 3. Normalize case to lower
+         * 4. Save to the ExportModel instance
+         */
+        $RestrictedTables = $this->Param('tables', false);
+        if (!empty($RestrictedTables)) {
+            $RestrictedTables = explode(',', $RestrictedTables);
+
+            if (is_array($RestrictedTables) && !empty($RestrictedTables)) {
+                $RestrictedTables = array_map('trim', $RestrictedTables);
+                $RestrictedTables = array_map('strtolower', $RestrictedTables);
+
+                $this->Ex->RestrictedTables = $RestrictedTables;
+            }
+        }
     }
 
     /**

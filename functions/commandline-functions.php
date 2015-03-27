@@ -54,7 +54,13 @@ $GlobalOptions = array(
     ),
     'destpath' => array('Define destination path for the export file.', 'Sx' => '::', 'Short' => 'd', 'Default' => ''),
     'spawn' => array('Create a new package with this name.', 'Sx' => '::', 'Short' => 's', 'Default' => ''),
-    'help' => array('Show this help, duh.', 'Short' => 'h')
+    'help' => array('Show this help, duh.', 'Short' => 'h'),
+    'tables' => array(
+        'Selective export, limited to specified tables, if provided',
+        'Sx' => ':',
+        'Short' => 's',
+        'Default' => ''
+    )
 );
 
 // Go through all of the supported types and add them to the type description.
