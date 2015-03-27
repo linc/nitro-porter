@@ -27,6 +27,10 @@ while ($Row = mysqli_fetch_array($Results, MYSQLI_ASSOC)) {
     if (file_exists($Directory . $Row['name'])) {
         rename($Directory . $Row['name'], $Directory . $Row['name'] . '.' . $Row['ext']);
         $Renamed++;
+
+        if (file_exists($Directory . 'thumb_' . $Row['name'])) {
+            rename($Directory . 'thumb_' . $Row['name'], $Directory . 'thumb_' . $Row['name'] . '.' . $Row['ext']);
+        }
     } else {
         $Failed++;
     }
