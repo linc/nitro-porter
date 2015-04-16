@@ -4,26 +4,33 @@
 
 // Add your database connection info here.
 $DatabaseServer = 'localhost';
-$DatabaseUser = 'root';
-$DatabasePassword = 'password';
-$DatabaseName = 'ynab';
+$DatabaseUser = '';
+$DatabasePassword = '';
+$DatabaseName = '';
 
-// Absolute path to the folder you're importing.
-$Directory = '/www/phpbb/files';
+// Absolute path to the folder you're importing, including trailing slash.
+$Directory = '/path/to/attachments/';
 
 // No more editing!
 
 // Select attachments
-mysqli_connect($DatabaseServer, $DatabaseUser, $DatabasePassword);
-mysqli_select_db($DatabaseName);
-$Results = mysqli_query("select physical_filename as name, extension as ext from phpbb_attachments");
+$LinkIdentifier = mysqli_connect($DatabaseServer, $DatabaseUser, $DatabasePassword);
+mysqli_select_db($LinkIdentifier, $DatabaseName);
+$Results = mysqli_query(
+    $LinkIdentifier,
+    "select physical_filename as name, extension as ext from phpbb_attachments"
+);
 
 // Iterate thru files based on database results and rename.
 $Renamed = $Failed = 0;
-while ($Row = mysqli_fetch_array($Results)) {
+while ($Row = mysqli_fetch_array($Results, MYSQLI_ASSOC)) {
     if (file_exists($Directory . $Row['name'])) {
-        rename($Directory . $Row['name'], $Directory . $Row['physical_filename'] . '.' . $Row['ext']);
+        rename($Directory . $Row['name'], $Directory . $Row['name'] . '.' . $Row['ext']);
         $Renamed++;
+
+        if (file_exists($Directory . 'thumb_' . $Row['name'])) {
+            rename($Directory . 'thumb_' . $Row['name'], $Directory . 'thumb_' . $Row['name'] . '.' . $Row['ext']);
+        }
     } else {
         $Failed++;
     }
