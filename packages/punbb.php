@@ -8,7 +8,11 @@
  */
 
 $Supported['punbb'] = array('name' => 'PunBB 1', 'prefix' => 'punbb_');
+$Supported['punbb']['CommandLine'] = array(
+    'avatarpath' => array('Full path of forum avatars.', 'Sx' => '::')
+);
 $Supported['punbb']['features'] = array(
+    'Avatars' => 1,
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -18,17 +22,25 @@ $Supported['punbb']['features'] = array(
     'Permissions' => 1,
     'Tags' => 1,
     'Signatures' => 1,
-    'Passwords' => 1,
+    'Passwords' => 1
 );
 
 class Punbb extends ExportController {
+
+    /** @var bool Path to avatar images */
+    protected $AvatarPath = false;
+
+    /** @var string CDN path prefix */
+    protected $cdn = '';
 
     /** @var array Required tables => columns */
     public $SourceTables = array();
 
     /**
      * Forum-specific export format
+     *
      * @todo Project file size / export time and possibly break into multiple files
+     *
      * @param ExportModel $Ex
      *
      */
@@ -36,8 +48,21 @@ class Punbb extends ExportController {
 
         $Ex->BeginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
 
+        $this->cdn = $this->Param('cdn', '');
+
+        if ($AvatarPath = $this->Param('avatarpath', false)) {
+            if (!$AvatarPath = realpath($AvatarPath)) {
+                echo "Unable to access path to avatars: $AvatarPath\n";
+                exit(1);
+            }
+
+            $this->AvatarPath = $AvatarPath;
+        }
+        unset($AvatarPath);
+
         // User.
         $User_Map = array(
+            'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'GetAvatarByID')),
             'id' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
@@ -46,20 +71,20 @@ class Punbb extends ExportController {
             'PasswordHash' => 'Password'
         );
         $Ex->ExportTable('User', "
-         select
-           u.*,
-           concat(u.password, '$', u.salt) as PasswordHash,
-           from_unixtime(registered) as DateInserted,
-           from_unixtime(last_visit) as DateLastActive
-         from :_users u
-         where group_id <> 2", $User_Map);
+         SELECT
+             u.*, u.id AS AvatarID,
+             concat(u.password, '$', u.salt) AS PasswordHash,
+             from_unixtime(registered) AS DateInserted,
+             from_unixtime(last_visit) AS DateLastActive
+         FROM :_users u
+         WHERE group_id <> 2", $User_Map);
 
         // Role.
         $Role_Map = array(
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $Ex->ExportTable('Role', "select * from :_groups", $Role_Map);
+        $Ex->ExportTable('Role', "SELECT * FROM :_groups", $Role_Map);
 
         // Permission.
         $Permission_Map = array(
@@ -77,12 +102,12 @@ class Punbb extends ExportController {
         );
         $Permission_Map = $Ex->FixPermissionColumns($Permission_Map);
         $Ex->ExportTable('Permission', "
-      select
+      SELECT
          g.*,
-         g_post_replies as `Garden.SignIn.Allow`,
-         g_mod_edit_users as `Garden.Users.Add`,
-         case when g_title = 'Administrators' then 'All' else null end as _Permissions
-      from :_groups g", $Permission_Map);
+         g_post_replies AS `Garden.SignIn.Allow`,
+         g_mod_edit_users AS `Garden.Users.Add`,
+         CASE WHEN g_title = 'Administrators' THEN 'All' ELSE NULL END AS _Permissions
+      FROM :_groups g", $Permission_Map);
 
         // UserRole.
         $UserRole_Map = array(
@@ -90,19 +115,19 @@ class Punbb extends ExportController {
             'group_id' => 'RoleID'
         );
         $Ex->ExportTable('UserRole',
-            "select
-            case u.group_id when 2 then 0 else id end as id,
+            "SELECT
+            CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
             u.group_id
-          from :_users u", $UserRole_Map);
+          FROM :_users u", $UserRole_Map);
 
         // Signatures.
         $Ex->ExportTable('UserMeta', "
-         select
+         SELECT
          id,
-         'Plugin.Signatures.Sig' as Name,
+         'Plugin.Signatures.Sig' AS Name,
          signature
-      from :_users u
-      where u.signature is not null", array('id ' => 'UserID', 'signature' => 'Value'));
+      FROM :_users u
+      WHERE u.signature IS NOT NULL", array('id ' => 'UserID', 'signature' => 'Value'));
 
 
         // Category.
@@ -114,22 +139,22 @@ class Punbb extends ExportController {
             'parent_id' => 'ParentCategoryID'
         );
         $Ex->ExportTable('Category', "
-      select
+      SELECT
         id,
         forum_name,
         forum_desc,
         disp_position,
-        cat_id * 1000 as parent_id
-      from :_forums f
-      union
+        cat_id * 1000 AS parent_id
+      FROM :_forums f
+      UNION
 
-      select
+      SELECT
         id * 1000,
         cat_name,
         '',
         disp_position,
-        null
-      from :_categories", $Category_Map);
+        NULL
+      FROM :_categories", $Category_Map);
 
         // Discussion.
         $Discussion_Map = array(
@@ -144,19 +169,19 @@ class Punbb extends ExportController {
 
         );
         $Ex->ExportTable('Discussion', "
-      select t.*,
-        from_unixtime(p.posted) as DateInserted,
+      SELECT t.*,
+        from_unixtime(p.posted) AS DateInserted,
         p.poster_id,
         p.poster_ip,
         p.message,
-        from_unixtime(p.edited) as DateUpdated,
-        eu.id as UpdateUserID,
-        'BBCode' as Format
-      from :_topics t
-      left join :_posts p
-        on t.first_post_id = p.id
-      left join :_users eu
-        on eu.username = p.edited_by", $Discussion_Map);
+        from_unixtime(p.edited) AS DateUpdated,
+        eu.id AS UpdateUserID,
+        'BBCode' AS Format
+      FROM :_topics t
+      LEFT JOIN :_posts p
+        ON t.first_post_id = p.id
+      LEFT JOIN :_users eu
+        ON eu.username = p.edited_by", $Discussion_Map);
 
         // Comment.
         $Comment_Map = array(
@@ -167,47 +192,51 @@ class Punbb extends ExportController {
             'message' => 'Body'
         );
         $Ex->ExportTable('Comment', "
-            select p.*,
-        'BBCode' as Format,
-        from_unixtime(p.posted) as DateInserted,
-        from_unixtime(p.edited) as DateUpdated,
-        eu.id as UpdateUserID
-      from :_topics t
-      join :_posts p
-        on t.id = p.topic_id
-      left join :_users eu
-        on eu.username = p.edited_by
-      where p.id <> t.first_post_id;", $Comment_Map);
+            SELECT p.*,
+        'BBCode' AS Format,
+        from_unixtime(p.posted) AS DateInserted,
+        from_unixtime(p.edited) AS DateUpdated,
+        eu.id AS UpdateUserID
+      FROM :_topics t
+      JOIN :_posts p
+        ON t.id = p.topic_id
+      LEFT JOIN :_users eu
+        ON eu.username = p.edited_by
+      WHERE p.id <> t.first_post_id;", $Comment_Map);
 
-        // Tag.
-        $Tag_Map = array(
-            'id' => 'TagID',
-            'tag' => 'Name'
-        );
-        $Ex->ExportTable('Tag', "select * from :_tags", $Tag_Map);
+        if ($Ex->Exists('tags')) {
+            // Tag.
+            $Tag_Map = array(
+                'id' => 'TagID',
+                'tag' => 'Name'
+            );
+            $Ex->ExportTable('Tag', "SELECT * FROM :_tags", $Tag_Map);
 
-        // TagDisucssion.
-        $TagDiscussionMap = array(
-            'topic_id' => 'DiscussionID',
-            'tag_id' => 'TagID'
-        );
-        $Ex->ExportTable('TagDiscussion', "select * from :_topic_tags", $TagDiscussionMap);
+            // TagDisucssion.
+            $TagDiscussionMap = array(
+                'topic_id' => 'DiscussionID',
+                'tag_id' => 'TagID'
+            );
+            $Ex->ExportTable('TagDiscussion', "SELECT * FROM :_topic_tags", $TagDiscussionMap);
+        }
 
-        // Media.
-        $Media_Map = array(
-            'id' => 'MediaID',
-            'filename' => 'Name',
-            'file_mime_type' => 'Type',
-            'size' => 'Size',
-            'owner_id' => 'InsertUserID'
-        );
-        $Ex->ExportTable('Media', "
-      select f.*,
-         concat('FileUpload/', f.file_path) as Path,
-         from_unixtime(f.uploaded_at) as DateInserted,
-         case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
-         coalesce(post_id, topic_id) as ForieignID
-      from :_attach_files f", $Media_Map);
+        if ($Ex->Exists('attach_files')) {
+            // Media.
+            $Media_Map = array(
+                'id' => 'MediaID',
+                'filename' => 'Name',
+                'file_mime_type' => 'Type',
+                'size' => 'Size',
+                'owner_id' => 'InsertUserID'
+            );
+            $Ex->ExportTable('Media', "
+          SELECT f.*,
+             concat({$this->cdn}, 'FileUpload/', f.file_path) AS Path,
+             from_unixtime(f.uploaded_at) AS DateInserted,
+             CASE WHEN post_id IS NULL THEN 'Discussion' ELSE 'Comment' END AS ForeignTable,
+             coalesce(post_id, topic_id) AS ForieignID
+          FROM :_attach_files f", $Media_Map);
+        }
 
 
         // End
@@ -247,6 +276,45 @@ class Punbb extends ExportController {
         }
 
         return false;
+    }
+
+    /**
+     * Take the user ID, avatar type value and generate a path to the avatar file.
+     *
+     * @param $Value Row field value.
+     * @param $Field Name of the current field.
+     * @param $Row All of the current row values.
+     *
+     * @return null|string
+     */
+    function GetAvatarByID($Value, $Field, $Row) {
+        if (!$this->AvatarPath) {
+            return null;
+        }
+
+        switch ($Row['avatar']) {
+            case 1:
+                $Extension = 'gif';
+                break;
+            case 2:
+                $Extension = 'jpg';
+                break;
+            case 3:
+                $Extension = 'png';
+                break;
+            default:
+                return null;
+        }
+
+        $AvatarFilename = "{$this->AvatarPath}/{$Value}.$Extension";
+
+        if (file_exists($AvatarFilename)) {
+            $AvatarBasename = basename($AvatarFilename);
+
+            return "{$this->cdn}punbb/avatars/$AvatarBasename";
+        } else {
+            return null;
+        }
     }
 }
 
