@@ -39,7 +39,6 @@ abstract class ExportController {
         $this->Ex->Destination = $this->Param('dest', 'file');
         $this->Ex->DestDb = $this->Param('destdb', null);
         $this->Ex->TestMode = $this->Param('test', false);
-        $this->Ex->UseStreaming = false; //$this->UseStreaming;
     }
 
     /**
@@ -80,14 +79,9 @@ abstract class ExportController {
 
                 $Msg = $this->Ex->Comments;
 
-                // Write the results.
-                if ($this->Ex->UseStreaming) {
-                    exit;
-                } else {
-                    // Send no path if we don't know where it went.
-                    $RelativePath = ($this->Param('destpath', false)) ? false : $this->Ex->Path;
-                    ViewExportResult($Msg, 'Info', $RelativePath);
-                }
+                // Send no path if we don't know where it went.
+                $RelativePath = ($this->Param('destpath', false)) ? false : $this->Ex->Path;
+                ViewExportResult($Msg, 'Info', $RelativePath);
             } else {
                 ViewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
             } // Back to form with error
@@ -108,7 +102,6 @@ abstract class ExportController {
             'type' => $_POST['type'],
             'prefix' => preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix'])
         );
-        $this->UseStreaming = array_key_exists('savefile', $_POST) ? false : true;
     }
 
     /**

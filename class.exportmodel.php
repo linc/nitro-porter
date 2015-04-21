@@ -105,9 +105,6 @@ class ExportModel {
     /** @var string Database username. */
     protected $_Username;
 
-    /** @var bool Whether or not to stream the export the the output rather than save a file. */
-    public $UseStreaming = false;
-
     /**
      * Setup.
      */
@@ -227,14 +224,10 @@ class ExportModel {
             }
         }
 
-        if ($this->UseStreaming) {
-            //ob_flush();
+        if ($this->UseCompression() && function_exists('gzopen')) {
+            gzclose($this->File);
         } else {
-            if ($this->UseCompression() && function_exists('gzopen')) {
-                gzclose($this->File);
-            } else {
-                fclose($this->File);
-            }
+            fclose($this->File);
         }
     }
 
@@ -1092,32 +1085,13 @@ class ExportModel {
      * @return resource
      */
     protected function _OpenFile() {
-//      if($this->UseStreaming) {
-//         /** Setup the output to stream the file. */
-//
-//         // required for IE, otherwise Content-Disposition may be ignored
-//         if(ini_get('zlib.output_compression'))
-//            ini_set('zlib.output_compression', 'Off');
-//
-//         @ob_end_clean();
-//
-//
-//         $fp = fopen('php://output', 'ab');
-//         header("Content-Disposition: attachment; filename=\"{$this->Path}\"");
-//         header('Content-Type: text/plain');
-//         header("Content-Transfer-Encoding: binary");
-//         header('Accept-Ranges: bytes');
-//         header("Cache-control: private");
-//         header('Pragma: private');
-//         header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-//      } else {
         $this->Path = str_replace(' ', '_', $this->Path);
         if ($this->UseCompression()) {
             $fp = gzopen($this->Path, 'wb');
         } else {
             $fp = fopen($this->Path, 'wb');
         }
-//      }
+
         $this->File = $fp;
 
         return $fp;
@@ -1256,7 +1230,7 @@ class ExportModel {
             $this->_UseCompression = $Value;
         }
 
-        return $this->_UseCompression && $this->Destination == 'file' && !$this->UseStreaming && function_exists('gzopen');
+        return $this->_UseCompression && $this->Destination == 'file' && function_exists('gzopen');
     }
 
     /**
