@@ -16,9 +16,6 @@ abstract class ExportController {
     /** @var array Required tables, columns set per exporter */
     protected $SourceTables = array();
 
-    /** @var bool Whether to stream result; deprecated. */
-    protected $UseStreaming = false;
-
     /** @var ExportModel */
     protected $Ex = null;
 
