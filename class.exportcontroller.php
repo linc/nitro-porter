@@ -76,7 +76,7 @@ abstract class ExportController {
 
                 $Msg = $this->Ex->Comments;
 
-                // Send no path if we don't know where it went.
+                // Write the results.  Send no path if we don't know where it went.
                 $RelativePath = ($this->Param('destpath', false)) ? false : $this->Ex->Path;
                 ViewExportResult($Msg, 'Info', $RelativePath);
             } else {
