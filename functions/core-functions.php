@@ -7,6 +7,13 @@
  * @param $errstr
  */
 function ErrorHandler($errno, $errstr) {
+    $ReportingLevel = error_reporting();
+
+    // If error reporting is turned off, possibly by @.  Bail out.
+    if (!$ReportingLevel) {
+        return;
+    }
+
     if (defined(DEBUG) || ($errno != E_DEPRECATED && $errno != E_USER_DEPRECATED)) {
         echo "Error: ({$errno}) {$errstr}\n";
         die();

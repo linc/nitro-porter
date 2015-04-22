@@ -99,7 +99,8 @@ class BbPress extends ExportController {
         $Ex->ExportTable('Discussion', "select t.*,
             'Html' as Format,
             case t.topic_open when 0 then 1 else 0 end as Closed
-         from :_topics t", $Discussion_Map);
+         from :_topics t
+         where topic_status = 0", $Discussion_Map);
 
         // Comments
         $Comment_Map = array(
@@ -112,7 +113,8 @@ class BbPress extends ExportController {
         );
         $Ex->ExportTable('Comment', "select p.*,
             'Html' as Format
-         from :_posts p", $Comment_Map);
+         from :_posts p
+         where post_status = 0", $Comment_Map);
 
         // Conversations.
 
