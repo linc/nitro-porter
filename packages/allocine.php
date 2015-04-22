@@ -1,1 +1,0 @@
-/home/vagrant/git/VanillaClients/allocine/porter/class.allocine.php
