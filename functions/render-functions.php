@@ -137,6 +137,13 @@ function ViewForm($Data) {
                     <label>Database Password</label>
                     <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>"/>
                 </li>
+                <li>
+                    <label>Export Type</label>
+                    <select name="tables" id="ExportTables">
+                        <option value="">All supported data</option>
+                        <option value="User,Role,UserRole,Permission">Only users and roles</option>
+                    </select>
+                </li>
             </ul>
             <div class="Button">
                 <input class="Button" type="submit" value="Begin Export"/>
