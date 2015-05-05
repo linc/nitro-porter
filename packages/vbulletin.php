@@ -881,6 +881,7 @@ class Vbulletin extends ExportController {
      */
     public function ExportMedia($MinDiscussionID = false) {
         $Ex = $this->Ex;
+        $instance = $this;
 
         if ($MinDiscussionID) {
             $DiscussionWhere = "and t.threadid > $MinDiscussionID";
@@ -896,11 +897,11 @@ class Vbulletin extends ExportController {
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'filethumb' => array(
                 'Column' => 'ThumbPath',
-                'Filter' => function($Value, $Field, $Row) {
-                    $MimeType = $this->BuildMimeType($Row['extension'], $Field, $Row);
+                'Filter' => function($Value, $Field, $Row) use ($instance) {
+                    $MimeType = $instance->BuildMimeType($Row['extension'], $Field, $Row);
 
                     if (substr($MimeType, 0, 6) == 'image/') {
-                        return $this->BuildMediaPath($Value, $Field, $Row);
+                        return $instance->BuildMediaPath($Value, $Field, $Row);
                     } else {
                         return null;
                     }
