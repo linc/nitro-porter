@@ -453,7 +453,7 @@ class IPB extends ExportController {
          PRIMARY KEY (`TagID`),
          UNIQUE KEY `FullName` (`FullName`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-        $Ex->Query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from ibf_core_tags t)");
+        $Ex->Query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
 
         $TagDiscussion_Map = array(
             'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
