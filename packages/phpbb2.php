@@ -42,7 +42,6 @@ class Phpbb2 extends ExportController {
             'topic_title',
             'topic_views',
             'topic_first_post_id',
-            'topic_replies',
             'topic_status',
             'topic_type',
             'topic_time'
