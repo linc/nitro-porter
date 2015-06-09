@@ -49,7 +49,6 @@ class Phpbb3 extends ExportController {
             'topic_title',
             'topic_views',
             'topic_first_post_id',
-            'topic_replies',
             'topic_status',
             'topic_type',
             'topic_time',
@@ -227,7 +226,6 @@ class Phpbb3 extends ExportController {
         );
         $Ex->ExportTable('Discussion', "select t.*,
             'BBCode' as Format,
-            topic_replies+1 as CountComments,
             case t.topic_status when 1 then 1 else 0 end as Closed,
             case t.topic_type when 1 then 1 else 0 end as Announce,
             case when t.poll_start > 0 then 'poll' else null end as type,
