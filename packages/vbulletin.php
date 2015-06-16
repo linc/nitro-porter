@@ -975,7 +975,8 @@ class Vbulletin extends ExportController {
                a.postid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
                '1' as height,
-               '1' as width
+               '1' as width,
+               null as filethumb
             from :_post p
                inner join :_thread t ON p.threadid = t.threadid
                left join :_attachment a ON a.postid = p.postid
