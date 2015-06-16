@@ -831,7 +831,11 @@ class Vbulletin extends ExportController {
      */
     public function ExportBlobs($Attachments = true, $CustomAvatars = true) {
         $Ex = $this->Ex;
-        $Extension = ExportModel::FileExtension('a.filename');
+        if ($Ex->Exists('attachment', array('contenttypeid', 'contentid')) === true) {
+            $Extension = ExportModel::FileExtension('a.filename');
+        } else {
+            $Extension = ExportModel::FileExtension('filename');
+        }
 
         if ($Attachments) {
             $Identity = ($Ex->Exists('attachment',
@@ -864,7 +868,7 @@ class Vbulletin extends ExportController {
         }
 
         // Export the group icons no matter what.
-        if ($Attachments || $CustomAvatars && $Ex->Exists('socialgroupicon', 'thumbnail_filedata')) {
+        if ($Ex->Exists('socialgroupicon', 'thumbnail_filedata') && ($Attachments || $CustomAvatars)) {
             $Sql = "
             select
                i.filedata,
