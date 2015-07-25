@@ -136,13 +136,13 @@ class esotalk extends ExportController {
 				'BBCode' AS Format,
 				FROM_UNIXTIME(TIME) AS DateInserted,
 				FROM_UNIXTIME(editTime) AS DateUpdated
-		FROM et_post p
-		INNER JOIN et_conversation c ON c.conversationId = p.conversationId
+		FROM :_post p
+		INNER JOIN :_conversation c ON c.conversationId = p.conversationId
 		AND c.private = 0
 		JOIN
 			( SELECT conversationId,
 				min(postId) AS m
-			FROM et_post
+			FROM :_post
 			GROUP BY conversationId) r ON r.conversationId = c.conversationId
 		WHERE p.postId<>r.m", $Comment_Map);
 
