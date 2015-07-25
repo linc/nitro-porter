@@ -132,17 +132,19 @@ class esotalk extends ExportController {
         );
         // Now we need to omit the comments we used as the OP.
         $Ex->ExportTable('Comment', "
-         select p.*, 'BBCode' as Format,
-            FROM_UNIXTIME(time) as DateInserted,
-            FROM_UNIXTIME(editTime) as DateUpdated
-         from :_post p
-         left join :_conversation c on c.conversationId = p.conversationId
-         where c.private = 0
-         and p.postId not in (select p.postId
-         	from :_conversation c
-         	left join :_post p on p.conversationId = c.conversationId where c.private = 0
-			   group by p.conversationId
-			   order by p.time)", $Comment_Map);
+		SELECT p.*,
+				'BBCode' AS Format,
+				FROM_UNIXTIME(TIME) AS DateInserted,
+				FROM_UNIXTIME(editTime) AS DateUpdated
+		FROM et_post p
+		INNER JOIN et_conversation c ON c.conversationId = p.conversationId
+		AND c.private = 0
+		JOIN
+			( SELECT conversationId,
+				min(postId) AS m
+			FROM et_post
+			GROUP BY conversationId) r ON r.conversationId = c.conversationId
+		WHERE p.postId<>r.m", $Comment_Map);
 
 
         // UserDiscussion.
