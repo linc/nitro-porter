@@ -8,7 +8,7 @@
  * @see functions.commandline.php for command line usage.
  */
 
-$Supported['esotalk'] = array('name' => 'esoTalk', 'prefix' => 'forum_');
+$Supported['esotalk'] = array('name' => 'esoTalk', 'prefix' => 'et_');
 $Supported['esotalk']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
@@ -139,8 +139,8 @@ class esotalk extends ExportController {
          left join :_conversation c on c.conversationId = p.conversationId
          where c.private = 0
          and p.postId not in (select p.postId
-         	from forum_conversation c
-         	left join forum_post p on p.conversationId = c.conversationId where c.private = 0
+         	from :_conversation c
+         	left join :_post p on p.conversationId = c.conversationId where c.private = 0
 			   group by p.conversationId
 			   order by p.time)", $Comment_Map);
 
