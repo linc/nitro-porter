@@ -112,14 +112,24 @@ class esotalk extends ExportController {
         );
         // The body of the OP is in the post table.
         $Ex->ExportTable('Discussion', "
-         select *, 'BBCode' as Format,
-            FROM_UNIXTIME(startTime) as DateInserted,
-            FROM_UNIXTIME(lastPostTime) as DateLastComment
-         from :_conversation c
-         left join :_post p on p.conversationId = c.conversationId
-         where private = 0
-         group by c.conversationId
-         order by p.time", $Discussion_Map);
+			SELECT
+				c.conversationId,
+				c.title,
+				c.channelId,
+				p.memberId,
+				c.sticky,
+				c.locked,
+				c.lastPostMemberId,
+				p.content,
+				'BBCode' AS Format,
+				FROM_UNIXTIME(startTime) AS DateInserted,
+				FROM_UNIXTIME(lastPostTime) AS DateLastComment
+			FROM :_conversation c
+			LEFT JOIN :_post p
+				ON p.conversationId = c.conversationId
+			WHERE private = 0
+			GROUP BY c.conversationId
+			ORDER BY p.time;", $Discussion_Map);
 
 
         // Comment.
