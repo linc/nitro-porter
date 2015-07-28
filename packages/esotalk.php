@@ -8,7 +8,7 @@
  * @see functions.commandline.php for command line usage.
  */
 
-$Supported['esotalk'] = array('name' => 'esoTalk', 'prefix' => 'forum_');
+$Supported['esotalk'] = array('name' => 'esoTalk', 'prefix' => 'et_');
 $Supported['esotalk']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
@@ -112,14 +112,24 @@ class esotalk extends ExportController {
         );
         // The body of the OP is in the post table.
         $Ex->ExportTable('Discussion', "
-         select *, 'BBCode' as Format,
-            FROM_UNIXTIME(startTime) as DateInserted,
-            FROM_UNIXTIME(lastPostTime) as DateLastComment
-         from :_conversation c
-         left join :_post p on p.conversationId = c.conversationId
-         where private = 0
-         group by c.conversationId
-         order by p.time", $Discussion_Map);
+			select
+				c.conversationId,
+				c.title,
+				c.channelId,
+				p.memberId,
+				c.sticky,
+				c.locked,
+				c.lastPostMemberId,
+				p.content,
+				'BBCode' as Format,
+				from_unixtime(startTime) as DateInserted,
+				from_unixtime(lastPostTime) as DateLastComment
+			from :_conversation c
+			left join :_post p
+				on p.conversationId = c.conversationId
+			where private = 0
+			group by c.conversationId
+			group by p.time", $Discussion_Map);
 
 
         // Comment.
@@ -132,17 +142,19 @@ class esotalk extends ExportController {
         );
         // Now we need to omit the comments we used as the OP.
         $Ex->ExportTable('Comment', "
-         select p.*, 'BBCode' as Format,
-            FROM_UNIXTIME(time) as DateInserted,
-            FROM_UNIXTIME(editTime) as DateUpdated
-         from :_post p
-         left join :_conversation c on c.conversationId = p.conversationId
-         where c.private = 0
-         and p.postId not in (select p.postId
-         	from forum_conversation c
-         	left join forum_post p on p.conversationId = c.conversationId where c.private = 0
-			   group by p.conversationId
-			   order by p.time)", $Comment_Map);
+		select p.*,
+				'BBCode' as Format,
+				from_unixtime(time) as DateInserted,
+				from_unixtime(editTime) as DateUpdated
+		from :_post p
+		inner join :_conversation c ON c.conversationId = p.conversationId
+		and c.private = 0
+		join
+			( select conversationId,
+				min(postId) as m
+			from :_post
+			group by conversationId) r on r.conversationId = c.conversationId
+		where p.postId<>r.m", $Comment_Map);
 
 
         // UserDiscussion.
