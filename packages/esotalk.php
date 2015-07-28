@@ -112,7 +112,7 @@ class esotalk extends ExportController {
         );
         // The body of the OP is in the post table.
         $Ex->ExportTable('Discussion', "
-			SELECT
+			select
 				c.conversationId,
 				c.title,
 				c.channelId,
@@ -121,15 +121,15 @@ class esotalk extends ExportController {
 				c.locked,
 				c.lastPostMemberId,
 				p.content,
-				'BBCode' AS Format,
-				FROM_UNIXTIME(startTime) AS DateInserted,
-				FROM_UNIXTIME(lastPostTime) AS DateLastComment
-			FROM :_conversation c
-			LEFT JOIN :_post p
-				ON p.conversationId = c.conversationId
-			WHERE private = 0
-			GROUP BY c.conversationId
-			ORDER BY p.time;", $Discussion_Map);
+				'BBCode' as Format,
+				from_unixtime(startTime) as DateInserted,
+				from_unixtime(lastPostTime) as DateLastComment
+			from :_conversation c
+			left join :_post p
+				on p.conversationId = c.conversationId
+			where private = 0
+			group by c.conversationId
+			group by p.time", $Discussion_Map);
 
 
         // Comment.
@@ -142,19 +142,19 @@ class esotalk extends ExportController {
         );
         // Now we need to omit the comments we used as the OP.
         $Ex->ExportTable('Comment', "
-		SELECT p.*,
-				'BBCode' AS Format,
-				FROM_UNIXTIME(TIME) AS DateInserted,
-				FROM_UNIXTIME(editTime) AS DateUpdated
-		FROM :_post p
-		INNER JOIN :_conversation c ON c.conversationId = p.conversationId
-		AND c.private = 0
-		JOIN
-			( SELECT conversationId,
-				min(postId) AS m
-			FROM :_post
-			GROUP BY conversationId) r ON r.conversationId = c.conversationId
-		WHERE p.postId<>r.m", $Comment_Map);
+		select p.*,
+				'BBCode' as Format,
+				from_unixtime(time) as DateInserted,
+				from_unixtime(editTime) as DateUpdated
+		from :_post p
+		inner join :_conversation c ON c.conversationId = p.conversationId
+		and c.private = 0
+		join
+			( select conversationId,
+				min(postId) as m
+			from :_post
+			group by conversationId) r on r.conversationId = c.conversationId
+		where p.postId<>r.m", $Comment_Map);
 
 
         // UserDiscussion.
