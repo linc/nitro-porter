@@ -200,7 +200,7 @@ class esotalk extends ExportController {
         );
 
         $Ex->ExportTable('UserConversation', "
-        select distinct a.fromMemberId AS memberId, a.type, c.private, c.conversationId from :_activity a
+        select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
         inner join :_conversation c on c.conversationId = a.conversationId
         and c.private = 1 and a.type = 'privateAdd'
         union all
