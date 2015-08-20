@@ -43,7 +43,7 @@ class esotalk extends ExportController {
             'memberId' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
-            //'confirmed' => 'Confirmed', //requires Vanilla 2.2
+            'confirmed' => 'Verified',
             'password' => 'Password',
         );
         $Ex->ExportTable('User', "
