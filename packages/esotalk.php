@@ -43,7 +43,7 @@ class esotalk extends ExportController {
             'memberId' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
-            //'confirmed' => 'Confirmed', //requires Vanilla 2.2
+            'confirmed' => 'Verified',
             'password' => 'Password',
         );
         $Ex->ExportTable('User', "
@@ -177,8 +177,51 @@ class esotalk extends ExportController {
 
 
         // Conversation.
-        // :_conversation where private = 1
+		$Conversation_map = array(
+            'conversationId' => 'ConversationID',
+            'countPosts' => 'CountMessages',
+            'startMemberId' => 'InsertUserID',
+            'countPosts' => 'CountMessages',
+        );
 
+        $Ex->ExportTable('Conversation', "
+                select p.*,
+                'BBCode' as Format,
+                from_unixtime(time) as DateInserted,
+                from_unixtime(lastposttime) as DateUpdated
+        from :_post p
+        inner join :_conversation c on c.conversationId = p.conversationId
+        and c.private = 1", $Conversation_map);
+
+        $UserConversation_map = array(
+            'conversationId' => 'ConversationID',
+            'memberId' => 'UserID',
+
+        );
+
+        $Ex->ExportTable('UserConversation', "
+        select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
+        inner join :_conversation c on c.conversationId = a.conversationId
+        and c.private = 1 and a.type = 'privateAdd'
+        union all
+        select distinct a.memberId as memberId, a.type, c.private, c.conversationId from :_activity a
+        inner join :_conversation c on c.conversationId = a.conversationId
+        and c.private = 1 and a.type = 'privateAdd'", $UserConversation_map);
+
+        $UserConversationMessage_map = array(
+            'postId' => 'MessageID',
+            'conversationId' => 'ConversationID',
+            'content' => 'Body',
+            'memberId' => 'InsertUserID',
+
+        );
+
+        $Ex->ExportTable('ConversationMessage', "
+                select p.*,
+                'BBCode' as Format,
+                from_unixtime(time) as DateInserted
+        from :_post p
+        inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1", $UserConversationMessage_map);
 
         $Ex->EndExport();
     }
