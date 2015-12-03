@@ -12,7 +12,8 @@
  */
 
 $Supported['vbulletin5'] = array('name' => 'vBulletin 5 Connect', 'prefix' => 'vb_');
-$Supported['vbulletin5']['CommandLine'] = array(//'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
+$Supported['vbulletin5']['CommandLine'] = array(
+    //'noexport' => array('Whether or not to skip the export.', 'Sx' => '::'),
 );
 $Supported['vbulletin5']['features'] = array(
     'Comments' => 1,
@@ -127,32 +128,32 @@ class Vbulletin5 extends Vbulletin {
             $PasswordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
         } else {
             // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
-            $PasswordSQL = "replace(token, ' ', '') as password2,
-         case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
+            $PasswordSQL = "replace(token, ' ', '') as password2, case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
         }
 
-        $Ex->ExportTable('User', "select u.*,
-            ipaddress as ipaddress2,
-            $PasswordSQL
-            DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
-            FROM_UNIXTIME(joindate) as DateFirstVisit,
-            FROM_UNIXTIME(lastvisit) as DateLastActive,
-            FROM_UNIXTIME(joindate) as DateInserted,
-            FROM_UNIXTIME(lastactivity) as DateUpdated,
-            case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
-                 when av.avatarpath is not null then av.avatarpath
-                 else null
-                 end as filephoto,
-            {$this->AvatarSelect},
-            case when ub.userid is not null then 1 else 0 end as Banned
-         from :_user u
-         left join :_customavatar a
-            on u.userid = a.userid
-         left join :_avatar av
-            on u.avatarid = av.avatarid
-         left join :_userban ub
-              on u.userid = ub.userid and ub.liftdate <= now() ",
-            $User_Map);  // ":_" will be replace by database prefix
+        $Ex->ExportTable('User', "
+            select
+                u.*,
+                ipaddress as ipaddress2,
+                $PasswordSQL
+                DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
+                FROM_UNIXTIME(joindate) as DateFirstVisit,
+                FROM_UNIXTIME(lastvisit) as DateLastActive,
+                FROM_UNIXTIME(joindate) as DateInserted,
+                FROM_UNIXTIME(lastactivity) as DateUpdated,
+                case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
+                    when av.avatarpath is not null then av.avatarpath
+                    else null
+                end as filephoto,
+                {$this->AvatarSelect},
+                case when ub.userid is not null then 1 else 0 end as Banned
+            from :_user u
+                left join :_customavatar a on u.userid = a.userid
+                left join :_avatar av on u.avatarid = av.avatarid
+                left join :_userban ub
+                    on u.userid = ub.userid
+                    and ub.liftdate <= now()
+         ;", $User_Map);  // ":_" will be replace by database prefix
         //ipdata - contains all IP records for user actions: view,visit,register,logon,logoff
 
 
@@ -251,9 +252,13 @@ class Vbulletin5 extends Vbulletin {
             )
         );
         $Ex->ExportTable('Rank', "
-         select ut.*, ut.title as title2, 0 as level
-         from :_usertitle ut
-         order by ut.minposts", $Rank_Map);
+            select
+                ut.*,
+                ut.title as title2,
+                0 as level
+            from :_usertitle ut
+            order by ut.minposts
+         ;", $Rank_Map);
 
 
         /// Signatures
@@ -276,9 +281,13 @@ class Vbulletin5 extends Vbulletin {
         $PrivateMessagesID = 0;
 
         // Filter Channels down to Forum tree
-        $ChannelResult = $Ex->Query("select n.* from :_node n
-         left join :_contenttype c on n.contenttypeid = c.contenttypeid
-         where c.class = 'Channel'");
+        $ChannelResult = $Ex->Query("
+            select
+                n.*
+            from :_node n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+            where c.class = 'Channel'
+        ;");
 
         while ($Channel = mysql_fetch_array($ChannelResult)) {
             $Channels[$Channel['nodeid']] = $Channel;
@@ -326,12 +335,14 @@ class Vbulletin5 extends Vbulletin {
 
         // Categories are Channels that were found in the Forum tree
         // If parent was 'Forum' set the parent to Root instead (-1)
-        $Ex->ExportTable('Category', "select n.*,
-         FROM_UNIXTIME(publishdate) as DateInserted,
-         if(parentid={$HomeID},-1,parentid) as parentid
-      from :_node n
-      where nodeid in (" . implode(',', $CategoryIDs) . ")
-      ", $Category_Map);
+        $Ex->ExportTable('Category', "
+            select
+                n.*,
+                FROM_UNIXTIME(publishdate) as DateInserted,
+                if(parentid={$HomeID},-1,parentid) as parentid
+            from :_node n
+            where nodeid in (" . implode(',', $CategoryIDs) . ")
+        ;", $Category_Map);
 
 
         /// Permission
@@ -353,21 +364,23 @@ class Vbulletin5 extends Vbulletin {
             // reportnodeid
         );
 
-        $Ex->ExportTable('Discussion', "select n.*,
-         t.rawtext,
-         'BBCode' as Format,
-         FROM_UNIXTIME(publishdate) as DateInserted,
-         v.count as CountViews,
-         convert(ABS(open-1),char(1)) as Closed,
-         if(convert(sticky,char(1))>0,2,0) as Announce
-      from :_node n
-         left join :_contenttype c on n.contenttypeid = c.contenttypeid
-         left join :_nodeview v on v.nodeid = n.nodeid
-         left join :_text t on t.nodeid = n.nodeid
-      where c.class = 'Text'
-         and n.showpublished = 1
-         and parentid in (" . implode(',', $CategoryIDs) . ")
-      ", $Discussion_Map);
+        $Ex->ExportTable('Discussion', "
+            select
+                n.*,
+                t.rawtext,
+                'BBCode' as Format,
+                FROM_UNIXTIME(publishdate) as DateInserted,
+                v.count as CountViews,
+                convert(ABS(open-1),char(1)) as Closed,
+                if(convert(sticky,char(1))>0,2,0) as Announce
+            from :_node n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+                left join :_nodeview v on v.nodeid = n.nodeid
+                left join :_text t on t.nodeid = n.nodeid
+            where c.class = 'Text'
+                and n.showpublished = 1
+                and parentid in (" . implode(',', $CategoryIDs) . ")
+        ;", $Discussion_Map);
 
 
         // UserDiscussion
@@ -377,11 +390,13 @@ class Vbulletin5 extends Vbulletin {
         );
         // Should be able to inner join `discussionread` for DateLastViewed
         // but it's blank in my sample data so I don't trust it.
-        $Ex->ExportTable('UserDiscussion', "select s.*,
-         1 as Bookmarked,
-         NOW() as DateLastViewed
-      from :_subscribediscussion s
-      ", $UserDiscussion_Map);
+        $Ex->ExportTable('UserDiscussion', "
+            select
+                s.*,
+                1 as Bookmarked,
+                NOW() as DateLastViewed
+            from :_subscribediscussion s
+        ;", $UserDiscussion_Map);
 
 
         // Comment.
@@ -392,17 +407,19 @@ class Vbulletin5 extends Vbulletin {
             'parentid' => 'DiscussionID',
         );
 
-        $Ex->ExportTable('Comment', "select n.*,
-         t.rawtext,
-         'BBCode' as Format,
-         FROM_UNIXTIME(publishdate) as DateInserted
-      from :_node n
-         left join :_contenttype c on n.contenttypeid = c.contenttypeid
-         left join :_text t on t.nodeid = n.nodeid
-      where c.class = 'Text'
-         and n.showpublished = 1
-         and parentid not in (" . implode(',', $CategoryIDs) . ")
-      ", $Comment_Map);
+        $Ex->ExportTable('Comment', "
+            select
+                n.*,
+                t.rawtext,
+                'BBCode' as Format,
+                FROM_UNIXTIME(publishdate) as DateInserted
+            from :_node n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+                left join :_text t on t.nodeid = n.nodeid
+            where c.class = 'Text'
+                and n.showpublished = 1
+                and parentid not in (" . implode(',', $CategoryIDs) . ")
+        ;", $Comment_Map);
 
 
         /// Drafts
@@ -424,25 +441,27 @@ class Vbulletin5 extends Vbulletin {
             'height' => 'ImageHeight',
             'filesize' => 'Size',
         );
-        $Ex->ExportTable('Media', "select a.*,
-         filename as Path2,
-         filename as ThumbPath2,
-         FROM_UNIXTIME(f.dateline) as DateInserted,
-         f.userid as userid,
-         f.userid as InsertUserID,
-         if (f.width,f.width,1) as width,
-         if (f.height,f.height,1) as height,
-         n.parentid as ForeignID,
-         f.extension,
-         f.filesize,
-         'local' as StorageMethod,
-         if(n2.parentid in (" . implode(',', $CategoryIDs) . "),'discussion','comment') as ForeignTable
-      from :_attach a
-         left join :_node n on n.nodeid = a.nodeid
-         left join :_filedata f on f.filedataid = a.filedataid
-         left join :_node n2 on n.parentid = n2.nodeid
-      where a.visible = 1
-      ", $Media_Map);
+        $Ex->ExportTable('Media', "
+            select
+                a.*,
+                filename as Path2,
+                filename as ThumbPath2,
+                FROM_UNIXTIME(f.dateline) as DateInserted,
+                f.userid as userid,
+                f.userid as InsertUserID,
+                if (f.width,f.width,1) as width,
+                if (f.height,f.height,1) as height,
+                n.parentid as ForeignID,
+                f.extension,
+                f.filesize,
+                'local' as StorageMethod,
+                if(n2.parentid in (" . implode(',', $CategoryIDs) . "),'discussion','comment') as ForeignTable
+            from :_attach a
+                left join :_node n on n.nodeid = a.nodeid
+                left join :_filedata f on f.filedataid = a.filedataid
+                left join :_node n2 on n.parentid = n2.nodeid
+            where a.visible = 1
+        ;", $Media_Map);
         // left join :_contenttype c on n.contenttypeid = c.contenttypeid
 
 
@@ -453,14 +472,16 @@ class Vbulletin5 extends Vbulletin {
             'totalcount' => 'CountMessages',
             'title' => 'Subject',
         );
-        $Ex->ExportTable('Conversation',
-            "select n.*,
-            n.nodeid as FirstMessageID,
-            FROM_UNIXTIME(n.publishdate) as DateInserted
-          from :_node n
-            left join :_text t on t.nodeid = n.nodeid
-          where parentid = $PrivateMessagesID
-            and t.rawtext <> ''", $Conversation_Map);
+        $Ex->ExportTable('Conversation', "
+            select
+                n.*,
+                n.nodeid as FirstMessageID,
+                FROM_UNIXTIME(n.publishdate) as DateInserted
+            from :_node n
+                left join :_text t on t.nodeid = n.nodeid
+            where parentid = $PrivateMessagesID
+                and t.rawtext <> ''
+        ;", $Conversation_Map);
 
 
         // Conversation Messages.
@@ -469,17 +490,19 @@ class Vbulletin5 extends Vbulletin {
             'rawtext' => 'Body',
             'userid' => 'InsertUserID'
         );
-        $Ex->ExportTable('ConversationMessage',
-            "select n.*,
-            t.rawtext,
-            'BBCode' as Format,
-            if(n.parentid<>$PrivateMessagesID,n.parentid,n.nodeid) as ConversationID,
-            FROM_UNIXTIME(n.publishdate) as DateInserted
-          from :_node n
-            left join :_contenttype c on n.contenttypeid = c.contenttypeid
-            left join :_text t on t.nodeid = n.nodeid
-          where c.class = 'PrivateMessage'
-            and t.rawtext <> ''", $ConversationMessage_Map);
+        $Ex->ExportTable('ConversationMessage', "
+            select
+                n.*,
+                t.rawtext,
+                'BBCode' as Format,
+                if(n.parentid<>$PrivateMessagesID,n.parentid,n.nodeid) as ConversationID,
+                FROM_UNIXTIME(n.publishdate) as DateInserted
+            from :_node n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+                left join :_text t on t.nodeid = n.nodeid
+            where c.class = 'PrivateMessage'
+                and t.rawtext <> ''
+        ;", $ConversationMessage_Map);
 
 
         // User Conversation.
@@ -489,10 +512,11 @@ class Vbulletin5 extends Vbulletin {
             'deleted' => 'Deleted'
         );
         // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
-        $Ex->ExportTable('UserConversation',
-            "select s.*
-          from :_sentto s
-          ;", $UserConversation_Map);
+        $Ex->ExportTable('UserConversation', "
+            select
+                s.*
+            from :_sentto s
+        ;", $UserConversation_Map);
 
 
         /// Groups
