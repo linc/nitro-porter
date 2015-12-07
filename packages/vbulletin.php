@@ -1045,7 +1045,7 @@ class Vbulletin extends ExportController {
         }
     }
 
-    function _ExportPolls() {
+    protected function _ExportPolls() {
         $Ex = $this->Ex;
         $fp = $Ex->File;
 //      $fp = fopen('php://output', 'ab');
