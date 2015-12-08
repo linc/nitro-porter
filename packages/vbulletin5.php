@@ -27,6 +27,7 @@ $Supported['vbulletin5']['features'] = array(
     'Bookmarks' => 1,
     'Ranks' => 1,
     'Passwords' => 1,
+    'Polls' => 1,
 );
 
 class Vbulletin5 extends Vbulletin {
@@ -49,7 +50,7 @@ class Vbulletin5 extends Vbulletin {
             'membergroupids',
             'usergroupid',
             'usertitle',
-            'avatarid'
+            'avatarid',
         ),
         'userfield' => array('userid'),
         'usergroup' => array('usergroupid', 'title', 'description'),
