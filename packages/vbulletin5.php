@@ -633,7 +633,7 @@ class Vbulletin5 extends Vbulletin {
                 n.parentid,
                 n.lastcontentid,
                 n.lastauthorid,
-                'Markdown' as Format,
+                'BBCode' as Format,
                 FROM_UNIXTIME(n.publishdate) as DateInserted,
                 v.count as CountViews,
                 convert(ABS(n.open-1),char(1)) as Closed,
