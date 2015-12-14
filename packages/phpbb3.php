@@ -466,7 +466,6 @@ join z_pmgroup g
   case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
   concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as Path,
   FROM_UNIXTIME(a.filetime) as DateInserted,
-  'local' as StorageMethod,
   a.*
 from :_attachments a
 join :_topics t

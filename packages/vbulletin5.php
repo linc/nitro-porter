@@ -516,7 +516,6 @@ class Vbulletin5 extends Vbulletin {
                 n.parentid as ForeignID,
                 f.extension,
                 f.filesize,
-                'local' as StorageMethod,
                 if(n2.parentid in (" . implode(',', $CategoryIDs) . "),'discussion','comment') as ForeignTable
             from :_attach a
                 left join :_node n on n.nodeid = a.nodeid

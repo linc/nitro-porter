@@ -163,7 +163,6 @@ class Kunena extends ExportController {
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
-            'local' as StorageMethod,
             case when m.id = m.thread then 'discussion' else 'comment' end as ForeignTable,
             m.time
          from :_kunena_attachments a

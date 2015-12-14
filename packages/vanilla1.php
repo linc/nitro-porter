@@ -493,7 +493,6 @@ join z_pm pm
                 'Name' => 'Name',
                 'MimeType' => 'Type',
                 'Size' => 'Size',
-                //'StorageMethod',
                 'Path' => array('Column' => 'Path', 'Filter' => array($this, 'StripMediaPath')),
                 'UserID' => 'InsertUserID',
                 'DateCreated' => 'DateInserted',
@@ -501,7 +500,7 @@ join z_pm pm
                 //'ForeignTable'
             );
             $Ex->ExportTable('Media',
-                "select a.*, 'local' as StorageMethod, 'comment' as ForeignTable from :_Attachment a",
+                "select a.*, 'comment' as ForeignTable from :_Attachment a",
                 $Media_Map);
         }
 
