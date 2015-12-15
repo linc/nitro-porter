@@ -25,7 +25,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     <div id="Content">
         <div class="Title">
             <h1>
-                <img src="http://vanillaforums.com/porter/vanilla_logo.png" alt="Vanilla"/>
+                <img src="./vanilla_logo.png" alt="Vanilla">
 
                 <p>Vanilla Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
             </h1>
