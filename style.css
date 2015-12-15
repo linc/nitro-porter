@@ -163,6 +163,11 @@ form li.Last {
    padding: 12px 0 2px;
    border-bottom: 0;
 }
+
+form fieldset:disabled legend,
+form fieldset:disabled label{
+   color: gray;
+}
 div.Button {
    text-align: right;
    padding: 12px 0 30px;

@@ -11,14 +11,14 @@
  * HTML header.
  */
 function PageHeader() {
-echo '<?xml version="1.0" encoding="UTF-8"?>';
 ?>
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html>
 <head>
     <title>Vanilla Porter - Forum Export Tool</title>
+    <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="style.css" media="screen"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 </head>
 <body>
 <div id="Frame">
@@ -102,47 +102,73 @@ function ViewForm($Data) {
             <?php endif; ?>
             <ul>
                 <li>
-                    <label>Source Forum Type</label>
-                    <select name="type" id="ForumType" onchange="updatePrefix();">
-                        <?php foreach ($forums as $forumClass => $forumInfo) : ?>
-                            <option value="<?php echo $forumClass; ?>"<?php
-                            if (GetValue('type') == $forumClass) {
-                                echo ' selected="selected"';
-                            } ?>><?php echo $forumInfo['name']; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label>
+                        Source Forum Type
+                        <select name="type" id="ForumType">
+                            <?php foreach ($forums as $forumClass => $forumInfo) : ?>
+                                <option value="<?php echo $forumClass; ?>"<?php
+                                if (GetValue('type') == $forumClass) {
+                                    echo ' selected="selected"';
+                                } ?>><?php echo $forumInfo['name']; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
                 </li>
                 <li>
-                    <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span></label>
-                    <input class="InputBox" type="text" name="prefix"
-                           value="<?php echo htmlspecialchars(GetValue('prefix')) != '' ? htmlspecialchars(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>"
-                           id="ForumPrefix"/>
+                    <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span>
+                        <input class="InputBox" type="text" name="prefix"
+                            value="<?php echo htmlspecialchars(GetValue('prefix')) != '' ? htmlspecialchars(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>"
+                            id="ForumPrefix"/>
+                    </label>
                 </li>
                 <li>
-                    <label>Database Host <span>Usually "localhost".</span></label>
-                    <input class="InputBox" type="text" name="dbhost"
-                           value="<?php echo htmlspecialchars(GetValue('dbhost', '', 'localhost')) ?>"/>
+                    <label>
+                        Database Host <span>Usually "localhost".</span>
+                        <input class="InputBox" type="text" name="dbhost"
+                            value="<?php echo htmlspecialchars(GetValue('dbhost', '', 'localhost')) ?>"/>
+                    </label>
                 </li>
                 <li>
-                    <label>Database Name</label>
-                    <input class="InputBox" type="text" name="dbname"
-                           value="<?php echo htmlspecialchars(GetValue('dbname')) ?>"/>
+                    <label>
+                        Database Name
+                        <input class="InputBox" type="text" name="dbname"
+                            value="<?php echo htmlspecialchars(GetValue('dbname')) ?>"/>
+                    </label>
                 </li>
                 <li>
-                    <label>Database Username</label>
-                    <input class="InputBox" type="text" name="dbuser"
-                           value="<?php echo htmlspecialchars(GetValue('dbuser')) ?>"/>
+                    <label>
+                        Database Username
+                        <input class="InputBox" type="text" name="dbuser"
+                            value="<?php echo htmlspecialchars(GetValue('dbuser')) ?>"/>
+                    </label>
                 </li>
                 <li>
-                    <label>Database Password</label>
-                    <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>"/>
+                    <label>Database Password
+                        <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>"/>
+                    </label>
                 </li>
                 <li>
-                    <label>Export Type</label>
-                    <select name="tables" id="ExportTables">
-                        <option value="">All supported data</option>
-                        <option value="User,Role,UserRole,Permission">Only users and roles</option>
-                    </select>
+                    <label>
+                        Export Type
+                        <select name="tables" id="ExportTables">
+                            <option value="">All supported data</option>
+                            <option value="User,Role,UserRole,Permission">Only users and roles</option>
+                        </select>
+                    </label>
+                </li>
+                <li id="FileExports">
+                    <fieldset>
+                        <legend>Export Options:</legend>
+                        <label>
+                            Avatars
+                            <input type="checkbox" name="avatars" value="1">
+                        </label>
+                        <label>
+                            Files
+                            <input type="checkbox" name="files" value="1">
+                        </label>
+
+                    </fieldset>
                 </li>
             </ul>
             <div class="Button">
@@ -151,18 +177,25 @@ function ViewForm($Data) {
         </div>
     </form>
     <script type="text/javascript">
-        //<![CDATA[
-        function updatePrefix() {
-            var type = document.getElementById('ForumType').value;
-            switch (type) {
-                <?php foreach($forums as $ForumClass => $ForumInfo) : ?>
-                case '<?php echo $ForumClass; ?>':
-                    document.getElementById('ForumPrefix').value = '<?php echo $ForumInfo['prefix']; ?>';
-                    break;
-                <?php endforeach; ?>
-            }
-        }
-        //]]>
+        $('#ForumType')
+            .change(function() {
+                var type = $(this).val();
+                switch (type) {
+                    <?php
+                    foreach($forums as $ForumClass => $ForumInfo) {
+                        $exportOptions = "\$('#FileExports > fieldset').prop('disabled', true);";
+                        if (in_array($ForumClass, array('vbulletin', 'vbulletin5'))) {
+                            $exportOptions = "\$('#FileExports > fieldset').prop('disabled', false);";
+                        }
+                    ?>
+                    case '<?= $ForumClass; ?>':
+                    <?= $exportOptions; ?>
+                        $('#ForumPrefix').val('<?= $ForumInfo['prefix']; ?>');
+                        break;
+                    <?php } ?>
+                }
+            })
+            .trigger('change');
     </script>
 
     <?php PageFooter();
