@@ -195,8 +195,8 @@ class Xenforo extends ExportController {
             ua.data as password,
             'xenforo' as hash_method,
             case when u.avatar_date > 0 then concat('{$Cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg') else null end as avatar
-         from xf_user u
-         left join xf_user_authenticate ua
+         from :_user u
+         left join :_user_authenticate ua
             on u.user_id = ua.user_id", $User_Map);
 
         // Roles.
@@ -206,7 +206,7 @@ class Xenforo extends ExportController {
         );
         $Ex->ExportTable('Role', "
          select *
-         from xf_user_group", $Role_Map);
+         from :_user_group", $Role_Map);
 
         // User Roles.
         $UserRole_Map = array(
@@ -216,13 +216,13 @@ class Xenforo extends ExportController {
 
         $Ex->ExportTable('UserRole', "
          select user_id, user_group_id
-         from xf_user
+         from :_user
 
          union all
 
          select u.user_id, ua.user_group_id
-         from xf_user u
-         join xf_user_group ua
+         from :_user u
+         join :_user_group ua
             on find_in_set(ua.user_group_id, u.secondary_group_ids)", $UserRole_Map);
 
         // Permission.
@@ -247,7 +247,7 @@ class Xenforo extends ExportController {
         );
         $Ex->ExportTable('Category', "
          select n.*
-         from xf_node n
+         from :_node n
          ", $Category_Map);
 
         // Discussions.
@@ -271,10 +271,10 @@ class Xenforo extends ExportController {
             p.message,
             'BBCode' as format,
             ip.ip
-         from xf_thread t
-         join xf_post p
+         from :_thread t
+         join :_post p
             on t.first_post_id = p.post_id
-         left join xf_ip ip
+         left join :_ip ip
             on p.ip_id = ip.ip_id", $Discussion_Map);
 
 
@@ -293,10 +293,10 @@ class Xenforo extends ExportController {
             p.*,
             'BBCode' as format,
             ip.ip
-         from xf_post p
-         join xf_thread t
+         from :_post p
+         join :_thread t
             on p.thread_id = t.thread_id
-         left join xf_ip ip
+         left join :_ip ip
             on p.ip_id = ip.ip_id
          where p.post_id <> t.first_post_id
             and message_state = 'visible'", $Comment_Map);
@@ -310,7 +310,7 @@ class Xenforo extends ExportController {
         );
         $Ex->ExportTable('Conversation', "
          select *
-         from xf_conversation_master", $Conversation_Map);
+         from :_conversation_master", $Conversation_Map);
 
         $ConversationMessage_Map = array(
             'message_id' => 'MessageID',
@@ -326,8 +326,8 @@ class Xenforo extends ExportController {
             m.*,
             'BBCode' as format,
             ip.ip
-         from xf_conversation_message m
-         left join xf_ip ip
+         from :_conversation_message m
+         left join :_ip ip
             on m.ip_id = ip.ip_id", $ConversationMessage_Map);
 
         $UserConversation_Map = array(
@@ -340,7 +340,7 @@ class Xenforo extends ExportController {
             r.conversation_id,
             user_id,
             case when r.recipient_state = 'deleted' then 1 else 0 end as Deleted
-         from xf_conversation_recipient r
+         from :_conversation_recipient r
 
          union all
 
@@ -348,7 +348,7 @@ class Xenforo extends ExportController {
             cu.conversation_id,
             cu.owner_user_id,
             0
-         from xf_conversation_user cu
+         from :_conversation_user cu
          ", $UserConversation_Map);
 
         $Ex->EndExport();
@@ -364,8 +364,8 @@ class Xenforo extends ExportController {
          select
             pe.*,
             g.title
-         from xf_permission_entry pe
-         join xf_user_group g
+         from :_permission_entry pe
+         join :_user_group g
             on pe.user_group_id = g.user_group_id");
         $this->_ExportPermissions($r, $Permissions);
 
@@ -373,8 +373,8 @@ class Xenforo extends ExportController {
           select
             pe.*,
             g.title
-         from xf_permission_entry_content pe
-         join xf_user_group g
+         from :_permission_entry_content pe
+         join :_user_group g
             on pe.user_group_id = g.user_group_id");
         $this->_ExportPermissions($r, $Permissions);
 
@@ -416,7 +416,7 @@ class Xenforo extends ExportController {
            user_id as UserID,
            'Plugin.Signatures.Sig' as Name,
            signature as Value
-         from xf_user_profile
+         from :_user_profile
          where nullif(signature, '') is not null
 
          union
@@ -425,7 +425,7 @@ class Xenforo extends ExportController {
            user_id,
            'Plugin.Signatures.Format',
            'BBCode'
-         from xf_user_profile
+         from :_user_profile
          where nullif(signature, '') is not null";
 
         $Ex->ExportTable('UserMeta', $Sql);

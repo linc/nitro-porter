@@ -20,7 +20,7 @@ class APG extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
-        $CharacterSet = $Ex->GetCharacterSet('pgd_Threads');
+        $CharacterSet = $Ex->GetCharacterSet('Threads');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }

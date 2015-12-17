@@ -158,7 +158,7 @@ class BbPress extends ExportController {
             $Ex->Query("create temporary table bbpmto (UserID int, ConversationID int)");
 
             if ($ConversationVersion == 'new') {
-                $To = $Ex->Query("select object_id, meta_value from bb_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
+                $To = $Ex->Query("select object_id, meta_value from :_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
                     true);
                 if (is_resource($To)) {
                     while (($Row = @mysql_fetch_assoc($To)) !== false) {
@@ -186,7 +186,7 @@ class BbPress extends ExportController {
                  pm_thread,
                  pm_from,
                  del_sender as Deleted
-               from bb_bbpm
+               from :_bbpm
 
                union
 
@@ -194,7 +194,7 @@ class BbPress extends ExportController {
                  pm_thread,
                  pm_to,
                  del_reciever
-               from bb_bbpm', $ConUser_Map);
+               from :_bbpm', $ConUser_Map);
             }
         }
 

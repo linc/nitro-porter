@@ -7,6 +7,7 @@
  * @package VanillaPorter
  */
 
+$Supported['vanilla1'] = array('name' => 'Vanilla 1', 'prefix' => 'LUM_');
 $Supported['vanilla1']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,

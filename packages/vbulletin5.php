@@ -62,6 +62,7 @@ class Vbulletin5 extends Vbulletin {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
+
         // Determine the character set
         $CharacterSet = $Ex->GetCharacterSet('nodes');
         if ($CharacterSet) {
