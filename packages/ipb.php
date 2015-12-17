@@ -500,6 +500,8 @@ class IPB extends ExportController {
             'attach_file' => 'Name',
             'attach_path' => 'Path',
             'attach_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             'attach_member_id' => 'InsertUserID',
             'attach_filesize' => 'Size',
             'ForeignID' => 'ForeignID',
@@ -511,6 +513,8 @@ class IPB extends ExportController {
         $Sql = "select
    a.*,
    concat('~cf/ipb/', a.attach_location) as attach_path,
+   concat('~cf/ipb/', a.attach_location) as thumb_path,
+   128 as thumb_width,
    ty.atype_mimetype,
    case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
    case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
@@ -820,6 +824,25 @@ drop table tmp_group;");
         if (count($Selects) > 0) {
             $Statement = implode(', ', $Selects);
             $Sql = str_replace('from ', ", $Statement\nfrom ", $Sql);
+        }
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_ExportTable
+     *
+     * @param string $Value Current value
+     * @param string $Field Current field
+     * @param array $Row Contents of the current record.
+     * @return current value of the field or null if the file is not an image.
+     */
+    public function FilterThumbnailData($Value, $Field, $Row) {
+        if (strpos($Row['atype_mimetype'], 'image/') === 0) {
+            return $Value;
+        } else {
+            return null;
         }
     }
 }
