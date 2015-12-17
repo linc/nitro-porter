@@ -19,8 +19,10 @@ $Supported['bbpress2']['features'] = array(
 class BbPress2 extends ExportController {
     /** @var array Required tables => columns */
     protected $SourceTables = array(
+        'postmeta' => array(),
         'posts' => array(),
-        'users' => array('ID', 'user_login', 'user_pass', 'user_email', 'user_registered')
+        'usermeta' => array(),
+        'users' => array('ID', 'user_login', 'user_pass', 'user_email', 'user_registered'),
     );
     /**
      * Forum-specific export format.
