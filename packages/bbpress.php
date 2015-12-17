@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$Supported['bbPress'] = array('name' => 'bbPress 1', 'prefix' => 'bb_');
-$Supported['bbPress']['features'] = array(
+$Supported['bbpress'] = array('name' => 'bbPress 1', 'prefix' => 'bb_');
+$Supported['bbpress']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
