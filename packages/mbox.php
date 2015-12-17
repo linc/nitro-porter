@@ -42,6 +42,12 @@ class Mbox extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
+
+        $CharacterSet = $Ex->GetCharacterSet('mbox');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
+        }
+
         // Begin
         $Ex->BeginExport('', 'Mbox', array());
 

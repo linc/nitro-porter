@@ -175,7 +175,6 @@ class IPB extends ExportController {
 
         $Ex->SourcePrefix = ':_';
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

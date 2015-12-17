@@ -146,7 +146,6 @@ class Xenforo extends ExportController {
 
         $Cdn = $this->CdnPrefix();
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

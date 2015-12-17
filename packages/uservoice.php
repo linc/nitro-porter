@@ -26,7 +26,7 @@ class UserVoice extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
-        // Get the characterset for the comments.
+
         $CharacterSet = $Ex->GetCharacterSet('Threads');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

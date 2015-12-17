@@ -40,6 +40,12 @@ class SMF2 extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
+
+        $CharacterSet = $Ex->GetCharacterSet('messages');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
+        }
+
         // Begin
         $Ex->BeginExport('', 'SMF 2.*', array('HashMethod' => 'Django'));
 

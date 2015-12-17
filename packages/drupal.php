@@ -28,9 +28,7 @@ class Drupal extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
-        $this->Ex = $Ex;
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('comment');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

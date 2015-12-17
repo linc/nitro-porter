@@ -28,6 +28,7 @@ class Yaf extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
+
         $CharacterSet = $Ex->GetCharacterSet('Topic');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

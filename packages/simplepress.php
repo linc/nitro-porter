@@ -37,7 +37,6 @@ class SimplePress extends ExportController {
     protected function ForumExport($Ex) {
         $Ex->SourcePrefix = 'wp_';
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

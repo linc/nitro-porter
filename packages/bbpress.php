@@ -33,6 +33,12 @@ class BbPress extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
+
+        $CharacterSet = $Ex->GetCharacterSet('posts');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
+        }
+
         // Begin
         $Ex->BeginExport('', 'bbPress 1.*', array('HashMethod' => 'Vanilla'));
 

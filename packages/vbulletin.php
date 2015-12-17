@@ -194,7 +194,6 @@ class Vbulletin extends ExportController {
             $ForumWhere = '';
         }
 
-        // Determine the character set
         $CharacterSet = $Ex->GetCharacterSet('post');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
