@@ -189,6 +189,8 @@ class ExpressionEngine extends ExportController {
         $Media_Map = array(
             'filename' => 'Name',
             'extension' => array('Column' => 'Type', 'Filter' => array($this, 'MimeTypeFromExtension')),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             'filesize' => 'Size',
             'member_id' => 'InsertUserID',
             'attachment_date' => array('Column' => 'DateInserted', 'Filter' => array($Ex, 'TimestampToDate')),
@@ -197,6 +199,8 @@ class ExpressionEngine extends ExportController {
         $Ex->ExportTable('Media', "
          SELECT
             concat('imported/', filename) AS Path,
+            concat('imported/', filename) as thumb_path,
+            128 as thumb_width,
             CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
             CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
             'local' AS StorageMethod,
@@ -397,6 +401,25 @@ class ExpressionEngine extends ExportController {
             JOIN z_pmgroup g
                 ON pm.title2 = g.title AND pm.userids = g.userids
             SET pm.group_id = g.group_id;");
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_ExportTable
+     *
+     * @param string $Value Current value
+     * @param string $Field Current field
+     * @param array $Row Contents of the current record.
+     * @return current value of the field or null if the file is not an image.
+     */
+    public function FilterThumbnailData($Value, $Field, $Row) {
+        if (strpos(MimeTypeFromExtension($Row['extension']), 'image/') === 0) {
+            return $Value;
+        } else {
+            return null;
+        }
     }
 
 }
