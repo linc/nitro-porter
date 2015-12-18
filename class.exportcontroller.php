@@ -32,14 +32,21 @@ abstract class ExportController {
 
         $this->Ex = new ExportModel;
         $this->Ex->Controller = $this;
-        $this->Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'],
-            $this->DbInfo['dbname']);
+        $this->Ex->SetConnection(
+            $this->DbInfo['dbhost'],
+            $this->DbInfo['dbuser'],
+            $this->DbInfo['dbpass'],
+            $this->DbInfo['dbname']
+        );
+
+        // That's not sexy but it gets the job done :D
+        $lcClassName = strtolower(get_class($this));
+        $hasDefaultPrefix = !empty($Supported[$lcClassName]['prefix']);
 
         if (isset($this->DbInfo['prefix'])) {
             $this->Ex->Prefix = $this->DbInfo['prefix'];
-        // That's not sexy but it gets the job done :D we could
-        } elseif (!empty($Supported[strtolower(get_class($this))]['prefix'])) {
-            $this->Ex->Prefix = $Supported[strtolower(get_class($this))]['prefix'];
+        } elseif ($hasDefaultPrefix) {
+            $this->Ex->Prefix = $Supported[$lcClassName]['prefix'];
         }
         $this->Ex->Destination = $this->Param('dest', 'file');
         $this->Ex->DestDb = $this->Param('destdb', null);
