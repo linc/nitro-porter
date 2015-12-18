@@ -183,9 +183,25 @@ function ViewForm($Data) {
                 switch (type) {
                     <?php
                     foreach($forums as $ForumClass => $ForumInfo) {
-                        $exportOptions = "\$('#FileExports > fieldset').prop('disabled', true);";
-                        if (in_array($ForumClass, array('vbulletin', 'vbulletin5'))) {
+                        $exportOptions = "\$('#FileExports > fieldset, #FileExports input').prop('disabled', true);";
+
+                        $hasAvatars = !empty($ForumInfo['features']['Avatars']);
+                        $hasAttachments = !empty($ForumInfo['features']['Attachments']);
+
+                        if ($hasAvatars || $hasAttachments) {
                             $exportOptions = "\$('#FileExports > fieldset').prop('disabled', false);";
+                            $exportOptions .= "\$('#FileExports input[name=avatars]').prop('disabled', ".($hasAvatars ? 'false' : 'true').")";
+                            if ($hasAvatars) {
+                                $exportOptions .= ".parent().removeClass('disabled');";
+                            } else {
+                                $exportOptions .= ".parent().addClass('disabled');";
+                            }
+                            $exportOptions .= "\$('#FileExports input[name=files]').prop('disabled', ".($hasAttachments ? 'false' : 'true').")";
+                            if ($hasAttachments) {
+                                $exportOptions .= ".parent().removeClass('disabled');";
+                            } else {
+                                $exportOptions .= ".parent().addClass('disabled');";
+                            }
                         }
                     ?>
                     case '<?= $ForumClass; ?>':

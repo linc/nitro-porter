@@ -165,7 +165,8 @@ form li.Last {
 }
 
 form fieldset:disabled legend,
-form fieldset:disabled label{
+form fieldset:disabled label,
+form label.disabled {
    color: gray;
 }
 div.Button {
