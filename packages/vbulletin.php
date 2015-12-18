@@ -943,7 +943,6 @@ class Vbulletin extends ExportController {
             case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
             case when t.threadid is not null then t.threadid else a.contentid end as ForeignID,
             FROM_UNIXTIME(a.dateline) as DateInserted,
-            'local' as StorageMethod,
             a.*,
             f.extension, f.filesize $AttachColumnsString,
             f.width, f.height, null as filethumb
@@ -965,7 +964,6 @@ class Vbulletin extends ExportController {
             // Lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
             $Extension = ExportModel::FileExtension('a.filename');
             $MediaSql = "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-               'local' as StorageMethod,
                'discussion' as ForeignTable,
                t.threadid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,
@@ -979,7 +977,6 @@ class Vbulletin extends ExportController {
             union all
 
             select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-               'local' as StorageMethod,
                'comment' as ForeignTable,
                a.postid as ForeignID,
                FROM_UNIXTIME(a.dateline) as DateInserted,

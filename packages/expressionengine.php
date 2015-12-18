@@ -198,7 +198,6 @@ class ExpressionEngine extends ExportController {
             concat('imported/', filename) AS Path,
             CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
             CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
-            'local' AS StorageMethod,
             a.*
          FROM forum_forum_attachments a", $Media_Map);
 
