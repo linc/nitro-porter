@@ -1232,7 +1232,7 @@ class ExportModel {
      * @return array
      * @see vnExport::ExportTable()
      */
-    public function Structures($NewStructures = FALSE) {
+    public function Structures($NewStructures = false) {
         if (is_array($NewStructures)) {
             $this->_Structures = $NewStructures;
         }
