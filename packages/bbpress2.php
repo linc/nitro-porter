@@ -211,4 +211,3 @@ class BbPress2 extends ExportController {
         $Ex->EndExport();
     }
 }
-?>
