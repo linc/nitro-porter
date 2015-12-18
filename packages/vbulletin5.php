@@ -301,7 +301,7 @@ class Vbulletin5 extends Vbulletin {
         }
 
         if (!$HomeID) {
-            exit ("Missing node 'Forum'");
+            exit("Missing node 'Forum'");
         }
 
         // Go thru the category list 6 times to build a (up to) 6-deep hierarchy
