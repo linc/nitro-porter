@@ -72,9 +72,7 @@ class Phpbb3 extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
-        $this->Ex = $Ex;
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
@@ -89,7 +87,7 @@ class Phpbb3 extends ExportController {
         // Users.
 
         // Grab the avatar salt.
-        $Px = $Ex->GetValue("select config_value from phpbb_config where config_name = 'avatar_salt'", '');
+        $Px = $Ex->GetValue("select config_value from :_config where config_name = 'avatar_salt'", '');
         $cdn = $this->Param('cdn', '');
 
         $User_Map = array(
@@ -113,7 +111,7 @@ class Phpbb3 extends ExportController {
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted,
             ban_userid is not null as Banned
          from :_users
-            left join phpbb_banlist bl ON (ban_userid = user_id)
+            left join :_banlist bl ON (ban_userid = user_id)
          ", $User_Map);  // ":_" will be replace by database prefix
 
         // Roles
@@ -159,7 +157,7 @@ class Phpbb3 extends ExportController {
         );
         $Ex->ExportTable('Rank', "
          select r.*, r.rank_title as title2, 0 as level
-         from phpbb_ranks r
+         from :_ranks r
          order by rank_special, rank_min;", $Rank_Map);
 
         // Permissions.
@@ -171,7 +169,7 @@ class Phpbb3 extends ExportController {
             when group_name like '%Admin%' then 'All'
             else 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
          end as _Permissions
-         from phpbb_groups");
+         from :_groups");
 
         // UserRoles
         $UserRole_Map = array(
@@ -191,13 +189,13 @@ class Phpbb3 extends ExportController {
         );
         $Ex->ExportTable('UserMeta', "
          select user_id, 'Plugin.Signatures.Sig' as name, user_sig, user_sig_bbcode_uid as bbcode_uid
-         from phpbb_users
+         from :_users
          where length(user_sig) > 1
 
          union
 
          select user_id, 'Plugin.Signatures.Format', 'BBCode', null
-         from phpbb_users
+         from :_users
          where length(user_sig) > 1
          ", $UserMeta_Map);
 
@@ -364,8 +362,8 @@ set pm.groupid = g.groupid;");
             t.*,
             t.topic_id as poll_id,
             1 as anonymous
-         from phpbb_poll_options po
-         join phpbb_topics t
+         from :_poll_options po
+         join :_topics t
             on po.topic_id = t.topic_id", $Poll_Map);
 
         $PollOption_Map = array(
@@ -385,8 +383,8 @@ set pm.groupid = g.groupid;");
             'Html' as format,
             t.topic_time,
             t.topic_poster
-         from phpbb_poll_options po
-         join phpbb_topics t
+         from :_poll_options po
+         join :_topics t
             on po.topic_id = t.topic_id", $PollOption_Map);
 
         $PollVote_Map = array(
@@ -395,7 +393,7 @@ set pm.groupid = g.groupid;");
         );
         $Ex->ExportTable('PollVote', "
          select v.*, v.poll_option_id * 1000000 + v.topic_id as id
-         from phpbb_poll_votes v", $PollVote_Map);
+         from :_poll_votes v", $PollVote_Map);
 
         // Conversations.
         $Conversation_Map = array(

@@ -63,7 +63,7 @@ class Phpbb2 extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
-        // Get the characterset for the comments.
+
         $CharacterSet = $Ex->GetCharacterSet('posts_text');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

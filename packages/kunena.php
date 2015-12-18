@@ -25,6 +25,12 @@ class Kunena extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
+
+        $CharacterSet = $Ex->GetCharacterSet('mbox');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
+        }
+
         $Ex->DestPrefix = 'jos';
 
         $Ex->BeginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));

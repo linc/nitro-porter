@@ -26,7 +26,8 @@ class Toast extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
-        $CharacterSet = $Ex->GetCharacterSet('tstdb_Post');
+
+        $CharacterSet = $Ex->GetCharacterSet('Post');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }

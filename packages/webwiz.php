@@ -26,8 +26,8 @@ class WebWiz extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
-        // Get the characterset for the comments.
-        $CharacterSet = $Ex->GetCharacterSet('tblTopic');
+
+        $CharacterSet = $Ex->GetCharacterSet('Topic');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
@@ -93,7 +93,7 @@ class WebWiz extends ExportController {
          case when Avatar like 'http%' then Avatar when Avatar > '' then concat('webwiz/', Avatar) else null end as Photo2,
             'webwiz' as HashMethod,
             u.*
-         from tblAuthor u
+         from :_Author u
          ", $User_Map);
 
 
@@ -104,7 +104,7 @@ class WebWiz extends ExportController {
         );
         $Ex->ExportTable('Role', "
          select *
-         from tblGroup", $Role_Map);
+         from :_Group", $Role_Map);
 
         // User Role.
         $UserRole_Map = array(
@@ -113,7 +113,7 @@ class WebWiz extends ExportController {
         );
         $Ex->ExportTable('UserRole', "
          select u.*
-         from tblAuthor u", $UserRole_Map);
+         from :_Author u", $UserRole_Map);
 
         // UserMeta
         $Ex->ExportTable('UserMeta', "
@@ -121,7 +121,7 @@ class WebWiz extends ExportController {
             Author_ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
             Signature as `Value`
-         from tblAuthor
+         from :_Author
          where Signature <> ''");
 
         // Category.
@@ -139,7 +139,7 @@ class WebWiz extends ExportController {
             f.Forum_order,
             f.Forum_name,
             f.Forum_description
-         from tblForum f
+         from :_Forum f
 
          union all
 
@@ -149,7 +149,7 @@ class WebWiz extends ExportController {
             c.Cat_order,
             c.Cat_name,
             null
-         from tblCategory c
+         from :_Category c
          ", $Category_Map);
 
         // Discussion.
@@ -174,8 +174,8 @@ class WebWiz extends ExportController {
             th.IP_addr,
             'Html' as Format,
             t.*
-         from tblTopic t
-         join tblThread th
+         from :_Topic t
+         join :_Thread th
             on t.Start_Thread_ID = th.Thread_ID", $Discussion_Map);
 
         // Comment.
@@ -192,8 +192,8 @@ class WebWiz extends ExportController {
       select
          th.*,
          'Html' as Format
-      from tblThread th
-      join tblTopic t
+      from :_Thread th
+      join :_Topic t
          on t.Topic_ID = th.Topic_ID
       where th.Thread_ID <> t.Start_Thread_ID", $Comment_Map);
 
@@ -218,7 +218,7 @@ class WebWiz extends ExportController {
          select
             pm.*,
             g.Title
-         from tblPMMessage pm
+         from :_PMMessage pm
          join z_pmgroup g
             on pm.PM_ID = g.Group_ID;", $Conversation_Map);
 
@@ -249,7 +249,7 @@ class WebWiz extends ExportController {
             pm.*,
             pm2.Group_ID,
             'Html' as Format
-          from tblPMMessage pm
+          from :_PMMessage pm
           join z_pmtext pm2
             on pm.PM_ID = pm2.PM_ID;", $Message_Map);
     }
@@ -271,7 +271,7 @@ class WebWiz extends ExportController {
          select
             PM_ID,
             Author_ID
-         from tblPMMessage;
+         from :_PMMessage;
 
          insert ignore z_pmto (
             PM_ID,
@@ -280,7 +280,7 @@ class WebWiz extends ExportController {
          select
             PM_ID,
             From_ID
-         from tblPMMessage;
+         from :_PMMessage;
 
          drop table if exists z_pmto2;
          create table z_pmto2 (
@@ -317,7 +317,7 @@ class WebWiz extends ExportController {
             PM_ID,
             PM_Tittle,
             case when PM_Tittle like 'Re:%' then trim(substring(PM_Tittle, 4)) else PM_Tittle end as Title2
-         from tblPMMessage;
+         from :_PMMessage;
 
          create index z_idx_pmtext on z_pmtext (PM_ID);
 

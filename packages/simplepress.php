@@ -37,7 +37,6 @@ class SimplePress extends ExportController {
     protected function ForumExport($Ex) {
         $Ex->SourcePrefix = 'wp_';
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
@@ -57,8 +56,8 @@ class SimplePress extends ExportController {
         );
         $Ex->ExportTable('User',
             "select m.*, u.user_pass, u.user_email, u.user_registered
-          from wp_users u
-          join wp_sfmembers m
+          from :_users u
+          join :_sfmembers m
             on u.ID = m.user_id;", $User_Map);
 
         // Roles
@@ -72,7 +71,7 @@ class SimplePress extends ExportController {
             usergroup_id,
             usergroup_name,
             usergroup_desc
-         from wp_sfusergroups
+         from :_sfusergroups
 
          union
 
@@ -89,7 +88,7 @@ case
    when usergroup_name like 'Member%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
    when usergroup_name like 'Mod%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage'
 end as _Permissions
-         from wp_sfusergroups
+         from :_sfusergroups
 
          union
 
@@ -104,14 +103,14 @@ end as _Permissions
             "select
             m.user_id,
             m.usergroup_id
-         from wp_sfmemberships m
+         from :_sfmemberships m
 
          union
 
          select
             um.user_id,
             100
-         from wp_usermeta um
+         from :_usermeta um
          where um.meta_key = 'wp_capabilities'
             and um.meta_value like '%PF Manage Forums%'", $UserRole_Map);
 
@@ -132,7 +131,7 @@ end as _Permissions
             f.forum_desc,
             lower(f.forum_slug) as forum_slug,
             case when f.parent = 0 then f.group_id + 1000 else f.parent end as parent_id
-         from wp_sfforums f
+         from :_sfforums f
 
          union
 
@@ -143,7 +142,7 @@ end as _Permissions
             g.group_desc,
             null,
             null
-         from wp_sfgroups g", $Category_Map);
+         from :_sfgroups g", $Category_Map);
 
         // Discussions
         $Discussion_Map = array(

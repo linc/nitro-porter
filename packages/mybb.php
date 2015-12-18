@@ -40,7 +40,7 @@ class MyBB extends ExportController {
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
     public function ForumExport($Ex) {
-        // Get the characterset for the comments.
+
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;

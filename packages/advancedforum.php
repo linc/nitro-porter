@@ -35,7 +35,8 @@ class advancedforum extends ExportController {
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
     public function ForumExport($Ex) {
-        $CharacterSet = $Ex->GetCharacterSet(':_node');
+
+        $CharacterSet = $Ex->GetCharacterSet('node');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }

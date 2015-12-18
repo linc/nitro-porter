@@ -7,6 +7,7 @@
  * @package VanillaPorter
  */
 
+$Supported['vanilla1'] = array('name' => 'Vanilla 1', 'prefix' => 'LUM_');
 $Supported['vanilla1']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
@@ -60,7 +61,6 @@ class Vanilla1 extends ExportController {
     protected function ForumExport($Ex) {
         $this->Ex = $Ex;
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('Comment');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
