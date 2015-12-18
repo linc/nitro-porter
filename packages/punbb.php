@@ -253,7 +253,7 @@ class Punbb extends ExportController {
         $Ex->EndExport();
     }
 
-    function StripMediaPath($AbsPath) {
+    public function StripMediaPath($AbsPath) {
         if (($Pos = strpos($AbsPath, '/uploads/')) !== false) {
             return substr($AbsPath, $Pos + 9);
         }
@@ -261,7 +261,7 @@ class Punbb extends ExportController {
         return $AbsPath;
     }
 
-    function FilterPermissions($Permissions, $ColumnName, &$Row) {
+    public function FilterPermissions($Permissions, $ColumnName, &$Row) {
         $Permissions2 = unserialize($Permissions);
 
         foreach ($Permissions2 as $Name => $Value) {
@@ -280,7 +280,7 @@ class Punbb extends ExportController {
         return false;
     }
 
-    function ForceBool($Value) {
+    public function ForceBool($Value) {
         if ($Value) {
             return true;
         }
@@ -297,7 +297,7 @@ class Punbb extends ExportController {
      *
      * @return null|string
      */
-    function GetAvatarByID($Value, $Field, $Row) {
+    public function GetAvatarByID($Value, $Field, $Row) {
         if (!$this->AvatarPath) {
             return null;
         }

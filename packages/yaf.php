@@ -21,7 +21,7 @@ $Supported['yaf']['features'] = array(
 );
 
 class Yaf extends ExportController {
-    static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
+    public static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
 
     /**
      *

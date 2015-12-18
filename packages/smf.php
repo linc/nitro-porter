@@ -365,7 +365,7 @@ join :_personal_messages pm2
 //      echo implode("\n\n", $Ex->Queries);
     }
 
-    function DecodeNumericEntity($Text) {
+    public function DecodeNumericEntity($Text) {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
 
@@ -375,7 +375,7 @@ join :_personal_messages pm2
         }
     }
 
-    function _pcreEntityToUtf($matches) {
+    public function _pcreEntityToUtf($matches) {
         $char = intval(is_array($matches) ? $matches[1] : $matches);
 
         if ($char < 0x80) {

@@ -665,7 +665,7 @@ class ExportModel {
      * @param int $End
      * @return string
      */
-    static function FormatElapsed($Start, $End = null) {
+    public static function FormatElapsed($Start, $End = null) {
         if ($End === null) {
             $Elapsed = $Start;
         } else {
@@ -685,7 +685,7 @@ class ExportModel {
      * @param $Value
      * @return int|mixed|string
      */
-    static function FormatValue($Value) {
+    public static function FormatValue($Value) {
         // Format the value for writing.
         if (is_null($Value)) {
             $Value = self::NULL;

@@ -270,7 +270,7 @@ class SMF2 extends ExportController {
 
     }
 
-    function DecodeNumericEntity($Text) {
+    public function DecodeNumericEntity($Text) {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
 
@@ -280,7 +280,7 @@ class SMF2 extends ExportController {
         }
     }
 
-    function _pcreEntityToUtf($matches) {
+    public function _pcreEntityToUtf($matches) {
         $char = intval(is_array($matches) ? $matches[1] : $matches);
 
         if ($char < 0x80) {

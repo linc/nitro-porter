@@ -76,7 +76,7 @@ class Vbulletin extends ExportController {
       end as customphoto";
 
     /* @var array Default permissions to map. */
-    static $Permissions = array(
+    public static $Permissions = array(
 
         'genericpermissions' => array(
             1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
@@ -119,7 +119,7 @@ class Vbulletin extends ExportController {
 //          16 => 'Plugins.WhosOnline.ViewHidden')
     );
 
-    static $Permissions2 = array();
+    public static $Permissions2 = array();
 
     /** @var array Required tables => columns. Commented values are optional. */
     protected $SourceTables = array(
@@ -1166,7 +1166,7 @@ class Vbulletin extends ExportController {
      * @param array $Row Contents of the current attachment record.
      * @return string Future path to file.
      */
-    function BuildMediaPath($Value, $Field, $Row) {
+    public function BuildMediaPath($Value, $Field, $Row) {
         if (isset($Row['hash']) && $Row['hash'] != '') {
             // Old school! (2.x)
             $FilePath = $Row['hash'] . '.' . $Row['extension'];
@@ -1200,7 +1200,7 @@ class Vbulletin extends ExportController {
      * @param $Field
      * @param $Row
      */
-    function BuildMediaDimension($Value, $Field, $Row) {
+    public function BuildMediaDimension($Value, $Field, $Row) {
         // Non-images get no height/width
         $Ex = $this->Ex;
         if ($Ex->Exists('attachment', array('extension'))) {
@@ -1226,7 +1226,7 @@ class Vbulletin extends ExportController {
      * @param array $Row Ignored.
      * @return string Extension or accurate MIME type.
      */
-    function BuildMimeType($Value, $Field, $Row) {
+    public function BuildMimeType($Value, $Field, $Row) {
         switch (strtolower($Value)) {
             case 'jpg':
             case 'gif':
@@ -1278,7 +1278,7 @@ class Vbulletin extends ExportController {
      * @param $Row
      * @return bool
      */
-    function SignInPermission($Value, $Field, $Row) {
+    public function SignInPermission($Value, $Field, $Row) {
         $Result = true;
         if (stripos($Row['title'], 'unregistered') !== false) {
             $Result = false;
@@ -1295,7 +1295,7 @@ class Vbulletin extends ExportController {
      * @param string $Name Variable for which we want the value.
      * @return mixed Value or FALSE if not found.
      */
-    function GetConfig($Name) {
+    public function GetConfig($Name) {
         $Sql = "select * from :_setting where varname = '$Name'";
         $Result = $this->Ex->Query($Sql, true);
         if ($Row = mysql_fetch_assoc($Result)) {
@@ -1311,7 +1311,7 @@ class Vbulletin extends ExportController {
      * @param $Row
      * @return bool
      */
-    function FilterPermissions($Value, $Field, $Row) {
+    public function FilterPermissions($Value, $Field, $Row) {
         if (!isset(self::$Permissions2[$Field])) {
             return 0;
         }
@@ -1328,7 +1328,7 @@ class Vbulletin extends ExportController {
      * @param $ColumnGroups
      * @param $Map
      */
-    function AddPermissionColumns($ColumnGroups, &$Map) {
+    public function AddPermissionColumns($ColumnGroups, &$Map) {
         $Permissions2 = array();
 
         foreach ($ColumnGroups as $ColumnGroup => $Columns) {
