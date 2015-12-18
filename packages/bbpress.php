@@ -239,5 +239,3 @@ function bb_decodeit($matches) {
 
     return "`$text`";
 }
-
-?>

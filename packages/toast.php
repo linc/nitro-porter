@@ -192,5 +192,3 @@ class Toast extends ExportController {
     }
 
 }
-
-?>

@@ -195,5 +195,3 @@ class Drupal extends ExportController {
     }
 
 }
-
-?>

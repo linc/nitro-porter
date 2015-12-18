@@ -177,5 +177,3 @@ abstract class ExportController {
         return $Result;
     }
 }
-
-?>

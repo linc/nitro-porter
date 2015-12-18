@@ -322,5 +322,3 @@ function SpawnPackage($Name) {
         echo "Invalid name: 2+ alphanumeric characters only.";
     }
 }
-
-?>

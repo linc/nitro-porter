@@ -272,5 +272,3 @@ class Jforum extends ExportController {
         $Ex->EndExport();
     }
 }
-
-?>

@@ -235,5 +235,3 @@ end as _Permissions
         $Ex->EndExport();
     }
 }
-
-?>

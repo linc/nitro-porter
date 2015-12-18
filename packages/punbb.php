@@ -346,5 +346,3 @@ class Punbb extends ExportController {
         }
     }
 }
-
-?>
