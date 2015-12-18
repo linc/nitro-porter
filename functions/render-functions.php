@@ -18,7 +18,7 @@ function PageHeader() {
     <title>Vanilla Porter - Forum Export Tool</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="style.css" media="screen"/>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="jquery.min.js"></script>
 </head>
 <body>
 <div id="Frame">
