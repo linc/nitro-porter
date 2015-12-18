@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$Supported['SimplePress'] = array('name' => 'SimplePress 1', 'prefix' => 'wp_');
-$Supported['SimplePress']['features'] = array(
+$Supported['simplepress'] = array('name' => 'SimplePress 1', 'prefix' => 'wp_');
+$Supported['simplepress']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
