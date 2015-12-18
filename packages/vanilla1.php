@@ -508,7 +508,7 @@ join z_pm pm
         $Ex->EndExport();
     }
 
-    function StripMediaPath($AbsPath) {
+    public function StripMediaPath($AbsPath) {
         if (($Pos = strpos($AbsPath, '/uploads/')) !== false) {
             return substr($AbsPath, $Pos + 9);
         }
@@ -516,7 +516,7 @@ join z_pm pm
         return $AbsPath;
     }
 
-    function FilterPermissions($Permissions, $ColumnName, &$Row) {
+    public function FilterPermissions($Permissions, $ColumnName, &$Row) {
         $Permissions2 = unserialize($Permissions);
 
         foreach ($Permissions2 as $Name => $Value) {
@@ -535,7 +535,7 @@ join z_pm pm
         return false;
     }
 
-    function ForceBool($Value) {
+    public function ForceBool($Value) {
         if ($Value) {
             return true;
         }
