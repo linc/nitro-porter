@@ -176,7 +176,7 @@ class esotalk extends ExportController {
 
 
         // Conversation.
-		$Conversation_map = array(
+        $Conversation_map = array(
             'conversationId' => 'ConversationID',
             'countPosts' => 'CountMessages',
             'startMemberId' => 'InsertUserID',
