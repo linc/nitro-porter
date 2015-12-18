@@ -907,7 +907,7 @@ class Vbulletin extends ExportController {
             'filethumb' => array(
                 'Column' => 'ThumbPath',
                 'Filter' => function($Value, $Field, $Row) use ($instance) {
-                    $filteredData = $this->FilterThumbnailData($Value, $Field, $Row);
+                    $filteredData = $this->filterThumbnailData($Value, $Field, $Row);
 
                     if ($filteredData) {
                         return $instance->BuildMediaPath($Value, $Field, $Row);
