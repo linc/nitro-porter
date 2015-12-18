@@ -696,7 +696,7 @@ class Vbulletin5 extends Vbulletin {
             'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
             'userid' => 'InsertUserId',
         );
-        $Ex->ExportTable('Poll',"
+        $Ex->ExportTable('Poll', "
             select
                 p.nodeid,
                 n.title,
