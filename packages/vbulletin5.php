@@ -758,5 +758,3 @@ class Vbulletin5 extends Vbulletin {
         ;", $PollVote_Map);
     }
 }
-
-?>

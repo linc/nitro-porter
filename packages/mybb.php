@@ -141,5 +141,3 @@ class MyBB extends ExportController {
         $Ex->EndExport();
     }
 }
-
-?>

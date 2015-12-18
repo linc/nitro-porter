@@ -188,5 +188,3 @@ class APG extends ExportController {
     }
 
 }
-
-?>

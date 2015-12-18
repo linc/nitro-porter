@@ -467,5 +467,3 @@ function CleanBodyBrackets($Value) {
 
     return $Value;
 }
-
-?>

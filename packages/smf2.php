@@ -288,5 +288,3 @@ class SMF2 extends ExportController {
         }
     }
 }
-
-?>

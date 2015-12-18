@@ -1518,5 +1518,3 @@ class ExportModel {
         return "right($ColumnName, instr(reverse($ColumnName), '.'))";
     }
 }
-
-?>

@@ -398,5 +398,3 @@ class ExpressionEngine extends ExportController {
     }
 
 }
-
-?>

@@ -178,5 +178,3 @@ class Kunena extends ExportController {
         $Ex->EndExport();
     }
 }
-
-?>

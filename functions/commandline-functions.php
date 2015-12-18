@@ -297,5 +297,3 @@ function V($Name, $Array, $Default = null) {
 
     return $Default;
 }
-
-?>

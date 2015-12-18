@@ -536,5 +536,3 @@ class Xenforo extends ExportController {
     }
 
 }
-
-?>

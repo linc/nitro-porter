@@ -1303,5 +1303,3 @@ class Vbulletin extends ExportController {
         self::$Permissions2 = $Permissions2;
     }
 }
-
-?>
