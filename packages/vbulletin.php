@@ -906,7 +906,7 @@ class Vbulletin extends ExportController {
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
             'filethumb' => array(
                 'Column' => 'ThumbPath',
-                'Filter' => function($Value, $Field, $Row) use ($instance) {
+                'Filter' => function ($Value, $Field, $Row) use ($instance) {
                     $MimeType = $instance->BuildMimeType($Row['extension'], $Field, $Row);
 
                     if (substr($MimeType, 0, 6) == 'image/') {
