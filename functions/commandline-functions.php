@@ -29,8 +29,14 @@ $GlobalOptions = array(
         'The table prefix in the database.',
         'Field' => 'prefix',
         'Sx' => ':',
-        'Default' => '',
+        'Default' => 'PACKAGE_DEFAULT',
         'Short' => 'x'
+    ),
+    'emptyprefix' => array(
+        'Force the package table prefix to be empty.',
+        'Field' => 'emptyprefix',
+        'Sx' => '',
+        'Default' => null
     ),
     'avatars' => array(
         'Enables exporting avatars from the database if supported.',
