@@ -24,7 +24,7 @@ $Supported['phpbb3']['features'] = array(
     'Passwords' => 1,
 );
 
-class Phpbb3 extends ExportController {
+class PhpBB3 extends ExportController {
 
     /** @var array Required tables => columns */
     protected $SourceTables = array(

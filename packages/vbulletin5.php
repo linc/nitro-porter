@@ -30,7 +30,7 @@ $Supported['vbulletin5']['features'] = array(
     'Polls' => 1,
 );
 
-class Vbulletin5 extends Vbulletin {
+class VBulletin5 extends VBulletin {
     /** @var array Required tables => columns. */
     protected $SourceTables = array(
         'contenttype' => array('contenttypeid', 'class'),

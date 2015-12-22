@@ -18,7 +18,7 @@ $Supported['phpbb2']['features'] = array(
     'Passwords' => 1,
 );
 
-class Phpbb2 extends ExportController {
+class PhpBB2 extends ExportController {
 
     /** @var array Required tables => columns */
     protected $SourceTables = array(

@@ -19,7 +19,7 @@ $Supported['esotalk']['features'] = array(
     'Passwords' => 1,
 );
 
-class esotalk extends ExportController {
+class Esotalk extends ExportController {
     /**
      * Main export process.
      *
