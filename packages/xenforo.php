@@ -4,10 +4,11 @@
  *
  * To export avatars, provide ?avatars=1&folder=/path/to/avatars
  *
- * @copyright Vanilla Forums Inc. 2010
+ * @copyright 2009-2015 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+
 $supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
 $supported['xenforo']['CommandLine'] = array(
     'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),

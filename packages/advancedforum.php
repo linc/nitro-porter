@@ -2,10 +2,9 @@
 /**
  * Advanced Forum (Drupal module) exporter tool.
  *
- * @copyright Vanilla Forums Inc. 2010-2014
- * @license GNU GPL2
+ * @copyright 2009-2015 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
- * @see functions.commandline.php for command line usage.
  */
 
 $supported['advancedforum'] = array(

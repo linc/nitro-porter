@@ -2,10 +2,9 @@
 /**
  * __NAME__ exporter tool.
  *
- * @copyright Vanilla Forums Inc. 2010-2014
- * @license GNU GPL2
+ * @copyright 2009-2015 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
- * @see functions.commandline.php for command line usage.
  */
 
 $supported['__NAME__'] = array('name'=> '__NAME__', 'prefix'=>'');
@@ -55,7 +54,6 @@ class __NAME__ extends ExportController {
          select u.*
          from :_tblAuthor u", $userRole_Map);
 
-
       // Category.
       $category_Map = array(
          //'SourceName' => 'VanillaName',
@@ -96,7 +94,6 @@ class __NAME__ extends ExportController {
       // Conversations.
 
       // Polls.
-
 
       $ex->endExport();
    }
