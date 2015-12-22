@@ -290,4 +290,6 @@ if (!function_exists('hex2bin')) {
         return $sbin;
     }
 }
+
+// Closing PHP tag required. (make.php)
 ?>

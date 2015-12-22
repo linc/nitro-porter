@@ -133,4 +133,5 @@ class Advancedforum extends ExportController {
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

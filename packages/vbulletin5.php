@@ -773,4 +773,5 @@ class VBulletin5 extends VBulletin {
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

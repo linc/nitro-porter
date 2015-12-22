@@ -347,4 +347,5 @@ class PunBB extends ExportController {
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

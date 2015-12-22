@@ -432,4 +432,5 @@ join :_personal_messages pm2
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

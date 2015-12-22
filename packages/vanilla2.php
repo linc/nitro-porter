@@ -77,4 +77,5 @@ class Vanilla2 extends ExportController {
 
 }
 
+// Closing PHP tag required. (make.php)
 ?>

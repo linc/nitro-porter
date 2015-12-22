@@ -240,4 +240,5 @@ function bb_Decodeit($matches) {
     return "`$text`";
 }
 
+// Closing PHP tag required. (make.php)
 ?>
