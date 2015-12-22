@@ -10,7 +10,7 @@
 /**
  * HTML header.
  */
-function PageHeader() {
+function pageHeader() {
 echo '<?xml version="1.0" encoding="UTF-8"?>';
 ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -36,7 +36,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         /**
          * HTML footer.
          */
-        function PageFooter() {
+        function pageFooter() {
         ?>
     </div>
 </div>
@@ -48,27 +48,27 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
 /**
  * Message: Write permission fail.
  */
-function ViewNoPermission($msg) {
-    PageHeader(); ?>
+function viewNoPermission($msg) {
+    pageHeader(); ?>
     <div class="Messages Errors">
         <ul>
             <li><?php echo $msg; ?></li>
         </ul>
     </div>
 
-    <?php PageFooter();
+    <?php pageFooter();
 }
 
 /**
  * Form: Database connection info.
  */
-function ViewForm($Data) {
-    $forums = GetValue('Supported', $Data, array());
-    $msg = GetValue('Msg', $Data, '');
-    $CanWrite = GetValue('CanWrite', $Data, null);
+function viewForm($Data) {
+    $forums = getValue('Supported', $Data, array());
+    $msg = getValue('Msg', $Data, '');
+    $CanWrite = getValue('CanWrite', $Data, null);
 
     if ($CanWrite === null) {
-        $CanWrite = TestWrite();
+        $CanWrite = testWrite();
     }
     if (!$CanWrite) {
         $msg = 'The porter does not have write permission to write to this folder. You need to give the porter permission to create files so that it can generate the export file.' . $msg;
@@ -80,7 +80,7 @@ function ViewForm($Data) {
         return;
     }
 
-    PageHeader(); ?>
+    pageHeader(); ?>
     <div class="Info">
         Howdy, stranger! Glad to see you headed our way.
         For help,
@@ -106,7 +106,7 @@ function ViewForm($Data) {
                     <select name="type" id="ForumType" onchange="updatePrefix();">
                         <?php foreach ($forums as $forumClass => $forumInfo) : ?>
                             <option value="<?php echo $forumClass; ?>"<?php
-                            if (GetValue('type') == $forumClass) {
+                            if (getValue('type') == $forumClass) {
                                 echo ' selected="selected"';
                             } ?>><?php echo $forumInfo['name']; ?></option>
                         <?php endforeach; ?>
@@ -115,27 +115,27 @@ function ViewForm($Data) {
                 <li>
                     <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span></label>
                     <input class="InputBox" type="text" name="prefix"
-                           value="<?php echo htmlspecialchars(GetValue('prefix')) != '' ? htmlspecialchars(GetValue('prefix')) : $forums['vanilla1']['prefix']; ?>"
+                           value="<?php echo htmlspecialchars(getValue('prefix')) != '' ? htmlspecialchars(getValue('prefix')) : $forums['vanilla1']['prefix']; ?>"
                            id="ForumPrefix"/>
                 </li>
                 <li>
                     <label>Database Host <span>Usually "localhost".</span></label>
                     <input class="InputBox" type="text" name="dbhost"
-                           value="<?php echo htmlspecialchars(GetValue('dbhost', '', 'localhost')) ?>"/>
+                           value="<?php echo htmlspecialchars(getValue('dbhost', '', 'localhost')) ?>"/>
                 </li>
                 <li>
                     <label>Database Name</label>
                     <input class="InputBox" type="text" name="dbname"
-                           value="<?php echo htmlspecialchars(GetValue('dbname')) ?>"/>
+                           value="<?php echo htmlspecialchars(getValue('dbname')) ?>"/>
                 </li>
                 <li>
                     <label>Database Username</label>
                     <input class="InputBox" type="text" name="dbuser"
-                           value="<?php echo htmlspecialchars(GetValue('dbuser')) ?>"/>
+                           value="<?php echo htmlspecialchars(getValue('dbuser')) ?>"/>
                 </li>
                 <li>
                     <label>Database Password</label>
-                    <input class="InputBox" type="password" name="dbpass" value="<?php echo GetValue('dbpass') ?>"/>
+                    <input class="InputBox" type="password" name="dbpass" value="<?php echo getValue('dbpass') ?>"/>
                 </li>
                 <li>
                     <label>Export Type</label>
@@ -165,7 +165,7 @@ function ViewForm($Data) {
         //]]>
     </script>
 
-    <?php PageFooter();
+    <?php pageFooter();
 }
 
 /**
@@ -175,12 +175,12 @@ function ViewForm($Data) {
  * @param string $Class CSS class for wrapper.
  * @param string|bool $Path Path to file for download, or false.
  */
-function ViewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
+function viewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
     if (defined('CONSOLE')) {
         return;
     }
 
-    PageHeader();
+    pageHeader();
 
     echo "<p class=\"DownloadLink\">Success!";
     if ($Path) {
@@ -198,7 +198,7 @@ function ViewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
         echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
         echo "</div>";
     }
-    PageFooter();
+    pageFooter();
 }
 
 /**
@@ -207,10 +207,10 @@ function ViewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
  * @param string $Platform
  * @param array $Features
  */
-function ViewFeatureList($Platform, $Features = array()) {
+function viewFeatureList($Platform, $Features = array()) {
     global $Supported;
 
-    PageHeader();
+    pageHeader();
 
     echo '<div class="Info">';
     echo '<h2>' . $Supported[$Platform]['name'] . '</h2>';
@@ -218,12 +218,12 @@ function ViewFeatureList($Platform, $Features = array()) {
 
     foreach ($Features as $Feature => $Trash) {
         echo '
-      <dt>' . FeatureName($Feature) . '</dt>
-      <dd>' . FeatureStatus($Platform, $Feature) . '</dd>';
+      <dt>' . featureName($Feature) . '</dt>
+      <dd>' . featureStatus($Platform, $Feature) . '</dd>';
     }
     echo '</dl>';
 
-    PageFooter();
+    pageFooter();
 }
 
 /**
@@ -231,11 +231,11 @@ function ViewFeatureList($Platform, $Features = array()) {
  *
  * @param array $Features
  */
-function ViewFeatureTable($Features = array()) {
+function viewFeatureTable($Features = array()) {
     global $Supported;
     $Platforms = array_keys($Supported);
 
-    PageHeader();
+    pageHeader();
     echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
     echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>.</p>';
     echo '<table class="Features"><thead><tr>';
@@ -251,17 +251,17 @@ function ViewFeatureTable($Features = array()) {
     // Checklist of features per platform.
     foreach ($Features as $Feature => $Trash) {
         // Name
-        echo '<tr><td class="FeatureName">' . FeatureName($Feature) . '</td>';
+        echo '<tr><td class="FeatureName">' . featureName($Feature) . '</td>';
 
         // Status per platform.
         foreach ($Platforms as $Platform) {
-            echo '<td>' . FeatureStatus($Platform, $Feature, false) . '</td>';
+            echo '<td>' . featureStatus($Platform, $Feature, false) . '</td>';
         }
         echo '</tr>';
     }
 
     echo '</tbody></table>';
-    PageFooter();
+    pageFooter();
 }
 
 ?>

@@ -13,7 +13,7 @@
  * @param $Value
  * @return string
  */
-function ForceDate($Value) {
+function forceDate($Value) {
     if (!$Value || preg_match('`0000-00-00`', $Value)) {
         return gmdate('Y-m-d H:i:s');
     }
@@ -27,7 +27,7 @@ function ForceDate($Value) {
  * @param $ip
  * @return string|null Valid IPv4 address or nuthin'.
  */
-function ForceIP4($ip) {
+function forceIP4($ip) {
     if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m)) {
         $ip = $m[1];
     } else {
@@ -44,7 +44,7 @@ function ForceIP4($ip) {
  * @param string $str A string to be formatted.
  * @return string
  */
-function FormatUrl($Str) {
+function formatUrl($Str) {
     $UrlTranslations = array(
         '–' => '-',
         '—' => '-',
@@ -357,7 +357,7 @@ function HTMLDecoder($Value) {
  * @param $Value
  * @return int
  */
-function NotFilter($Value) {
+function notFilter($Value) {
     return (int)(!$Value);
 }
 
@@ -369,7 +369,7 @@ function NotFilter($Value) {
  * @param $Value
  * @return null|string
  */
-function TimestampToDate($Value) {
+function timestampToDate($Value) {
     if ($Value == null) {
         return null;
     } else {
@@ -411,7 +411,7 @@ function YNBool($Value) {
  * @param $Value
  * @return string
  */
-function GuessFormat($Value) {
+function guessFormat($Value) {
     if (strpos($Value, '[') !== false) {
         return 'BBCode';
     } elseif (strpos($Value, '<') !== false) {
@@ -427,7 +427,7 @@ function GuessFormat($Value) {
  * @param $Value
  * @return string
  */
-function MimeTypeFromExtension($Value) {
+function mimeTypeFromExtension($Value) {
     switch ($Value) {
         case '.png':
         case '.jpg':
@@ -458,7 +458,7 @@ function MimeTypeFromExtension($Value) {
  * @param $Value
  * @return mixed
  */
-function CleanBodyBrackets($Value) {
+function cleanBodyBrackets($Value) {
     if (strpos($Value, '[') !== false) {
         $Result = str_replace(array('<', '>'), array('[', ']'), $Value);
 

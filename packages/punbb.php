@@ -44,18 +44,18 @@ class Punbb extends ExportController {
      * @param ExportModel $Ex
      *
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
+        $CharacterSet = $Ex->getCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
+        $Ex->beginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
 
-        $this->cdn = $this->Param('cdn', '');
+        $this->cdn = $this->param('cdn', '');
 
-        if ($AvatarPath = $this->Param('avatarpath', false)) {
+        if ($AvatarPath = $this->param('avatarpath', false)) {
             if (!$AvatarPath = realpath($AvatarPath)) {
                 echo "Unable to access path to avatars: $AvatarPath\n";
                 exit(1);
@@ -75,7 +75,7 @@ class Punbb extends ExportController {
             'registration_ip' => 'InsertIPAddress',
             'PasswordHash' => 'Password'
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          SELECT
              u.*, u.id AS AvatarID,
              concat(u.password, '$', u.salt) AS PasswordHash,
@@ -89,7 +89,7 @@ class Punbb extends ExportController {
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $Ex->ExportTable('Role', "SELECT * FROM :_groups", $Role_Map);
+        $Ex->exportTable('Role', "SELECT * FROM :_groups", $Role_Map);
 
         // Permission.
         $Permission_Map = array(
@@ -105,8 +105,8 @@ class Punbb extends ExportController {
             'g_pun_attachment_allow_upload' => 'Plugins.Attachments.Upload.Allow',
 
         );
-        $Permission_Map = $Ex->FixPermissionColumns($Permission_Map);
-        $Ex->ExportTable('Permission', "
+        $Permission_Map = $Ex->fixPermissionColumns($Permission_Map);
+        $Ex->exportTable('Permission', "
       SELECT
          g.*,
          g_post_replies AS `Garden.SignIn.Allow`,
@@ -119,14 +119,14 @@ class Punbb extends ExportController {
             'id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole',
+        $Ex->exportTable('UserRole',
             "SELECT
             CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
             u.group_id
           FROM :_users u", $UserRole_Map);
 
         // Signatures.
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          SELECT
          id,
          'Plugin.Signatures.Sig' AS Name,
@@ -143,7 +143,7 @@ class Punbb extends ExportController {
             'disp_position' => 'Sort',
             'parent_id' => 'ParentCategoryID'
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
       SELECT
         id,
         forum_name,
@@ -173,7 +173,7 @@ class Punbb extends ExportController {
             'message' => 'Body'
 
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
       SELECT t.*,
         from_unixtime(p.posted) AS DateInserted,
         p.poster_id,
@@ -196,7 +196,7 @@ class Punbb extends ExportController {
             'poster_ip' => 'InsertIPAddress',
             'message' => 'Body'
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
             SELECT p.*,
         'BBCode' AS Format,
         from_unixtime(p.posted) AS DateInserted,
@@ -209,23 +209,23 @@ class Punbb extends ExportController {
         ON eu.username = p.edited_by
       WHERE p.id <> t.first_post_id;", $Comment_Map);
 
-        if ($Ex->Exists('tags')) {
+        if ($Ex->exists('tags')) {
             // Tag.
             $Tag_Map = array(
                 'id' => 'TagID',
                 'tag' => 'Name'
             );
-            $Ex->ExportTable('Tag', "SELECT * FROM :_tags", $Tag_Map);
+            $Ex->exportTable('Tag', "SELECT * FROM :_tags", $Tag_Map);
 
             // TagDisucssion.
             $TagDiscussionMap = array(
                 'topic_id' => 'DiscussionID',
                 'tag_id' => 'TagID'
             );
-            $Ex->ExportTable('TagDiscussion', "SELECT * FROM :_topic_tags", $TagDiscussionMap);
+            $Ex->exportTable('TagDiscussion', "SELECT * FROM :_topic_tags", $TagDiscussionMap);
         }
 
-        if ($Ex->Exists('attach_files')) {
+        if ($Ex->exists('attach_files')) {
             // Media.
             $Media_Map = array(
                 'id' => 'MediaID',
@@ -234,7 +234,7 @@ class Punbb extends ExportController {
                 'size' => 'Size',
                 'owner_id' => 'InsertUserID'
             );
-            $Ex->ExportTable('Media', "
+            $Ex->exportTable('Media', "
           SELECT f.*,
              concat({$this->cdn}, 'FileUpload/', f.file_path) AS Path,
              from_unixtime(f.uploaded_at) AS DateInserted,
@@ -245,10 +245,10 @@ class Punbb extends ExportController {
 
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
-    public function StripMediaPath($AbsPath) {
+    public function stripMediaPath($AbsPath) {
         if (($Pos = strpos($AbsPath, '/uploads/')) !== false) {
             return substr($AbsPath, $Pos + 9);
         }
@@ -256,7 +256,7 @@ class Punbb extends ExportController {
         return $AbsPath;
     }
 
-    public function FilterPermissions($Permissions, $ColumnName, &$Row) {
+    public function filterPermissions($Permissions, $ColumnName, &$Row) {
         $Permissions2 = unserialize($Permissions);
 
         foreach ($Permissions2 as $Name => $Value) {
@@ -275,7 +275,7 @@ class Punbb extends ExportController {
         return false;
     }
 
-    public function ForceBool($Value) {
+    public function forceBool($Value) {
         if ($Value) {
             return true;
         }
@@ -292,7 +292,7 @@ class Punbb extends ExportController {
      *
      * @return null|string
      */
-    public function GetAvatarByID($Value, $Field, $Row) {
+    public function getAvatarByID($Value, $Field, $Row) {
         if (!$this->AvatarPath) {
             return null;
         }

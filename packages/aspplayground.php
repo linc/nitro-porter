@@ -19,14 +19,14 @@ class APG extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('Threads');
+        $CharacterSet = $Ex->getCharacterSet('Threads');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'ASP Playground');
+        $Ex->beginExport('', 'ASP Playground');
         $Ex->SourcePrefix = 'pgd_';
 
         // User.
@@ -41,7 +41,7 @@ class APG extends ExportController {
             'dateSignUp' => 'DateInserted',
             'lastLogin' => 'DateLastActive',
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select m.*,
             'Text' as HashMethod
          from :_Members m;", $User_Map);
@@ -60,10 +60,10 @@ class APG extends ExportController {
         $UserRole_Map = array(
             'Mem' => 'UserID'
         );
-        $Ex->ExportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $UserRole_Map);
+        $Ex->exportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $UserRole_Map);
 
         // Signatures.
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select
             Mem,
             'Plugin.Signatures.Sig' as `Name`,
@@ -89,7 +89,7 @@ class APG extends ExportController {
             'lastModTime' => 'DateUpdated'
         );
 
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select f.*
          from :_Forums f;", $Category_Map);
 
@@ -103,7 +103,7 @@ class APG extends ExportController {
             'hits' => 'CountViews',
             'lastupdate' => 'DateLastComment'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select
             t.*,
             m.Body
@@ -121,7 +121,7 @@ class APG extends ExportController {
             'Body' => 'Body',
             'ip' => 'InsertIPAddress'
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select m.*,
             'BBCode' as Format
          from :_Messages m;", $Comment_Map);
@@ -173,10 +173,10 @@ class APG extends ExportController {
               on t.PM_ID = pm.PMessageID;", $ConversationMessage_Map);
         */
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
-    public function CleanDate($Value) {
+    public function cleanDate($Value) {
         if (!$Value) {
             return null;
         }

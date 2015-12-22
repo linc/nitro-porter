@@ -12,7 +12,7 @@
  * @param $Feature
  * @return string
  */
-function FeatureStatus($Platform, $Feature, $Notes = true) {
+function featureStatus($Platform, $Feature, $Notes = true) {
     global $Supported;
 
     if (!isset($Supported[$Platform]['features'])) {
@@ -46,7 +46,7 @@ function FeatureStatus($Platform, $Feature, $Notes = true) {
  * @param $Feature
  * @return string
  */
-function FeatureName($Feature) {
+function featureName($Feature) {
     return ltrim(preg_replace('/[A-Z]/', ' $0', $Feature));
 }
 
@@ -61,7 +61,7 @@ function FeatureName($Feature) {
  *
  * @return array
  */
-function VanillaFeatures($Set = false) {
+function vanillaFeatures($Set = false) {
     if (!$Set) {
         $Set = array('core', 'addon');
     }
@@ -69,10 +69,10 @@ function VanillaFeatures($Set = false) {
     $Features = array();
     if (is_array($Set)) {
         foreach ($Set as $Section) {
-            $Features += VanillaFeatureSet($Section);
+            $Features += vanillaFeatureSet($Section);
         }
     } else {
-        $Features = VanillaFeatureSet($Set);
+        $Features = vanillaFeatureSet($Set);
     }
 
     return $Features;
@@ -84,7 +84,7 @@ function VanillaFeatures($Set = false) {
  * @param string $Section
  * @return array
  */
-function VanillaFeatureSet($Section) {
+function vanillaFeatureSet($Section) {
     switch ($Section) {
         case 'addon':
             $Set = array(

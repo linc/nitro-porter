@@ -33,7 +33,7 @@ class Vanilla2 extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
         $Tables = array(
             'Activity',
             'Category',
@@ -52,13 +52,13 @@ class Vanilla2 extends ExportController {
             'UserRole'
         );
 
-        $Ex->BeginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
+        $Ex->beginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
 
         foreach ($Tables as $TableName) {
-            $this->ExportTable($Ex, $TableName);
+            $this->exportTable($Ex, $TableName);
         }
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
     /**
@@ -66,13 +66,13 @@ class Vanilla2 extends ExportController {
      * @param ExportModel $Ex
      * @param string $TableName
      */
-    protected function ExportTable($Ex, $TableName) {
+    protected function exportTable($Ex, $TableName) {
         // Make sure the table exists.
-        if (!$Ex->Exists($TableName)) {
+        if (!$Ex->exists($TableName)) {
             return;
         }
 
-        $Ex->ExportTable($TableName, "select * from :_{$TableName}");
+        $Ex->exportTable($TableName, "select * from :_{$TableName}");
     }
 
 }

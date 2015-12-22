@@ -32,15 +32,15 @@ class BbPress extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
+        $CharacterSet = $Ex->getCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $Ex->BeginExport('', 'bbPress 1.*', array('HashMethod' => 'Vanilla'));
+        $Ex->beginExport('', 'bbPress 1.*', array('HashMethod' => 'Vanilla'));
 
         // Users
         $User_Map = array(
@@ -50,10 +50,10 @@ class BbPress extends ExportController {
             'user_email' => 'Email',
             'user_registered' => 'DateInserted'
         );
-        $Ex->ExportTable('User', "select * from :_users", $User_Map);  // ":_" will be replace by database prefix
+        $Ex->exportTable('User', "select * from :_users", $User_Map);  // ":_" will be replace by database prefix
 
         // Roles
-        $Ex->ExportTable('Role',
+        $Ex->exportTable('Role',
             "select 1 as RoleID, 'Guest' as Name
          union select 2, 'Key Master'
          union select 3, 'Administrator'
@@ -66,7 +66,7 @@ class BbPress extends ExportController {
         $UserRole_Map = array(
             'user_id' => 'UserID'
         );
-        $Ex->ExportTable('UserRole',
+        $Ex->exportTable('UserRole',
             "select distinct
            user_id,
            case when locate('keymaster', meta_value) <> 0 then 2
@@ -87,7 +87,7 @@ class BbPress extends ExportController {
             'forum_slug' => 'UrlCode',
             'left_order' => 'Sort'
         );
-        $Ex->ExportTable('Category', "select *,
+        $Ex->exportTable('Category', "select *,
          lower(forum_slug) as forum_slug,
          nullif(forum_parent,0) as ParentCategoryID
          from :_forums", $Category_Map);
@@ -102,7 +102,7 @@ class BbPress extends ExportController {
             'topic_start_time' => 'DateInserted',
             'topic_sticky' => 'Announce'
         );
-        $Ex->ExportTable('Discussion', "select t.*,
+        $Ex->exportTable('Discussion', "select t.*,
             'Html' as Format,
             case t.topic_open when 0 then 1 else 0 end as Closed
          from :_topics t
@@ -117,7 +117,7 @@ class BbPress extends ExportController {
             'poster_id' => 'InsertUserID',
             'post_time' => 'DateInserted'
         );
-        $Ex->ExportTable('Comment', "select p.*,
+        $Ex->exportTable('Comment', "select p.*,
             'Html' as Format
          from :_posts p
          where post_status = 0", $Comment_Map);
@@ -125,7 +125,7 @@ class BbPress extends ExportController {
         // Conversations.
 
         // The export is different depending on the table layout.
-        $PM = $Ex->Exists('bbpm', array('ID', 'pm_title', 'pm_from', 'pm_to', 'pm_text', 'sent_on', 'pm_thread'));
+        $PM = $Ex->exists('bbpm', array('ID', 'pm_title', 'pm_from', 'pm_to', 'pm_text', 'sent_on', 'pm_thread'));
         $ConversationVersion = '';
 
         if ($PM === true) {
@@ -144,7 +144,7 @@ class BbPress extends ExportController {
                 'pm_thread' => 'ConversationID',
                 'pm_from' => 'InsertUserID'
             );
-            $Ex->ExportTable('Conversation',
+            $Ex->exportTable('Conversation',
                 "select *, from_unixtime(sent_on) as DateInserted
             from :_bbpm
             where thread_depth = 0", $Conv_Map);
@@ -156,15 +156,15 @@ class BbPress extends ExportController {
                 'pm_from' => 'InsertUserID',
                 'pm_text' => array('Column' => 'Body', 'Filter' => 'bbPressTrim')
             );
-            $Ex->ExportTable('ConversationMessage',
+            $Ex->exportTable('ConversationMessage',
                 'select *, from_unixtime(sent_on) as DateInserted
             from :_bbpm', $ConvMessage_Map);
 
             // UserConversation.
-            $Ex->Query("create temporary table bbpmto (UserID int, ConversationID int)");
+            $Ex->query("create temporary table bbpmto (UserID int, ConversationID int)");
 
             if ($ConversationVersion == 'new') {
-                $To = $Ex->Query("select object_id, meta_value from :_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
+                $To = $Ex->query("select object_id, meta_value from :_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
                     true);
                 if (is_resource($To)) {
                     while (($Row = @mysql_fetch_assoc($To)) !== false) {
@@ -176,18 +176,18 @@ class BbPress extends ExportController {
                         }
                         $ToIns = trim($ToIns, ',');
 
-                        $Ex->Query("insert bbpmto (UserID, ConversationID) values $ToIns", true);
+                        $Ex->query("insert bbpmto (UserID, ConversationID) values $ToIns", true);
                     }
                     mysql_free_result($To);
 
-                    $Ex->ExportTable('UserConversation', 'select * from bbpmto');
+                    $Ex->exportTable('UserConversation', 'select * from bbpmto');
                 }
             } else {
                 $ConUser_Map = array(
                     'pm_thread' => 'ConversationID',
                     'pm_from' => 'UserID'
                 );
-                $Ex->ExportTable('UserConversation',
+                $Ex->exportTable('UserConversation',
                     'select distinct
                  pm_thread,
                  pm_from,
@@ -205,15 +205,15 @@ class BbPress extends ExportController {
         }
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 }
 
 function bbPressTrim($Text) {
-    return rtrim(bb_code_trick_reverse($Text));
+    return rtrim(bb_Code_Trick_Reverse($Text));
 }
 
-function bb_code_trick_reverse($text) {
+function bb_Code_Trick_Reverse($text) {
     $text = preg_replace_callback("!(<pre><code>|<code>)(.*?)(</code></pre>|</code>)!s", 'bb_decodeit', $text);
     $text = str_replace(array('<p>', '<br />'), '', $text);
     $text = str_replace('</p>', "\n", $text);
@@ -224,7 +224,7 @@ function bb_code_trick_reverse($text) {
     return $text;
 }
 
-function bb_decodeit($matches) {
+function bb_Decodeit($matches) {
     $text = $matches[2];
     $trans_table = array_flip(get_html_translation_table(HTML_ENTITIES));
     $text = strtr($text, $trans_table);

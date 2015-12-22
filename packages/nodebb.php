@@ -29,14 +29,14 @@ class Nodebb extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('topic');
+        $CharacterSet = $Ex->getCharacterSet('topic');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'NodeBB 0.*', array('HashMethod' => 'Vanilla'));
+        $Ex->beginExport('', 'NodeBB 0.*', array('HashMethod' => 'Vanilla'));
 
         // Users
         $User_Map = array(
@@ -54,7 +54,7 @@ class Nodebb extends ExportController {
             'hm' => 'HashMethod'
         );
 
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
 
              select uid, username, password, email, `email:confirmed` as confirmed, showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
              from :_user
@@ -68,7 +68,7 @@ class Nodebb extends ExportController {
             'description' => 'Description'
         );
 
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
 
             select gm._key as _key, gm._num as _num, g.description as description
             from :_group_members gm left join :_group g
@@ -81,7 +81,7 @@ class Nodebb extends ExportController {
             'members' => 'UserID'
         );
 
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
 
             select *, g._num as id
             from :_group_members g join :_group_members__members m
@@ -96,7 +96,7 @@ class Nodebb extends ExportController {
             'signature' => 'Value'
         );
 
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
 
             select uid, 'Plugin.Signatures.Sig' as name, signature
             from :_user
@@ -134,25 +134,25 @@ class Nodebb extends ExportController {
             'disabled' => 'Archived'
         );
 
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
 
             select *
             from :_category
 
         ", $Category_Map);
 
-        if (!$Ex->IndexExists('z_idx_topic', ':_topic')) {
-            $Ex->Query("create index z_idx_topic on :_topic(mainPid);");
+        if (!$Ex->indexExists('z_idx_topic', ':_topic')) {
+            $Ex->query("create index z_idx_topic on :_topic(mainPid);");
         }
-        if (!$Ex->IndexExists('z_idx_post', ':_post')) {
-            $Ex->Query("create index z_idx_post on :_post(pid);");
+        if (!$Ex->indexExists('z_idx_post', ':_post')) {
+            $Ex->query("create index z_idx_post on :_post(pid);");
         }
-        if (!$Ex->IndexExists('z_idx_poll', ':_poll')) {
-            $Ex->Query("create index z_idx_poll on :_poll(tid);");
+        if (!$Ex->indexExists('z_idx_poll', ':_poll')) {
+            $Ex->query("create index z_idx_poll on :_poll(tid);");
         }
 
-        $Ex->Query("drop table if exists z_discussionids;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_discussionids;");
+        $Ex->query("
 
             create table z_discussionids (
                 tid int unsigned,
@@ -161,7 +161,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert ignore z_discussionids (
                 tid
@@ -173,8 +173,8 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("drop table if exists z_reactiontotalsupvote;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_reactiontotalsupvote;");
+        $Ex->query("
 
             create table z_reactiontotalsupvote (
                 value varchar(50),
@@ -184,8 +184,8 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("drop table if exists z_reactiontotalsdownvote;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_reactiontotalsdownvote;");
+        $Ex->query("
 
             create table z_reactiontotalsdownvote (
                 value varchar(50),
@@ -195,8 +195,8 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("drop table if exists z_reactiontotals;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_reactiontotals;");
+        $Ex->query("
 
             create table z_reactiontotals (
               value varchar(50),
@@ -207,7 +207,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert z_reactiontotalsupvote
             select value, count(*) as totals
@@ -216,7 +216,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert z_reactiontotalsdownvote
             select value, count(*) as totals
@@ -225,7 +225,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert z_reactiontotals
             select *
@@ -264,7 +264,7 @@ class Nodebb extends ExportController {
             'poll' => array('Column' => 'Type', 'Filter' => array($this, 'isPoll'))
         );
 
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
 
             select p.tid, cid, title, content, p.uid, locked, pinned, p.timestamp, p.edited, p.editor, viewcount, votes, poll._id as poll, 'Markdown' as format, concat(ifnull(u.total, 0), ':', ifnull(d.total, 0)) as attributes
             from :_topic t
@@ -280,8 +280,8 @@ class Nodebb extends ExportController {
 
         ", $Discussion_Map);
 
-        $Ex->Query("drop table if exists z_comments;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_comments;");
+        $Ex->query("
 
             create table z_comments (
                 pid int,
@@ -299,7 +299,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert ignore z_comments (
                 pid,
@@ -319,7 +319,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             update z_comments as c
             join z_reactiontotals r
@@ -341,7 +341,7 @@ class Nodebb extends ExportController {
             'attributes' => array('Column' => 'Attributes', 'Filter' => array($this, 'serializeReactions'))
         );
 
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
 
             select content, uid, tid, timestamp, edited, editor, votes, 'Markdown' as format, concat(ifnull(upvote, 0), ':', ifnull(downvote, 0)) as attributes
             from z_comments
@@ -358,7 +358,7 @@ class Nodebb extends ExportController {
             'timestamp' => array('Column' => 'DateInserted', 'Filter' => array($this, 'tsToDate'))
         );
 
-        $Ex->ExportTable('Poll', "
+        $Ex->exportTable('Poll', "
 
             select *
             from :_poll p left join :_poll_settings ps
@@ -375,7 +375,7 @@ class Nodebb extends ExportController {
             'format' => 'Format'
         );
 
-        $Ex->ExportTable('PollOption', "
+        $Ex->exportTable('PollOption', "
 
             select _num, _key, title, id+1 as sort, votecount, 'Html' as format
             from :_poll_options
@@ -388,7 +388,7 @@ class Nodebb extends ExportController {
             'poll_option_id' => 'PollOptionID'
         );
 
-        $Ex->ExportTable('PollVote', "
+        $Ex->exportTable('PollVote', "
 
             select povm.members as userid, po._num as poll_option_id
             from :_poll_options_votes__members povm
@@ -401,8 +401,8 @@ class Nodebb extends ExportController {
         ", $PollVote_Map);
 
         //Tags
-        if (!$Ex->IndexExists('z_idx_topic_key', ':_topic')) {
-            $Ex->Query("create index z_idx_topic_key on :_topic (_key);");
+        if (!$Ex->indexExists('z_idx_topic_key', ':_topic')) {
+            $Ex->query("create index z_idx_topic_key on :_topic (_key);");
         }
 
         $Tag_Map = array(
@@ -418,9 +418,9 @@ class Nodebb extends ExportController {
 
         $Now = time();
 
-        $Ex->Query("set @rownr=1000;");
+        $Ex->query("set @rownr=1000;");
 
-        $Ex->ExportTable('Tag', "
+        $Ex->exportTable('Tag', "
 
             select @rownr:=@rownr+1 as tagid, members as fullname, members as slug, '' as type, count, timestamp, uid, cid
             from (
@@ -442,9 +442,9 @@ class Nodebb extends ExportController {
             'timestamp' => array('Column' => 'DateInserted', 'Filter' => array($this, 'tsToDate'))
         );
 
-        $Ex->Query("set @rownr=1000;");
+        $Ex->query("set @rownr=1000;");
 
-        $Ex->ExportTable('TagDiscussion', "
+        $Ex->exportTable('TagDiscussion', "
 
             select tagid, cid, tid, timestamp
             from :_topic_tags__members two
@@ -465,11 +465,11 @@ class Nodebb extends ExportController {
         ", $TagDiscussion_Map);
 
         //Conversations
-        if (!$Ex->IndexExists('z_idx_message_key', ':_message')) {
-            $Ex->Query("create index z_idx_message_key on :_message(_key);");
+        if (!$Ex->indexExists('z_idx_message_key', ':_message')) {
+            $Ex->query("create index z_idx_message_key on :_message(_key);");
         }
-        $Ex->Query("drop table if exists z_pmto;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_pmto;");
+        $Ex->query("
 
             create table z_pmto (
                 pmid int unsigned,
@@ -480,7 +480,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert ignore z_pmto (
                 pmid,
@@ -491,7 +491,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert ignore z_pmto (
                 pmid,
@@ -502,8 +502,8 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("drop table if exists z_pmto2;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_pmto2;");
+        $Ex->query("
 
             create table z_pmto2 (
                 pmid int unsigned,
@@ -514,7 +514,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             replace z_pmto2 (
                 pmid,
@@ -526,8 +526,8 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("drop table if exists z_pmgroup;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_pmgroup;");
+        $Ex->query("
 
             create table z_pmgroup (
                 userids varchar(250),
@@ -540,7 +540,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             insert z_pmgroup
             select userids, concat('message:', min(pmid)), min(pmid), max(pmid), count(*)
@@ -549,7 +549,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             update z_pmto2 as p
             left join z_pmgroup g
@@ -558,7 +558,7 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("
+        $Ex->query("
 
             update z_pmto as p
             left join z_pmto2 p2
@@ -567,8 +567,8 @@ class Nodebb extends ExportController {
 
         ");
 
-        $Ex->Query("create index z_idx_pmto_cid on z_pmto(groupid);");
-        $Ex->Query("create index z_idx_pmgroup_cid on z_pmgroup(firstmessageid);");
+        $Ex->query("create index z_idx_pmto_cid on z_pmto(groupid);");
+        $Ex->query("create index z_idx_pmgroup_cid on z_pmgroup(firstmessageid);");
 
         $Conversation_Map = array(
             'conversationid' => 'ConversationID',
@@ -578,7 +578,7 @@ class Nodebb extends ExportController {
             'countmessages' => 'CountMessages'
         );
 
-        $Ex->ExportTable('Conversation', "
+        $Ex->exportTable('Conversation', "
 
             select *, firstmessageid as conversationid, 2 as countparticipants
             from z_pmgroup
@@ -597,7 +597,7 @@ class Nodebb extends ExportController {
             'timestamp' => array('Column' => 'DateInserted', 'Filter' => array($this, 'tsToDate'))
         );
 
-        $Ex->ExportTable('ConversationMessage', "
+        $Ex->exportTable('ConversationMessage', "
 
             select groupid as conversationid, pmid as messageid, content, 'Text' as format, fromuid, timestamp
             from z_pmto2
@@ -612,7 +612,7 @@ class Nodebb extends ExportController {
             'lastmessageid' => 'LastMessageID'
         );
 
-        $Ex->ExportTable('UserConversation', "
+        $Ex->exportTable('UserConversation', "
 
             select p.groupid as conversationid, userid, lastmessageid
             from z_pmto p
@@ -628,7 +628,7 @@ class Nodebb extends ExportController {
             'bookmarked' => 'Bookmarked'
         );
 
-        $Ex->ExportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
             select members, _key, 1 as bookmarked
             from :_tid_followers__members
             left join :_tid_followers
@@ -636,14 +636,14 @@ class Nodebb extends ExportController {
         ", $UserDiscussion_Map);
 
         //Reactions
-        if (!$Ex->IndexExists('z_idx_topic_mainpid', ':_topic')) {
-            $Ex->Query("create index z_idx_topic_mainpid on :_topic(mainPid);");
+        if (!$Ex->indexExists('z_idx_topic_mainpid', ':_topic')) {
+            $Ex->query("create index z_idx_topic_mainpid on :_topic(mainPid);");
         }
-        if (!$Ex->IndexExists('z_idx_uid_downvote', ':_uid_downvote')) {
-            $Ex->Query("create index z_idx_uid_downvote on :_uid_downvote(value);");
+        if (!$Ex->indexExists('z_idx_uid_downvote', ':_uid_downvote')) {
+            $Ex->query("create index z_idx_uid_downvote on :_uid_downvote(value);");
         }
-        if (!$Ex->IndexExists('z_idx_uid_upvote', ':_uid_upvote')) {
-            $Ex->Query("create index z_idx_uid_upvote on :_uid_upvote(value);");
+        if (!$Ex->indexExists('z_idx_uid_upvote', ':_uid_upvote')) {
+            $Ex->query("create index z_idx_uid_upvote on :_uid_upvote(value);");
         }
 
         $UserTag_Map = array(
@@ -655,7 +655,7 @@ class Nodebb extends ExportController {
             'total' => 'Total'
         );
 
-        $Ex->ExportTable('UserTag', "
+        $Ex->exportTable('UserTag', "
 
             select 11 as tagid, 'Discussion' as recordtype, u._key, u.value, score, total
             from :_uid_upvote u
@@ -703,12 +703,12 @@ class Nodebb extends ExportController {
 
         //TODO: Permissions
 
-        $Ex->EndExport();
+        $Ex->endExport();
 
     }
 
     public function nameToSlug($name) {
-        return $this->Url($name);
+        return $this->url($name);
     }
 
     protected $_UrlTranslations = array(
@@ -973,7 +973,7 @@ class Nodebb extends ExportController {
         'я' => 'ya'
     );
 
-    public function Url($Mixed) {
+    public function url($Mixed) {
 
         // Preliminary decoding
         $Mixed = strip_tags(html_entity_decode($Mixed, ENT_COMPAT, 'UTF-8'));

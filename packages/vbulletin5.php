@@ -61,32 +61,32 @@ class Vbulletin5 extends Vbulletin {
      *
      * @param ExportModel $Ex
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('nodes');
+        $CharacterSet = $Ex->getCharacterSet('nodes');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'vBulletin 5 Connect');
+        $Ex->beginExport('', 'vBulletin 5 Connect');
 
-        $this->ExportBlobs(
-            $this->Param('files'),
-            $this->Param('avatars')
+        $this->exportBlobs(
+            $this->param('files'),
+            $this->param('avatars')
         );
 
-        if ($this->Param('noexport')) {
-            $Ex->Comment('Skipping the export.');
-            $Ex->EndExport();
+        if ($this->param('noexport')) {
+            $Ex->comment('Skipping the export.');
+            $Ex->endExport();
 
             return;
         }
 
-        $cdn = $this->Param('cdn', '');
+        $cdn = $this->param('cdn', '');
 
 
         // Grab all of the ranks.
-        $Ranks = $Ex->Get("select * from :_usertitle order by minposts desc", 'usertitleid');
+        $Ranks = $Ex->get("select * from :_usertitle order by minposts desc", 'usertitleid');
 
 
         // Users
@@ -116,7 +116,7 @@ class Vbulletin5 extends Vbulletin {
         );
 
         // Use file avatar or the result of our blob export?
-        if ($this->GetConfig('usefileavatar')) {
+        if ($this->getConfig('usefileavatar')) {
             $User_Map['filephoto'] = 'Photo';
         } else {
             $User_Map['customphoto'] = 'Photo';
@@ -125,14 +125,14 @@ class Vbulletin5 extends Vbulletin {
         // vBulletin 5.1 changes the hash to crypt(md5(password), hash).
         // Switches from password & salt to token (and scheme & secret).
         // The scheme appears to be crypt()'s default and secret looks uselessly redundant.
-        if ($Ex->Exists('user', 'token') !== true) {
+        if ($Ex->exists('user', 'token') !== true) {
             $PasswordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
         } else {
             // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
             $PasswordSQL = "replace(token, ' ', '') as password2, case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
         }
 
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
             select
                 u.*,
                 ipaddress as ipaddress2,
@@ -164,7 +164,7 @@ class Vbulletin5 extends Vbulletin {
             'title' => 'Name',
             'description' => 'Description'
         );
-        $Ex->ExportTable('Role', 'select * from :_usergroup', $Role_Map);
+        $Ex->exportTable('Role', 'select * from :_usergroup', $Role_Map);
 
 
         // UserRoles
@@ -172,25 +172,25 @@ class Vbulletin5 extends Vbulletin {
             'userid' => 'UserID',
             'usergroupid' => 'RoleID'
         );
-        $Ex->Query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
+        $Ex->query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
         # Put primary groups into tmp table
-        $Ex->Query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
+        $Ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         # Put stupid CSV column into tmp table
-        $SecondaryRoles = $Ex->Query("select userid, usergroupid, membergroupids from :_user", true);
+        $SecondaryRoles = $Ex->query("select userid, usergroupid, membergroupids from :_user", true);
         if (is_resource($SecondaryRoles)) {
             while (($Row = @mysql_fetch_assoc($SecondaryRoles)) !== false) {
                 if ($Row['membergroupids'] != '') {
                     $Groups = explode(',', $Row['membergroupids']);
                     foreach ($Groups as $GroupID) {
-                        $Ex->Query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})",
+                        $Ex->query("insert into VbulletinRoles (userid, usergroupid) values({$Row['userid']},{$GroupID})",
                             true);
                     }
                 }
             }
         }
         # Export from our tmp table and drop
-        $Ex->ExportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
-        $Ex->Query("DROP TABLE IF EXISTS VbulletinRoles");
+        $Ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $UserRole_Map);
+        $Ex->query("DROP TABLE IF EXISTS VbulletinRoles");
 
 
         // Permissions.
@@ -200,8 +200,8 @@ class Vbulletin5 extends Vbulletin {
             'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
             'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
         );
-        $this->AddPermissionColumns(self::$Permissions, $Permissions_Map);
-        $Ex->ExportTable('Permission', 'select * from :_usergroup', $Permissions_Map);
+        $this->addPermissionColumns(self::$Permissions, $Permissions_Map);
+        $Ex->exportTable('Permission', 'select * from :_usergroup', $Permissions_Map);
 
 
         // UserMeta
@@ -252,7 +252,7 @@ class Vbulletin5 extends Vbulletin {
                 }
             )
         );
-        $Ex->ExportTable('Rank', "
+        $Ex->exportTable('Rank', "
             select
                 ut.*,
                 ut.title as title2,
@@ -282,7 +282,7 @@ class Vbulletin5 extends Vbulletin {
         $PrivateMessagesID = 0;
 
         // Filter Channels down to Forum tree
-        $ChannelResult = $Ex->Query("
+        $ChannelResult = $Ex->query("
             select
                 n.*
             from :_node n
@@ -336,7 +336,7 @@ class Vbulletin5 extends Vbulletin {
 
         // Categories are Channels that were found in the Forum tree
         // If parent was 'Forum' set the parent to Root instead (-1)
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
             select
                 n.*,
                 FROM_UNIXTIME(publishdate) as DateInserted,
@@ -395,10 +395,10 @@ class Vbulletin5 extends Vbulletin {
             // NOTE: Only polls that are directly under a channel (discussion) will be exported.
             // Vanilla poll plugin does not support polls as comments.
 
-            $Ex->Query("drop table if exists vBulletinDiscussionTable;");
+            $Ex->query("drop table if exists vBulletinDiscussionTable;");
 
             // Create a temporary table to hold old discussions and to create new discussions for polls
-            $Ex->Query("
+            $Ex->query("
                 create table `vBulletinDiscussionTable` (
                     `nodeid` int(10) unsigned not null AUTO_INCREMENT,
                     `type` varchar(10) default null,
@@ -417,7 +417,7 @@ class Vbulletin5 extends Vbulletin {
                     primary key (`nodeid`)
                 )
             ;");
-            $Ex->Query("insert into vBulletinDiscussionTable $DiscussionQuery");
+            $Ex->query("insert into vBulletinDiscussionTable $DiscussionQuery");
 
             $this->_generatePollsDiscussion();
 
@@ -439,15 +439,15 @@ class Vbulletin5 extends Vbulletin {
                     Announce
                 from vBulletinDiscussionTable
             ;";
-            $Ex->ExportTable('Discussion', $Sql, $Discussion_Map);
+            $Ex->exportTable('Discussion', $Sql, $Discussion_Map);
 
             // Export polls
-            $this->_ExportPolls();
+            $this->_exportPolls();
 
             // Cleanup tmp table
-            $Ex->Query("drop table vBulletinDiscussionTable;");
+            $Ex->query("drop table vBulletinDiscussionTable;");
         } else {
-            $Ex->ExportTable('Discussion', $DiscussionQuery, $Discussion_Map);
+            $Ex->exportTable('Discussion', $DiscussionQuery, $Discussion_Map);
         }
 
         // UserDiscussion
@@ -457,7 +457,7 @@ class Vbulletin5 extends Vbulletin {
         );
         // Should be able to inner join `discussionread` for DateLastViewed
         // but it's blank in my sample data so I don't trust it.
-        $Ex->ExportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
             select
                 s.*,
                 1 as Bookmarked,
@@ -474,7 +474,7 @@ class Vbulletin5 extends Vbulletin {
             'parentid' => 'DiscussionID',
         );
 
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
             select
                 n.*,
                 t.rawtext,
@@ -503,7 +503,7 @@ class Vbulletin5 extends Vbulletin {
             'height' => 'ImageHeight',
             'filesize' => 'Size',
         );
-        $Ex->ExportTable('Media', "
+        $Ex->exportTable('Media', "
             select
                 a.*,
                 filename as Path2,
@@ -533,7 +533,7 @@ class Vbulletin5 extends Vbulletin {
             'totalcount' => 'CountMessages',
             'title' => 'Subject',
         );
-        $Ex->ExportTable('Conversation', "
+        $Ex->exportTable('Conversation', "
             select
                 n.*,
                 n.nodeid as FirstMessageID,
@@ -551,7 +551,7 @@ class Vbulletin5 extends Vbulletin {
             'rawtext' => 'Body',
             'userid' => 'InsertUserID'
         );
-        $Ex->ExportTable('ConversationMessage', "
+        $Ex->exportTable('ConversationMessage', "
             select
                 n.*,
                 t.rawtext,
@@ -573,7 +573,7 @@ class Vbulletin5 extends Vbulletin {
             'deleted' => 'Deleted'
         );
         // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
-        $Ex->ExportTable('UserConversation', "
+        $Ex->exportTable('UserConversation', "
             select
                 s.*
             from :_sentto s
@@ -586,7 +586,7 @@ class Vbulletin5 extends Vbulletin {
         // class='SocialGroupMessage'
 
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
     /**
@@ -596,7 +596,7 @@ class Vbulletin5 extends Vbulletin {
         $Count = 0;
 
         $Sql = "show tables like ':_poll';";
-        $Result = $this->Ex->Query($Sql, true);
+        $Result = $this->Ex->query($Sql, true);
 
         if (mysql_num_rows($Result) === 1) {
             $Sql = "
@@ -608,7 +608,7 @@ class Vbulletin5 extends Vbulletin {
                 where ct.class = 'Channel'
             ;";
 
-            $Result = $this->Ex->Query($Sql);
+            $Result = $this->Ex->query($Sql);
             if ($Row = mysql_fetch_assoc($Result)) {
                 $Count = $Row['Count'];
             }
@@ -667,10 +667,10 @@ class Vbulletin5 extends Vbulletin {
             ) $PollsThatNeedWrappingQuery
         ";
 
-        $Ex->Query($Sql);
+        $Ex->query($Sql);
     }
 
-    protected function _ExportPolls() {
+    protected function _exportPolls() {
         $Ex = $this->Ex;
         $fp = $Ex->File;
 
@@ -682,7 +682,7 @@ class Vbulletin5 extends Vbulletin {
             'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
             'userid' => 'InsertUserId',
         );
-        $Ex->ExportTable('Poll', "
+        $Ex->exportTable('Poll', "
             select
                 p.nodeid,
                 n.title,
@@ -721,12 +721,12 @@ class Vbulletin5 extends Vbulletin {
         ;";
 
         // We have to generate a sort order so let's do the exportation manually line by line....
-        $ExportStructure = $Ex->GetExportStructure($PollOption_Map, 'PollOption', $PollOption_Map);
-        $RevMappings = $Ex->FlipMappings($PollOption_Map);
+        $ExportStructure = $Ex->getExportStructure($PollOption_Map, 'PollOption', $PollOption_Map);
+        $RevMappings = $Ex->flipMappings($PollOption_Map);
 
-        $Ex->WriteBeginTable($fp, 'PollOption', $ExportStructure);
+        $Ex->writeBeginTable($fp, 'PollOption', $ExportStructure);
 
-        $Result = $Ex->Query($Sql);
+        $Result = $Ex->query($Sql);
         $CurrentPollID = null;
         $CurrentSortID = 0;
         while ($Row = mysql_fetch_assoc($Result)) {
@@ -738,10 +738,10 @@ class Vbulletin5 extends Vbulletin {
 
             $Row['sort'] = ++$CurrentSortID;
 
-            $Ex->WriteRow($fp, $Row, $ExportStructure, $RevMappings);
+            $Ex->writeRow($fp, $Row, $ExportStructure, $RevMappings);
         }
-        $Ex->WriteEndTable($fp);
-        $Ex->Comment("Exported Table: PollOption (".mysql_num_rows($Result)." rows)");
+        $Ex->writeEndTable($fp);
+        $Ex->comment("Exported Table: PollOption (".mysql_num_rows($Result)." rows)");
         mysql_free_result($Result);
 
         $PollVote_Map = array(
@@ -749,7 +749,7 @@ class Vbulletin5 extends Vbulletin {
             'polloptionid' => 'PollOptionID',
             'votedate' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
         );
-        $Ex->ExportTable('PollVote', "
+        $Ex->exportTable('PollVote', "
             select
                 pv.userid,
                 pv.polloptionid,

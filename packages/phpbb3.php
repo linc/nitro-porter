@@ -71,9 +71,9 @@ class Phpbb3 extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
+        $CharacterSet = $Ex->getCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
@@ -82,13 +82,13 @@ class Phpbb3 extends ExportController {
 
 
         // Begin
-        $Ex->BeginExport('', 'phpBB 3.*', array('HashMethod' => 'phpBB'));
+        $Ex->beginExport('', 'phpBB 3.*', array('HashMethod' => 'phpBB'));
 
         // Users.
 
         // Grab the avatar salt.
-        $Px = $Ex->GetValue("select config_value from :_config where config_name = 'avatar_salt'", '');
-        $cdn = $this->Param('cdn', '');
+        $Px = $Ex->getValue("select config_value from :_config where config_name = 'avatar_salt'", '');
+        $cdn = $this->param('cdn', '');
 
         $User_Map = array(
             'user_id' => 'UserID',
@@ -101,7 +101,7 @@ class Phpbb3 extends ExportController {
             'user_rank' => 'RankID',
             'user_ip' => 'LastIPAddress'
         );
-        $Ex->ExportTable('User', "select *,
+        $Ex->exportTable('User', "select *,
             case user_avatar_type
                when 1 then concat('$cdn', 'phpbb/', '$Px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
                when 2 then user_avatar
@@ -120,9 +120,9 @@ class Phpbb3 extends ExportController {
             'group_name' => 'Name',
             'group_desc' => 'Description'
         );
-        $Ex->ExportTable('Role', 'select * from :_groups', $Role_Map);
+        $Ex->exportTable('Role', 'select * from :_groups', $Role_Map);
 
-        $this->ExportUserNotes();
+        $this->exportUserNotes();
 
         // Ranks.
         $Rank_Map = array(
@@ -155,13 +155,13 @@ class Phpbb3 extends ExportController {
                 }
             )
         );
-        $Ex->ExportTable('Rank', "
+        $Ex->exportTable('Rank', "
          select r.*, r.rank_title as title2, 0 as level
          from :_ranks r
          order by rank_special, rank_min;", $Rank_Map);
 
         // Permissions.
-        $Ex->ExportTable('Permission', "select
+        $Ex->exportTable('Permission', "select
          group_id as RoleID,
          case
             when group_name like '%Guest%' or group_name like 'BOTS' then 'View'
@@ -176,7 +176,7 @@ class Phpbb3 extends ExportController {
             'user_id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', 'select user_id, group_id from :_users
+        $Ex->exportTable('UserRole', 'select user_id, group_id from :_users
          union
          select user_id, group_id from :_user_group', $UserRole_Map);
 
@@ -187,7 +187,7 @@ class Phpbb3 extends ExportController {
             'name' => 'Name',
             'user_sig' => array('Column' => 'Value', 'Filter' => array($this, 'RemoveBBCodeUIDs'))
         );
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select user_id, 'Plugin.Signatures.Sig' as name, user_sig, user_sig_bbcode_uid as bbcode_uid
          from :_users
          where length(user_sig) > 1
@@ -207,7 +207,7 @@ class Phpbb3 extends ExportController {
             'forum_desc' => 'Description',
             'left_id' => 'Sort'
         );
-        $Ex->ExportTable('Category', "select *,
+        $Ex->exportTable('Category', "select *,
          nullif(parent_id,0) as ParentCategoryID
          from :_forums", $Category_Map);
 
@@ -222,7 +222,7 @@ class Phpbb3 extends ExportController {
             'topic_first_post_id' => array('Column' => 'FirstCommentID', 'Type' => 'int'),
             'type' => 'Type'
         );
-        $Ex->ExportTable('Discussion', "select t.*,
+        $Ex->exportTable('Discussion', "select t.*,
             'BBCode' as Format,
             case t.topic_status when 1 then 1 else 0 end as Closed,
             case t.topic_type when 1 then 1 else 0 end as Announce,
@@ -242,7 +242,7 @@ class Phpbb3 extends ExportController {
             'poster_ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'ForceIP4'),
             'post_edit_user' => 'UpdateUserID'
         );
-        $Ex->ExportTable('Comment', "select p.*,
+        $Ex->exportTable('Comment', "select p.*,
             'BBCode' as Format,
             FROM_UNIXTIME(p.post_time) as DateInserted,
             FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
@@ -253,49 +253,49 @@ class Phpbb3 extends ExportController {
             'user_id' => 'UserID',
             'topic_id' => 'DiscussionID'
         );
-        $Ex->ExportTable('UserDiscussion', "select b.*,
+        $Ex->exportTable('UserDiscussion', "select b.*,
          1 as Bookmarked
          from :_bookmarks b", $UserDiscussion_Map);
 
         // Conversations tables.
 
-        $Ex->Query("drop table if exists z_pmto;");
+        $Ex->query("drop table if exists z_pmto;");
 
-        $Ex->Query("create table z_pmto (
+        $Ex->query("create table z_pmto (
 id int unsigned,
 userid int unsigned,
 primary key(id, userid));");
 
-        $Ex->Query("insert ignore z_pmto (id, userid)
+        $Ex->query("insert ignore z_pmto (id, userid)
 select msg_id, author_id
 from :_privmsgs;");
 
-        $Ex->Query("insert ignore z_pmto (id, userid)
+        $Ex->query("insert ignore z_pmto (id, userid)
 select msg_id, user_id
 from :_privmsgs_to;");
 
-        $Ex->Query("insert ignore z_pmto (id, userid)
+        $Ex->query("insert ignore z_pmto (id, userid)
 select msg_id, author_id
 from :_privmsgs_to;");
 
-        $Ex->Query("drop table if exists z_pmto2;");
+        $Ex->query("drop table if exists z_pmto2;");
 
-        $Ex->Query("create table z_pmto2 (
+        $Ex->query("create table z_pmto2 (
   id int unsigned,
   userids varchar(250),
   primary key (id)
 );");
 
-        $Ex->Query("insert ignore z_pmto2 (id, userids)
+        $Ex->query("insert ignore z_pmto2 (id, userids)
 select
   id,
   group_concat(userid order by userid)
 from z_pmto
 group by id;");
 
-        $Ex->Query("drop table if exists z_pm;");
+        $Ex->query("drop table if exists z_pm;");
 
-        $Ex->Query("create table z_pm (
+        $Ex->query("create table z_pm (
   id int unsigned,
   subject varchar(255),
   subject2 varchar(255),
@@ -303,7 +303,7 @@ group by id;");
   groupid int unsigned
 );");
 
-        $Ex->Query("insert z_pm (
+        $Ex->query("insert z_pm (
   id,
   subject,
   subject2,
@@ -318,17 +318,17 @@ from :_privmsgs pm
 join z_pmto2 t
   on t.id = pm.msg_id;");
 
-        $Ex->Query("create index z_idx_pm on z_pm (id);");
+        $Ex->query("create index z_idx_pm on z_pm (id);");
 
-        $Ex->Query("drop table if exists z_pmgroup;");
+        $Ex->query("drop table if exists z_pmgroup;");
 
-        $Ex->Query("create table z_pmgroup (
+        $Ex->query("create table z_pmgroup (
   groupid int unsigned,
   subject varchar(255),
   userids varchar(250)
 );");
 
-        $Ex->Query("insert z_pmgroup (
+        $Ex->query("insert z_pmgroup (
   groupid,
   subject,
   userids
@@ -340,10 +340,10 @@ select
 from z_pm pm
 group by pm.subject2, pm.userids;");
 
-        $Ex->Query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
-        $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
+        $Ex->query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
+        $Ex->query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
 
-        $Ex->Query("update z_pm pm
+        $Ex->query("update z_pm pm
 join z_pmgroup g
   on pm.subject2 = g.subject and pm.userids = g.userids
 set pm.groupid = g.groupid;");
@@ -357,7 +357,7 @@ set pm.groupid = g.groupid;");
             'topic_poster' => 'InsertUserID',
             'anonymous' => 'Anonymous'
         );
-        $Ex->ExportTable('Poll', "
+        $Ex->exportTable('Poll', "
          select distinct
             t.*,
             t.topic_id as poll_id,
@@ -376,7 +376,7 @@ set pm.groupid = g.groupid;");
             'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
             'topic_poster' => 'InsertUserID'
         );
-        $Ex->ExportTable('PollOption', "
+        $Ex->exportTable('PollOption', "
          select
             po.*,
             po.poll_option_id * 1000000 + po.topic_id as id,
@@ -391,7 +391,7 @@ set pm.groupid = g.groupid;");
             'vote_user_id' => 'UserID',
             'id' => 'PollOptionID'
         );
-        $Ex->ExportTable('PollVote', "
+        $Ex->exportTable('PollVote', "
          select v.*, v.poll_option_id * 1000000 + v.topic_id as id
          from :_poll_votes v", $PollVote_Map);
 
@@ -406,7 +406,7 @@ set pm.groupid = g.groupid;");
             )
         );
 
-        $Ex->ExportTable('Conversation', "select
+        $Ex->exportTable('Conversation', "select
   g.subject as RealSubject,
   pm.*,
   from_unixtime(pm.message_time) as DateInserted
@@ -421,7 +421,7 @@ join z_pmgroup g
             'message_text' => array('Column' => 'Body', 'Filter' => array($this, 'RemoveBBCodeUIDs')),
             'author_id' => 'InsertUserID'
         );
-        $Ex->ExportTable('ConversationMessage',
+        $Ex->exportTable('ConversationMessage',
             "select
          pm.*,
          pm2.groupid,
@@ -436,7 +436,7 @@ join z_pmgroup g
             'userid' => 'UserID',
             'groupid' => 'ConversationID'
         );
-        $Ex->ExportTable('UserConversation',
+        $Ex->exportTable('UserConversation',
             "select
          g.groupid,
          t.userid
@@ -444,13 +444,13 @@ join z_pmgroup g
        join z_pmgroup g
          on g.groupid = t.id;", $UserConversation_Map);
 
-        $Ex->Query('drop table if exists z_pmto');
-        $Ex->Query('drop table if exists z_pmto2;');
-        $Ex->Query('drop table if exists z_pm;');
-        $Ex->Query('drop table if exists z_pmgroup;');
+        $Ex->query('drop table if exists z_pmto');
+        $Ex->query('drop table if exists z_pmto2;');
+        $Ex->query('drop table if exists z_pm;');
+        $Ex->query('drop table if exists z_pmgroup;');
 
         // Media.
-        $cdn = $this->Param('cdn', '');
+        $cdn = $this->param('cdn', '');
         $Media_Map = array(
             'attach_id' => 'MediaID',
             'real_filename' => 'Name',
@@ -458,7 +458,7 @@ join z_pmgroup g
             'mimetype' => 'Type',
             'filesize' => 'Size',
         );
-        $Ex->ExportTable('Media',
+        $Ex->exportTable('Media',
             "select
   case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
   case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
@@ -469,13 +469,13 @@ from :_attachments a
 join :_topics t
   on a.topic_id = t.topic_id", $Media_Map);
 
-        $this->ExportBanList();
+        $this->exportBanList();
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
-    protected function ExportUserNotes() {
+    protected function exportUserNotes() {
         $Ex = $this->Ex;
 
         // User notes.
@@ -508,7 +508,7 @@ join :_topics t
                 }
             )
         );
-        $Ex->ExportTable('UserNote',
+        $Ex->exportTable('UserNote',
             "select l.*, 'Text' as format
          from :_log l
          where reportee_id > 0
@@ -518,9 +518,9 @@ join :_topics t
     /**
      * Export email and ip ban list.
      */
-    public function ExportBanList() {
+    public function exportBanList() {
         $Ex = $this->Ex;
-        $Ex->ExportTable('Ban',
+        $Ex->exportTable('Ban',
             "select bl.*, ban_id as BanID, if (ban_ip='', 'Email', 'IpAddress') as BanType,
              if(ban_ip='', ban_email, ban_ip) as BanValue,
              Concat('Imported ban. ', ban_give_reason) as Notes,
@@ -529,7 +529,7 @@ join :_topics t
          where bl.ban_userid = 0 and (ban_ip!='' or ban_email!='')");
     }
 
-    public function RemoveBBCodeUIDs($r, $Field = '', $Row = '') {
+    public function removeBBCodeUIDs($r, $Field = '', $Row = '') {
         if (!$r) {
             return $r;
         }

@@ -59,7 +59,7 @@ foreach ($Paths as $Path) {
 
 // If running from cli, execute its command.
 if (defined('CONSOLE')) {
-    ParseCommandLine();
+    parseCommandLine();
 }
 
 // Instantiate the appropriate controller or display the input page.
@@ -67,12 +67,12 @@ $Method = 'DoExport';
 if (isset($_REQUEST['features'])) {
     // Feature list or table.
     $Set = (isset($_REQUEST['cloud'])) ? array('core', 'addons', 'cloud') : false;
-    $Set = VanillaFeatures($Set);
+    $Set = vanillaFeatures($Set);
 
     if (isset($_REQUEST['type'])) {
-        ViewFeatureList($_REQUEST['type'], $Set);
+        viewFeatureList($_REQUEST['type'], $Set);
     } else {
-        ViewFeatureTable($Set);
+        viewFeatureTable($Set);
     }
 } elseif (isset($_POST['type'])) {
     if (array_key_exists($_POST['type'], $Supported)) {
@@ -89,8 +89,8 @@ if (isset($_REQUEST['features'])) {
     }
 } else {
     // Show the web UI to start an export.
-    $CanWrite = TestWrite();
-    ViewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
+    $CanWrite = testWrite();
+    viewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
 }
 
 // Console output should end in newline.

@@ -62,9 +62,9 @@ class Phpbb2 extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('posts_text');
+        $CharacterSet = $Ex->getCharacterSet('posts_text');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
@@ -72,7 +72,7 @@ class Phpbb2 extends ExportController {
         $Ex->SourcePrefix = 'phpbb_';
 
         // Begin
-        $Ex->BeginExport('', 'phpBB 2.*', array('HashMethod' => 'phpBB'));
+        $Ex->beginExport('', 'phpBB 2.*', array('HashMethod' => 'phpBB'));
 
         // Users
         $User_Map = array(
@@ -83,7 +83,7 @@ class Phpbb2 extends ExportController {
             'user_timezone' => 'HourOffset',
             'user_posts' => array('Column' => 'CountComments', 'Type' => 'int')
         );
-        $Ex->ExportTable('User', "select *,
+        $Ex->exportTable('User', "select *,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
             FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted
@@ -97,7 +97,7 @@ class Phpbb2 extends ExportController {
             'group_description' => 'Description'
         );
         // Skip single-user groups
-        $Ex->ExportTable('Role', 'select * from :_groups where group_single_user = 0', $Role_Map);
+        $Ex->exportTable('Role', 'select * from :_groups where group_single_user = 0', $Role_Map);
 
 
         // UserRoles
@@ -106,7 +106,7 @@ class Phpbb2 extends ExportController {
             'group_id' => 'RoleID'
         );
         // Skip pending memberships
-        $Ex->ExportTable('UserRole', '
+        $Ex->exportTable('UserRole', '
             select
                 user_id,
                 group_id
@@ -121,7 +121,7 @@ class Phpbb2 extends ExportController {
             'description' => 'Description',
             'parentid' => 'ParentCategoryID'
         );
-        $Ex->ExportTable('Category',
+        $Ex->exportTable('Category',
             "select
   c.cat_id * 1000 as id,
   c.cat_title,
@@ -151,7 +151,7 @@ left join :_categories c
             'Format' => 'Format',
             'topic_views' => 'CountViews'
         );
-        $Ex->ExportTable('Discussion', "select t.*,
+        $Ex->exportTable('Discussion', "select t.*,
         'BBCode' as Format,
          case t.topic_status when 1 then 1 else 0 end as Closed,
          case t.topic_type when 1 then 1 else 0 end as Announce,
@@ -167,7 +167,7 @@ left join :_categories c
             'Format' => 'Format',
             'poster_id' => 'InsertUserID'
         );
-        $Ex->ExportTable('Comment', "select p.*, pt.post_text, pt.bbcode_uid,
+        $Ex->exportTable('Comment', "select p.*, pt.post_text, pt.bbcode_uid,
         'BBCode' as Format,
          FROM_UNIXTIME(p.post_time) as DateInserted,
          FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
@@ -175,39 +175,39 @@ left join :_categories c
             $Comment_Map);
 
         // Conversations tables.
-        $Ex->Query("drop table if exists z_pmto;");
+        $Ex->query("drop table if exists z_pmto;");
 
-        $Ex->Query("create table z_pmto (
+        $Ex->query("create table z_pmto (
 id int unsigned,
 userid int unsigned,
 primary key(id, userid));");
 
-        $Ex->Query("insert ignore z_pmto (id, userid)
+        $Ex->query("insert ignore z_pmto (id, userid)
 select privmsgs_id, privmsgs_from_userid
 from :_privmsgs;");
 
-        $Ex->Query("insert ignore z_pmto (id, userid)
+        $Ex->query("insert ignore z_pmto (id, userid)
 select privmsgs_id, privmsgs_to_userid
 from :_privmsgs;");
 
-        $Ex->Query("drop table if exists z_pmto2;");
+        $Ex->query("drop table if exists z_pmto2;");
 
-        $Ex->Query("create table z_pmto2 (
+        $Ex->query("create table z_pmto2 (
   id int unsigned,
   userids varchar(250),
   primary key (id)
 );");
 
-        $Ex->Query("insert ignore z_pmto2 (id, userids)
+        $Ex->query("insert ignore z_pmto2 (id, userids)
 select
   id,
   group_concat(userid order by userid)
 from z_pmto
 group by id;");
 
-        $Ex->Query("drop table if exists z_pm;");
+        $Ex->query("drop table if exists z_pm;");
 
-        $Ex->Query("create table z_pm (
+        $Ex->query("create table z_pm (
   id int unsigned,
   subject varchar(255),
   subject2 varchar(255),
@@ -215,7 +215,7 @@ group by id;");
   groupid int unsigned
 );");
 
-        $Ex->Query("insert z_pm (
+        $Ex->query("insert z_pm (
   id,
   subject,
   subject2,
@@ -230,17 +230,17 @@ from :_privmsgs pm
 join z_pmto2 t
   on t.id = pm.privmsgs_id;");
 
-        $Ex->Query("create index z_idx_pm on z_pm (id);");
+        $Ex->query("create index z_idx_pm on z_pm (id);");
 
-        $Ex->Query("drop table if exists z_pmgroup;");
+        $Ex->query("drop table if exists z_pmgroup;");
 
-        $Ex->Query("create table z_pmgroup (
+        $Ex->query("create table z_pmgroup (
   groupid int unsigned,
   subject varchar(255),
   userids varchar(250)
 );");
 
-        $Ex->Query("insert z_pmgroup (
+        $Ex->query("insert z_pmgroup (
   groupid,
   subject,
   userids
@@ -252,10 +252,10 @@ select
 from z_pm pm
 group by pm.subject2, pm.userids;");
 
-        $Ex->Query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
-        $Ex->Query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
+        $Ex->query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
+        $Ex->query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
 
-        $Ex->Query("update z_pm pm
+        $Ex->query("update z_pm pm
 join z_pmgroup g
   on pm.subject2 = g.subject and pm.userids = g.userids
 set pm.groupid = g.groupid;");
@@ -271,7 +271,7 @@ set pm.groupid = g.groupid;");
             )
         );
 
-        $Ex->ExportTable('Conversation', "select
+        $Ex->exportTable('Conversation', "select
   g.subject as RealSubject,
   pm.*,
   from_unixtime(pm.privmsgs_date) as DateInserted
@@ -286,7 +286,7 @@ join z_pmgroup g
             'privmsgs_text' => array('Column' => 'Body', 'Filter' => array($this, 'RemoveBBCodeUIDs')),
             'privmsgs_from_userid' => 'InsertUserID'
         );
-        $Ex->ExportTable('ConversationMessage',
+        $Ex->exportTable('ConversationMessage',
             "select
          pm.*,
          txt.*,
@@ -305,7 +305,7 @@ join z_pmgroup g
             'userid' => 'UserID',
             'groupid' => 'ConversationID'
         );
-        $Ex->ExportTable('UserConversation',
+        $Ex->exportTable('UserConversation',
             "select
          g.groupid,
          t.userid
@@ -313,20 +313,20 @@ join z_pmgroup g
        join z_pmgroup g
          on g.groupid = t.id;", $UserConversation_Map);
 
-        $Ex->Query('drop table if exists z_pmto');
-        $Ex->Query('drop table if exists z_pmto2;');
-        $Ex->Query('drop table if exists z_pm;');
-        $Ex->Query('drop table if exists z_pmgroup;');
+        $Ex->query('drop table if exists z_pmto');
+        $Ex->query('drop table if exists z_pmto2;');
+        $Ex->query('drop table if exists z_pm;');
+        $Ex->query('drop table if exists z_pmgroup;');
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
-    public static function EntityDecode($Value) {
+    public static function entityDecode($Value) {
         return html_entity_decode($Value, ENT_QUOTES, 'UTF-8');
     }
 
-    public function RemoveBBCodeUIDs($Value, $Field, $Row) {
+    public function removeBBCodeUIDs($Value, $Field, $Row) {
         $UID = $Row['bbcode_uid'];
 
         return str_replace(':' . $UID, '', $Value);

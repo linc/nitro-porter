@@ -41,20 +41,20 @@ class Mbox extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('mbox');
+        $CharacterSet = $Ex->getCharacterSet('mbox');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $Ex->BeginExport('', 'Mbox', array());
+        $Ex->beginExport('', 'Mbox', array());
 
 
         // Temporary user table
-        $Ex->Query('create table :_mbox_user (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
-        $Result = $Ex->Query('select Sender from :_mbox group by Sender', true);
+        $Ex->query('create table :_mbox_user (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
+        $Result = $Ex->query('select Sender from :_mbox group by Sender', true);
 
         // Users, pt 1: Build ref array; Parse name & email out - strip quotes, <, >
         $Users = array();
@@ -73,7 +73,7 @@ class Mbox extends ExportController {
                 $Name = explode('@', $Name);
                 $Name = $Name[0];
             }
-            $Email = $this->ParseEmail($Row['Sender']);
+            $Email = $this->parseEmail($Row['Sender']);
 
             // Compile by unique email
             $Users[$Email] = $Name;
@@ -81,7 +81,7 @@ class Mbox extends ExportController {
 
         // Users, pt 2: loop thru unique emails
         foreach ($Users as $Email => $Name) {
-            $Ex->Query('insert into :_mbox_user (Name, Email)
+            $Ex->query('insert into :_mbox_user (Name, Email)
             values ("' . mysql_real_escape_string($Name) . '", "' . mysql_real_escape_string($Email) . '")');
             $UserID = mysql_insert_id();
             // Overwrite user list with new UserID instead of name
@@ -90,13 +90,13 @@ class Mbox extends ExportController {
 
 
         // Temporary category table
-        $Ex->Query('create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
+        $Ex->query('create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
          PRIMARY KEY (CategoryID))');
-        $Result = $Ex->Query('select Folder from :_mbox group by Folder', true);
+        $Result = $Ex->query('select Folder from :_mbox group by Folder', true);
         // Parse name out & build ref array
         $Categories = array();
         while ($Row = mysql_fetch_assoc($Result)) {
-            $Ex->Query('insert into :_mbox_category (Name)
+            $Ex->query('insert into :_mbox_category (Name)
             values ("' . mysql_real_escape_string($Row["Folder"]) . '")');
             $CategoryID = mysql_insert_id();
             $Categories[$Row["Folder"]] = $CategoryID;
@@ -104,47 +104,47 @@ class Mbox extends ExportController {
 
 
         // Temporary post table
-        $Ex->Query('create table :_mbox_post (PostID int AUTO_INCREMENT, DiscussionID int,
+        $Ex->query('create table :_mbox_post (PostID int AUTO_INCREMENT, DiscussionID int,
          IsDiscussion tinyint default 0, InsertUserID int, Name varchar(255), Body text, DateInserted datetime,
          CategoryID int, PRIMARY KEY (PostID))');
-        $Result = $Ex->Query('select * from :_mbox', true);
+        $Result = $Ex->query('select * from :_mbox', true);
         // Parse name, body, date, userid, categoryid
         while ($Row = mysql_fetch_assoc($Result)) {
             // Assemble posts into a format we can actually export.
             // Subject: trim quotes, 're: ', 'fwd: ', 'fw: ', [category]
             $Name = trim(preg_replace('#^(re:)|(fwd?:) #i', '', trim($Row['Subject'], '"')));
             $Name = trim(preg_replace('#^\[[0-9a-zA-Z_-]*] #', '', $Name));
-            $Email = $this->ParseEmail($Row['Sender']);
+            $Email = $this->parseEmail($Row['Sender']);
             $UserID = (isset($Users[$Email])) ? $Users[$Email] : 0;
-            $Ex->Query('insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
+            $Ex->query('insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
             values ("' . mysql_real_escape_string($Name) . '",
                ' . $UserID . ',
                ' . $Categories[$Row['Folder']] . ',
                from_unixtime(' . strtotime($Row['Date']) . '),
-               "' . mysql_real_escape_string($this->ParseBody($Row['Body'])) . '")');
+               "' . mysql_real_escape_string($this->parseBody($Row['Body'])) . '")');
         }
 
         // Decide which posts are OPs
-        $Result = $Ex->Query('select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name',
+        $Result = $Ex->query('select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name',
             true);
         $Discussions = array();
         while ($Row = mysql_fetch_assoc($Result)) {
             $Discussions[] = $Row['PostID'];
         }
-        $Ex->Query('update :_mbox_post set IsDiscussion = 1 where PostID in (' . implode(",", $Discussions) . ')');
+        $Ex->query('update :_mbox_post set IsDiscussion = 1 where PostID in (' . implode(",", $Discussions) . ')');
 
         // Thread the comments
-        $Result = $Ex->Query('select c.PostID, d.PostID as DiscussionID from :_mbox_post c
+        $Result = $Ex->query('select c.PostID, d.PostID as DiscussionID from :_mbox_post c
          left join :_mbox_post d on c.Name like d.Name and d.IsDiscussion = 1
          where c.IsDiscussion = 0', true);
         while ($Row = mysql_fetch_assoc($Result)) {
-            $Ex->Query('update :_mbox_post set DiscussionID = ' . $Row['DiscussionID'] . '  where PostID = ' . $Row['PostID']);
+            $Ex->query('update :_mbox_post set DiscussionID = ' . $Row['DiscussionID'] . '  where PostID = ' . $Row['PostID']);
         }
 
 
         // Users
         $User_Map = array();
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
             NOW() as DateInserted,
             'Reset' as HashMethod
@@ -153,7 +153,7 @@ class Mbox extends ExportController {
 
         // Categories
         $Category_Map = array();
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
       select *
       from :_mbox_category", $Category_Map);
 
@@ -162,7 +162,7 @@ class Mbox extends ExportController {
         $Discussion_Map = array(
             'PostID' => 'DiscussionID'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
       select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID,
          'Html' as Format
        from :_mbox_post p where IsDiscussion = 1", $Discussion_Map);
@@ -172,7 +172,7 @@ class Mbox extends ExportController {
         $Comment_Map = array(
             'PostID' => 'CommentID'
         );
-        $Ex->ExportTable('Comment',
+        $Ex->exportTable('Comment',
             "select p.*,
          'Html' as Format
        from :_mbox_post p
@@ -185,14 +185,14 @@ class Mbox extends ExportController {
         //$Ex->Query('drop table :_mbox_user');
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
 //      echo implode("\n\n", $Ex->Queries);
     }
 
     /**
      * Grab the email from the User field.
      */
-    public function ParseEmail($Email) {
+    public function parseEmail($Email) {
         $EmailBits = explode('<', $Email);
         if (!isset($EmailBits[1])) {
             return $Email;
@@ -206,7 +206,7 @@ class Mbox extends ExportController {
     /**
      * Body: strip headers, signatures, fwds.
      */
-    public function ParseBody($Body) {
+    public function parseBody($Body) {
         $Body = preg_replace('#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#', '',
             $Body);
         $Body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $Body);

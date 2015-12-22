@@ -24,16 +24,16 @@ class Kunena extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('mbox');
+        $CharacterSet = $Ex->getCharacterSet('mbox');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         $Ex->DestPrefix = 'jos';
 
-        $Ex->BeginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
+        $Ex->beginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
 
         // User.
         $User_Map = array(
@@ -50,7 +50,7 @@ class Kunena extends ExportController {
             'admin' => array('Column' => 'Admin', 'Type' => 'tinyint(1)'),
             'Photo' => 'Photo'
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          SELECT
             u.*,
             case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
@@ -67,14 +67,14 @@ class Kunena extends ExportController {
             'rank_id' => 'RoleID',
             'rank_title' => 'Name',
         );
-        $Ex->ExportTable('Role', "select * from :_kunena_ranks", $Role_Map);
+        $Ex->exportTable('Role', "select * from :_kunena_ranks", $Role_Map);
 
         // UserRole.
         $UserRole_Map = array(
             'id' => 'UserID',
             'rank' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select *
          from :_users u", $UserRole_Map);
 
@@ -95,7 +95,7 @@ class Kunena extends ExportController {
             'description' => 'Description',
 
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select * from :_kunena_categories", $Category_Map);
 
         // Discussion.
@@ -113,7 +113,7 @@ class Kunena extends ExportController {
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select
             t.*,
             txt.message,
@@ -135,7 +135,7 @@ class Kunena extends ExportController {
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select
             t.*,
             txt.message,
@@ -150,7 +150,7 @@ class Kunena extends ExportController {
             'thread' => 'DiscussionID',
             'userid' => 'UserID'
         );
-        $Ex->ExportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select t.*, 1 as Bookmarked
          from :_kunena_subscriptions t", $UserDiscussion_Map);
 
@@ -165,7 +165,7 @@ class Kunena extends ExportController {
             'filename' => array('Column' => 'Name', 'Filter' => 'UrlDecode'),
             'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
         );
-        $Ex->ExportTable('Media', "
+        $Ex->exportTable('Media', "
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
@@ -175,6 +175,6 @@ class Kunena extends ExportController {
          join :_kunena_messages m
             on m.id = a.mesid", $Media_Map);
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 }

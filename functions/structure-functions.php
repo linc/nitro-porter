@@ -12,7 +12,7 @@
  *
  * @return array
  */
-function VanillaStructure() {
+function vanillaStructure() {
     // Adding new items without matching existing spacing costs 2 toes.
     return array(
         'Activity' => array(

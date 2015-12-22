@@ -6,7 +6,7 @@
  * @param $errno
  * @param $errstr
  */
-function ErrorHandler($errno, $errstr, $errFile, $errLine) {
+function errorHandler($errno, $errstr, $errFile, $errLine) {
     $ReportingLevel = error_reporting();
 
     // If error reporting is turned off, possibly by @.  Bail out.
@@ -36,7 +36,7 @@ function decho($Var, $Prefix = 'debug') {
 /**
  * Write out a value passed as bytes to its most readable format.
  */
-function FormatMemorySize($Bytes, $Precision = 1) {
+function formatMemorySize($Bytes, $Precision = 1) {
     $Units = array('B', 'K', 'M', 'G', 'T');
 
     $Bytes = max((int)$Bytes, 0);
@@ -53,7 +53,7 @@ function FormatMemorySize($Bytes, $Precision = 1) {
 /**
  * Test filesystem permissions.
  */
-function TestWrite() {
+function testWrite() {
     // Create file
     $file = 'vanilla2test.txt';
     @touch($file);
@@ -74,7 +74,7 @@ function TestWrite() {
  * @param string $Default
  * @return string
  */
-function GetValue($Key, $Collection = null, $Default = '') {
+function getValue($Key, $Collection = null, $Default = '') {
     if (!$Collection) {
         $Collection = $_POST;
     }
@@ -94,7 +94,7 @@ function GetValue($Key, $Collection = null, $Default = '') {
  * @param int $Width
  * @return bool
  */
-function GenerateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
+function generateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
     list($WidthSource, $HeightSource, $Type) = getimagesize($Path);
 
     $XCoord = 0;
@@ -159,7 +159,7 @@ function GenerateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
  * @param $Sql
  * @return array
  */
-function ParseSelect($Sql) {
+function parseSelect($Sql) {
     if (!preg_match('`^\s*select\s+(.+)\s+from\s+(.+)\s*`is', $Sql, $Matches)) {
         trigger_error("Could not parse '$Sql'", E_USER_ERROR);
     }
@@ -212,7 +212,7 @@ function ParseSelect($Sql) {
  * @param $Matches
  * @return mixed
  */
-function _ReplaceCommas($Matches) {
+function _replaceCommas($Matches) {
     return str_replace(',', '!COMMA!', $Matches[0]);
 }
 
@@ -222,9 +222,9 @@ function _ReplaceCommas($Matches) {
  * @param array $Columns An array in the form Alias => Column or just Column
  * @return type
  */
-function ReplaceSelect($Sql, $Columns) {
+function replaceSelect($Sql, $Columns) {
     if (is_string($Sql)) {
-        $Parsed = ParseSelect($Sql);
+        $Parsed = parseSelect($Sql);
     } else {
         $Parsed = $Sql;
     }
@@ -255,7 +255,7 @@ function ReplaceSelect($Sql, $Columns) {
     $Parsed['Select'] = $NewSelect;
 
     if (is_string($Sql)) {
-        return SelectString($Parsed);
+        return selectString($Parsed);
     } else {
         return $Parsed;
     }
@@ -267,7 +267,7 @@ function ReplaceSelect($Sql, $Columns) {
  * @param $Parsed
  * @return string
  */
-function SelectString($Parsed) {
+function selectString($Parsed) {
     // Build the select.
     $Parts = $Parsed['Select'];
     $Selects = array();
@@ -294,7 +294,7 @@ function SelectString($Parsed) {
  * @param string $Delimiter
  * @return mixed
  */
-function CombinePaths($Paths, $Delimiter = '/') {
+function combinePaths($Paths, $Delimiter = '/') {
     if (is_array($Paths)) {
         $MungedPath = implode($Delimiter, $Paths);
         $MungedPath = str_replace(array($Delimiter . $Delimiter . $Delimiter, $Delimiter . $Delimiter),
@@ -311,7 +311,7 @@ function CombinePaths($Paths, $Delimiter = '/') {
  *
  * @param string $Name
  */
-function SpawnPackage($Name) {
+function spawnPackage($Name) {
 
     if ($Name && strlen($Name) > 2) {
         $Name = preg_replace('/[^A-Za-z0-9]/', '', $Name);

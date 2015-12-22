@@ -37,18 +37,18 @@ class IPB extends ExportController {
     /**
      * Export avatars into vanilla-compatibles names
      */
-    public function DoAvatars() {
+    public function doAvatars() {
         // Source table
-        $SourceTable = $this->Param('source', 'profile_portal');
+        $SourceTable = $this->param('source', 'profile_portal');
 
         // Check source folder
-        $SourceFolder = $this->Param('avatarpath');
+        $SourceFolder = $this->param('avatarpath');
         if (!is_dir($SourceFolder)) {
             trigger_error("Source avatar folder '{$SourceFolder}' does not exist.");
         }
 
         // Set up a target folder
-        $TargetFolder = CombinePaths(array($SourceFolder, 'ipb'));
+        $TargetFolder = combinePaths(array($SourceFolder, 'ipb'));
         if (!is_dir($SourceFolder)) {
             @$Made = mkdir($TargetFolder, 0777, true);
             if (!$Made) {
@@ -59,7 +59,7 @@ class IPB extends ExportController {
         switch ($SourceTable) {
             case 'profile_portal':
 
-                $UserList = $this->Ex->Query("select
+                $UserList = $this->Ex->query("select
                   pp_member_id as member_id,
                   pp_main_photo as main_photo,
                   pp_thumb_photo as thumb_photo,
@@ -72,7 +72,7 @@ class IPB extends ExportController {
 
             case 'member_extra':
 
-                $UserList = $this->Ex->Query("select
+                $UserList = $this->Ex->query("select
                   id as member_id,
                   avatar_location as photo
                from :_member_extra
@@ -104,24 +104,24 @@ class IPB extends ExportController {
 
             $PhotoFileName = basename($Photo);
             $PhotoPath = dirname($Photo);
-            $PhotoFolder = CombinePaths(array($TargetFolder, $PhotoPath));
+            $PhotoFolder = combinePaths(array($TargetFolder, $PhotoPath));
             @mkdir($PhotoFolder, 0777, true);
 
-            $PhotoSrc = CombinePaths(array($SourceFolder, $Photo));
+            $PhotoSrc = combinePaths(array($SourceFolder, $Photo));
             if (!file_exists($PhotoSrc)) {
                 $Errors[] = "Missing file: {$PhotoSrc}";
                 continue;
             }
 
-            $MainPhoto = trim(GetValue('main_photo', $Row, null));
-            $ThumbPhoto = trim(GetValue('thumb_photo', $Row, null));
+            $MainPhoto = trim(getValue('main_photo', $Row, null));
+            $ThumbPhoto = trim(getValue('thumb_photo', $Row, null));
 
             // Main Photo
             if (!$MainPhoto) {
                 $MainPhoto = $Photo;
             }
-            $MainSrc = CombinePaths(array($SourceFolder, $MainPhoto));
-            $MainDest = CombinePaths(array($PhotoFolder, "p" . $PhotoFileName));
+            $MainSrc = combinePaths(array($SourceFolder, $MainPhoto));
+            $MainDest = combinePaths(array($PhotoFolder, "p" . $PhotoFileName));
             $Copied = @copy($MainSrc, $MainDest);
             if (!$Copied) {
                 $Error |= true;
@@ -132,8 +132,8 @@ class IPB extends ExportController {
             if (!$ThumbPhoto) {
                 $ThumbPhoto = $Photo;
             }
-            $ThumbSrc = CombinePaths(array($SourceFolder, $MainPhoto));
-            $ThumbDest = CombinePaths(array($PhotoFolder, "n" . $PhotoFileName));
+            $ThumbSrc = combinePaths(array($SourceFolder, $MainPhoto));
+            $ThumbDest = combinePaths(array($PhotoFolder, "n" . $PhotoFileName));
             $Copied = @copy($ThumbSrc, $ThumbDest);
             if (!$Copied) {
                 $Error |= true;
@@ -164,7 +164,7 @@ class IPB extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 //      $Ex->TestMode = FALSE;
 //      $Ex->TestLimit = FALSE;
 //      $Ex->Destination = 'database';
@@ -175,7 +175,7 @@ class IPB extends ExportController {
 
         $Ex->SourcePrefix = ':_';
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
+        $CharacterSet = $Ex->getCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
@@ -189,14 +189,14 @@ class IPB extends ExportController {
 //      $Ex->HtmlDecoderDb('topics', 'description', 'tid');
 
         // Begin
-        $Ex->BeginExport('', 'IPB 3.*', array('HashMethod' => 'ipb'));
+        $Ex->beginExport('', 'IPB 3.*', array('HashMethod' => 'ipb'));
 
         // Export avatars
-        if ($this->Param('avatars')) {
-            $this->DoAvatars();
+        if ($this->param('avatars')) {
+            $this->doAvatars();
         }
 
-        if ($Ex->Exists('members', 'member_id') === true) {
+        if ($Ex->exists('members', 'member_id') === true) {
             $MemberID = 'member_id';
         } else {
             $MemberID = 'id';
@@ -226,7 +226,7 @@ class IPB extends ExportController {
         $From = '';
         $Select = '';
 
-        if ($Ex->Exists('members', 'members_pass_hash') === true) {
+        if ($Ex->exists('members', 'members_pass_hash') === true) {
             $Select = ",concat(m.members_pass_hash, '$', m.members_pass_salt) as Password";
         } else {
             $Select = ",concat(mc.converge_pass_hash, '$', mc.converge_pass_salt) as Password";
@@ -234,15 +234,15 @@ class IPB extends ExportController {
             on m.$MemberID = mc.converge_id";
         }
 
-        if ($Ex->Exists('members', 'hide_email') === true) {
+        if ($Ex->exists('members', 'hide_email') === true) {
             $ShowEmail = '!hide_email';
         } else {
             $ShowEmail = '0';
         }
 
-        $Cdn = $this->CdnPrefix();
+        $Cdn = $this->cdnPrefix();
 
-        if ($Ex->Exists('member_extra') === true) {
+        if ($Ex->exists('member_extra') === true) {
             $Sql = "select
                   m.*,
                   m.joined as firstvisit,
@@ -277,15 +277,15 @@ class IPB extends ExportController {
                     on m.$MemberID = p.pp_member_id
                  $From";
         }
-        $this->ClearFilters('members', $User_Map, $Sql, 'm');
-        $Ex->ExportTable('User', $Sql, $User_Map);  // ":_" will be replaced by database prefix
+        $this->clearFilters('members', $User_Map, $Sql, 'm');
+        $Ex->exportTable('User', $Sql, $User_Map);  // ":_" will be replaced by database prefix
 
         // Roles.
         $Role_Map = array(
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $Ex->ExportTable('Role', "select * from :_groups", $Role_Map);
+        $Ex->exportTable('Role', "select * from :_groups", $Role_Map);
 
         // Permissions.
         $Permission_Map = array(
@@ -303,8 +303,8 @@ class IPB extends ExportController {
             'g_access_cp' => 'Garden.Settings.View',
 //          'g_edit_topic' => 'Vanilla.Discussions.Edit'
         );
-        $Permission_Map = $Ex->FixPermissionColumns($Permission_Map);
-        $Ex->ExportTable('Permission', "
+        $Permission_Map = $Ex->fixPermissionColumns($Permission_Map);
+        $Ex->exportTable('Permission', "
          select r.*,
             r.g_view_board as g_view_board2,
             r.g_view_board as g_view_board3,
@@ -313,7 +313,7 @@ class IPB extends ExportController {
 
         // User Role.
 
-        if ($Ex->Exists('members', 'member_group_id') === true) {
+        if ($Ex->exists('members', 'member_group_id') === true) {
             $GroupID = 'member_group_id';
         } else {
             $GroupID = 'mgroup';
@@ -329,7 +329,7 @@ class IPB extends ExportController {
             m.$MemberID, m.$GroupID
          from :_members m";
 
-        if ($Ex->Exists('members', 'mgroup_others')) {
+        if ($Ex->exists('members', 'mgroup_others')) {
             $Sql .= "
             union all
 
@@ -340,7 +340,7 @@ class IPB extends ExportController {
 
         }
 
-        $Ex->ExportTable('UserRole', $Sql, $UserRole_Map);
+        $Ex->exportTable('UserRole', $Sql, $UserRole_Map);
 
         // UserMeta.
         $UserMeta_Map = array(
@@ -349,7 +349,7 @@ class IPB extends ExportController {
             'Value' => 'Value'
         );
 
-        if ($Ex->Exists('profile_portal', 'signature') === true) {
+        if ($Ex->exists('profile_portal', 'signature') === true) {
             $Sql = "
          select
             pp_member_id as UserID,
@@ -367,7 +367,7 @@ class IPB extends ExportController {
          from :_profile_portal
          where length(signature) > 1
                ";
-        } elseif ($Ex->Exists('member_extra', array('id', 'signature')) === true) {
+        } elseif ($Ex->exists('member_extra', array('id', 'signature')) === true) {
             $Sql = "
          select
             id as UserID,
@@ -388,7 +388,7 @@ class IPB extends ExportController {
             $Sql = false;
         }
         if ($Sql) {
-            $Ex->ExportTable('UserMeta', $Sql, $UserMeta_Map);
+            $Ex->exportTable('UserMeta', $Sql, $UserMeta_Map);
         }
 
         // Category.
@@ -400,12 +400,12 @@ class IPB extends ExportController {
             'parent_id' => 'ParentCategoryID',
             'position' => 'Sort'
         );
-        $Ex->ExportTable('Category', "select * from :_forums", $Category_Map);
+        $Ex->exportTable('Category', "select * from :_forums", $Category_Map);
 
         // Discussion.
         $DescriptionSQL = 'p.post';
-        $HasTopicDescription = ($Ex->Exists('topics', array('description')) === true);
-        if ($HasTopicDescription || $Ex->Exists('posts', array('description')) === true) {
+        $HasTopicDescription = ($Ex->exists('topics', array('description')) === true);
+        if ($HasTopicDescription || $Ex->exists('posts', array('description')) === true) {
             $Description = ($HasTopicDescription) ? 't.description' : 'p.description';
             $DescriptionSQL = "case
             when $Description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', $Description, '</div>', p.post)
@@ -441,18 +441,18 @@ class IPB extends ExportController {
       left join :_posts p
          on t.topic_firstpost = p.pid
       where t.tid between {from} and {to}";
-        $this->ClearFilters('topics', $Discussion_Map, $Sql, 't');
-        $Ex->ExportTable('Discussion', $Sql, $Discussion_Map);
+        $this->clearFilters('topics', $Discussion_Map, $Sql, 't');
+        $Ex->exportTable('Discussion', $Sql, $Discussion_Map);
 
         // Tags
-        $Ex->Query("DROP TABLE IF EXISTS `z_tag` ");
-        $Ex->Query("CREATE TABLE `z_tag` (
+        $Ex->query("DROP TABLE IF EXISTS `z_tag` ");
+        $Ex->query("CREATE TABLE `z_tag` (
          `TagID` int(11) unsigned NOT NULL AUTO_INCREMENT,
          `FullName` varchar(50) DEFAULT NULL,
          PRIMARY KEY (`TagID`),
          UNIQUE KEY `FullName` (`FullName`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-        $Ex->Query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
+        $Ex->query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
 
         $TagDiscussion_Map = array(
             'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
@@ -460,7 +460,7 @@ class IPB extends ExportController {
         $Sql = "select TagID, '0' as CategoryID, tag_meta_id as DiscussionID, t.tag_added
         from :_core_tags t
         left join z_tag zt on t.tag_text = zt.FullName";
-        $Ex->ExportTable('TagDiscussion', $Sql, $TagDiscussion_Map);
+        $Ex->exportTable('TagDiscussion', $Sql, $TagDiscussion_Map);
 
         $Tag_Map = array(
             'FullName' => 'FullName',
@@ -468,7 +468,7 @@ class IPB extends ExportController {
         );
         $Sql = "select TagID, FullName, FullName as FullNameToName
         from z_tag zt";
-        $Ex->ExportTable('Tag', $Sql, $Tag_Map);
+        $Ex->exportTable('Tag', $Sql, $Tag_Map);
 
         // Comments.
         $Comment_Map = array(
@@ -489,8 +489,8 @@ class IPB extends ExportController {
          on p.topic_id = t.tid
       where p.pid between {from} and {to}
          and p.pid <> t.topic_firstpost";
-        $this->ClearFilters('Comment', $Comment_Map, $Sql, 'p');
-        $Ex->ExportTable('Comment', $Sql, $Comment_Map);
+        $this->clearFilters('Comment', $Comment_Map, $Sql, 'p');
+        $Ex->exportTable('Comment', $Sql, $Comment_Map);
 
         // Media.
         $Media_Map = array(
@@ -521,19 +521,19 @@ join :_topics t
    on t.tid = p.topic_id
 left join :_attachments_type ty
    on a.attach_ext = ty.atype_extension";
-        $this->ClearFilters('Media', $Media_Map, $Sql);
-        $Ex->ExportTable('Media', $Sql, $Media_Map);
+        $this->clearFilters('Media', $Media_Map, $Sql);
+        $Ex->exportTable('Media', $Sql, $Media_Map);
 
-        if ($Ex->Exists('message_topic_user_map')) {
-            $this->_ExportConversationsV3();
+        if ($Ex->exists('message_topic_user_map')) {
+            $this->_exportConversationsV3();
         } else {
-            $this->_ExportConversationsV2();
+            $this->_exportConversationsV2();
         }
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
-    protected function _ExportConversationsV2() {
+    protected function _exportConversationsV2() {
         $Ex = $this->Ex;
 
         $Sql = <<<EOT
@@ -670,7 +670,7 @@ join tmp_group g
 set c.groupid = g.groupid;
 EOT;
 
-        $Ex->QueryN($Sql);
+        $Ex->queryN($Sql);
 
         // Conversations.
         $Conversation_Map = array(
@@ -686,8 +686,8 @@ EOT;
 from :_message_topics mt
 join tmp_conversation tc
    on mt.mt_id = tc.id";
-        $this->ClearFilters('Conversation', $Conversation_Map, $Sql);
-        $Ex->ExportTable('Conversation', $Sql, $Conversation_Map);
+        $this->clearFilters('Conversation', $Conversation_Map, $Sql);
+        $Ex->exportTable('Conversation', $Sql, $Conversation_Map);
 
         // Conversation Message.
         $ConversationMessage_Map = array(
@@ -709,8 +709,8 @@ join :_message_topics mt
    on mt.mt_msg_id = tx.msg_id
 join tmp_conversation tc
    on mt.mt_id = tc.id";
-        $this->ClearFilters('ConversationMessage', $ConversationMessage_Map, $Sql);
-        $Ex->ExportTable('ConversationMessage', $Sql, $ConversationMessage_Map);
+        $this->clearFilters('ConversationMessage', $ConversationMessage_Map, $Sql);
+        $Ex->exportTable('ConversationMessage', $Sql, $ConversationMessage_Map);
 
         // User Conversation.
         $UserConversation_Map = array(
@@ -723,9 +723,9 @@ join tmp_conversation tc
 from tmp_to t
 join tmp_group g
    on g.groupid = t.id";
-        $Ex->ExportTable('UserConversation', $Sql, $UserConversation_Map);
+        $Ex->exportTable('UserConversation', $Sql, $UserConversation_Map);
 
-        $Ex->QueryN("
+        $Ex->queryN("
       drop table tmp_conversation;
 drop table tmp_to;
 drop table tmp_to2;
@@ -733,7 +733,7 @@ drop table tmp_group;");
     }
 
 
-    protected function _ExportConversationsV3() {
+    protected function _exportConversationsV3() {
         $Ex = $this->Ex;
 
         // Conversations.
@@ -744,8 +744,8 @@ drop table tmp_group;");
             'mt_starter_id' => 'InsertUserID'
         );
         $Sql = "select * from :_message_topics where mt_is_deleted = 0";
-        $this->ClearFilters('Conversation', $Conversation_Map, $Sql);
-        $Ex->ExportTable('Conversation', $Sql, $Conversation_Map);
+        $this->clearFilters('Conversation', $Conversation_Map, $Sql);
+        $Ex->exportTable('Conversation', $Sql, $Conversation_Map);
 
         // Conversation Message.
         $ConversationMessage_Map = array(
@@ -761,8 +761,8 @@ drop table tmp_group;");
             m.*,
             'IPB' as Format
          from :_message_posts m";
-        $this->ClearFilters('ConversationMessage', $ConversationMessage_Map, $Sql);
-        $Ex->ExportTable('ConversationMessage', $Sql, $ConversationMessage_Map);
+        $this->clearFilters('ConversationMessage', $ConversationMessage_Map, $Sql);
+        $Ex->exportTable('ConversationMessage', $Sql, $ConversationMessage_Map);
 
         // User Conversation.
         $UserConversation_Map = array(
@@ -774,10 +774,10 @@ drop table tmp_group;");
          t.*,
          !map_user_active as Deleted
       from :_message_topic_user_map t";
-        $Ex->ExportTable('UserConversation', $Sql, $UserConversation_Map);
+        $Ex->exportTable('UserConversation', $Sql, $UserConversation_Map);
     }
 
-    public function ClearFilters($Table, &$Map, &$Sql) {
+    public function clearFilters($Table, &$Map, &$Sql) {
         $PK = false;
         $Selects = array();
 

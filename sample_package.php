@@ -37,16 +37,16 @@ class SampleName extends ExportController {
      * @param ExportModel $Ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
-        $CharacterSet = $Ex->GetCharacterSet('CommentsTableNameGoesHere');
+        $CharacterSet = $Ex->getCharacterSet('CommentsTableNameGoesHere');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Reiterate the platform name here to be included in the porter file header.
-        $Ex->BeginExport('', 'Proper Platform Name Goes Here');
+        $Ex->beginExport('', 'Proper Platform Name Goes Here');
 
         // It's usually a good idea to do the porting in the approximate order laid out here.
 
@@ -65,7 +65,7 @@ class SampleName extends ExportController {
         // Therefore, our select statement must cover all the "source" columns.
         // It's frequently necessary to add joins, where clauses, and more to get the data we want.
         // The :_ before the table name is the placeholder for the prefix designated. It gets swapped on the fly.
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select u.*
          from :_User u
          ", $User_Map);
@@ -77,7 +77,7 @@ class SampleName extends ExportController {
             'Group_ID' => 'RoleID',
             'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
         );
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
          from :_tblGroup", $Role_Map);
 
@@ -89,7 +89,7 @@ class SampleName extends ExportController {
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID',
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.*
          from :_tblAuthor u", $UserRole_Map);
 
@@ -102,7 +102,7 @@ class SampleName extends ExportController {
         // This is often a good place for any extraneous data on the User table too.
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration and profiles will auto-populate with the migrated data.
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select
             Author_ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -119,7 +119,7 @@ class SampleName extends ExportController {
             'Forum_ID' => 'CategoryID',
             'Forum_name' => 'Name',
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select *
          from :_tblCategory c
          ", $Category_Map);
@@ -133,7 +133,7 @@ class SampleName extends ExportController {
             'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select *,
             FROM_UNIXTIME(Message_date) as Message_date
          from :_tblTopic t
@@ -152,7 +152,7 @@ class SampleName extends ExportController {
             'Format' => 'Format',
             'Message_date' => array('Column' => 'DateInserted')
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select th.*
          from :_tblThread th", $Comment_Map);
 
@@ -169,7 +169,7 @@ class SampleName extends ExportController {
         // If you need a large number of complex SQL statements, consider making it a separate method
         // to keep the main process easy to understand. Pass $Ex as a parameter if you do.
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
 }
