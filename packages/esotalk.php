@@ -26,15 +26,15 @@ class esotalk extends ExportController {
      * @param ExportModel $Ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('post');
+        $CharacterSet = $Ex->getCharacterSet('post');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Reiterate the platform name here to be included in the porter file header.
-        $Ex->BeginExport('', 'esotalk');
+        $Ex->beginExport('', 'esotalk');
 
 
         // User.
@@ -45,7 +45,7 @@ class esotalk extends ExportController {
             'confirmed' => 'Verified',
             'password' => 'Password',
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select u.*, 'crypt' as HashMethod,
             FROM_UNIXTIME(joinTime) as DateInserted,
             FROM_UNIXTIME(lastActionTime) as DateLastActive,
@@ -58,7 +58,7 @@ class esotalk extends ExportController {
             'groupId' => 'RoleID',
             'name' => 'Name',
         );
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
          select groupId, name
          from :_group
          union select max(groupId)+1, 'Member' from :_group
@@ -72,7 +72,7 @@ class esotalk extends ExportController {
             'groupId' => 'RoleID',
         );
         // Create fake 'member' and 'administrator' roles to account for them being set separately on member table.
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.memberId, u.groupId
          from :_member_group u
          union all
@@ -92,7 +92,7 @@ class esotalk extends ExportController {
             'countConversations' => 'CountDiscussions',
             //'countPosts' => 'CountComments',
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select *
          from :_channel c", $Category_Map);
 
@@ -110,7 +110,7 @@ class esotalk extends ExportController {
             'content' => 'Body',
         );
         // The body of the OP is in the post table.
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
 			select
 				c.conversationId,
 				c.title,
@@ -140,7 +140,7 @@ class esotalk extends ExportController {
             'editMemberId' => 'UpdateUserID',
         );
         // Now we need to omit the comments we used as the OP.
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
 		select p.*,
 				'BBCode' as Format,
 				from_unixtime(time) as DateInserted,
@@ -161,7 +161,7 @@ class esotalk extends ExportController {
             'id' => 'UserID',
             'conversationId' => 'DiscussionID',
         );
-        $Ex->ExportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select *
          from :_member_conversation
          where starred = 1", $UserDiscussion_Map);
@@ -183,7 +183,7 @@ class esotalk extends ExportController {
             'countPosts' => 'CountMessages',
         );
 
-        $Ex->ExportTable('Conversation', "
+        $Ex->exportTable('Conversation', "
                 select p.*,
                 'BBCode' as Format,
                 from_unixtime(time) as DateInserted,
@@ -198,7 +198,7 @@ class esotalk extends ExportController {
 
         );
 
-        $Ex->ExportTable('UserConversation', "
+        $Ex->exportTable('UserConversation', "
         select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
         inner join :_conversation c on c.conversationId = a.conversationId
         and c.private = 1 and a.type = 'privateAdd'
@@ -215,13 +215,13 @@ class esotalk extends ExportController {
 
         );
 
-        $Ex->ExportTable('ConversationMessage', "
+        $Ex->exportTable('ConversationMessage', "
                 select p.*,
                 'BBCode' as Format,
                 from_unixtime(time) as DateInserted
         from :_post p
         inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1", $UserConversationMessage_map);
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 }

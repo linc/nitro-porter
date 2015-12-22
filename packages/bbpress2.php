@@ -28,13 +28,13 @@ class BbPress2 extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
         // Begin
-        $Ex->BeginExport('', 'bbPress 2.*', array('HashMethod' => 'Vanilla'));
+        $Ex->beginExport('', 'bbPress 2.*', array('HashMethod' => 'Vanilla'));
 
         // Users
-        $Ex->Query("drop table if exists z_user;");
-        $Ex->Query("
+        $Ex->query("drop table if exists z_user;");
+        $Ex->query("
             create table `z_user` (
                 `ID` bigint(20) unsigned not null AUTO_INCREMENT,
                 `user_login` varchar(60) NOT NULL DEFAULT '',
@@ -58,7 +58,7 @@ class BbPress2 extends ExportController {
             from :_users
         ";
 
-        $Ex->Query("insert into z_user $UserQuery");
+        $Ex->query("insert into z_user $UserQuery");
 
         $GuestUserQuery = "
             select
@@ -83,7 +83,7 @@ class BbPress2 extends ExportController {
             group by user_email
         ";
 
-        $Ex->Query("
+        $Ex->query("
             insert into z_user(
                 /* ID auto_increment yay! */
                 user_login,
@@ -101,10 +101,10 @@ class BbPress2 extends ExportController {
             'user_email'=>'Email',
             'user_registered'=>'DateInserted',
         );
-        $Ex->ExportTable('User', "select * from z_user;", $user_Map);
+        $Ex->exportTable('User', "select * from z_user;", $user_Map);
 
         // Roles
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
             select
                 1 as RoleID,
                 'Guest' as Name
@@ -118,7 +118,7 @@ class BbPress2 extends ExportController {
         $UserRole_Map = array(
             'user_id'=>'UserID'
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
             select
                 distinct(user_id) as user_id,
                 case
@@ -148,7 +148,7 @@ class BbPress2 extends ExportController {
             'post_name'=>'UrlCode',
             'menu_order'=>'Sort',
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
             select
                 *,
                 lower(post_name) as forum_slug,
@@ -167,7 +167,7 @@ class BbPress2 extends ExportController {
             'post_date'=>'DateInserted',
             'menu_order'=>'Announce',
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
             select
                 p.*,
                 if (p.post_author > 0, p.post_author, z_user.ID) as post_author, /* override post_author value from p.* */
@@ -188,7 +188,7 @@ class BbPress2 extends ExportController {
             'post_author' => 'InsertUserID',
             'post_date' => 'DateInserted',
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
             select
                 p.*,
                 if (p.post_author > 0, p.post_author, z_user.ID) as post_author, /* override post_author value from p.* */
@@ -205,10 +205,10 @@ class BbPress2 extends ExportController {
             ;", $Comment_Map);
 
         // Cleanup
-        $Ex->Query("drop table if exists z_user;");
+        $Ex->query("drop table if exists z_user;");
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 }
 

@@ -34,16 +34,16 @@ class SimplePress extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
         $Ex->SourcePrefix = 'wp_';
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
+        $CharacterSet = $Ex->getCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $Ex->BeginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
+        $Ex->beginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
 
         // Users
         $User_Map = array(
@@ -54,7 +54,7 @@ class SimplePress extends ExportController {
             'user_registered' => 'DateInserted',
             'lastvisit' => 'DateLastActive'
         );
-        $Ex->ExportTable('User',
+        $Ex->exportTable('User',
             "select m.*, u.user_pass, u.user_email, u.user_registered
           from :_users u
           join :_sfmembers m
@@ -66,7 +66,7 @@ class SimplePress extends ExportController {
             'usergroup_name' => 'Name',
             'usergroup_desc' => 'Description'
         );
-        $Ex->ExportTable('Role',
+        $Ex->exportTable('Role',
             "select
             usergroup_id,
             usergroup_name,
@@ -81,7 +81,7 @@ class SimplePress extends ExportController {
             ''", $Role_Map);
 
         // Permissions.
-        $Ex->ExportTable('Permission', "select
+        $Ex->exportTable('Permission', "select
             usergroup_id as RoleID,
 case
    when usergroup_name like 'Guest%' then 'View'
@@ -99,7 +99,7 @@ end as _Permissions
             'user_id' => 'UserID',
             'usergroup_id' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole',
+        $Ex->exportTable('UserRole',
             "select
             m.user_id,
             m.usergroup_id
@@ -123,7 +123,7 @@ end as _Permissions
             'form_slug' => 'UrlCode',
             'parent_id' => 'ParentCategoryID'
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select
             f.forum_id,
             f.forum_name,
@@ -155,24 +155,24 @@ end as _Permissions
             'topic_pinned' => 'Announce',
             'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
         );
-        $Ex->ExportTable('Discussion', "select t.*,
+        $Ex->exportTable('Discussion', "select t.*,
             'Html' as Format
          from :_sftopics t", $Discussion_Map);
 
-        if ($Ex->Exists('sftags')) {
+        if ($Ex->exists('sftags')) {
             // Tags
             $Tag_Map = array(
                 'tag_id' => 'TagID',
                 'tag_name' => 'Name'
             );
-            $Ex->ExportTable('Tag', "select * from :_sftags", $Tag_Map);
+            $Ex->exportTable('Tag', "select * from :_sftags", $Tag_Map);
 
-            if ($Ex->Exists('sftagmeta')) {
+            if ($Ex->exists('sftagmeta')) {
                 $TagDiscussion_Map = array(
                     'tag_id' => 'TagID',
                     'topic_id' => 'DiscussionID'
                 );
-                $Ex->ExportTable('TagDiscussion', "select * from :_sftagmeta", $TagDiscussion_Map);
+                $Ex->exportTable('TagDiscussion', "select * from :_sftagmeta", $TagDiscussion_Map);
             }
         }
 
@@ -186,7 +186,7 @@ end as _Permissions
             'post_date' => 'DateInserted',
             'poster_ip' => 'InsertIPAddress'
         );
-        $Ex->ExportTable('Comment', "select p.*,
+        $Ex->exportTable('Comment', "select p.*,
             'Html' as Format
          from :_sfposts p", $Comment_Map);
 
@@ -196,7 +196,7 @@ end as _Permissions
             'from_id' => 'InsertUserID',
             'sent_date' => 'DateInserted'
         );
-        $Ex->ExportTable('Conversation',
+        $Ex->exportTable('Conversation',
             "select *
          from :_sfmessages
          where is_reply = 0", $Conv_Map);
@@ -207,7 +207,7 @@ end as _Permissions
             'from_id' => 'InsertUserID',
             'message' => array('Column' => 'Body')
         );
-        $Ex->ExportTable('ConversationMessage',
+        $Ex->exportTable('ConversationMessage',
             'select c.message_id as ConversationID, m.*
          from :_sfmessages c
          join :_sfmessages m
@@ -219,7 +219,7 @@ end as _Permissions
             'message_id' => 'ConversationID',
             'from_id' => 'UserID'
         );
-        $Ex->ExportTable('UserConversation',
+        $Ex->exportTable('UserConversation',
             'select message_id, from_id
          from :_sfmessages
          where is_reply = 0
@@ -232,6 +232,6 @@ end as _Permissions
             $UserConv_Map);
 
         // End
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 }

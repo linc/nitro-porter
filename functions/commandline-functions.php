@@ -68,7 +68,7 @@ if (isset($Supported)) {
     $GlobalOptions['type']['Values'] = array_keys($Supported);
 }
 
-function GetAllCommandLineOptions($Sections = false) {
+function getAllCommandLineOptions($Sections = false) {
     global $GlobalOptions, $Supported;
 
     if ($Sections) {
@@ -78,7 +78,7 @@ function GetAllCommandLineOptions($Sections = false) {
     }
 
     foreach ($Supported as $Type => $Options) {
-        $CommandLine = V('CommandLine', $Options);
+        $CommandLine = v('CommandLine', $Options);
         if (!$CommandLine) {
             continue;
         }
@@ -101,13 +101,13 @@ function GetAllCommandLineOptions($Sections = false) {
     return $Result;
 }
 
-function GetOptCodes($Options) {
+function getOptCodes($Options) {
     $ShortCodes = '';
     $LongCodes = array();
 
     foreach ($Options as $LongCode => $Row) {
-        $Sx = V('Sx', $Row, '');
-        $Short = V('Short', $Row, '');
+        $Sx = v('Sx', $Row, '');
+        $Short = v('Short', $Row, '');
 
         if ($Short) {
             $ShortCodes .= $Short . $Sx;
@@ -131,26 +131,26 @@ function parseCommandLine($Options = null, $Files = null) {
         $Supported = array();
     }
 
-    $CommandOptions = GetAllCommandLineOptions();
-    list($ShortCodes, $LongCodes) = GetOptCodes($CommandOptions);
+    $CommandOptions = getAllCommandLineOptions();
+    list($ShortCodes, $LongCodes) = getOptCodes($CommandOptions);
 
 //   print_r($LongCodes);
 
     $Opts = getopt($ShortCodes, $LongCodes);
 
     if (isset($Opts['help']) || isset($Opts['h'])) {
-        WriteCommandLineHelp();
+        writeCommandLineHelp();
         die();
     }
 
     // Spawn new packages from the command line!
     if (isset($Opts['spawn']) || isset($Opts['s'])) {
         $Name = (isset($Opts['spawn'])) ? $Opts['spawn'] : $Opts['s'];
-        SpawnPackage($Name);
+        spawnPackage($Name);
         die();
     }
 
-    $Opts = ValidateCommandLine($Opts, $CommandOptions);
+    $Opts = validateCommandLine($Opts, $CommandOptions);
 
     if (is_array($Files)) {
         $Opts2 = array();
@@ -187,14 +187,14 @@ function validateCommandLine($Values, $Options) {
 //   print_r($Values);
 //   print_r($Options);
 
-    $Type = V('type', $Values, V('t', $Values));
+    $Type = v('type', $Values, v('t', $Values));
 
     foreach ($Options as $LongCode => $Row) {
-        $Req = V('Req', $Row);
-        $Short = V('Short', $Row);
+        $Req = v('Req', $Row);
+        $Short = v('Short', $Row);
 
-        $Sx = V('Sx', $Row);
-        $Types = V('Types', $Row);
+        $Sx = v('Sx', $Row);
+        $Types = v('Types', $Row);
 
         if ($Types && !in_array($Type, $Types)) {
 //         echo "Skipping $LongCode\n";
@@ -218,7 +218,7 @@ function validateCommandLine($Values, $Options) {
         }
 
         if (!$Value) {
-            $Default = V('Default', $Row, null);
+            $Default = v('Default', $Row, null);
             if ($Default === null) {
                 if ($Req) {
                     $Errors[] = "Missing required parameter: $LongCode";
@@ -230,14 +230,14 @@ function validateCommandLine($Values, $Options) {
             }
         }
 
-        if ($AllowedValues = V('Values', $Row)) {
+        if ($AllowedValues = v('Values', $Row)) {
             if (!in_array($Value, $AllowedValues)) {
                 $Errors[] = "Invalid value for parameter: $LongCode. Must be one of: " . implode(', ', $AllowedValues);
                 continue;
             }
         }
 
-        $Field = V('Field', $Row, $LongCode);
+        $Field = v('Field', $Row, $LongCode);
         $Result[$Field] = $Value;
     }
 
@@ -253,9 +253,9 @@ function validateCommandLine($Values, $Options) {
 
 function writeCommandLineHelp($Options = null, $Section = '') {
     if ($Options === null) {
-        $Options = GetAllCommandLineOptions(true);
+        $Options = getAllCommandLineOptions(true);
         foreach ($Options as $Section => $Options) {
-            WriteCommandLineHelp($Options, $Section);
+            writeCommandLineHelp($Options, $Section);
         }
 
         return;
@@ -274,13 +274,13 @@ function writeCommandLineHelp($Options = null, $Section = '') {
         // Align our descriptions by passing
         $Output = str_pad($Output, 18, ' ');
 
-        if (V('Req', $Options)) {
+        if (v('Req', $Options)) {
             $Output .= 'Required. ';
         }
 
         $Output .= "{$Options[0]}\n";
 
-        if ($Values = V('Values', $Options)) {
+        if ($Values = v('Values', $Options)) {
             $Output .= '    Valid Values: ' . implode(', ', $Values) . "\n";
         }
 
@@ -290,7 +290,7 @@ function writeCommandLineHelp($Options = null, $Section = '') {
     echo "\n";
 }
 
-function V($Name, $Array, $Default = null) {
+function v($Name, $Array, $Default = null) {
     if (isset($Array[$Name])) {
         return $Array[$Name];
     }

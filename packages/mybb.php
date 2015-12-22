@@ -39,15 +39,15 @@ class MyBB extends ExportController {
      * @param ExportModel $Ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
+        $CharacterSet = $Ex->getCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Reiterate the platform name here to be included in the porter file header.
-        $Ex->BeginExport('', 'MyBB');
+        $Ex->beginExport('', 'MyBB');
 
         // User.
         $User_Map = array(
@@ -58,7 +58,7 @@ class MyBB extends ExportController {
             'regdate3' => 'DateFirstVisit',
             'email' => 'Email',
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
             FROM_UNIXTIME(regdate) as regdate2,
             FROM_UNIXTIME(regdate) as regdate3,
@@ -74,7 +74,7 @@ class MyBB extends ExportController {
             'title' => 'Name',
             'description' => 'Description',
         );
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
          from :_usergroups", $Role_Map);
 
@@ -83,7 +83,7 @@ class MyBB extends ExportController {
             'uid' => 'UserID',
             'usergroup' => 'RoleID',
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.uid, u.usergroup
          from :_users u", $UserRole_Map);
 
@@ -95,7 +95,7 @@ class MyBB extends ExportController {
             'name' => 'Name',
             'description' => 'Description',
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select *
          from :_forums f
          ", $Category_Map);
@@ -109,7 +109,7 @@ class MyBB extends ExportController {
             'views' => 'CountViews',
             'replies' => 'CountComments',
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select *,
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
@@ -122,7 +122,7 @@ class MyBB extends ExportController {
             'uid' => 'InsertUserID',
             'message' => array('Column' => 'Body'),
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select p.*,
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
@@ -133,11 +133,11 @@ class MyBB extends ExportController {
             'tid' => 'DiscussionID',
             'uid' => 'UserID',
         );
-        $Ex->ExportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select *,
             1 as Bookmarked
          from :_threadsubscriptions t", $UserDiscussion_Map);
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 }

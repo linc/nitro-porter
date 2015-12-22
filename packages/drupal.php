@@ -27,15 +27,15 @@ class Drupal extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('comment');
+        $CharacterSet = $Ex->getCharacterSet('comment');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $Ex->BeginExport('', 'Drupal');
+        $Ex->beginExport('', 'Drupal');
 
         // Users
         $User_Map = array(
@@ -47,7 +47,7 @@ class Drupal extends ExportController {
             'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
             'login' => array('Column' => 'DateLastActive', 'Filter' => 'TimestampToDate')
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
             nullif(concat('drupal/', u.picture), 'drupal/') as photo,
             concat('md5$$', u.pass) as Password,
@@ -61,7 +61,7 @@ class Drupal extends ExportController {
             'Name' => 'Name',
             'signature' => 'Value'
         );
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select u.*, 'Plugins.Signatures.Sig' as Name
          from :_users u
          where uid > 0", $UserMeta_Map);
@@ -71,14 +71,14 @@ class Drupal extends ExportController {
             'rid' => 'RoleID',
             'name' => 'Name'
         );
-        $Ex->ExportTable('Role', "select r.* from :_role r", $Role_Map);
+        $Ex->exportTable('Role', "select r.* from :_role r", $Role_Map);
 
         // User Role.
         $UserRole_Map = array(
             'uid' => 'UserID',
             'rid' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select * from :_users_roles", $UserRole_Map);
 
         // Categories (sigh)
@@ -88,7 +88,7 @@ class Drupal extends ExportController {
             'description' => 'description',
             'parent' => 'ParentCategoryID'
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select t.*, nullif(h.parent, 0) as parent
          from :_term_data t
          join :_term_hierarchy h
@@ -105,7 +105,7 @@ class Drupal extends ExportController {
             'sticky' => 'Announce',
             'tid' => 'CategoryID'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
          from nodeforum f
          left join node n
@@ -121,7 +121,7 @@ class Drupal extends ExportController {
             'hostname' => 'InsertIPAddress',
             'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select
             n.created,
             n.uid,
@@ -177,7 +177,7 @@ class Drupal extends ExportController {
            where n.type = 'forum'", $Media_Map);
         */
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
     /**
@@ -185,13 +185,13 @@ class Drupal extends ExportController {
      * @param ExportModel $Ex
      * @param string $TableName
      */
-    protected function ExportTable($Ex, $TableName) {
+    protected function exportTable($Ex, $TableName) {
         // Make sure the table exists.
-        if (!$Ex->Exists($TableName)) {
+        if (!$Ex->exists($TableName)) {
             return;
         }
 
-        $Ex->ExportTable($TableName, "select * from :_{$TableName}");
+        $Ex->exportTable($TableName, "select * from :_{$TableName}");
     }
 
 }

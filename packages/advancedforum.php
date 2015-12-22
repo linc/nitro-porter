@@ -34,20 +34,20 @@ class advancedforum extends ExportController {
      * @param ExportModel $Ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('node');
+        $CharacterSet = $Ex->getCharacterSet('node');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'Advanced Forum 7.x-2.*');
+        $Ex->beginExport('', 'Advanced Forum 7.x-2.*');
 
-        $FilePath = $cdn = $this->Param('filepath', '');
+        $FilePath = $cdn = $this->param('filepath', '');
 
         // User.
         $User_Map = array();
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
             select `u`.`uid` as `UserID`, `u`.`name` as `Name`, `u`.`mail` as `Email`, `u`.`pass` as `Password`,
                 'drupal' as `HashMethod`, from_unixtime(`created`) as `DateInserted`,
                 if(`fm`.`filename` is not null, concat('$FilePath', `fm`.`filename`), NULL) as `Photo`
@@ -57,7 +57,7 @@ class advancedforum extends ExportController {
 
         // Role.
         $Role_Map = array();
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
             SELECT `name` AS `Name`, `rid` AS `RoleID`
             FROM `:_role` `r`
             ORDER BY `weight` ASC", $Role_Map);
@@ -65,14 +65,14 @@ class advancedforum extends ExportController {
 
         // User Role.
         $UserRole_Map = array();
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          SELECT `rid` AS `RoleID`, `uid` AS `UserID`
          FROM `:_users_roles` `ur`", $UserRole_Map);
 
 
         // Category.
         $Category_Map = array();
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
             SELECT `ttd`.`tid` AS `CategoryID`, `tth`.`parent` AS `ParentCategoryID`,
               `ttd`.`name` AS `Name`, `ttd`.`weight` AS `Sort`
             FROM `:_taxonomy_term_data` `ttd`
@@ -87,7 +87,7 @@ class advancedforum extends ExportController {
             'body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'TranslateFormatType'))
         );
 
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
             SELECT `fi`.`nid` AS `DiscussionID`, `fi`.`tid` AS `CategoryID`, `fi`.`title` AS `Name`,
                 `fi`.`comment_count` AS `CountComments`, `fdb`.`body_value` AS `Body`,
                 from_unixtime(`n`.`created`) AS `DateInserted`,
@@ -104,7 +104,7 @@ class advancedforum extends ExportController {
         $Comment_Map = array(
             'comment_body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'TranslateFormatType'))
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
             SELECT `c`.`cid` AS `CommentID`, `c`.`nid` AS `DiscussionID`, `c`.`uid` AS `InsertUserID`,
             from_unixtime(`c`.`created`) AS `DateInserted`,
             if(`c`.`created` < `c`.`changed`, from_unixtime(`c`.`changed`), NULL) AS `DateUpdated`,
@@ -112,7 +112,7 @@ class advancedforum extends ExportController {
             FROM `:_comment` `c` JOIN `:_field_data_comment_body` `fdcb` ON (`c`.`cid` = `fdcb`.`entity_id`)
             ORDER BY `cid` ASC", $Comment_Map);
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
     /**
@@ -122,7 +122,7 @@ class advancedforum extends ExportController {
      * @param $Row   Full data row columns
      * @return string Translated format slug
      */
-    public static function TranslateFormatType($Value, $Field, $Row) {
+    public static function translateFormatType($Value, $Field, $Row) {
         switch ($Value) {
             case 'filtered_html':
             case 'full_html':

@@ -25,14 +25,14 @@ class Toast extends ExportController {
      *
      * @param ExportModel $Ex
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('Post');
+        $CharacterSet = $Ex->getCharacterSet('Post');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'Toast Forum');
+        $Ex->beginExport('', 'Toast Forum');
         $Ex->SourcePrefix = 'tstdb_';
 
         // User.
@@ -43,7 +43,7 @@ class Toast extends ExportController {
             'LastLoginDate' => array('Column' => 'DateLastActive', 'Type' => 'datetime'),
             'IP' => 'LastIPAddress'
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select
             *,
             NOW() as DateInserted
@@ -51,7 +51,7 @@ class Toast extends ExportController {
 
         // Determine safe RoleID to use for non-existant Member role
         $LastRoleID = 1001;
-        $LastRoleResult = $Ex->Query("select max(ID) as LastID from :_Group");
+        $LastRoleResult = $Ex->query("select max(ID) as LastID from :_Group");
         if ($LastRoleResult) {
             $LastRole = mysql_fetch_array($LastRoleResult);
             $LastRoleID = $LastRole['LastID'] + 1;
@@ -63,7 +63,7 @@ class Toast extends ExportController {
             'ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
          select
             ID,
             Name
@@ -82,7 +82,7 @@ class Toast extends ExportController {
             'MemberID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select
             GroupID,
             MemberID
@@ -99,7 +99,7 @@ class Toast extends ExportController {
          where l.GroupID is null", $UserRole_Map);
 
         // Signatures.
-        $Ex->ExportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select
             ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -124,7 +124,7 @@ class Toast extends ExportController {
             'Description' => 'Description'
         );
 
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select
             f.ID,
             f.CategoryID * 1000 as CategoryID,
@@ -154,7 +154,7 @@ class Toast extends ExportController {
             'Hits' => 'CountViews',
             'ReplyCount' => 'CountComments'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select p.*,
             'Html' as Format
          from :_Post p
@@ -170,17 +170,17 @@ class Toast extends ExportController {
             'ModifyDate' => 'DateUpdated',
             'Message' => 'Body'
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select *,
             'Html' as Format
          from :_Post p
          where Topic = 0 and Deleted = 0;", $Comment_Map);
 
 
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
-    public function CleanDate($Value) {
+    public function cleanDate($Value) {
         if (!$Value) {
             return null;
         }

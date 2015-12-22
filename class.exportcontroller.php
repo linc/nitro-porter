@@ -20,7 +20,7 @@ abstract class ExportController {
     protected $Ex = null;
 
     /** Forum-specific export routine */
-    abstract protected function ForumExport($Ex);
+    abstract protected function forumExport($Ex);
 
     /**
      * Construct and set the controller's properties from the posted form.
@@ -28,11 +28,11 @@ abstract class ExportController {
     public function __construct() {
         global $Supported;
 
-        $this->HandleInfoForm();
+        $this->handleInfoForm();
 
         $this->Ex = new ExportModel;
         $this->Ex->Controller = $this;
-        $this->Ex->SetConnection(
+        $this->Ex->setConnection(
             $this->DbInfo['dbhost'],
             $this->DbInfo['dbuser'],
             $this->DbInfo['dbpass'],
@@ -48,9 +48,9 @@ abstract class ExportController {
         } elseif ($hasDefaultPrefix) {
             $this->Ex->Prefix = $Supported[$lcClassName]['prefix'];
         }
-        $this->Ex->Destination = $this->Param('dest', 'file');
-        $this->Ex->DestDb = $this->Param('destdb', null);
-        $this->Ex->TestMode = $this->Param('test', false);
+        $this->Ex->Destination = $this->param('dest', 'file');
+        $this->Ex->DestDb = $this->param('destdb', null);
+        $this->Ex->TestMode = $this->param('test', false);
 
         /**
          * Selective exports
@@ -59,7 +59,7 @@ abstract class ExportController {
          * 3. Normalize case to lower
          * 4. Save to the ExportModel instance
          */
-        $RestrictedTables = $this->Param('tables', false);
+        $RestrictedTables = $this->param('tables', false);
         if (!empty($RestrictedTables)) {
             $RestrictedTables = explode(',', $RestrictedTables);
 
@@ -77,8 +77,8 @@ abstract class ExportController {
      *
      * @return string
      */
-    public function CdnPrefix() {
-        $Cdn = rtrim($this->Param('cdn', ''), '/');
+    public function cdnPrefix() {
+        $Cdn = rtrim($this->param('cdn', ''), '/');
         if ($Cdn) {
             $Cdn .= '/';
         }
@@ -89,42 +89,42 @@ abstract class ExportController {
     /**
      * Logic for export process.
      */
-    public function DoExport() {
+    public function doExport() {
         global $Supported;
 
         // Test connection
-        $Msg = $this->TestDatabase();
+        $Msg = $this->testDatabase();
         if ($Msg === true) {
 
             // Test src tables' existence structure
-            $Msg = $this->Ex->VerifySource($this->SourceTables);
+            $Msg = $this->Ex->verifySource($this->SourceTables);
             if ($Msg === true) {
                 // Good src tables - Start dump
-                $this->Ex->UseCompression(true);
+                $this->Ex->useCompression(true);
                 $this->Ex->FilenamePrefix = $this->DbInfo['dbname'];
                 set_time_limit(60 * 60);
 
 //            ob_start();
-                $this->ForumExport($this->Ex);
+                $this->forumExport($this->Ex);
 //            $Errors = ob_get_clean();
 
                 $Msg = $this->Ex->Comments;
 
                 // Write the results.  Send no path if we don't know where it went.
-                $RelativePath = ($this->Param('destpath', false)) ? false : $this->Ex->Path;
-                ViewExportResult($Msg, 'Info', $RelativePath);
+                $RelativePath = ($this->param('destpath', false)) ? false : $this->Ex->Path;
+                viewExportResult($Msg, 'Info', $RelativePath);
             } else {
-                ViewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
+                viewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
             } // Back to form with error
         } else {
-            ViewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
+            viewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
         } // Back to form with error
     }
 
     /**
      * User submitted db connection info.
      */
-    public function HandleInfoForm() {
+    public function handleInfoForm() {
         $this->DbInfo = array(
             'dbhost' => $_POST['dbhost'],
             'dbuser' => $_POST['dbuser'],
@@ -142,7 +142,7 @@ abstract class ExportController {
      * @param mixed $Default Fallback value.
      * @return mixed Value of the parameter.
      */
-    public function Param($Name, $Default = false) {
+    public function param($Name, $Default = false) {
         if (isset($_POST[$Name])) {
             return $_POST[$Name];
         } elseif (isset($_GET[$Name])) {
@@ -157,7 +157,7 @@ abstract class ExportController {
      *
      * @return string|bool True on success, message on failure.
      */
-    public function TestDatabase() {
+    public function testDatabase() {
         // Connection
         if (!function_exists('mysql_connect')) {
             $Result = 'mysql_connect is an undefined function.  Verify MySQL extension is installed and enabled.';

@@ -25,14 +25,14 @@ class UserVoice extends ExportController {
      *
      * @param ExportModel $Ex
      */
-    public function ForumExport($Ex) {
+    public function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('Threads');
+        $CharacterSet = $Ex->getCharacterSet('Threads');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
-        $Ex->BeginExport('', 'User Voice');
+        $Ex->beginExport('', 'User Voice');
         $Ex->SourcePrefix = 'cs_';
 
 
@@ -42,7 +42,7 @@ class UserVoice extends ExportController {
             'UserName' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'CreateDate' => array('Column' => 'DateInserted'),
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
          concat('sha1$', m.PasswordSalt, '$', m.Password) as Password,
          'django' as HashMethod,
@@ -57,7 +57,7 @@ class UserVoice extends ExportController {
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'RoleIDConverter')),
             'RoleName' => 'Name'
         );
-        $Ex->ExportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
          from aspnet_Roles", $Role_Map);
 
@@ -65,7 +65,7 @@ class UserVoice extends ExportController {
         $UserRole_Map = array(
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'RoleIDConverter')),
         );
-        $Ex->ExportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.UserID, ur.RoleId
          from aspnet_UsersInRoles ur
          left join :_Users u on ur.UserId = u.MembershipID
@@ -79,7 +79,7 @@ class UserVoice extends ExportController {
             'SortOrder' => 'Sort',
             'DateCreated' => 'DateInserted'
         );
-        $Ex->ExportTable('Category', "
+        $Ex->exportTable('Category', "
          select s.*
          from :_Sections s", $Category_Map);
 
@@ -100,7 +100,7 @@ class UserVoice extends ExportController {
             'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
             'IPAddress' => 'InsertIPAddress'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select t.*,
             p.Subject,
             p.Body,
@@ -121,7 +121,7 @@ class UserVoice extends ExportController {
             'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
             'PostDate' => 'DateInserted'
         );
-        $Ex->ExportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select p.*
          from :_Posts p
          where SortOrder > 1", $Comment_Map);
@@ -131,7 +131,7 @@ class UserVoice extends ExportController {
         $UserDiscussion_Map = array(
             'ThreadID' => 'DiscussionID'
         );
-        $Ex->ExportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select t.*,
             '1' as Bookmarked,
             NOW() as DateLastViewed
@@ -156,12 +156,12 @@ class UserVoice extends ExportController {
         */
 
         // Decode files in database.
-        $this->ExportHexAvatars();
+        $this->exportHexAvatars();
         //$this->ExportHexAttachments();
 
 
         // El fin.
-        $Ex->EndExport();
+        $Ex->endExport();
     }
 
     /**
@@ -171,17 +171,17 @@ class UserVoice extends ExportController {
      * @param string $RoleID
      * @return int
      */
-    public function RoleIDConverter($RoleID) {
+    public function roleIDConverter($RoleID) {
         return hexdec(substr($RoleID, 0, 4));
     }
 
     /**
      * Avatars are hex-encoded in the database.
      */
-    public function ExportHexAvatars($Thumbnail = true) {
-        $this->Ex->Comment("Exporting hex encoded columns...");
+    public function exportHexAvatars($Thumbnail = true) {
+        $this->Ex->comment("Exporting hex encoded columns...");
 
-        $Result = $this->Ex->Query("select UserID, Length, ContentType, Content from :_UserAvatar");
+        $Result = $this->Ex->query("select UserID, Length, ContentType, Content from :_UserAvatar");
         $Path = '/www/porter/userpics';
         $Count = 0;
 
@@ -196,7 +196,7 @@ class UserVoice extends ExportController {
 
             $PhotoPath = $Path . '/pavatar' . $Row['UserID'] . '.jpg';
             file_put_contents($PhotoPath, hex2bin($Row['Content']));
-            $this->Ex->Status('.');
+            $this->Ex->status('.');
 
             if ($Thumbnail) {
                 if ($Thumbnail === true) {
@@ -205,21 +205,21 @@ class UserVoice extends ExportController {
 
                 //$PicPath = str_replace('/avat', '/pavat', $PhotoPath);
                 $ThumbPath = str_replace('/pavat', '/navat', $PhotoPath);
-                GenerateThumbnail($PhotoPath, $ThumbPath, $Thumbnail, $Thumbnail);
+                generateThumbnail($PhotoPath, $ThumbPath, $Thumbnail, $Thumbnail);
             }
             $Count++;
         }
-        $this->Ex->Status("$Count Hex Encoded.\n");
-        $this->Ex->Comment("$Count Hex Encoded.", false);
+        $this->Ex->status("$Count Hex Encoded.\n");
+        $this->Ex->comment("$Count Hex Encoded.", false);
     }
 
     /**
      *
      */
-    public function ExportHexAttachments() {
-        $this->Ex->Comment("Exporting hex encoded columns...");
+    public function exportHexAttachments() {
+        $this->Ex->comment("Exporting hex encoded columns...");
 
-        $Result = $this->Ex->Query("select a.*, p.PostID
+        $Result = $this->Ex->query("select a.*, p.PostID
          from :_PostAttachments a
          left join :_Posts p on p.PostID = a.PostID
          where IsRemote = 0");
@@ -238,8 +238,8 @@ class UserVoice extends ExportController {
             file_put_contents($Path . '/' . $Row['FileName'], hex2bin($Row['Content']));
             $Count++;
         }
-        $this->Ex->Status("$Count Hex Encoded.\n");
-        $this->Ex->Comment("$Count Hex Encoded.", false);
+        $this->Ex->status("$Count Hex Encoded.\n");
+        $this->Ex->comment("$Count Hex Encoded.", false);
     }
 }
 
@@ -249,7 +249,7 @@ class UserVoice extends ExportController {
  * @param string $ext If this argument is specified then this extension will be added to the list of known types.
  * @return string The file extension without the dot.
  */
-function MimeToExt($mime, $ext = null) {
+function mimeToExt($mime, $ext = null) {
     static $known = array('text/plain' => 'txt', 'image/jpeg' => 'jpg');
     $mime = strtolower($mime);
 

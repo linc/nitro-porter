@@ -39,15 +39,15 @@ class SMF2 extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($Ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('messages');
+        $CharacterSet = $Ex->getCharacterSet('messages');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $Ex->BeginExport('', 'SMF 2.*', array('HashMethod' => 'Django'));
+        $Ex->beginExport('', 'SMF 2.*', array('HashMethod' => 'Django'));
 
         // Users
         $User_Map = array(
@@ -65,7 +65,7 @@ class SMF2 extends ExportController {
             'DateLastActive' => 'DateLastActive',
             'DateUpdated' => 'DateUpdated'
         );
-        $Ex->ExportTable('User', "
+        $Ex->exportTable('User', "
          select m.*,
             from_unixtime(date_registered) as DateInserted,
             from_unixtime(date_registered) as DateFirstVisit,
@@ -81,21 +81,21 @@ class SMF2 extends ExportController {
             'id_group' => 'RoleID',
             'group_name' => 'Name'
         );
-        $Ex->ExportTable('Role', "select * from :_membergroups", $Role_Map);
+        $Ex->exportTable('Role', "select * from :_membergroups", $Role_Map);
 
         // UserRoles
         $UserRole_Map = array(
             'id_member' => 'UserID',
             'id_group' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', "select * from :_members", $UserRole_Map);
+        $Ex->exportTable('UserRole', "select * from :_members", $UserRole_Map);
 
         // Categories
         $Category_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity'))
         );
 
-        $Ex->ExportTable('Category',
+        $Ex->exportTable('Category',
             "
             select
               (`id_cat` + 1000000) as `CategoryID`,
@@ -139,7 +139,7 @@ class SMF2 extends ExportController {
             'LastCommentUserID' => 'LastCommentUserID',
             'id_last_msg' => 'LastCommentID'
         );
-        $Ex->ExportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
       select t.*,
          (t.num_replies + 1) as CountComments,
          m.subject,
@@ -168,7 +168,7 @@ class SMF2 extends ExportController {
             'id_member' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
-        $Ex->ExportTable('Comment',
+        $Ex->exportTable('Comment',
             "select m.*,
                from_unixtime(m.poster_time) AS DateInserted,
                'BBCode' as Format
@@ -193,7 +193,7 @@ class SMF2 extends ExportController {
             'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
         );
-        $Ex->ExportTable('Media', "
+        $Ex->exportTable('Media', "
             select a.*,
                 concat('attachments/', a.filename) as Path,
                 IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
@@ -216,7 +216,7 @@ class SMF2 extends ExportController {
             'unixmsgtime' => 'DateInserted',
         );
 
-        $Ex->ExportTable('Conversation',
+        $Ex->exportTable('Conversation',
             "select
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime
@@ -233,7 +233,7 @@ class SMF2 extends ExportController {
             'unixmsgtime' => 'DateInserted',
         );
 
-        $Ex->ExportTable('ConversationMessage',
+        $Ex->exportTable('ConversationMessage',
             "select
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime ,
@@ -248,7 +248,7 @@ class SMF2 extends ExportController {
             'deleted2' => 'Deleted'
         );
 
-        $Ex->ExportTable('UserConversation',
+        $Ex->exportTable('UserConversation',
             "(select
               pm.id_member_from as id_member2,
               pm.id_pm_head,
@@ -266,11 +266,11 @@ class SMF2 extends ExportController {
 
         // End
 
-        $Ex->EndExport();
+        $Ex->endExport();
 
     }
 
-    public function DecodeNumericEntity($Text) {
+    public function decodeNumericEntity($Text) {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
 
