@@ -273,4 +273,5 @@ class Jforum extends ExportController {
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

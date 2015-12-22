@@ -196,4 +196,5 @@ class Drupal extends ExportController {
 
 }
 
+// Closing PHP tag required. (make.php)
 ?>

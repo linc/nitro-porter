@@ -226,4 +226,5 @@ class Esotalk extends ExportController {
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

@@ -544,4 +544,5 @@ join z_pm pm
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

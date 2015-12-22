@@ -557,4 +557,5 @@ join :_topics t
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

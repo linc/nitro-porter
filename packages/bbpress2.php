@@ -211,3 +211,7 @@ class BBPress2 extends ExportController {
         $Ex->endExport();
     }
 }
+
+// Closing PHP tag required. (make.php)
+?>
+

@@ -179,4 +179,5 @@ class Kunena extends ExportController {
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>
