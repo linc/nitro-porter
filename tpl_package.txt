@@ -8,8 +8,8 @@
  * @see functions.commandline.php for command line usage.
  */
 
-$Supported['__NAME__'] = array('name'=> '__NAME__', 'prefix'=>'');
-$Supported['__NAME__']['features'] = array('Users' => 1);
+$supported['__NAME__'] = array('name'=> '__NAME__', 'prefix'=>'');
+$supported['__NAME__']['features'] = array('Users' => 1);
 
 class __NAME__ extends ExportController {
    /**
@@ -18,71 +18,71 @@ class __NAME__ extends ExportController {
     * @param ExportModel $Ex
     * @see $_Structures in ExportModel for allowed destination tables & columns.
     */
-   public function ForumExport($Ex) {
+   public function forumExport($ex) {
       // Get the characterset for the comments.
       // Usually the comments table is the best target for this.
-      $CharacterSet = $Ex->GetCharacterSet('posts');
-      if ($CharacterSet)
-         $Ex->CharacterSet = $CharacterSet;
+      $characterSet = $ex->getCharacterSet('posts');
+      if ($characterSet)
+         $ex->characterSet = $characterSet;
 
       // Reiterate the platform name here to be included in the porter file header.
-      $Ex->BeginExport('', '__NAME__');
+      $ex->beginExport('', '__NAME__');
 
 
       // User.
-      $User_Map = array(
+      $user_Map = array(
          //'Source' => 'Vanilla',
       );
-      $Ex->ExportTable('User', "
+      $ex->exportTable('User', "
          select u.*
-         from :_tblUser u", $User_Map);
+         from :_tblUser u", $user_Map);
 
 
       // Role.
-      $Role_Map = array(
+      $role_Map = array(
          //'Source' => 'Vanilla',
       );
-      $Ex->ExportTable('Role', "
+      $ex->exportTable('Role', "
          select *
-         from :_tblGroup", $Role_Map);
+         from :_tblGroup", $role_Map);
 
 
       // User Role.
-      $UserRole_Map = array(
+      $userRole_Map = array(
          //'SourceName' => 'VanillaName',
       );
-      $Ex->ExportTable('UserRole', "
+      $ex->exportTable('UserRole', "
          select u.*
-         from :_tblAuthor u", $UserRole_Map);
+         from :_tblAuthor u", $userRole_Map);
 
 
       // Category.
-      $Category_Map = array(
+      $category_Map = array(
          //'SourceName' => 'VanillaName',
       );
-      $Ex->ExportTable('Category', "
+      $ex->exportTable('Category', "
          select *
-         from :_tblCategory c", $Category_Map);
+         from :_tblCategory c", $category_Map);
 
 
       // Discussion.
-      $Discussion_Map = array(
+      $discussion_Map = array(
          //'SourceName' => 'VanillaName',
          //'SourceName' => array('Column' => 'VanillaName', 'Filter' => 'HTMLDecoder'),
       );
-      $Ex->ExportTable('Discussion', "
+      $ex->exportTable('Discussion', "
          select *,
             FROM_UNIXTIME(Message_date) as Message_date
-         from :_tblTopic t", $Discussion_Map);
+         from :_tblTopic t", $discussion_Map);
 
 
       // Comment.
-      $Comment_Map = array(
+      $comment_Map = array(
          //'SourceName' => 'VanillaName',
       );
-      $Ex->ExportTable('Comment', "
+      $ex->exportTable('Comment', "
          select th.*
-         from :_tblThread th", $Comment_Map);
+         from :_tblThread th", $comment_Map);
 
 
       // UserDiscussion.
@@ -98,7 +98,7 @@ class __NAME__ extends ExportController {
       // Polls.
 
 
-      $Ex->EndExport();
+      $ex->endExport();
    }
 }
 
