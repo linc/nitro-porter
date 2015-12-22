@@ -225,3 +225,5 @@ class Esotalk extends ExportController {
         $Ex->endExport();
     }
 }
+
+?>

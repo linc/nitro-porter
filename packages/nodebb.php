@@ -1062,3 +1062,5 @@ class NodeBB extends ExportController {
         return $attributes;
     }
 }
+
+?>

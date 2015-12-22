@@ -363,3 +363,5 @@ class Yaf extends ExportController {
         $this->Ex->queryN($Sql);
     }
 }
+
+?>

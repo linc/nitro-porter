@@ -216,3 +216,5 @@ class Mbox extends ExportController {
         return trim($Body[0]);
     }
 }
+
+?>

@@ -359,3 +359,5 @@ class WebWiz extends ExportController {
         $this->Ex->queryN($Sql);
     }
 }
+
+?>

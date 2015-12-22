@@ -636,3 +636,5 @@ function vanillaStructure() {
         )
     );
 }
+
+?>

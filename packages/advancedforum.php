@@ -132,3 +132,5 @@ class Advancedforum extends ExportController {
         }
     }
 }
+
+?>

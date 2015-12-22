@@ -76,3 +76,5 @@ class Vanilla2 extends ExportController {
     }
 
 }
+
+?>
