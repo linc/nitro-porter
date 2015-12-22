@@ -1,11 +1,11 @@
 <?php
 /* Written by John Crenshaw for Priacta, Inc. */
-
 /**
- * SMF exporter tool
+ * SMF2 exporter tool
  *
- * @copyright Priacta, Inc. 2010
+ * @copyright 2009-2015 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @author John Crenshaw
  * @package VanillaPorter
  */
 

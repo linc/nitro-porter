@@ -2,10 +2,9 @@
 /**
  * jforum exporter tool.
  *
- * @copyright Vanilla Forums Inc. 2010-2014
- * @license GNU GPL2
+ * @copyright 2009-2015 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
- * @see functions.commandline.php for command line usage.
  */
 
 // Add to the $Supported array so it appears in the dropdown menu. Uncomment next line.

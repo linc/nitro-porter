@@ -62,8 +62,11 @@ $supported['vbulletin']['features'] = array(
 /**
  * vBulletin-specific extension of generic ExportController.
  *
+ * @copyright 2009-2015 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
+
 class VBulletin extends ExportController {
     /* @var string SQL fragment to build new path to attachments. */
     public $attachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', a.attachmentid,'.', f.extension) as Path";

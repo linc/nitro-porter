@@ -2,8 +2,8 @@
 /**
  * Expression Engine exporter tool
  *
- * @copyright Vanilla Forums Inc. 2010-2015
- * @license GNU GPL2
+ * @copyright 2009-2015 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 

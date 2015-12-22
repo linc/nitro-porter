@@ -16,7 +16,7 @@
  * Import all CSVs to 1 table named ‘mbox’ with text fields:
  *    Subject, Sender, Body, Date, Folder (manually set to name of each mbox)
  *
- * @copyright Vanilla Forums 2013
+ * @copyright 2009-2015 Vanilla Forums Inc.
  * @author Lincoln Russell lincolnwebs.com
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
