@@ -772,3 +772,5 @@ class VBulletin5 extends VBulletin {
         ;", $PollVote_Map);
     }
 }
+
+?>

@@ -125,3 +125,5 @@ function vanillaFeatureSet($Section) {
 
     return $Set;
 }
+
+?>

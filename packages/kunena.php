@@ -201,3 +201,5 @@ class Kunena extends ExportController {
         }
     }
 }
+
+?>

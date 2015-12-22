@@ -332,3 +332,5 @@ join z_pmgroup g
         return str_replace(':' . $UID, '', $Value);
     }
 }
+
+?>
