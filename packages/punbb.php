@@ -1,6 +1,6 @@
 <?php
 /**
- * Punbb exporter tool
+ * PunBB exporter tool
  *
  * @copyright Vanilla Forums Inc. 2010
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
@@ -25,7 +25,7 @@ $Supported['punbb']['features'] = array(
     'Passwords' => 1
 );
 
-class Punbb extends ExportController {
+class PunBB extends ExportController {
 
     /** @var bool Path to avatar images */
     protected $AvatarPath = false;

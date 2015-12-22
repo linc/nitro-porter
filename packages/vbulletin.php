@@ -64,7 +64,7 @@ $Supported['vbulletin']['features'] = array(
  *
  * @package VanillaPorter
  */
-class Vbulletin extends ExportController {
+class VBulletin extends ExportController {
     /* @var string SQL fragment to build new path to attachments. */
     public $AttachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', a.attachmentid,'.', f.extension) as Path";
 

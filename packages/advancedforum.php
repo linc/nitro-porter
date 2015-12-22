@@ -27,7 +27,7 @@ $Supported['advancedforum']['features'] = array(
     'Users' => 1
 );
 
-class advancedforum extends ExportController {
+class Advancedforum extends ExportController {
     /**
      * Main export process.
      *
