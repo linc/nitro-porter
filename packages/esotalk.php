@@ -8,8 +8,8 @@
  * @see functions.commandline.php for command line usage.
  */
 
-$Supported['esotalk'] = array('name' => 'esoTalk', 'prefix' => 'et_');
-$Supported['esotalk']['features'] = array(
+$supported['esotalk'] = array('name' => 'esoTalk', 'prefix' => 'et_');
+$supported['esotalk']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -26,64 +26,64 @@ class Esotalk extends ExportController {
      * @param ExportModel $Ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($Ex) {
+    public function forumExport($ex) {
 
-        $CharacterSet = $Ex->getCharacterSet('post');
-        if ($CharacterSet) {
-            $Ex->CharacterSet = $CharacterSet;
+        $characterSet = $ex->getCharacterSet('post');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
         }
 
         // Reiterate the platform name here to be included in the porter file header.
-        $Ex->beginExport('', 'esotalk');
+        $ex->beginExport('', 'esotalk');
 
 
         // User.
-        $User_Map = array(
+        $user_Map = array(
             'memberId' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
             'confirmed' => 'Verified',
             'password' => 'Password',
         );
-        $Ex->exportTable('User', "
+        $ex->exportTable('User', "
          select u.*, 'crypt' as HashMethod,
             FROM_UNIXTIME(joinTime) as DateInserted,
             FROM_UNIXTIME(lastActionTime) as DateLastActive,
             if(account='suspended',1,0) as Banned
-         from :_member u", $User_Map);
+         from :_member u", $user_Map);
 
 
         // Role.
-        $Role_Map = array(
+        $role_Map = array(
             'groupId' => 'RoleID',
             'name' => 'Name',
         );
-        $Ex->exportTable('Role', "
+        $ex->exportTable('Role', "
          select groupId, name
          from :_group
          union select max(groupId)+1, 'Member' from :_group
          union select max(groupId)+2, 'Administrator' from :_group
-         ", $Role_Map);
+         ", $role_Map);
 
 
         // User Role.
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'memberId' => 'UserID',
             'groupId' => 'RoleID',
         );
         // Create fake 'member' and 'administrator' roles to account for them being set separately on member table.
-        $Ex->exportTable('UserRole', "
+        $ex->exportTable('UserRole', "
          select u.memberId, u.groupId
          from :_member_group u
          union all
          select memberId, (select max(groupId)+1 from :_group) from :_member where account='member'
          union all
          select memberId, (select max(groupId)+2 from :_group) from :_member where account='administrator'
-         ", $UserRole_Map);
+         ", $userRole_Map);
 
 
         // Category.
-        $Category_Map = array(
+        $category_Map = array(
             'channelId' => 'CategoryID',
             'title' => 'Name',
             'slug' => 'UrlCode',
@@ -92,13 +92,13 @@ class Esotalk extends ExportController {
             'countConversations' => 'CountDiscussions',
             //'countPosts' => 'CountComments',
         );
-        $Ex->exportTable('Category', "
+        $ex->exportTable('Category', "
          select *
-         from :_channel c", $Category_Map);
+         from :_channel c", $category_Map);
 
 
         // Discussion.
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'conversationId' => 'DiscussionID',
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'channelId' => 'CategoryID',
@@ -110,7 +110,7 @@ class Esotalk extends ExportController {
             'content' => 'Body',
         );
         // The body of the OP is in the post table.
-        $Ex->exportTable('Discussion', "
+        $ex->exportTable('Discussion', "
 			select
 				c.conversationId,
 				c.title,
@@ -128,11 +128,11 @@ class Esotalk extends ExportController {
 				on p.conversationId = c.conversationId
 			where private = 0
 			group by c.conversationId
-			group by p.time", $Discussion_Map);
+			group by p.time", $discussion_Map);
 
 
         // Comment.
-        $Comment_Map = array(
+        $comment_Map = array(
             'postId' => 'CommentID',
             'conversationId' => 'DiscussionID',
             'content' => 'Body',
@@ -140,7 +140,7 @@ class Esotalk extends ExportController {
             'editMemberId' => 'UpdateUserID',
         );
         // Now we need to omit the comments we used as the OP.
-        $Ex->exportTable('Comment', "
+        $ex->exportTable('Comment', "
 		select p.*,
 				'BBCode' as Format,
 				from_unixtime(time) as DateInserted,
@@ -153,18 +153,18 @@ class Esotalk extends ExportController {
 				min(postId) as m
 			from :_post
 			group by conversationId) r on r.conversationId = c.conversationId
-		where p.postId<>r.m", $Comment_Map);
+		where p.postId<>r.m", $comment_Map);
 
 
         // UserDiscussion.
-        $UserDiscussion_Map = array(
+        $userDiscussion_Map = array(
             'id' => 'UserID',
             'conversationId' => 'DiscussionID',
         );
-        $Ex->exportTable('UserDiscussion', "
+        $ex->exportTable('UserDiscussion', "
          select *
          from :_member_conversation
-         where starred = 1", $UserDiscussion_Map);
+         where starred = 1", $userDiscussion_Map);
 
 
         // Permission.
@@ -176,38 +176,38 @@ class Esotalk extends ExportController {
 
 
         // Conversation.
-        $Conversation_map = array(
+        $conversation_map = array(
             'conversationId' => 'ConversationID',
             'countPosts' => 'CountMessages',
             'startMemberId' => 'InsertUserID',
             'countPosts' => 'CountMessages',
         );
 
-        $Ex->exportTable('Conversation', "
+        $ex->exportTable('Conversation', "
                 select p.*,
                 'BBCode' as Format,
                 from_unixtime(time) as DateInserted,
                 from_unixtime(lastposttime) as DateUpdated
         from :_post p
         inner join :_conversation c on c.conversationId = p.conversationId
-        and c.private = 1", $Conversation_map);
+        and c.private = 1", $conversation_map);
 
-        $UserConversation_map = array(
+        $userConversation_map = array(
             'conversationId' => 'ConversationID',
             'memberId' => 'UserID',
 
         );
 
-        $Ex->exportTable('UserConversation', "
+        $ex->exportTable('UserConversation', "
         select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
         inner join :_conversation c on c.conversationId = a.conversationId
         and c.private = 1 and a.type = 'privateAdd'
         union all
         select distinct a.memberId as memberId, a.type, c.private, c.conversationId from :_activity a
         inner join :_conversation c on c.conversationId = a.conversationId
-        and c.private = 1 and a.type = 'privateAdd'", $UserConversation_map);
+        and c.private = 1 and a.type = 'privateAdd'", $userConversation_map);
 
-        $UserConversationMessage_map = array(
+        $userConversationMessage_map = array(
             'postId' => 'MessageID',
             'conversationId' => 'ConversationID',
             'content' => 'Body',
@@ -215,14 +215,14 @@ class Esotalk extends ExportController {
 
         );
 
-        $Ex->exportTable('ConversationMessage', "
+        $ex->exportTable('ConversationMessage', "
                 select p.*,
                 'BBCode' as Format,
                 from_unixtime(time) as DateInserted
         from :_post p
-        inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1", $UserConversationMessage_map);
+        inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1", $userConversationMessage_map);
 
-        $Ex->endExport();
+        $ex->endExport();
     }
 }
 
