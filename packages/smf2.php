@@ -9,8 +9,8 @@
  * @package VanillaPorter
  */
 
-$Supported['smf2'] = array('name' => 'Simple Machines 2', 'prefix' => 'smf_');
-$Supported['smf2']['features'] = array(
+$supported['smf2'] = array('name' => 'Simple Machines 2', 'prefix' => 'smf_');
+$supported['smf2']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -25,7 +25,7 @@ $Supported['smf2']['features'] = array(
 class SMF2 extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $SourceTables = array(
+    protected $sourceTables = array(
         'boards' => array(),
         'messages' => array(),
         'personal_messages' => array(),
@@ -39,18 +39,18 @@ class SMF2 extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function forumExport($Ex) {
+    protected function forumExport($ex) {
 
-        $CharacterSet = $Ex->getCharacterSet('messages');
-        if ($CharacterSet) {
-            $Ex->CharacterSet = $CharacterSet;
+        $characterSet = $ex->getCharacterSet('messages');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
         }
 
         // Begin
-        $Ex->beginExport('', 'SMF 2.*', array('HashMethod' => 'Django'));
+        $ex->beginExport('', 'SMF 2.*', array('HashMethod' => 'Django'));
 
         // Users
-        $User_Map = array(
+        $user_Map = array(
             'id_member' => 'UserID',
             'member_name' => 'Name',
             'password' => 'Password',
@@ -65,7 +65,7 @@ class SMF2 extends ExportController {
             'DateLastActive' => 'DateLastActive',
             'DateUpdated' => 'DateUpdated'
         );
-        $Ex->exportTable('User', "
+        $ex->exportTable('User', "
          select m.*,
             from_unixtime(date_registered) as DateInserted,
             from_unixtime(date_registered) as DateFirstVisit,
@@ -74,28 +74,28 @@ class SMF2 extends ExportController {
             concat('sha1$', lower(member_name), '$', passwd) as `password`,
             if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
          from :_members m
-         left join :_attachments a on a.id_member = m.id_member ", $User_Map);
+         left join :_attachments a on a.id_member = m.id_member ", $user_Map);
 
         // Roles
-        $Role_Map = array(
+        $role_Map = array(
             'id_group' => 'RoleID',
             'group_name' => 'Name'
         );
-        $Ex->exportTable('Role', "select * from :_membergroups", $Role_Map);
+        $ex->exportTable('Role', "select * from :_membergroups", $role_Map);
 
         // UserRoles
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'id_member' => 'UserID',
             'id_group' => 'RoleID'
         );
-        $Ex->exportTable('UserRole', "select * from :_members", $UserRole_Map);
+        $ex->exportTable('UserRole', "select * from :_members", $userRole_Map);
 
         // Categories
-        $Category_Map = array(
+        $category_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity'))
         );
 
-        $Ex->exportTable('Category',
+        $ex->exportTable('Category',
             "
             select
               (`id_cat` + 1000000) as `CategoryID`,
@@ -116,10 +116,10 @@ class SMF2 extends ExportController {
               b.`board_order` as `Sort`
             from :_boards b
 
-            ", $Category_Map);
+            ", $category_Map);
 
         // Discussions
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'id_topic' => 'DiscussionID',
             'subject' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity')),
             //,'Filter'=>'bb2html'),
@@ -139,7 +139,7 @@ class SMF2 extends ExportController {
             'LastCommentUserID' => 'LastCommentUserID',
             'id_last_msg' => 'LastCommentID'
         );
-        $Ex->exportTable('Discussion', "
+        $ex->exportTable('Discussion', "
       select t.*,
          (t.num_replies + 1) as CountComments,
          m.subject,
@@ -157,10 +157,10 @@ class SMF2 extends ExportController {
 
        -- where t.spam = 0 AND m.spam = 0;
 
-       ", $Discussion_Map);
+       ", $discussion_Map);
 
         // Comments
-        $Comment_Map = array(
+        $comment_Map = array(
             'id_msg' => 'CommentID',
             'id_topic' => 'DiscussionID',
             'Format' => 'Format',
@@ -168,17 +168,17 @@ class SMF2 extends ExportController {
             'id_member' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
-        $Ex->exportTable('Comment',
+        $ex->exportTable('Comment',
             "select m.*,
                from_unixtime(m.poster_time) AS DateInserted,
                'BBCode' as Format
              from :_messages m
                join :_topics t on m.id_topic = t.id_topic
                where m.id_msg <> t.id_first_msg;
-             ", $Comment_Map);
+             ", $comment_Map);
 
         // Media
-        $Media_Map = array(
+        $media_Map = array(
             'ID_ATTACH' => 'MediaID',
             'id_msg' => 'ForeignID',
             'size' => 'Size',
@@ -193,7 +193,7 @@ class SMF2 extends ExportController {
             'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
         );
-        $Ex->exportTable('Media', "
+        $ex->exportTable('Media', "
             select a.*,
                 concat('attachments/', a.filename) as Path,
                 IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
@@ -205,26 +205,26 @@ class SMF2 extends ExportController {
                 left join :_topics t on a.id_msg = t.id_first_msg
             where a.attachment_type = 0
                 and a.id_msg > 0
-        ", $Media_Map);
+        ", $media_Map);
 
 
         // Conversations
-        $Conversation_Map = array(
+        $conversation_Map = array(
             'id_pm_head' => 'ConversationID',
             'subject' => 'Subject',
             'id_member_from' => 'InsertUserID',
             'unixmsgtime' => 'DateInserted',
         );
 
-        $Ex->exportTable('Conversation',
+        $ex->exportTable('Conversation',
             "select
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime
             from :_personal_messages pm
-            ", $Conversation_Map);
+            ", $conversation_Map);
 
 
-        $ConvMsg_Map = array(
+        $convMsg_Map = array(
             'id_pm' => 'MessageID',
             'id_pm_head' => 'ConversationID',
             'body' => 'Body',
@@ -233,22 +233,22 @@ class SMF2 extends ExportController {
             'unixmsgtime' => 'DateInserted',
         );
 
-        $Ex->exportTable('ConversationMessage',
+        $ex->exportTable('ConversationMessage',
             "select
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime ,
               'BBCode' as format
             from :_personal_messages pm
-            ", $ConvMsg_Map);
+            ", $convMsg_Map);
 
 
-        $UserConv_Map = array(
+        $userConv_Map = array(
             'id_member2' => 'UserId',
             'id_pm_head' => 'ConversationID',
             'deleted2' => 'Deleted'
         );
 
-        $Ex->exportTable('UserConversation',
+        $ex->exportTable('UserConversation',
             "(select
               pm.id_member_from as id_member2,
               pm.id_pm_head,
@@ -261,22 +261,22 @@ class SMF2 extends ExportController {
             pmr.deleted as deleted2
             from :_personal_messages pm join :_pm_recipients pmr on pmr.id_pm = pm.id_pm
             )
-            ", $UserConv_Map);
+            ", $userConv_Map);
 
 
         // End
 
-        $Ex->endExport();
+        $ex->endExport();
 
     }
 
-    public function decodeNumericEntity($Text) {
+    public function decodeNumericEntity($text) {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
 
-            return mb_decode_numericentity($Text, $convmap, 'UTF-8');
+            return mb_decode_numericentity($text, $convmap, 'UTF-8');
         } else {
-            return $Text;
+            return $text;
         }
     }
 

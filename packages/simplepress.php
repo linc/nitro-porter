@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$Supported['simplepress'] = array('name' => 'SimplePress 1', 'prefix' => 'wp_');
-$Supported['simplepress']['features'] = array(
+$supported['simplepress'] = array('name' => 'SimplePress 1', 'prefix' => 'wp_');
+$supported['simplepress']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -22,7 +22,7 @@ $Supported['simplepress']['features'] = array(
 class SimplePress extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $SourceTables = array(
+    protected $sourceTables = array(
         'sfforums' => array(),
         'sfposts' => array(),
         'sftopics' => array(),
@@ -34,19 +34,19 @@ class SimplePress extends ExportController {
      * Forum-specific export format.
      * @param ExportModel $Ex
      */
-    protected function forumExport($Ex) {
-        $Ex->SourcePrefix = 'wp_';
+    protected function forumExport($ex) {
+        $ex->sourcePrefix = 'wp_';
 
-        $CharacterSet = $Ex->getCharacterSet('posts');
-        if ($CharacterSet) {
-            $Ex->CharacterSet = $CharacterSet;
+        $characterSet = $ex->getCharacterSet('posts');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
         }
 
         // Begin
-        $Ex->beginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
+        $ex->beginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
 
         // Users
-        $User_Map = array(
+        $user_Map = array(
             'user_id' => 'UserID',
             'display_name' => 'Name',
             'user_pass' => 'Password',
@@ -54,19 +54,19 @@ class SimplePress extends ExportController {
             'user_registered' => 'DateInserted',
             'lastvisit' => 'DateLastActive'
         );
-        $Ex->exportTable('User',
+        $ex->exportTable('User',
             "select m.*, u.user_pass, u.user_email, u.user_registered
           from :_users u
           join :_sfmembers m
-            on u.ID = m.user_id;", $User_Map);
+            on u.ID = m.user_id;", $user_Map);
 
         // Roles
-        $Role_Map = array(
+        $role_Map = array(
             'usergroup_id' => 'RoleID',
             'usergroup_name' => 'Name',
             'usergroup_desc' => 'Description'
         );
-        $Ex->exportTable('Role',
+        $ex->exportTable('Role',
             "select
             usergroup_id,
             usergroup_name,
@@ -78,10 +78,10 @@ class SimplePress extends ExportController {
          select
             100,
             'Administrators',
-            ''", $Role_Map);
+            ''", $role_Map);
 
         // Permissions.
-        $Ex->exportTable('Permission', "select
+        $ex->exportTable('Permission', "select
             usergroup_id as RoleID,
 case
    when usergroup_name like 'Guest%' then 'View'
@@ -95,11 +95,11 @@ end as _Permissions
          select 100, 'All'");
 
         // UserRoles
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'user_id' => 'UserID',
             'usergroup_id' => 'RoleID'
         );
-        $Ex->exportTable('UserRole',
+        $ex->exportTable('UserRole',
             "select
             m.user_id,
             m.usergroup_id
@@ -112,10 +112,10 @@ end as _Permissions
             100
          from :_usermeta um
          where um.meta_key = 'wp_capabilities'
-            and um.meta_value like '%PF Manage Forums%'", $UserRole_Map);
+            and um.meta_value like '%PF Manage Forums%'", $userRole_Map);
 
         // Categories
-        $Category_Map = array(
+        $category_Map = array(
             'forum_id' => 'CategoryID',
             'forum_name' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'forum_desc' => 'Description',
@@ -123,7 +123,7 @@ end as _Permissions
             'form_slug' => 'UrlCode',
             'parent_id' => 'ParentCategoryID'
         );
-        $Ex->exportTable('Category', "
+        $ex->exportTable('Category', "
          select
             f.forum_id,
             f.forum_name,
@@ -142,10 +142,10 @@ end as _Permissions
             g.group_desc,
             null,
             null
-         from :_sfgroups g", $Category_Map);
+         from :_sfgroups g", $category_Map);
 
         // Discussions
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'topic_id' => 'DiscussionID',
             'forum_id' => 'CategoryID',
             'user_id' => 'InsertUserID',
@@ -155,29 +155,29 @@ end as _Permissions
             'topic_pinned' => 'Announce',
             'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
         );
-        $Ex->exportTable('Discussion', "select t.*,
+        $ex->exportTable('Discussion', "select t.*,
             'Html' as Format
-         from :_sftopics t", $Discussion_Map);
+         from :_sftopics t", $discussion_Map);
 
-        if ($Ex->exists('sftags')) {
+        if ($ex->exists('sftags')) {
             // Tags
-            $Tag_Map = array(
+            $tag_Map = array(
                 'tag_id' => 'TagID',
                 'tag_name' => 'Name'
             );
-            $Ex->exportTable('Tag', "select * from :_sftags", $Tag_Map);
+            $ex->exportTable('Tag', "select * from :_sftags", $tag_Map);
 
-            if ($Ex->exists('sftagmeta')) {
-                $TagDiscussion_Map = array(
+            if ($ex->exists('sftagmeta')) {
+                $tagDiscussion_Map = array(
                     'tag_id' => 'TagID',
                     'topic_id' => 'DiscussionID'
                 );
-                $Ex->exportTable('TagDiscussion', "select * from :_sftagmeta", $TagDiscussion_Map);
+                $ex->exportTable('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
             }
         }
 
         // Comments
-        $Comment_Map = array(
+        $comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
             'post_content' => 'Body',
@@ -186,40 +186,40 @@ end as _Permissions
             'post_date' => 'DateInserted',
             'poster_ip' => 'InsertIPAddress'
         );
-        $Ex->exportTable('Comment', "select p.*,
+        $ex->exportTable('Comment', "select p.*,
             'Html' as Format
-         from :_sfposts p", $Comment_Map);
+         from :_sfposts p", $comment_Map);
 
         // Conversation.
-        $Conv_Map = array(
+        $conv_Map = array(
             'message_id' => 'ConversationID',
             'from_id' => 'InsertUserID',
             'sent_date' => 'DateInserted'
         );
-        $Ex->exportTable('Conversation',
+        $ex->exportTable('Conversation',
             "select *
          from :_sfmessages
-         where is_reply = 0", $Conv_Map);
+         where is_reply = 0", $conv_Map);
 
         // ConversationMessage.
-        $ConvMessage_Map = array(
+        $convMessage_Map = array(
             'message_id' => 'MessageID',
             'from_id' => 'InsertUserID',
             'message' => array('Column' => 'Body')
         );
-        $Ex->exportTable('ConversationMessage',
+        $ex->exportTable('ConversationMessage',
             'select c.message_id as ConversationID, m.*
          from :_sfmessages c
          join :_sfmessages m
            on (m.is_reply = 0 and m.message_id = c.message_id) or (m.is_reply = 1 and c.is_reply = 0 and m.message_slug = c.message_slug and m.from_id in (c.from_id, c.to_id) and m.to_id in (c.from_id, c.to_id));',
-            $ConvMessage_Map);
+            $convMessage_Map);
 
         // UserConversation
-        $UserConv_Map = array(
+        $userConv_Map = array(
             'message_id' => 'ConversationID',
             'from_id' => 'UserID'
         );
-        $Ex->exportTable('UserConversation',
+        $ex->exportTable('UserConversation',
             'select message_id, from_id
          from :_sfmessages
          where is_reply = 0
@@ -229,10 +229,10 @@ end as _Permissions
          select message_id, to_id
          from :_sfmessages
          where is_reply = 0',
-            $UserConv_Map);
+            $userConv_Map);
 
         // End
-        $Ex->endExport();
+        $ex->endExport();
     }
 }
 
