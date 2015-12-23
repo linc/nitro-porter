@@ -177,18 +177,29 @@ class SMF2 extends ExportController {
             'id_msg' => 'ForeignID',
             'size' => 'Size',
             'height' => 'ImageHeight',
-            'width' => 'ImageWidth'
+            'width' => 'ImageWidth',
+            'extract_mimetype' => array(
+                'Column' => 'Type',
+                'Filter' => function($value, $field, $row) {
+                    return $this->getMimeTypeFromFileName($row['Path']);
+                }
+            ),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
         );
-        $Ex->ExportTable('Media',
-            "select a.*,
-               concat('attachments/', a.filename) as Path,
-               concat('attachments/', b.filename) as ThumbPath,
-               if(t.id_topic is null, 'Comment', 'Discussion') as ForeignTable
-             from :_attachments a
-             left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
-             left join :_topics t on a.id_msg = t.id_first_msg
-             where a.attachment_type = 0
-               and a.id_msg > 0;", $Media_Map);
+        $Ex->ExportTable('Media', "
+            select a.*,
+                concat('attachments/', a.filename) as Path,
+                IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
+                null as extract_mimetype,
+                b.width as thumb_width,
+                if(t.id_topic is null, 'Comment', 'Discussion') as ForeignTable
+            from :_attachments a
+                left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+                left join :_topics t on a.id_msg = t.id_first_msg
+            where a.attachment_type = 0
+                and a.id_msg > 0
+        ", $Media_Map);
 
 
         // Conversations
@@ -279,6 +290,43 @@ class SMF2 extends ExportController {
             } else {
                 return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
             }
+        }
+    }
+
+    /**
+     * Determine mime type from file name
+     *
+     * @param string $fileName File name (Can be full path or file name only)
+     * @return null|string Mime type if it could be determined or null.
+     */
+    public function getMimeTypeFromFileName($fileName) {
+        $mimeType = null;
+
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        if ($extension) {
+            $mimeType = MimeTypeFromExtension('.'.$extension);
+        }
+
+        return $mimeType;
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_ExportTable
+     *
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
+     * @return current value of the field or null if the file is not an image.
+     */
+    public function FilterThumbnailData($value, $field, $row) {
+        $mimeType = $this->getMimeTypeFromFileName($row['Path']);
+        if ($mimeType && strpos($mimeType, 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
         }
     }
 }
