@@ -62,15 +62,15 @@ function viewNoPermission($msg) {
 /**
  * Form: Database connection info.
  */
-function viewForm($Data) {
-    $forums = getValue('Supported', $Data, array());
-    $msg = getValue('Msg', $Data, '');
-    $CanWrite = getValue('CanWrite', $Data, null);
+function viewForm($data) {
+    $forums = getValue('Supported', $data, array());
+    $msg = getValue('Msg', $data, '');
+    $canWrite = getValue('CanWrite', $data, null);
 
-    if ($CanWrite === null) {
-        $CanWrite = testWrite();
+    if ($canWrite === null) {
+        $canWrite = testWrite();
     }
-    if (!$CanWrite) {
+    if (!$canWrite) {
         $msg = 'The porter does not have write permission to write to this folder. You need to give the porter permission to create files so that it can generate the export file.' . $msg;
     }
 
@@ -155,9 +155,9 @@ function viewForm($Data) {
         function updatePrefix() {
             var type = document.getElementById('ForumType').value;
             switch (type) {
-                <?php foreach($forums as $ForumClass => $ForumInfo) : ?>
-                case '<?php echo $ForumClass; ?>':
-                    document.getElementById('ForumPrefix').value = '<?php echo $ForumInfo['prefix']; ?>';
+                <?php foreach($forums as $forumClass => $forumInfo) : ?>
+                case '<?php echo $forumClass; ?>':
+                    document.getElementById('ForumPrefix').value = '<?php echo $forumInfo['prefix']; ?>';
                     break;
                 <?php endforeach; ?>
             }
@@ -171,11 +171,11 @@ function viewForm($Data) {
 /**
  * Message: Result of export.
  *
- * @param array $Msgs Comments / logs from the export.
- * @param string $Class CSS class for wrapper.
- * @param string|bool $Path Path to file for download, or false.
+ * @param array $msgs Comments / logs from the export.
+ * @param string $class CSS class for wrapper.
+ * @param string|bool $path Path to file for download, or false.
  */
-function viewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
+function viewExportResult($msgs = array(), $class = 'Info', $path = false) {
     if (defined('CONSOLE')) {
         return;
     }
@@ -183,16 +183,16 @@ function viewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
     pageHeader();
 
     echo "<p class=\"DownloadLink\">Success!";
-    if ($Path) {
-        " <a href=\"$Path\"><b>Download exported file</b></a>";
+    if ($path) {
+        " <a href=\"$path\"><b>Download exported file</b></a>";
     }
     echo "</p>";
 
-    if (count($Msgs)) {
-        echo "<div class=\"$Class\">";
+    if (count($msgs)) {
+        echo "<div class=\"$class\">";
         echo "<p>Really boring export logs follow:</p>\n";
-        foreach ($Msgs as $Msg) {
-            echo "<p>$Msg</p>\n";
+        foreach ($msgs as $msg) {
+            echo "<p>$msg</p>\n";
         }
 
         echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
@@ -204,22 +204,22 @@ function viewExportResult($Msgs = array(), $Class = 'Info', $Path = false) {
 /**
  * Output a definition list of features for a single platform.
  *
- * @param string $Platform
- * @param array $Features
+ * @param string $platform
+ * @param array $features
  */
-function viewFeatureList($Platform, $Features = array()) {
-    global $Supported;
+function viewFeatureList($platform, $features = array()) {
+    global $supported;
 
     pageHeader();
 
     echo '<div class="Info">';
-    echo '<h2>' . $Supported[$Platform]['name'] . '</h2>';
+    echo '<h2>' . $supported[$platform]['name'] . '</h2>';
     echo '<dl>';
 
-    foreach ($Features as $Feature => $Trash) {
+    foreach ($features as $feature => $trash) {
         echo '
-      <dt>' . featureName($Feature) . '</dt>
-      <dd>' . featureStatus($Platform, $Feature) . '</dd>';
+      <dt>' . featureName($feature) . '</dt>
+      <dd>' . featureStatus($platform, $feature) . '</dd>';
     }
     echo '</dl>';
 
@@ -229,11 +229,11 @@ function viewFeatureList($Platform, $Features = array()) {
 /**
  * Output a table of features per all platforms.
  *
- * @param array $Features
+ * @param array $features
  */
-function viewFeatureTable($Features = array()) {
-    global $Supported;
-    $Platforms = array_keys($Supported);
+function viewFeatureTable($features = array()) {
+    global $supported;
+    $platforms = array_keys($supported);
 
     pageHeader();
     echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
@@ -242,20 +242,20 @@ function viewFeatureTable($Features = array()) {
 
     // Header row of labels for each platform
     echo '<th><i>Feature</i></th>';
-    foreach ($Platforms as $Slug) {
-        echo '<th class="Platform"><div><span><a href="?features=1&type=' . $Slug . '">' . $Supported[$Slug]['name'] . '</a></span></div></th>';
+    foreach ($platforms as $slug) {
+        echo '<th class="Platform"><div><span><a href="?features=1&type=' . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
     }
 
     echo '</tr></thead><tbody>';
 
     // Checklist of features per platform.
-    foreach ($Features as $Feature => $Trash) {
+    foreach ($features as $feature => $trash) {
         // Name
-        echo '<tr><td class="FeatureName">' . featureName($Feature) . '</td>';
+        echo '<tr><td class="FeatureName">' . featureName($feature) . '</td>';
 
         // Status per platform.
-        foreach ($Platforms as $Platform) {
-            echo '<td>' . featureStatus($Platform, $Feature, false) . '</td>';
+        foreach ($platforms as $platform) {
+            echo '<td>' . featureStatus($platform, $feature, false) . '</td>';
         }
         echo '</tr>';
     }

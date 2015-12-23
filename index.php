@@ -28,7 +28,7 @@ if (PHP_SAPI == 'cli') {
 }
 
 /** @var array Supported forum packages: classname => array(name, prefix, features) */
-global $Supported;
+global $supported;
 
 // Support Files
 include_once 'class.exportmodel.php';
@@ -44,16 +44,16 @@ include_once 'functions/feature-functions.php';
 set_error_handler("ErrorHandler");
 
 // Set Vanilla to appear first in the list.
-$Supported = array(
+$supported = array(
     'vanilla1' => array('name' => 'Vanilla 1', 'prefix' => 'LUM_'),
     'vanilla2' => array('name' => 'Vanilla 2', 'prefix' => 'GDN_')
 );
 
 // Include individual software porters.
 // MAKESKIPSTART
-$Paths = glob(dirname(__FILE__) . '/packages/*.php');
-foreach ($Paths as $Path) {
-    include_once $Path;
+$paths = glob(dirname(__FILE__) . '/packages/*.php');
+foreach ($paths as $path) {
+    include_once $path;
 }
 // MAKESKIPEND
 
@@ -63,34 +63,34 @@ if (defined('CONSOLE')) {
 }
 
 // Instantiate the appropriate controller or display the input page.
-$Method = 'DoExport';
+$method = 'DoExport';
 if (isset($_REQUEST['features'])) {
     // Feature list or table.
-    $Set = (isset($_REQUEST['cloud'])) ? array('core', 'addons', 'cloud') : false;
-    $Set = vanillaFeatures($Set);
+    $set = (isset($_REQUEST['cloud'])) ? array('core', 'addons', 'cloud') : false;
+    $set = vanillaFeatures($set);
 
     if (isset($_REQUEST['type'])) {
-        viewFeatureList($_REQUEST['type'], $Set);
+        viewFeatureList($_REQUEST['type'], $set);
     } else {
-        viewFeatureTable($Set);
+        viewFeatureTable($set);
     }
 } elseif (isset($_POST['type'])) {
-    if (array_key_exists($_POST['type'], $Supported)) {
+    if (array_key_exists($_POST['type'], $supported)) {
         // Mini-Factory for conducting exports.
         $class = ucwords($_POST['type']);
-        $Controller = new $class();
-        if (!method_exists($Controller, $Method)) {
-            echo "This datasource type does not support {$Method}.\n";
+        $controller = new $class();
+        if (!method_exists($controller, $method)) {
+            echo "This datasource type does not support {$method}.\n";
             exit();
         }
-        $Controller->$Method();
+        $controller->$method();
     } else {
         echo 'Invalid type specified: ' . $_POST['type'];
     }
 } else {
     // Show the web UI to start an export.
-    $CanWrite = testWrite();
-    viewForm(array('Supported' => $Supported, 'CanWrite' => $CanWrite));
+    $canWrite = testWrite();
+    viewForm(array('Supported' => $supported, 'CanWrite' => $canWrite));
 }
 
 // Console output should end in newline.
