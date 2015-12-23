@@ -5,7 +5,7 @@
  * @package VanillaPorter
  */
 
-$globalOptions = array(
+$GlobalOptions = array(
     // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s
     'type' => array(
         'Type of forum we\'re freeing you from.',
@@ -69,238 +69,238 @@ $globalOptions = array(
 );
 
 // Go through all of the supported types and add them to the type description.
-if (isset($supported)) {
-    $globalOptions['type']['Values'] = array_keys($supported);
+if (isset($Supported)) {
+    $GlobalOptions['type']['Values'] = array_keys($Supported);
 }
 
-function getAllCommandLineOptions($sections = false) {
-    global $globalOptions, $supported;
+function getAllCommandLineOptions($Sections = false) {
+    global $GlobalOptions, $Supported;
 
-    if ($sections) {
-        $result['Global Options'] = $globalOptions;
+    if ($Sections) {
+        $Result['Global Options'] = $GlobalOptions;
     } else {
-        $result = $globalOptions;
+        $Result = $GlobalOptions;
     }
 
-    foreach ($supported as $type => $options) {
-        $commandLine = v('CommandLine', $options);
-        if (!$commandLine) {
+    foreach ($Supported as $Type => $Options) {
+        $CommandLine = v('CommandLine', $Options);
+        if (!$CommandLine) {
             continue;
         }
 
-        if ($sections) {
-            $result[$options['name']] = $commandLine;
+        if ($Sections) {
+            $Result[$Options['name']] = $CommandLine;
         } else {
             // We need to add the types to each command line option for validation purposes.
-            foreach ($commandLine as $longCode => $row) {
-                if (isset($result[$longCode])) {
-                    $result[$longCode]['Types'][] = $type;
+            foreach ($CommandLine as $LongCode => $Row) {
+                if (isset($Result[$LongCode])) {
+                    $Result[$LongCode]['Types'][] = $Type;
                 } else {
-                    $row['Types'] = array($type);
-                    $result[$longCode] = $row;
+                    $Row['Types'] = array($Type);
+                    $Result[$LongCode] = $Row;
                 }
             }
         }
     }
 
-    return $result;
+    return $Result;
 }
 
-function getOptCodes($options) {
-    $shortCodes = '';
-    $longCodes = array();
+function getOptCodes($Options) {
+    $ShortCodes = '';
+    $LongCodes = array();
 
-    foreach ($options as $longCode => $row) {
-        $sx = v('Sx', $row, '');
-        $short = v('Short', $row, '');
+    foreach ($Options as $LongCode => $Row) {
+        $Sx = v('Sx', $Row, '');
+        $Short = v('Short', $Row, '');
 
-        if ($short) {
-            $shortCodes .= $short . $sx;
+        if ($Short) {
+            $ShortCodes .= $Short . $Sx;
         }
-        $longCodes[] = $longCode . $sx;
+        $LongCodes[] = $LongCode . $Sx;
     }
 
-    return array($shortCodes, $longCodes);
+    return array($ShortCodes, $LongCodes);
 }
 
-function parseCommandLine($options = null, $files = null) {
-    global $globalOptions, $supported, $argv;
+function parseCommandLine($Options = null, $Files = null) {
+    global $GlobalOptions, $Supported, $argv;
 
-    if (isset($options)) {
-        $globalOptions = $options;
+    if (isset($Options)) {
+        $GlobalOptions = $Options;
     }
-    if (!isset($globalOptions)) {
-        $globalOptions = array();
+    if (!isset($GlobalOptions)) {
+        $GlobalOptions = array();
     }
-    if (!isset($supported)) {
-        $supported = array();
+    if (!isset($Supported)) {
+        $Supported = array();
     }
 
-    $commandOptions = getAllCommandLineOptions();
-    list($shortCodes, $longCodes) = getOptCodes($commandOptions);
+    $CommandOptions = getAllCommandLineOptions();
+    list($ShortCodes, $LongCodes) = getOptCodes($CommandOptions);
 
 //   print_r($LongCodes);
 
-    $opts = getopt($shortCodes, $longCodes);
+    $Opts = getopt($ShortCodes, $LongCodes);
 
-    if (isset($opts['help']) || isset($opts['h'])) {
+    if (isset($Opts['help']) || isset($Opts['h'])) {
         writeCommandLineHelp();
         die();
     }
 
     // Spawn new packages from the command line!
-    if (isset($opts['spawn']) || isset($opts['s'])) {
-        $name = (isset($opts['spawn'])) ? $opts['spawn'] : $opts['s'];
-        spawnPackage($name);
+    if (isset($Opts['spawn']) || isset($Opts['s'])) {
+        $Name = (isset($Opts['spawn'])) ? $Opts['spawn'] : $Opts['s'];
+        spawnPackage($Name);
         die();
     }
 
-    $opts = validateCommandLine($opts, $commandOptions);
+    $Opts = validateCommandLine($Opts, $CommandOptions);
 
-    if (is_array($files)) {
-        $opts2 = array();
-        foreach ($files as $name) {
-            $value = array_pop($argv);
-            if (!$value) {
-                echo "Missing required parameter: $name";
+    if (is_array($Files)) {
+        $Opts2 = array();
+        foreach ($Files as $Name) {
+            $Value = array_pop($argv);
+            if (!$Value) {
+                echo "Missing required parameter: $Name";
             } else {
-                $opts2[$name] = $value;
+                $Opts2[$Name] = $Value;
             }
         }
-        if ($opts2) {
-            if ($opts === false) {
-                $opts = $opts2;
+        if ($Opts2) {
+            if ($Opts === false) {
+                $Opts = $Opts2;
             } else {
-                $opts = array_merge($opts, $opts2);
+                $Opts = array_merge($Opts, $Opts2);
             }
         }
     }
 
-    if ($opts === false) {
+    if ($Opts === false) {
         die();
     }
 
-    $_POST = $opts;
+    $_POST = $Opts;
 
-    return $opts;
+    return $Opts;
 }
 
-function validateCommandLine($values, $options) {
-    $errors = array();
-    $result = array();
+function validateCommandLine($Values, $Options) {
+    $Errors = array();
+    $Result = array();
 
 //   print_r($Values);
 //   print_r($Options);
 
-    $type = v('type', $values, v('t', $values));
+    $Type = v('type', $Values, v('t', $Values));
 
-    foreach ($options as $longCode => $row) {
-        $req = v('Req', $row);
-        $short = v('Short', $row);
+    foreach ($Options as $LongCode => $Row) {
+        $Req = v('Req', $Row);
+        $Short = v('Short', $Row);
 
-        $sx = v('Sx', $row);
-        $types = v('Types', $row);
+        $Sx = v('Sx', $Row);
+        $Types = v('Types', $Row);
 
-        if ($types && !in_array($type, $types)) {
+        if ($Types && !in_array($Type, $Types)) {
 //         echo "Skipping $LongCode\n";
             continue;
         }
 
-        if (isset($values[$longCode])) {
-            $value = $values[$longCode];
-            if (!$value) {
-                $value = true;
+        if (isset($Values[$LongCode])) {
+            $Value = $Values[$LongCode];
+            if (!$Value) {
+                $Value = true;
             }
-        } elseif ($short && isset($values[$short])) {
-            $value = $values[$short];
-            if (!$value) {
-                $value = true;
+        } elseif ($Short && isset($Values[$Short])) {
+            $Value = $Values[$Short];
+            if (!$Value) {
+                $Value = true;
             }
-        } elseif (isset($row['Default'])) {
-            $value = $row['Default'];
+        } elseif (isset($Row['Default'])) {
+            $Value = $Row['Default'];
         } else {
-            $value = null;
+            $Value = null;
         }
 
-        if (!$value) {
-            $default = v('Default', $row, null);
-            if ($default === null) {
-                if ($req) {
-                    $errors[] = "Missing required parameter: $longCode";
+        if (!$Value) {
+            $Default = v('Default', $Row, null);
+            if ($Default === null) {
+                if ($Req) {
+                    $Errors[] = "Missing required parameter: $LongCode";
                 }
 
                 continue;
             } else {
-                $value = $default;
+                $Value = $Default;
             }
         }
 
-        if ($allowedValues = v('Values', $row)) {
-            if (!in_array($value, $allowedValues)) {
-                $errors[] = "Invalid value for parameter: $longCode. Must be one of: " . implode(', ', $allowedValues);
+        if ($AllowedValues = v('Values', $Row)) {
+            if (!in_array($Value, $AllowedValues)) {
+                $Errors[] = "Invalid value for parameter: $LongCode. Must be one of: " . implode(', ', $AllowedValues);
                 continue;
             }
         }
 
-        $field = v('Field', $row, $longCode);
-        $result[$field] = $value;
+        $Field = v('Field', $Row, $LongCode);
+        $Result[$Field] = $Value;
     }
 
-    if (count($errors)) {
-        echo implode("\n", $errors) . "\n";
+    if (count($Errors)) {
+        echo implode("\n", $Errors) . "\n";
 
         return false;
     }
 
 
-    return $result;
+    return $Result;
 }
 
-function writeCommandLineHelp($options = null, $section = '') {
-    if ($options === null) {
-        $options = getAllCommandLineOptions(true);
-        foreach ($options as $section => $options) {
-            writeCommandLineHelp($options, $section);
+function writeCommandLineHelp($Options = null, $Section = '') {
+    if ($Options === null) {
+        $Options = getAllCommandLineOptions(true);
+        foreach ($Options as $Section => $Options) {
+            writeCommandLineHelp($Options, $Section);
         }
 
         return;
     }
 
-    echo "$section\n";
-    foreach ($options as $longname => $options) {
-        $output = "  ";
+    echo "$Section\n";
+    foreach ($Options as $Longname => $Options) {
+        $Output = "  ";
 
-        if (isset($options['Short'])) {
-            $output .= '-' . $options['Short'] . ', ';
+        if (isset($Options['Short'])) {
+            $Output .= '-' . $Options['Short'] . ', ';
         }
 
-        $output .= "--$longname";
+        $Output .= "--$Longname";
 
         // Align our descriptions by passing
-        $output = str_pad($output, 18, ' ');
+        $Output = str_pad($Output, 18, ' ');
 
-        if (v('Req', $options)) {
-            $output .= 'Required. ';
+        if (v('Req', $Options)) {
+            $Output .= 'Required. ';
         }
 
-        $output .= "{$options[0]}\n";
+        $Output .= "{$Options[0]}\n";
 
-        if ($values = v('Values', $options)) {
-            $output .= '    Valid Values: ' . implode(', ', $values) . "\n";
+        if ($Values = v('Values', $Options)) {
+            $Output .= '    Valid Values: ' . implode(', ', $Values) . "\n";
         }
 
-        echo $output;
+        echo $Output;
     }
 
     echo "\n";
 }
 
-function v($name, $array, $default = null) {
-    if (isset($array[$name])) {
-        return $array[$name];
+function v($Name, $Array, $Default = null) {
+    if (isset($Array[$Name])) {
+        return $Array[$Name];
     }
 
-    return $default;
+    return $Default;
 }
 
 ?>

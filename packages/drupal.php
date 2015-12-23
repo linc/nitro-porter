@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['drupal'] = array('name' => 'Drupal 6', 'prefix' => '');
-$supported['drupal']['features'] = array(
+$Supported['drupal'] = array('name' => 'Drupal 6', 'prefix' => '');
+$Supported['drupal']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -22,23 +22,23 @@ $supported['drupal']['features'] = array(
 class Drupal extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $_sourceTables = array();
+    protected $_SourceTables = array();
 
     /**
      * @param ExportModel $Ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('comment');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('comment');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $ex->beginExport('', 'Drupal');
+        $Ex->beginExport('', 'Drupal');
 
         // Users
-        $user_Map = array(
+        $User_Map = array(
             'uid' => 'UserID',
             'name' => 'Name',
             'Password' => 'Password',
@@ -47,55 +47,55 @@ class Drupal extends ExportController {
             'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
             'login' => array('Column' => 'DateLastActive', 'Filter' => 'TimestampToDate')
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
             nullif(concat('drupal/', u.picture), 'drupal/') as photo,
             concat('md5$$', u.pass) as Password,
             'Django' as HashMethod
          from :_users u
-         where uid > 0", $user_Map);
+         where uid > 0", $User_Map);
 
         // Signatures.
-        $userMeta_Map = array(
+        $UserMeta_Map = array(
             'uid' => 'UserID',
             'Name' => 'Name',
             'signature' => 'Value'
         );
-        $ex->exportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select u.*, 'Plugins.Signatures.Sig' as Name
          from :_users u
-         where uid > 0", $userMeta_Map);
+         where uid > 0", $UserMeta_Map);
 
         // Roles.
-        $role_Map = array(
+        $Role_Map = array(
             'rid' => 'RoleID',
             'name' => 'Name'
         );
-        $ex->exportTable('Role', "select r.* from :_role r", $role_Map);
+        $Ex->exportTable('Role', "select r.* from :_role r", $Role_Map);
 
         // User Role.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'uid' => 'UserID',
             'rid' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
-         select * from :_users_roles", $userRole_Map);
+        $Ex->exportTable('UserRole', "
+         select * from :_users_roles", $UserRole_Map);
 
         // Categories (sigh)
-        $category_Map = array(
+        $Category_Map = array(
             'tid' => 'CategoryID',
             'name' => 'Name',
             'description' => 'description',
             'parent' => 'ParentCategoryID'
         );
-        $ex->exportTable('Category', "
+        $Ex->exportTable('Category', "
          select t.*, nullif(h.parent, 0) as parent
          from :_term_data t
          join :_term_hierarchy h
-            on t.tid = h.tid", $category_Map);
+            on t.tid = h.tid", $Category_Map);
 
         // Discussions.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'nid' => 'DiscussionID',
             'title' => 'Name',
             'body' => 'Body',
@@ -105,23 +105,23 @@ class Drupal extends ExportController {
             'sticky' => 'Announce',
             'tid' => 'CategoryID'
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
          from nodeforum f
          left join node n
             on f.nid = n.nid
          left join node_revisions r
-            on r.nid = n.nid", $discussion_Map);
+            on r.nid = n.nid", $Discussion_Map);
 
         // Comments.
-        $comment_Map = array(
+        $Comment_Map = array(
             'cid' => 'CommentID',
             'uid' => 'InsertUserID',
             'body' => array('Column' => 'Body'),
             'hostname' => 'InsertIPAddress',
             'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select
             n.created,
             n.uid,
@@ -135,7 +135,7 @@ class Drupal extends ExportController {
             on c.cid = n.nid
          left join node_revisions r
             on r.nid = n.nid
-         where n.type = 'forum_reply'", $comment_Map);
+         where n.type = 'forum_reply'", $Comment_Map);
 
         // Comments.
         /*$Comment_Map = array(
@@ -177,7 +177,7 @@ class Drupal extends ExportController {
            where n.type = 'forum'", $Media_Map);
         */
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 
     /**
@@ -185,13 +185,13 @@ class Drupal extends ExportController {
      * @param ExportModel $Ex
      * @param string $TableName
      */
-    protected function exportTable($ex, $tableName) {
+    protected function exportTable($Ex, $TableName) {
         // Make sure the table exists.
-        if (!$ex->exists($tableName)) {
+        if (!$Ex->exists($TableName)) {
             return;
         }
 
-        $ex->exportTable($tableName, "select * from :_{$tableName}");
+        $Ex->exportTable($TableName, "select * from :_{$TableName}");
     }
 
 }

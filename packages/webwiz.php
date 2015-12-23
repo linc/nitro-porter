@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['webwiz'] = array('name' => 'Web Wiz Forums', 'prefix' => 'tbl');
-$supported['webwiz']['features'] = array(
+$Supported['webwiz'] = array('name' => 'Web Wiz Forums', 'prefix' => 'tbl');
+$Supported['webwiz']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -25,15 +25,15 @@ class WebWiz extends ExportController {
      *
      * @param ExportModel $Ex
      */
-    public function forumExport($ex) {
+    public function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('Topic');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('Topic');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
-        $ex->beginExport('', 'Web Wiz Forums');
-        $ex->sourcePrefix = 'tbl';
+        $Ex->beginExport('', 'Web Wiz Forums');
+        $Ex->SourcePrefix = 'tbl';
 
 //      // Permissions.
 //      $Permission_Map = array(
@@ -70,7 +70,7 @@ class WebWiz extends ExportController {
 
 
         // User.
-        $user_Map = array(
+        $User_Map = array(
             'Author_ID' => 'UserID',
             'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'Real_name' => array('Column' => 'FullName', 'Type' => 'varchar(50)', 'Filter' => 'HTMLDecoder'),
@@ -86,7 +86,7 @@ class WebWiz extends ExportController {
             'DOB' => 'DateOfBirth',
             'Show_email' => 'ShowEmail'
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select
             concat(Salt, '$', Password) as Password2,
             case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
@@ -94,29 +94,29 @@ class WebWiz extends ExportController {
             'webwiz' as HashMethod,
             u.*
          from :_Author u
-         ", $user_Map);
+         ", $User_Map);
 
 
         // Role.
-        $role_Map = array(
+        $Role_Map = array(
             'Group_ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
-         from :_Group", $role_Map);
+         from :_Group", $Role_Map);
 
         // User Role.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.*
-         from :_Author u", $userRole_Map);
+         from :_Author u", $UserRole_Map);
 
         // UserMeta
-        $ex->exportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select
             Author_ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -125,14 +125,14 @@ class WebWiz extends ExportController {
          where Signature <> ''");
 
         // Category.
-        $category_Map = array(
+        $Category_Map = array(
             'Forum_ID' => 'CategoryID',
             'Forum_name' => 'Name',
             'Forum_description' => 'Description',
             'Parent_ID' => 'ParentCategoryID',
             'Forum_order' => 'Sort'
         );
-        $ex->exportTable('Category', "
+        $Ex->exportTable('Category', "
          select
             f.Forum_ID,
             f.Cat_ID * 1000 as Parent_ID,
@@ -150,10 +150,10 @@ class WebWiz extends ExportController {
             c.Cat_name,
             null
          from :_Category c
-         ", $category_Map);
+         ", $Category_Map);
 
         // Discussion.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'Topic_ID' => 'DiscussionID',
             'Forum_ID' => 'CategoryID',
             'Author_ID' => 'InsertUserID',
@@ -166,7 +166,7 @@ class WebWiz extends ExportController {
             'Locked' => 'Closed',
 
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select
             th.Author_ID,
             th.Message,
@@ -176,10 +176,10 @@ class WebWiz extends ExportController {
             t.*
          from :_Topic t
          join :_Thread th
-            on t.Start_Thread_ID = th.Thread_ID", $discussion_Map);
+            on t.Start_Thread_ID = th.Thread_ID", $Discussion_Map);
 
         // Comment.
-        $comment_Map = array(
+        $Comment_Map = array(
             'Thread_ID' => 'CommentID',
             'Topic_ID' => 'DiscussionID',
             'Author_ID' => 'InsertUserID',
@@ -188,55 +188,55 @@ class WebWiz extends ExportController {
             'Format' => 'Format',
             'Message_date' => array('Column' => 'DateInserted')
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
       select
          th.*,
          'Html' as Format
       from :_Thread th
       join :_Topic t
          on t.Topic_ID = th.Topic_ID
-      where th.Thread_ID <> t.Start_Thread_ID", $comment_Map);
+      where th.Thread_ID <> t.Start_Thread_ID", $Comment_Map);
 
         $this->exportConversations();
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 
     public function exportConversations() {
-        $ex = $this->ex;
+        $Ex = $this->Ex;
 
         $this->_exportConversationTemps();
 
         // Conversation.
-        $conversation_Map = array(
+        $Conversation_Map = array(
             'PM_ID' => 'ConversationID',
             'Title' => array('Column' => 'Subject', 'Type' => 'varchar(255)'),
             'Author_ID' => 'InsertUserID',
             'PM_Message_Date' => array('Column' => 'DateInserted')
         );
-        $ex->exportTable('Conversation', "
+        $Ex->exportTable('Conversation', "
          select
             pm.*,
             g.Title
          from :_PMMessage pm
          join z_pmgroup g
-            on pm.PM_ID = g.Group_ID;", $conversation_Map);
+            on pm.PM_ID = g.Group_ID;", $Conversation_Map);
 
         // User Conversation.
-        $userConversation_Map = array(
+        $UserConversation_Map = array(
             'Group_ID' => 'ConversationID',
             'User_ID' => 'UserID'
         );
-        $ex->exportTable('UserConversation', "
+        $Ex->exportTable('UserConversation', "
          select
             g.Group_ID,
             t.User_ID
          from z_pmto t
          join z_pmgroup g
-            on g.Group_ID = t.PM_ID;", $userConversation_Map);
+            on g.Group_ID = t.PM_ID;", $UserConversation_Map);
 
         // Conversation Message.
-        $message_Map = array(
+        $Message_Map = array(
             'Group_ID' => 'ConversationID',
             'PM_ID' => 'MessageID',
             'PM_Message' => 'Body',
@@ -244,18 +244,18 @@ class WebWiz extends ExportController {
             'PM_Message_Date' => array('Column' => 'DateInserted'),
             'Author_ID' => 'InsertUserID'
         );
-        $ex->exportTable('ConversationMessage', "
+        $Ex->exportTable('ConversationMessage', "
          select
             pm.*,
             pm2.Group_ID,
             'Html' as Format
           from :_PMMessage pm
           join z_pmtext pm2
-            on pm.PM_ID = pm2.PM_ID;", $message_Map);
+            on pm.PM_ID = pm2.PM_ID;", $Message_Map);
     }
 
     protected function _exportConversationTemps() {
-        $sql = "
+        $Sql = "
          drop table if exists z_pmto;
 
          create table z_pmto (
@@ -356,7 +356,7 @@ class WebWiz extends ExportController {
                  on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
                set pm.Group_ID = g.Group_ID;";
 
-        $this->ex->queryN($sql);
+        $this->Ex->queryN($Sql);
     }
 }
 

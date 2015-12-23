@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['kunena'] = array('name' => 'Joomla Kunena', 'prefix' => 'jos_');
-$supported['kunena']['features'] = array(
+$Supported['kunena'] = array('name' => 'Joomla Kunena', 'prefix' => 'jos_');
+$Supported['kunena']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -24,19 +24,19 @@ class Kunena extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    public function forumExport($ex) {
+    public function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('mbox');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('mbox');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
-        $ex->destPrefix = 'jos';
+        $Ex->DestPrefix = 'jos';
 
-        $ex->beginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
+        $Ex->beginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
 
         // User.
-        $user_Map = array(
+        $User_Map = array(
             'id' => 'UserID',
             'name' => 'Name',
             'email' => 'Email',
@@ -50,7 +50,7 @@ class Kunena extends ExportController {
             'admin' => array('Column' => 'Admin', 'Type' => 'tinyint(1)'),
             'Photo' => 'Photo'
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          SELECT
             u.*,
             case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
@@ -60,23 +60,23 @@ class Kunena extends ExportController {
             !ku.hideemail as showemail
          FROM :_users u
          left join :_kunena_users ku
-            on ku.userid = u.id", $user_Map);
+            on ku.userid = u.id", $User_Map);
 
         // Role.
-        $role_Map = array(
+        $Role_Map = array(
             'rank_id' => 'RoleID',
             'rank_title' => 'Name',
         );
-        $ex->exportTable('Role', "select * from :_kunena_ranks", $role_Map);
+        $Ex->exportTable('Role', "select * from :_kunena_ranks", $Role_Map);
 
         // UserRole.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'id' => 'UserID',
             'rank' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select *
-         from :_users u", $userRole_Map);
+         from :_users u", $UserRole_Map);
 
         // Permission.
 //      $Ex->ExportTable('Permission',
@@ -87,7 +87,7 @@ class Kunena extends ExportController {
 //      select 16 as RoleID, 'All' as _Permissions", array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
 
         // Category.
-        $category_Map = array(
+        $Category_Map = array(
             'id' => 'CategoryID',
             'parent' => 'ParentCategoryID',
             'name' => 'Name',
@@ -95,11 +95,11 @@ class Kunena extends ExportController {
             'description' => 'Description',
 
         );
-        $ex->exportTable('Category', "
-         select * from :_kunena_categories", $category_Map);
+        $Ex->exportTable('Category', "
+         select * from :_kunena_categories", $Category_Map);
 
         // Discussion.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'id' => 'DiscussionID',
             'catid' => 'CategoryID',
             'userid' => 'InsertUserID',
@@ -113,7 +113,7 @@ class Kunena extends ExportController {
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select
             t.*,
             txt.message,
@@ -121,10 +121,10 @@ class Kunena extends ExportController {
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread = t.id", $discussion_Map);
+         where t.thread = t.id", $Discussion_Map);
 
         // Comment.
-        $comment_Map = array(
+        $Comment_Map = array(
             'id' => 'CommentID',
             'thread' => 'DiscussionID',
             'userid' => 'InsertUserID',
@@ -135,7 +135,7 @@ class Kunena extends ExportController {
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select
             t.*,
             txt.message,
@@ -143,19 +143,19 @@ class Kunena extends ExportController {
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread <> t.id", $comment_Map);
+         where t.thread <> t.id", $Comment_Map);
 
         // UserDiscussion.
-        $userDiscussion_Map = array(
+        $UserDiscussion_Map = array(
             'thread' => 'DiscussionID',
             'userid' => 'UserID'
         );
-        $ex->exportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select t.*, 1 as Bookmarked
-         from :_kunena_subscriptions t", $userDiscussion_Map);
+         from :_kunena_subscriptions t", $UserDiscussion_Map);
 
         // Media.
-        $media_Map = array(
+        $Media_Map = array(
             'id' => 'MediaID',
             'mesid' => 'ForeignID',
             'userid' => 'InsertUserID',
@@ -165,7 +165,7 @@ class Kunena extends ExportController {
             'filename' => array('Column' => 'Name', 'Filter' => 'UrlDecode'),
             'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
         );
-        $ex->exportTable('Media', "
+        $Ex->exportTable('Media', "
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
@@ -173,9 +173,9 @@ class Kunena extends ExportController {
             m.time
          from :_kunena_attachments a
          join :_kunena_messages m
-            on m.id = a.mesid", $media_Map);
+            on m.id = a.mesid", $Media_Map);
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 }
 

@@ -13,12 +13,12 @@
  * @param $Value
  * @return string
  */
-function forceDate($value) {
-    if (!$value || preg_match('`0000-00-00`', $value)) {
+function forceDate($Value) {
+    if (!$Value || preg_match('`0000-00-00`', $Value)) {
         return gmdate('Y-m-d H:i:s');
     }
 
-    return $value;
+    return $Value;
 }
 
 /**
@@ -44,8 +44,8 @@ function forceIP4($ip) {
  * @param string $str A string to be formatted.
  * @return string
  */
-function formatUrl($str) {
-    $urlTranslations = array(
+function formatUrl($Str) {
+    $UrlTranslations = array(
         '–' => '-',
         '—' => '-',
         'À' => 'A',
@@ -308,47 +308,47 @@ function formatUrl($str) {
     );
 
     // Preliminary decoding
-    $str = strip_tags(html_entity_decode($str, ENT_COMPAT, 'UTF-8'));
-    $str = strtr($str, $urlTranslations);
-    $str = preg_replace('`[\']`', '', $str);
+    $Str = strip_tags(html_entity_decode($Str, ENT_COMPAT, 'UTF-8'));
+    $Str = strtr($Str, $UrlTranslations);
+    $Str = preg_replace('`[\']`', '', $Str);
 
     // Test for Unicode PCRE support
     // On non-UTF8 systems this will result in a blank string.
-    $unicodeSupport = (preg_replace('`[\pP]`u', '', 'P') != '');
+    $UnicodeSupport = (preg_replace('`[\pP]`u', '', 'P') != '');
 
     // Convert punctuation, symbols, and spaces to hyphens
-    if ($unicodeSupport) {
-        $str = preg_replace('`[\pP\pS\s]`u', '-', $str);
+    if ($UnicodeSupport) {
+        $Str = preg_replace('`[\pP\pS\s]`u', '-', $Str);
     } else {
-        $str = preg_replace('`[\s_[^\w\d]]`', '-', $str);
+        $Str = preg_replace('`[\s_[^\w\d]]`', '-', $Str);
     }
 
     // Lowercase, no trailing or repeat hyphens
-    $str = preg_replace('`-+`', '-', strtolower($str));
-    $str = trim($str, '-');
+    $Str = preg_replace('`-+`', '-', strtolower($Str));
+    $Str = trim($Str, '-');
 
-    return rawurlencode($str);
+    return rawurlencode($Str);
 }
 
 /**
  * Decode the HTML out of a value.
  */
-function HTMLDecoder($value) {
-    $characterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
+function HTMLDecoder($Value) {
+    $CharacterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
 
-    switch ($characterSet) {
+    switch ($CharacterSet) {
         case 'latin1':
-            $characterSet = 'ISO-8859-1';
+            $CharacterSet = 'ISO-8859-1';
             break;
         case 'latin9':
-            $characterSet = 'ISO-8859-15';
+            $CharacterSet = 'ISO-8859-15';
             break;
         case 'utf8':
-            $characterSet = 'UTF-8';
+            $CharacterSet = 'UTF-8';
             break;
     }
 
-    return html_entity_decode($value, ENT_QUOTES, $characterSet);
+    return html_entity_decode($Value, ENT_QUOTES, $CharacterSet);
 }
 
 /**
@@ -357,8 +357,8 @@ function HTMLDecoder($value) {
  * @param $Value
  * @return int
  */
-function notFilter($value) {
-    return (int)(!$value);
+function notFilter($Value) {
+    return (int)(!$Value);
 }
 
 /**
@@ -369,11 +369,11 @@ function notFilter($value) {
  * @param $Value
  * @return null|string
  */
-function timestampToDate($value) {
-    if ($value == null) {
+function timestampToDate($Value) {
+    if ($Value == null) {
         return null;
     } else {
-        return gmdate('Y-m-d H:i:s', $value);
+        return gmdate('Y-m-d H:i:s', $Value);
     }
 }
 
@@ -383,12 +383,12 @@ function timestampToDate($value) {
  * @param $Value
  * @return null|string
  */
-function long2ipf($value) {
-    if (!$value) {
+function long2ipf($Value) {
+    if (!$Value) {
         return null;
     }
 
-    return long2ip($value);
+    return long2ip($Value);
 }
 
 /**
@@ -397,8 +397,8 @@ function long2ipf($value) {
  * @param $Value
  * @return int
  */
-function YNBool($value) {
-    if ($value == 'y') {
+function YNBool($Value) {
+    if ($Value == 'y') {
         return 1;
     } else {
         return 0;
@@ -411,10 +411,10 @@ function YNBool($value) {
  * @param $Value
  * @return string
  */
-function guessFormat($value) {
-    if (strpos($value, '[') !== false) {
+function guessFormat($Value) {
+    if (strpos($Value, '[') !== false) {
         return 'BBCode';
-    } elseif (strpos($value, '<') !== false) {
+    } elseif (strpos($Value, '<') !== false) {
         return 'Html';
     } else {
         return 'BBCode';
@@ -427,28 +427,28 @@ function guessFormat($value) {
  * @param $Value
  * @return string
  */
-function mimeTypeFromExtension($value) {
-    switch ($value) {
+function mimeTypeFromExtension($Value) {
+    switch ($Value) {
         case '.png':
         case '.jpg':
         case '.jpeg':
         case '.gif':
         case '.bmp':
-            return 'image/' . substr($value, 1);
+            return 'image/' . substr($Value, 1);
         case '.zip':
         case '.doc':
         case '.docx':
         case '.pdf':
         case '.xls':
         case '.swf':
-            return 'application/' . substr($value, 1);
+            return 'application/' . substr($Value, 1);
         case '.txt':
         case '.htm':
         case '.html':
-            return 'text/' . substr($value, 1);
+            return 'text/' . substr($Value, 1);
         case '.mov':
         case '.avi':
-            return 'video/' . substr($value, 1);
+            return 'video/' . substr($Value, 1);
     }
 }
 
@@ -458,14 +458,14 @@ function mimeTypeFromExtension($value) {
  * @param $Value
  * @return mixed
  */
-function cleanBodyBrackets($value) {
-    if (strpos($value, '[') !== false) {
-        $result = str_replace(array('<', '>'), array('[', ']'), $value);
+function cleanBodyBrackets($Value) {
+    if (strpos($Value, '[') !== false) {
+        $Result = str_replace(array('<', '>'), array('[', ']'), $Value);
 
-        return $result;
+        return $Result;
     }
 
-    return $value;
+    return $Value;
 }
 
 ?>

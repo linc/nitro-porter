@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['toast'] = array('name' => 'Toast', 'prefix' => 'tstdb_');
-$supported['toast']['features'] = array(
+$Supported['toast'] = array('name' => 'Toast', 'prefix' => 'tstdb_');
+$Supported['toast']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -19,51 +19,51 @@ $supported['toast']['features'] = array(
 );
 
 class Toast extends ExportController {
-    public static $passwordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
+    public static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
 
     /**
      *
      * @param ExportModel $Ex
      */
-    public function forumExport($ex) {
+    public function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('Post');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('Post');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
-        $ex->beginExport('', 'Toast Forum');
-        $ex->sourcePrefix = 'tstdb_';
+        $Ex->beginExport('', 'Toast Forum');
+        $Ex->SourcePrefix = 'tstdb_';
 
         // User.
-        $user_Map = array(
+        $User_Map = array(
             'ID' => 'UserID',
             'Username' => 'Name',
             'Email' => 'Email',
             'LastLoginDate' => array('Column' => 'DateLastActive', 'Type' => 'datetime'),
             'IP' => 'LastIPAddress'
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select
             *,
             NOW() as DateInserted
-         from :_Member u", $user_Map);
+         from :_Member u", $User_Map);
 
         // Determine safe RoleID to use for non-existant Member role
-        $lastRoleID = 1001;
-        $lastRoleResult = $ex->query("select max(ID) as LastID from :_Group");
-        if ($lastRoleResult) {
-            $lastRole = mysql_fetch_array($lastRoleResult);
-            $lastRoleID = $lastRole['LastID'] + 1;
+        $LastRoleID = 1001;
+        $LastRoleResult = $Ex->query("select max(ID) as LastID from :_Group");
+        if ($LastRoleResult) {
+            $LastRole = mysql_fetch_array($LastRoleResult);
+            $LastRoleID = $LastRole['LastID'] + 1;
         }
 
         // Role.
         // Add default Member role.
-        $role_Map = array(
+        $Role_Map = array(
             'ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable('Role', "
+        $Ex->exportTable('Role', "
          select
             ID,
             Name
@@ -72,17 +72,17 @@ class Toast extends ExportController {
          union all
 
          select
-            $lastRoleID as ID,
+            $LastRoleID as ID,
             'Member' as Name
-         from :_Group;", $role_Map);
+         from :_Group;", $Role_Map);
 
         // UserRole.
         // Users without roles get put into new Member role.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'MemberID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select
             GroupID,
             MemberID
@@ -91,15 +91,15 @@ class Toast extends ExportController {
          union all
 
          select
-            $lastRoleID as GroupID,
+            $LastRoleID as GroupID,
             m.ID as MemberID
          from :_Member m
          left join :_MemberGroupLink l
             on l.MemberID = m.ID
-         where l.GroupID is null", $userRole_Map);
+         where l.GroupID is null", $UserRole_Map);
 
         // Signatures.
-        $ex->exportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select
             ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -117,14 +117,14 @@ class Toast extends ExportController {
          where Signature <> '';");
 
         // Category.
-        $category_Map = array(
+        $Category_Map = array(
             'ID' => 'CategoryID',
             'CategoryID' => 'ParentCategoryID',
             'ForumName' => 'Name',
             'Description' => 'Description'
         );
 
-        $ex->exportTable('Category', "
+        $Ex->exportTable('Category', "
          select
             f.ID,
             f.CategoryID * 1000 as CategoryID,
@@ -139,10 +139,10 @@ class Toast extends ExportController {
             -1 as CategoryID,
             c.Name as ForumName,
             null as Description
-         from :_Category c;", $category_Map);
+         from :_Category c;", $Category_Map);
 
         // Discussion.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'ID' => 'DiscussionID',
             'ForumID' => 'CategoryID',
             'MemberID' => 'InsertUserID',
@@ -154,15 +154,15 @@ class Toast extends ExportController {
             'Hits' => 'CountViews',
             'ReplyCount' => 'CountComments'
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select p.*,
             'Html' as Format
          from :_Post p
          where p.Topic = 1
-            and p.Deleted = 0;", $discussion_Map);
+            and p.Deleted = 0;", $Discussion_Map);
 
         // Comment.
-        $comment_Map = array(
+        $Comment_Map = array(
             'ID' => 'CommentID',
             'TopicID' => 'DiscussionID',
             'MemberID' => 'InsertUserID',
@@ -170,25 +170,25 @@ class Toast extends ExportController {
             'ModifyDate' => 'DateUpdated',
             'Message' => 'Body'
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select *,
             'Html' as Format
          from :_Post p
-         where Topic = 0 and Deleted = 0;", $comment_Map);
+         where Topic = 0 and Deleted = 0;", $Comment_Map);
 
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 
-    public function cleanDate($value) {
-        if (!$value) {
+    public function cleanDate($Value) {
+        if (!$Value) {
             return null;
         }
-        if (substr($value, 0, 4) == '0000') {
+        if (substr($Value, 0, 4) == '0000') {
             return null;
         }
 
-        return $value;
+        return $Value;
     }
 
 }
