@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['uservoice'] = array('name' => 'User Voice', 'prefix' => 'cs_');
-$supported['uservoice']['features'] = array(
+$Supported['uservoice'] = array('name' => 'User Voice', 'prefix' => 'cs_');
+$Supported['uservoice']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -25,67 +25,67 @@ class UserVoice extends ExportController {
      *
      * @param ExportModel $Ex
      */
-    public function forumExport($ex) {
+    public function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('Threads');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('Threads');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
-        $ex->beginExport('', 'User Voice');
-        $ex->sourcePrefix = 'cs_';
+        $Ex->beginExport('', 'User Voice');
+        $Ex->SourcePrefix = 'cs_';
 
 
         // User.
-        $user_Map = array(
+        $User_Map = array(
             'LastActivity' => array('Column' => 'DateLastActive'),
             'UserName' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'CreateDate' => array('Column' => 'DateInserted'),
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
          concat('sha1$', m.PasswordSalt, '$', m.Password) as Password,
          'django' as HashMethod,
          if(a.Content is not null, concat('import/userpics/avatar',u.UserID,'.jpg'), NULL) as Photo
          from :_Users u
          left join aspnet_Membership m on m.UserId = u.MembershipID
-         left join :_UserAvatar a on a.UserID = u.UserID", $user_Map);
+         left join :_UserAvatar a on a.UserID = u.UserID", $User_Map);
 
 
         // Role.
-        $role_Map = array(
+        $Role_Map = array(
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'RoleIDConverter')),
             'RoleName' => 'Name'
         );
-        $ex->exportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
-         from aspnet_Roles", $role_Map);
+         from aspnet_Roles", $Role_Map);
 
         // User Role.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'RoleIDConverter')),
         );
-        $ex->exportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.UserID, ur.RoleId
          from aspnet_UsersInRoles ur
          left join :_Users u on ur.UserId = u.MembershipID
-         ", $userRole_Map);
+         ", $UserRole_Map);
 
 
         // Category.
-        $category_Map = array(
+        $Category_Map = array(
             'SectionID' => 'CategoryID',
             'ParentID' => 'ParentCategoryID',
             'SortOrder' => 'Sort',
             'DateCreated' => 'DateInserted'
         );
-        $ex->exportTable('Category', "
+        $Ex->exportTable('Category', "
          select s.*
-         from :_Sections s", $category_Map);
+         from :_Sections s", $Category_Map);
 
 
         // Discussion.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'ThreadID' => 'DiscussionID',
             'SectionID' => 'CategoryID',
             'UserID' => 'InsertUserID',
@@ -100,7 +100,7 @@ class UserVoice extends ExportController {
             'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
             'IPAddress' => 'InsertIPAddress'
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select t.*,
             p.Subject,
             p.Body,
@@ -109,11 +109,11 @@ class UserVoice extends ExportController {
             if(t.IsSticky  > 0, 2, 0) as Announce
          from :_Threads t
          left join :_Posts p on p.ThreadID = t.ThreadID
-         where p.SortOrder = 1", $discussion_Map);
+         where p.SortOrder = 1", $Discussion_Map);
 
 
         // Comment.
-        $comment_Map = array(
+        $Comment_Map = array(
             'PostID' => 'CommentID',
             'ThreadID' => 'DiscussionID',
             'UserID' => 'InsertUserID',
@@ -121,21 +121,21 @@ class UserVoice extends ExportController {
             'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
             'PostDate' => 'DateInserted'
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select p.*
          from :_Posts p
-         where SortOrder > 1", $comment_Map);
+         where SortOrder > 1", $Comment_Map);
 
 
         // Bookmarks
-        $userDiscussion_Map = array(
+        $UserDiscussion_Map = array(
             'ThreadID' => 'DiscussionID'
         );
-        $ex->exportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select t.*,
             '1' as Bookmarked,
             NOW() as DateLastViewed
-         from :_TrackedThreads t", $userDiscussion_Map);
+         from :_TrackedThreads t", $UserDiscussion_Map);
 
         // Media.
         /*$Media_Map = array(
@@ -161,7 +161,7 @@ class UserVoice extends ExportController {
 
 
         // El fin.
-        $ex->endExport();
+        $Ex->endExport();
     }
 
     /**
@@ -171,75 +171,75 @@ class UserVoice extends ExportController {
      * @param string $RoleID
      * @return int
      */
-    public function roleIDConverter($roleID) {
-        return hexdec(substr($roleID, 0, 4));
+    public function roleIDConverter($RoleID) {
+        return hexdec(substr($RoleID, 0, 4));
     }
 
     /**
      * Avatars are hex-encoded in the database.
      */
-    public function exportHexAvatars($thumbnail = true) {
-        $this->ex->comment("Exporting hex encoded columns...");
+    public function exportHexAvatars($Thumbnail = true) {
+        $this->Ex->comment("Exporting hex encoded columns...");
 
-        $result = $this->ex->query("select UserID, Length, ContentType, Content from :_UserAvatar");
-        $path = '/www/porter/userpics';
-        $count = 0;
+        $Result = $this->Ex->query("select UserID, Length, ContentType, Content from :_UserAvatar");
+        $Path = '/www/porter/userpics';
+        $Count = 0;
 
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($Row = mysql_fetch_assoc($Result)) {
             // Build path
-            if (!file_exists(dirname($path))) {
-                $r = mkdir(dirname($path), 0777, true);
-                if (!$r) {
-                    die("Could not create " . dirname($path));
+            if (!file_exists(dirname($Path))) {
+                $R = mkdir(dirname($Path), 0777, true);
+                if (!$R) {
+                    die("Could not create " . dirname($Path));
                 }
             }
 
-            $photoPath = $path . '/pavatar' . $row['UserID'] . '.jpg';
-            file_put_contents($photoPath, hex2bin($row['Content']));
-            $this->ex->status('.');
+            $PhotoPath = $Path . '/pavatar' . $Row['UserID'] . '.jpg';
+            file_put_contents($PhotoPath, hex2bin($Row['Content']));
+            $this->Ex->status('.');
 
-            if ($thumbnail) {
-                if ($thumbnail === true) {
-                    $thumbnail = 50;
+            if ($Thumbnail) {
+                if ($Thumbnail === true) {
+                    $Thumbnail = 50;
                 }
 
                 //$PicPath = str_replace('/avat', '/pavat', $PhotoPath);
-                $thumbPath = str_replace('/pavat', '/navat', $photoPath);
-                generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
+                $ThumbPath = str_replace('/pavat', '/navat', $PhotoPath);
+                generateThumbnail($PhotoPath, $ThumbPath, $Thumbnail, $Thumbnail);
             }
-            $count++;
+            $Count++;
         }
-        $this->ex->status("$count Hex Encoded.\n");
-        $this->ex->comment("$count Hex Encoded.", false);
+        $this->Ex->status("$Count Hex Encoded.\n");
+        $this->Ex->comment("$Count Hex Encoded.", false);
     }
 
     /**
      *
      */
     public function exportHexAttachments() {
-        $this->ex->comment("Exporting hex encoded columns...");
+        $this->Ex->comment("Exporting hex encoded columns...");
 
-        $result = $this->ex->query("select a.*, p.PostID
+        $Result = $this->Ex->query("select a.*, p.PostID
          from :_PostAttachments a
          left join :_Posts p on p.PostID = a.PostID
          where IsRemote = 0");
-        $path = '/www/porter/attach';
-        $count = 0;
+        $Path = '/www/porter/attach';
+        $Count = 0;
 
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($Row = mysql_fetch_assoc($Result)) {
             // Build path
-            if (!file_exists(dirname($path))) {
-                $r = mkdir(dirname($path), 0777, true);
-                if (!$r) {
-                    die("Could not create " . dirname($path));
+            if (!file_exists(dirname($Path))) {
+                $R = mkdir(dirname($Path), 0777, true);
+                if (!$R) {
+                    die("Could not create " . dirname($Path));
                 }
             }
 
-            file_put_contents($path . '/' . $row['FileName'], hex2bin($row['Content']));
-            $count++;
+            file_put_contents($Path . '/' . $Row['FileName'], hex2bin($Row['Content']));
+            $Count++;
         }
-        $this->ex->status("$count Hex Encoded.\n");
-        $this->ex->comment("$count Hex Encoded.", false);
+        $this->Ex->status("$Count Hex Encoded.\n");
+        $this->Ex->comment("$Count Hex Encoded.", false);
     }
 }
 

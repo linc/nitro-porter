@@ -19,104 +19,104 @@ class ExportModel {
     const QUOTE = '"';
 
     /** @var bool */
-    public $captureOnly = false;
+    public $CaptureOnly = false;
 
     /** @var array Any comments that have been written during the export. */
-    public $comments = array();
+    public $Comments = array();
 
     /** @var ExportController * */
-    public $controller = null;
+    public $Controller = null;
 
     /** @var string The charcter set to set as the connection anytime the database connects. */
-    public $characterSet = 'utf8';
+    public $CharacterSet = 'utf8';
 
     /** @var int The chunk size when exporting large tables. */
-    public $chunkSize = 100000;
+    public $ChunkSize = 100000;
 
     /** @var array * */
-    public $currentRow = null;
+    public $CurrentRow = null;
 
     /** @var string Where we are sending this export: 'file' or 'database'. * */
-    public $destination = 'file';
+    public $Destination = 'file';
 
     /** @var string * */
-    public $destPrefix = 'GDN_z';
+    public $DestPrefix = 'GDN_z';
 
     /** @var array * */
-    public static $escapeSearch = array();
+    public static $EscapeSearch = array();
 
     /** @var array * */
-    public static $escapeReplace = array();
+    public static $EscapeReplace = array();
 
     /** @var object File pointer */
-    public $file = null;
+    public $File = null;
 
     /** @var string A prefix to put into an automatically generated filename. */
-    public $filenamePrefix = '';
+    public $FilenamePrefix = '';
 
     /** @var string Database host. * */
-    public $_host = 'localhost';
+    public $_Host = 'localhost';
 
     /** @var bool Whether mb_detect_encoding() is available. * */
-    public static $mb = false;
+    public static $Mb = false;
 
     /** @var object PDO instance */
     protected $_PDO = null;
 
     /** @var string Database password. * */
-    protected $_password;
+    protected $_Password;
 
     /** @var string The path to the export file. */
-    public $path = '';
+    public $Path = '';
 
     /**
      * @var string The database prefix. When you pass a sql string to ExportTable() it will replace occurances of :_ with this property.
      * @see ExportModel::ExportTable()
      */
-    public $prefix = '';
+    public $Prefix = '';
 
     /** @var array * */
-    public $queries = array();
+    public $Queries = array();
 
     /** @var array * */
-    protected $_queryStructures = array();
+    protected $_QueryStructures = array();
 
     /** @var array Tables to limit the export to.  A full export is an empty array. */
-    public $restrictedTables = array();
+    public $RestrictedTables = array();
 
     /** @var string The path to the source of the export in the case where a file is being converted. */
-    public $sourcePath = '';
+    public $SourcePath = '';
 
     /** @var string */
-    public $sourcePrefix = '';
+    public $SourcePrefix = '';
 
     /** @var bool * */
-    public $scriptCreateTable = true;
+    public $ScriptCreateTable = true;
 
     /** @var array Structures that define the format of the export tables. */
-    protected $_structures = array();
+    protected $_Structures = array();
 
     /** @var bool Whether to limit results to the $TestLimit. */
-    public $testMode = false;
+    public $TestMode = false;
 
     /** @var int How many records to limit when $TestMode is enabled. */
-    public $testLimit = 10;
+    public $TestLimit = 10;
 
     /** @var bool Whether or not to use compression when creating the file. */
-    protected $_useCompression = true;
+    protected $_UseCompression = true;
 
     /** @var string Database username. */
-    protected $_username;
+    protected $_Username;
 
     /**
      * Setup.
      */
     public function __construct() {
-        self::$mb = function_exists('mb_detect_encoding');
+        self::$Mb = function_exists('mb_detect_encoding');
 
         // Set the search and replace to escape strings.
-        self::$escapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
-        self::$escapeReplace = array(
+        self::$EscapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
+        self::$EscapeReplace = array(
             self::ESCAPE . self::ESCAPE,
             self::ESCAPE . self::DELIM,
             self::ESCAPE . self::NEWLINE,
@@ -124,7 +124,7 @@ class ExportModel {
         );
 
         // Load structure.
-        $this->_structures = vanillaStructure();
+        $this->_Structures = vanillaStructure();
     }
 
     /**
@@ -135,43 +135,43 @@ class ExportModel {
      * @param array $Header
      * @return resource Pointer to the file created.
      */
-    public function beginExport($path = '', $source = '', $header = array()) {
-        $this->comments = array();
-        $this->beginTime = microtime(true);
+    public function beginExport($Path = '', $Source = '', $Header = array()) {
+        $this->Comments = array();
+        $this->BeginTime = microtime(true);
 
         // Allow us to define where the output file goes.
-        if ($path) {
-            $this->path = $path;
-        } elseif ($this->controller->param('destpath')) {
-            $this->path = $this->controller->param('destpath');
-            if (strstr($this->path, '/') !== false && substr($this->path, 1, -1) != '/') {
+        if ($Path) {
+            $this->Path = $Path;
+        } elseif ($this->Controller->param('destpath')) {
+            $this->Path = $this->Controller->param('destpath');
+            if (strstr($this->Path, '/') !== false && substr($this->Path, 1, -1) != '/') {
                 // We're using slash paths but didn't include a final slash.
-                $this->path .= '/';
+                $this->Path .= '/';
             }
         }
 
         // Allow the $Path parameter to override this default naming.
-        if (!$path) {
-            $this->path .= 'export_' . ($this->filenamePrefix ? $this->filenamePrefix . '_' : '') . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
+        if (!$Path) {
+            $this->Path .= 'export_' . ($this->FilenamePrefix ? $this->FilenamePrefix . '_' : '') . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
         }
 
         // Start the file pointer.
         $fp = $this->_openFile();
 
         // Build meta info about where this file came from.
-        $comment = 'Vanilla Export: ' . $this->version();
-        if ($source) {
-            $comment .= self::DELIM . ' Source: ' . $source;
+        $Comment = 'Vanilla Export: ' . $this->version();
+        if ($Source) {
+            $Comment .= self::DELIM . ' Source: ' . $Source;
         }
-        foreach ($header as $key => $value) {
-            $comment .= self::DELIM . " $key: $value";
+        foreach ($Header as $Key => $Value) {
+            $Comment .= self::DELIM . " $Key: $Value";
         }
 
         // Add meta info to the output.
-        if ($this->captureOnly) {
-            $this->comment($comment);
+        if ($this->CaptureOnly) {
+            $this->comment($Comment);
         } else {
-            fwrite($fp, $comment . self::NEWLINE . self::NEWLINE);
+            fwrite($fp, $Comment . self::NEWLINE . self::NEWLINE);
         }
 
         $this->comment('Export Started: ' . date('Y-m-d H:i:s'));
@@ -185,22 +185,22 @@ class ExportModel {
      * @param string $Message The message to write.
      * @param bool $Echo Whether or not to echo the message in addition to writing it to the file.
      */
-    public function comment($message, $echo = true) {
-        if ($this->destination == 'file') {
-            $char = self::COMMENT;
+    public function comment($Message, $Echo = true) {
+        if ($this->Destination == 'file') {
+            $Char = self::COMMENT;
         } else {
-            $char = '--';
+            $Char = '--';
         }
 
-        $comment = $char . ' ' . str_replace(self::NEWLINE, self::NEWLINE . self::COMMENT . ' ',
-                $message) . self::NEWLINE;
+        $Comment = $Char . ' ' . str_replace(self::NEWLINE, self::NEWLINE . self::COMMENT . ' ',
+                $Message) . self::NEWLINE;
 
-        fwrite($this->file, $comment);
-        if ($echo) {
+        fwrite($this->File, $Comment);
+        if ($Echo) {
             if (defined('CONSOLE')) {
-                echo $comment;
+                echo $Comment;
             } else {
-                $this->comments[] = $message;
+                $this->Comments[] = $Message;
             }
         }
     }
@@ -211,26 +211,26 @@ class ExportModel {
      * This method must be called if BeginExport() has been called or else the export file will not be closed.
      */
     public function endExport() {
-        $this->endTime = microtime(true);
-        $this->totalTime = $this->endTime - $this->beginTime;
+        $this->EndTime = microtime(true);
+        $this->TotalTime = $this->EndTime - $this->BeginTime;
 
-        $this->comment($this->path);
+        $this->comment($this->Path);
         $this->comment('Export Completed: ' . date('Y-m-d H:i:s'));
-        $this->comment(sprintf('Elapsed Time: %s', self::formatElapsed($this->totalTime)));
+        $this->comment(sprintf('Elapsed Time: %s', self::formatElapsed($this->TotalTime)));
 
-        if ($this->testMode || $this->controller->param('dumpsql') || $this->captureOnly) {
-            $queries = implode("\n\n", $this->queries);
-            if ($this->destination == 'database') {
-                fwrite($this->file, $queries);
+        if ($this->TestMode || $this->Controller->param('dumpsql') || $this->CaptureOnly) {
+            $Queries = implode("\n\n", $this->Queries);
+            if ($this->Destination == 'database') {
+                fwrite($this->File, $Queries);
             } else {
-                $this->comment($queries, true);
+                $this->comment($Queries, true);
             }
         }
 
         if ($this->useCompression() && function_exists('gzopen')) {
-            gzclose($this->file);
+            gzclose($this->File);
         } else {
-            fclose($this->file);
+            fclose($this->File);
         }
     }
 
@@ -248,18 +248,18 @@ class ExportModel {
      *   - If you specify an array you can have the following keys: Column, and Type where Column represents the new column name and Type represents the MySQL type.
      *  For a list of the export tables and columns see $this->Structure().
      */
-    public function exportTable($tableName, $query, $mappings = array()) {
-        if (!empty($this->restrictedTables) && !in_array(strtolower($tableName), $this->restrictedTables)) {
-            $this->comment("Skipping table: $tableName");
+    public function exportTable($TableName, $Query, $Mappings = array()) {
+        if (!empty($this->RestrictedTables) && !in_array(strtolower($TableName), $this->RestrictedTables)) {
+            $this->comment("Skipping table: $TableName");
         } else {
-            $beginTime = microtime(true);
+            $BeginTime = microtime(true);
 
-            $rowCount = $this->_exportTable($tableName, $query, $mappings);
+            $RowCount = $this->_exportTable($TableName, $Query, $Mappings);
 
-            $endTime = microtime(true);
-            $elapsed = self::formatElapsed($beginTime, $endTime);
-            $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
-            fwrite($this->file, self::NEWLINE);
+            $EndTime = microtime(true);
+            $Elapsed = self::formatElapsed($BeginTime, $EndTime);
+            $this->comment("Exported Table: $TableName ($RowCount rows, $Elapsed)");
+            fwrite($this->File, self::NEWLINE);
         }
     }
 
@@ -270,36 +270,36 @@ class ExportModel {
      * @param $Query
      * @param array $Mappings
      */
-    protected function _exportTableImport($tableName, $query, $mappings = array()) {
+    protected function _exportTableImport($TableName, $Query, $Mappings = array()) {
         // Backup the settings.
-        $destinationBak = $this->destination;
-        $this->destination = 'file';
+        $DestinationBak = $this->Destination;
+        $this->Destination = 'file';
 
-        $_fileBak = $this->file;
-        $path = dirname(__FILE__) . '/' . $tableName . '.csv';
-        $this->comment("Exporting To: $path");
-        $fp = fopen($path, 'wb');
-        $this->file = $fp;
+        $_FileBak = $this->File;
+        $Path = dirname(__FILE__) . '/' . $TableName . '.csv';
+        $this->comment("Exporting To: $Path");
+        $fp = fopen($Path, 'wb');
+        $this->File = $fp;
 
         // First export the file to a file.
-        $this->_exportTable($tableName, $query, $mappings, array('NoEndline' => true));
+        $this->_exportTable($TableName, $Query, $Mappings, array('NoEndline' => true));
 
         // Now define a table to import into.
-        $this->_createExportTable($tableName, $query, $mappings);
+        $this->_createExportTable($TableName, $Query, $Mappings);
 
         // Now load the data.
-        $sql = "load data local infile '$path' into table {$this->destDb}.{$this->destPrefix}$tableName
+        $Sql = "load data local infile '$Path' into table {$this->DestDb}.{$this->DestPrefix}$TableName
          character set utf8
          columns terminated by ','
          optionally enclosed by '\"'
          escaped by '\\\\'
          lines terminated by '\\n'
          ignore 2 lines";
-        $this->query($sql);
+        $this->query($Sql);
 
         // Restore the settings.
-        $this->destination = $destinationBak;
-        $this->file = $_fileBak;
+        $this->Destination = $DestinationBak;
+        $this->File = $_FileBak;
     }
 
     /**
@@ -310,64 +310,64 @@ class ExportModel {
      * @param $PathColumn
      * @param bool $Thumbnail
      */
-    public function exportBlobs($sql, $blobColumn, $pathColumn, $thumbnail = false) {
+    public function exportBlobs($Sql, $BlobColumn, $PathColumn, $Thumbnail = false) {
         $this->comment("Exporting blobs...");
 
-        $result = $this->query($sql);
-        $count = 0;
-        while ($row = mysql_fetch_assoc($result)) {
+        $Result = $this->query($Sql);
+        $Count = 0;
+        while ($Row = mysql_fetch_assoc($Result)) {
             // vBulletin attachment hack (can't do this in MySQL)
-            if (strpos($row[$pathColumn], '.attach') && strpos($row[$pathColumn], 'attachments/') !== false) {
-                $pathParts = explode('/', $row[$pathColumn]); // 3 parts
+            if (strpos($Row[$PathColumn], '.attach') && strpos($Row[$PathColumn], 'attachments/') !== false) {
+                $PathParts = explode('/', $Row[$PathColumn]); // 3 parts
 
                 // Split up the userid into a path, digit by digit
-                $n = strlen($pathParts[1]);
-                $dirParts = array();
+                $n = strlen($PathParts[1]);
+                $DirParts = array();
                 for ($i = 0; $i < $n; $i++) {
-                    $dirParts[] = $pathParts[1]{$i};
+                    $DirParts[] = $PathParts[1]{$i};
                 }
-                $pathParts[1] = implode('/', $dirParts);
+                $PathParts[1] = implode('/', $DirParts);
 
                 // Rebuild full path
-                $row[$pathColumn] = implode('/', $pathParts);
+                $Row[$PathColumn] = implode('/', $PathParts);
             }
 
-            $path = $row[$pathColumn];
+            $Path = $Row[$PathColumn];
 
             // Build path
-            if (!file_exists(dirname($path))) {
-                $r = mkdir(dirname($path), 0777, true);
-                if (!$r) {
-                    die("Could not create " . dirname($path));
+            if (!file_exists(dirname($Path))) {
+                $R = mkdir(dirname($Path), 0777, true);
+                if (!$R) {
+                    die("Could not create " . dirname($Path));
                 }
             }
 
-            if ($thumbnail) {
-                $picPath = str_replace('/avat', '/pavat', $path);
-                $fp = fopen($picPath, 'wb');
+            if ($Thumbnail) {
+                $PicPath = str_replace('/avat', '/pavat', $Path);
+                $fp = fopen($PicPath, 'wb');
             } else {
-                $fp = fopen($path, 'wb');
+                $fp = fopen($Path, 'wb');
             }
             if (!is_resource($fp)) {
-                die("Could not open $path.");
+                die("Could not open $Path.");
             }
 
-            fwrite($fp, $row[$blobColumn]);
+            fwrite($fp, $Row[$BlobColumn]);
             fclose($fp);
             $this->status('.');
 
-            if ($thumbnail) {
-                if ($thumbnail === true) {
-                    $thumbnail = 50;
+            if ($Thumbnail) {
+                if ($Thumbnail === true) {
+                    $Thumbnail = 50;
                 }
 
-                $thumbPath = str_replace('/avat', '/navat', $path);
-                generateThumbnail($picPath, $thumbPath, $thumbnail, $thumbnail);
+                $ThumbPath = str_replace('/avat', '/navat', $Path);
+                generateThumbnail($PicPath, $ThumbPath, $Thumbnail, $Thumbnail);
             }
-            $count++;
+            $Count++;
         }
-        $this->status("$count Blobs.\n");
-        $this->comment("$count Blobs.", false);
+        $this->status("$Count Blobs.\n");
+        $this->comment("$Count Blobs.", false);
     }
 
     /**
@@ -380,81 +380,81 @@ class ExportModel {
      * @param array $Options
      * @return int
      */
-    protected function _exportTable($tableName, $query, $mappings = array(), $options = array()) {
-        $fp = $this->file;
+    protected function _exportTable($TableName, $Query, $Mappings = array(), $Options = array()) {
+        $fp = $this->File;
 
         // Make sure the table is valid for export.
-        if (!array_key_exists($tableName, $this->_structures)) {
-            $this->comment("Error: $tableName is not a valid export."
-                . " The valid tables for export are " . implode(", ", array_keys($this->_structures)));
+        if (!array_key_exists($TableName, $this->_Structures)) {
+            $this->comment("Error: $TableName is not a valid export."
+                . " The valid tables for export are " . implode(", ", array_keys($this->_Structures)));
             fwrite($fp, self::NEWLINE);
 
             return;
         }
 
-        if ($this->destination == 'database') {
-            $this->_exportTableDB($tableName, $query, $mappings);
+        if ($this->Destination == 'database') {
+            $this->_exportTableDB($TableName, $Query, $Mappings);
 
             return;
         }
 
         // Check for a chunked query.
-        $query = str_replace('{from}', -2000000000, $query);
-        $query = str_replace('{to}', 2000000000, $query);
+        $Query = str_replace('{from}', -2000000000, $Query);
+        $Query = str_replace('{to}', 2000000000, $Query);
 
-        if (strpos($query, '{from}') !== false) {
-            $this->_exportTableDBChunked($tableName, $query, $mappings);
+        if (strpos($Query, '{from}') !== false) {
+            $this->_exportTableDBChunked($TableName, $Query, $Mappings);
 
             return;
         }
 
         // If we are in test mode then limit the query.
-        if ($this->testMode && $this->testLimit) {
-            $query = rtrim($query, ';');
-            if (stripos($query, 'select') !== false && stripos($query, 'limit') === false) {
-                $query .= " limit {$this->testLimit}";
+        if ($this->TestMode && $this->TestLimit) {
+            $Query = rtrim($Query, ';');
+            if (stripos($Query, 'select') !== false && stripos($Query, 'limit') === false) {
+                $Query .= " limit {$this->TestLimit}";
             }
         }
 
-        $structure = $this->_structures[$tableName];
+        $Structure = $this->_Structures[$TableName];
 
-        $lastID = 0;
+        $LastID = 0;
         $IDName = 'NOTSET';
-        $firstQuery = true;
+        $FirstQuery = true;
 
-        $data = $this->query($query);
+        $Data = $this->query($Query);
 
         // Loop through the data and write it to the file.
-        $rowCount = 0;
-        if ($data !== false) {
-            while (($row = mysql_fetch_assoc($data)) !== false) {
-                $row = (array)$row; // export%202010-05-06%20210937.txt
-                $this->currentRow =& $row;
-                $rowCount++;
+        $RowCount = 0;
+        if ($Data !== false) {
+            while (($Row = mysql_fetch_assoc($Data)) !== false) {
+                $Row = (array)$Row; // export%202010-05-06%20210937.txt
+                $this->CurrentRow =& $Row;
+                $RowCount++;
 
-                if ($firstQuery) {
+                if ($FirstQuery) {
                     // Get the export structure.
-                    $exportStructure = $this->getExportStructure($row, $structure, $mappings, $tableName);
-                    $revMappings = $this->flipMappings($mappings);
-                    $this->writeBeginTable($fp, $tableName, $exportStructure);
+                    $ExportStructure = $this->getExportStructure($Row, $Structure, $Mappings, $TableName);
+                    $RevMappings = $this->flipMappings($Mappings);
+                    $this->writeBeginTable($fp, $TableName, $ExportStructure);
 
-                    $firstQuery = false;
+                    $FirstQuery = false;
                 }
-                $this->writeRow($fp, $row, $exportStructure, $revMappings);
+                $this->writeRow($fp, $Row, $ExportStructure, $RevMappings);
             }
         }
-        if ($data !== false) {
-            mysql_free_result($data);
+        if ($Data !== false) {
+            mysql_free_result($Data);
         }
-        unset($data);
+        unset($Data);
 
-        if (!isset($options['NoEndline'])) {
+        if (!isset($Options['NoEndline'])) {
             $this->writeEndTable($fp);
         }
 
         mysql_close();
 
-        return $rowCount;
+        return $RowCount;
     }
 
     /**
@@ -464,49 +464,49 @@ class ExportModel {
      * @param $Query
      * @param array $Mappings
      */
-    protected function _createExportTable($tableName, $query, $mappings = array()) {
-        if (!$this->scriptCreateTable) {
+    protected function _createExportTable($TableName, $Query, $Mappings = array()) {
+        if (!$this->ScriptCreateTable) {
             return;
         }
 
         // Limit the query to grab any additional columns.
-        $queryStruct = rtrim($query, ';') . ' limit 1';
-        $structure = $this->_structures[$tableName];
+        $QueryStruct = rtrim($Query, ';') . ' limit 1';
+        $Structure = $this->_Structures[$TableName];
 
-        $data = $this->query($queryStruct, true);
+        $Data = $this->query($QueryStruct, true);
 //      $Mb = function_exists('mb_detect_encoding');
 
         // Loop through the data and write it to the file.
-        if ($data === false) {
+        if ($Data === false) {
             return;
         }
 
         // Get the export structure.
-        while (($row = mysql_fetch_assoc($data)) !== false) {
-            $row = (array)$row;
+        while (($Row = mysql_fetch_assoc($Data)) !== false) {
+            $Row = (array)$Row;
 
             // Get the export structure.
-            $exportStructure = $this->getExportStructure($row, $structure, $mappings, $tableName);
+            $ExportStructure = $this->getExportStructure($Row, $Structure, $Mappings, $TableName);
 
             break;
         }
-        mysql_close($data);
+        mysql_close($Data);
 
         // Build the create table statement.
-        $columnDefs = array();
-        foreach ($exportStructure as $columnName => $type) {
-            $columnDefs[] = "`$columnName` $type";
+        $ColumnDefs = array();
+        foreach ($ExportStructure as $ColumnName => $Type) {
+            $ColumnDefs[] = "`$ColumnName` $Type";
         }
-        $destDb = '';
-        if (isset($this->destDb)) {
-            $destDb = $this->destDb . '.';
+        $DestDb = '';
+        if (isset($this->DestDb)) {
+            $DestDb = $this->DestDb . '.';
         }
 
-        $this->query("drop table if exists {$destDb}{$this->destPrefix}$tableName");
-        $createSql = "create table {$destDb}{$this->destPrefix}$tableName (\n  " . implode(",\n  ",
-                $columnDefs) . "\n) engine=innodb";
+        $this->query("drop table if exists {$DestDb}{$this->DestPrefix}$TableName");
+        $CreateSql = "create table {$DestDb}{$this->DestPrefix}$TableName (\n  " . implode(",\n  ",
+                $ColumnDefs) . "\n) engine=innodb";
 
-        $this->query($createSql);
+        $this->query($CreateSql);
     }
 
     /**
@@ -517,69 +517,69 @@ class ExportModel {
      * @param $Query
      * @param array $Mappings
      */
-    protected function _exportTableDB($tableName, $query, $mappings = array()) {
-        if ($this->hasFilter($mappings) || strpos($query, 'union all') !== false) {
-            $this->_exportTableImport($tableName, $query, $mappings);
+    protected function _exportTableDB($TableName, $Query, $Mappings = array()) {
+        if ($this->hasFilter($Mappings) || strpos($Query, 'union all') !== false) {
+            $this->_exportTableImport($TableName, $Query, $Mappings);
 
             return;
         }
 
         // Check for a chunked query.
-        if (strpos($query, '{from}') !== false) {
-            $this->_exportTableDBChunked($tableName, $query, $mappings);
+        if (strpos($Query, '{from}') !== false) {
+            $this->_exportTableDBChunked($TableName, $Query, $Mappings);
 
             return;
         }
 
-        $destDb = '';
-        if (isset($this->destDb)) {
-            $destDb = $this->destDb . '.';
+        $DestDb = '';
+        if (isset($this->DestDb)) {
+            $DestDb = $this->DestDb . '.';
         }
 
         // Limit the query to grab any additional columns.
-        $queryStruct = $this->getQueryStructure($query, $tableName);
-        $structure = $this->_structures[$tableName];
+        $QueryStruct = $this->getQueryStructure($Query, $TableName);
+        $Structure = $this->_Structures[$TableName];
 
-        $exportStructure = $this->getExportStructure($queryStruct, $structure, $mappings, $tableName);
+        $ExportStructure = $this->getExportStructure($QueryStruct, $Structure, $Mappings, $TableName);
 
-        $mappings = $this->flipMappings($mappings);
+        $Mappings = $this->flipMappings($Mappings);
 
         // Build the create table statement.
-        $columnDefs = array();
-        foreach ($exportStructure as $columnName => $type) {
-            $columnDefs[] = "`$columnName` $type";
+        $ColumnDefs = array();
+        foreach ($ExportStructure as $ColumnName => $Type) {
+            $ColumnDefs[] = "`$ColumnName` $Type";
         }
-        if ($this->scriptCreateTable) {
-            $this->query("drop table if exists {$destDb}{$this->destPrefix}$tableName");
-            $createSql = "create table {$destDb}{$this->destPrefix}$tableName (\n  " . implode(",\n  ",
-                    $columnDefs) . "\n) engine=innodb";
-            $this->query($createSql);
+        if ($this->ScriptCreateTable) {
+            $this->query("drop table if exists {$DestDb}{$this->DestPrefix}$TableName");
+            $CreateSql = "create table {$DestDb}{$this->DestPrefix}$TableName (\n  " . implode(",\n  ",
+                    $ColumnDefs) . "\n) engine=innodb";
+            $this->query($CreateSql);
         }
 
-        $query = rtrim($query, ';');
+        $Query = rtrim($Query, ';');
         // Build the insert statement.
-        if ($this->testMode && $this->testLimit) {
-            $query .= " limit {$this->testLimit}";
+        if ($this->TestMode && $this->TestLimit) {
+            $Query .= " limit {$this->TestLimit}";
         }
 
-        $insertColumns = array();
-        $selectColumns = array();
-        foreach ($exportStructure as $columnName => $type) {
-            $insertColumns[] = '`' . $columnName . '`';
-            if (isset($mappings[$columnName])) {
-                $selectColumns[$columnName] = $mappings[$columnName];
+        $InsertColumns = array();
+        $SelectColumns = array();
+        foreach ($ExportStructure as $ColumnName => $Type) {
+            $InsertColumns[] = '`' . $ColumnName . '`';
+            if (isset($Mappings[$ColumnName])) {
+                $SelectColumns[$ColumnName] = $Mappings[$ColumnName];
             } else {
-                $selectColumns[$columnName] = $columnName;
+                $SelectColumns[$ColumnName] = $ColumnName;
             }
         }
 
-        $query = replaceSelect($query, $selectColumns);
+        $Query = replaceSelect($Query, $SelectColumns);
 
-        $insertSql = "replace {$destDb}{$this->destPrefix}$tableName"
-            . " (\n  " . implode(",\n   ", $insertColumns) . "\n)\n"
-            . $query;
+        $InsertSql = "replace {$DestDb}{$this->DestPrefix}$TableName"
+            . " (\n  " . implode(",\n   ", $InsertColumns) . "\n)\n"
+            . $Query;
 
-        $this->query($insertSql);
+        $this->query($InsertSql);
     }
 
     /**
@@ -590,32 +590,32 @@ class ExportModel {
      * @param $Query
      * @param array $Mappings
      */
-    protected function _exportTableDBChunked($tableName, $query, $mappings = array()) {
+    protected function _exportTableDBChunked($TableName, $Query, $Mappings = array()) {
         // Grab the table name from the first from.
-        if (preg_match('`\sfrom\s([^\s]+)`', $query, $matches)) {
-            $from = $matches[1];
+        if (preg_match('`\sfrom\s([^\s]+)`', $Query, $Matches)) {
+            $From = $Matches[1];
         } else {
-            trigger_error("Could not figure out table for $tableName chunking.", E_USER_WARNING);
+            trigger_error("Could not figure out table for $TableName chunking.", E_USER_WARNING);
 
             return;
         }
 
-        $sql = "show table status like '{$from}';";
-        $r = $this->query($sql, true);
-        $row = mysql_fetch_assoc($r);
-        mysql_free_result($r);
-        $max = $row['Auto_increment'];
+        $Sql = "show table status like '{$From}';";
+        $R = $this->query($Sql, true);
+        $Row = mysql_fetch_assoc($R);
+        mysql_free_result($R);
+        $Max = $Row['Auto_increment'];
 
-        if (!$max) {
-            $max = 2000000;
+        if (!$Max) {
+            $Max = 2000000;
         }
 
-        for ($i = 0; $i < $max; $i += $this->chunkSize) {
-            $from = $i;
-            $to = $from + $this->chunkSize - 1;
+        for ($i = 0; $i < $Max; $i += $this->ChunkSize) {
+            $From = $i;
+            $To = $From + $this->ChunkSize - 1;
 
-            $sql = str_replace(array('{from}', '{to}'), array($from, $to), $query);
-            $this->_exportTableDB($tableName, $sql, $mappings);
+            $Sql = str_replace(array('{from}', '{to}'), array($From, $To), $Query);
+            $this->_exportTableDB($TableName, $Sql, $Mappings);
         }
     }
 
@@ -625,16 +625,16 @@ class ExportModel {
      * @param $Columns
      * @return array
      */
-    public function fixPermissionColumns($columns) {
-        $result = array();
-        foreach ($columns as $index => $value) {
-            if (is_string($value) && strpos($value, '.') !== false) {
-                $value = array('Column' => $value, 'Type' => 'tinyint(1)');
+    public function fixPermissionColumns($Columns) {
+        $Result = array();
+        foreach ($Columns as $Index => $Value) {
+            if (is_string($Value) && strpos($Value, '.') !== false) {
+                $Value = array('Column' => $Value, 'Type' => 'tinyint(1)');
             }
-            $result[$index] = $value;
+            $Result[$Index] = $Value;
         }
 
-        return $result;
+        return $Result;
     }
 
     /**
@@ -643,19 +643,19 @@ class ExportModel {
      * @param $Mappings
      * @return array
      */
-    public function flipMappings($mappings) {
-        $result = array();
-        foreach ($mappings as $column => $mapping) {
-            if (is_string($mapping)) {
-                $result[$mapping] = array('Column' => $column);
+    public function flipMappings($Mappings) {
+        $Result = array();
+        foreach ($Mappings as $Column => $Mapping) {
+            if (is_string($Mapping)) {
+                $Result[$Mapping] = array('Column' => $Column);
             } else {
-                $col = $mapping['Column'];
-                $mapping['Column'] = $column;
-                $result[$col] = $mapping;
+                $Col = $Mapping['Column'];
+                $Mapping['Column'] = $Column;
+                $Result[$Col] = $Mapping;
             }
         }
 
-        return $result;
+        return $Result;
     }
 
     /**
@@ -665,18 +665,18 @@ class ExportModel {
      * @param int $End
      * @return string
      */
-    public static function formatElapsed($start, $end = null) {
-        if ($end === null) {
-            $elapsed = $start;
+    public static function formatElapsed($Start, $End = null) {
+        if ($End === null) {
+            $Elapsed = $Start;
         } else {
-            $elapsed = $end - $start;
+            $Elapsed = $End - $Start;
         }
 
-        $m = floor($elapsed / 60);
-        $s = $elapsed - $m * 60;
-        $result = sprintf('%02d:%05.2f', $m, $s);
+        $m = floor($Elapsed / 60);
+        $s = $Elapsed - $m * 60;
+        $Result = sprintf('%02d:%05.2f', $m, $s);
 
-        return $result;
+        return $Result;
     }
 
     /**
@@ -685,29 +685,29 @@ class ExportModel {
      * @param $Value
      * @return int|mixed|string
      */
-    public static function formatValue($value) {
+    public static function formatValue($Value) {
         // Format the value for writing.
-        if (is_null($value)) {
-            $value = self::NULL;
-        } elseif (is_numeric($value)) {
+        if (is_null($Value)) {
+            $Value = self::NULL;
+        } elseif (is_numeric($Value)) {
             // Do nothing, formats as is.
-        } elseif (is_string($value)) {
-            if (self::$mb && mb_detect_encoding($value) != 'UTF-8') {
-                $value = utf8_encode($value);
+        } elseif (is_string($Value)) {
+            if (self::$Mb && mb_detect_encoding($Value) != 'UTF-8') {
+                $Value = utf8_encode($Value);
             }
 
-            $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
-            $value = self::QUOTE
-                . str_replace(self::$escapeSearch, self::$escapeReplace, $value)
+            $Value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $Value);
+            $Value = self::QUOTE
+                . str_replace(self::$EscapeSearch, self::$EscapeReplace, $Value)
                 . self::QUOTE;
-        } elseif (is_bool($value)) {
-            $value = $value ? 1 : 0;
+        } elseif (is_bool($Value)) {
+            $Value = $Value ? 1 : 0;
         } else {
             // Unknown format.
-            $value = self::NULL;
+            $Value = self::NULL;
         }
 
-        return $value;
+        return $Value;
     }
 
     /**
@@ -717,19 +717,19 @@ class ExportModel {
      * @param type $IndexColumn
      * @return type
      */
-    public function get($sql, $indexColumn = false) {
-        $r = $this->_query($sql, true);
-        $result = array();
+    public function get($Sql, $IndexColumn = false) {
+        $R = $this->_query($Sql, true);
+        $Result = array();
 
-        while ($row = mysql_fetch_assoc($r)) {
-            if ($indexColumn) {
-                $result[$row[$indexColumn]] = $row;
+        while ($Row = mysql_fetch_assoc($R)) {
+            if ($IndexColumn) {
+                $Result[$Row[$IndexColumn]] = $Row;
             } else {
-                $result[] = $row;
+                $Result[] = $Row;
             }
         }
 
-        return $result;
+        return $Result;
     }
 
     /**
@@ -738,30 +738,30 @@ class ExportModel {
      * @param string $Table
      * @return string|bool Character set name or false.
      */
-    public function getCharacterSet($table) {
+    public function getCharacterSet($Table) {
         // First get the collation for the database.
-        $data = $this->query("show table status like ':_{$table}';");
-        if (!$data) {
+        $Data = $this->query("show table status like ':_{$Table}';");
+        if (!$Data) {
             return false;
         }
-        if ($statusRow = mysql_fetch_assoc($data)) {
-            $collation = $statusRow['Collation'];
+        if ($StatusRow = mysql_fetch_assoc($Data)) {
+            $Collation = $StatusRow['Collation'];
         } else {
             return false;
         }
 
         // Grab the character set from the database.
-        $data = $this->query("show collation like '$collation'");
-        if (!$data) {
+        $Data = $this->query("show collation like '$Collation'");
+        if (!$Data) {
             return false;
         }
-        if ($collationRow = mysql_fetch_assoc($data)) {
-            $characterSet = $collationRow['Charset'];
+        if ($CollationRow = mysql_fetch_assoc($Data)) {
+            $CharacterSet = $CollationRow['Charset'];
             if (!defined('PORTER_CHARACTER_SET')) {
-                define('PORTER_CHARACTER_SET', $characterSet);
+                define('PORTER_CHARACTER_SET', $CharacterSet);
             }
 
-            return $characterSet;
+            return $CharacterSet;
         }
 
         return false;
@@ -774,39 +774,39 @@ class ExportModel {
      */
     public function getDatabasePrefixes() {
         // Grab all of the tables.
-        $data = $this->query('show tables');
-        if ($data === false) {
+        $Data = $this->query('show tables');
+        if ($Data === false) {
             return array();
         }
 
         // Get the names in an array for easier parsing.
-        $tables = array();
-        while (($row = mysql_fetch_array($data, MYSQL_NUM)) !== false) {
-            $tables[] = $row[0];
+        $Tables = array();
+        while (($Row = mysql_fetch_array($Data, MYSQL_NUM)) !== false) {
+            $Tables[] = $Row[0];
         }
-        sort($tables);
+        sort($Tables);
 
-        $prefixes = array();
+        $Prefixes = array();
 
         // Loop through each table and get its prefixes.
-        foreach ($tables as $table) {
-            $pxFound = false;
-            foreach ($prefixes as $pxIndex => $px) {
-                $newPx = $this->_getPrefix($table, $px);
-                if (strlen($newPx) > 0) {
-                    $pxFound = true;
-                    if ($newPx != $px) {
-                        $prefixes[$pxIndex] = $newPx;
+        foreach ($Tables as $Table) {
+            $PxFound = false;
+            foreach ($Prefixes as $PxIndex => $Px) {
+                $NewPx = $this->_getPrefix($Table, $Px);
+                if (strlen($NewPx) > 0) {
+                    $PxFound = true;
+                    if ($NewPx != $Px) {
+                        $Prefixes[$PxIndex] = $NewPx;
                     }
                     break;
                 }
             }
-            if (!$pxFound) {
-                $prefixes[] = $table;
+            if (!$PxFound) {
+                $Prefixes[] = $Table;
             }
         }
 
-        return $prefixes;
+        return $Prefixes;
     }
 
     /**
@@ -816,19 +816,19 @@ class ExportModel {
      * @param $B
      * @return string
      */
-    protected function _getPrefix($a, $b) {
-        $length = min(strlen($a), strlen($b));
-        $prefix = '';
+    protected function _getPrefix($A, $B) {
+        $Length = min(strlen($A), strlen($B));
+        $Prefix = '';
 
-        for ($i = 0; $i < $length; $i++) {
-            if ($a[$i] == $b[$i]) {
-                $prefix .= $a[$i];
+        for ($i = 0; $i < $Length; $i++) {
+            if ($A[$i] == $B[$i]) {
+                $Prefix .= $A[$i];
             } else {
                 break;
             }
         }
 
-        return $prefix;
+        return $Prefix;
     }
 
     /**
@@ -840,114 +840,114 @@ class ExportModel {
      * @param string $TableName
      * @return array
      */
-    public function getExportStructure($row, $tableOrStructure, &$mappings, $tableName = '_') {
-        $exportStructure = array();
+    public function getExportStructure($Row, $TableOrStructure, &$Mappings, $TableName = '_') {
+        $ExportStructure = array();
 
-        if (is_string($tableOrStructure)) {
-            $structure = $this->_structures[$tableOrStructure];
+        if (is_string($TableOrStructure)) {
+            $Structure = $this->_Structures[$TableOrStructure];
         } else {
-            $structure = $tableOrStructure;
+            $Structure = $TableOrStructure;
         }
 
         // See what columns to add to the end of the structure.
-        foreach ($row as $column => $x) {
-            if (array_key_exists($column, $mappings)) {
-                $mapping = $mappings[$column];
-                if (is_string($mapping)) {
-                    if (array_key_exists($mapping, $structure)) {
+        foreach ($Row as $Column => $X) {
+            if (array_key_exists($Column, $Mappings)) {
+                $Mapping = $Mappings[$Column];
+                if (is_string($Mapping)) {
+                    if (array_key_exists($Mapping, $Structure)) {
                         // This an existing column.
-                        $destColumn = $mapping;
-                        $destType = $structure[$destColumn];
+                        $DestColumn = $Mapping;
+                        $DestType = $Structure[$DestColumn];
                     } else {
                         // This is a created column.
-                        $destColumn = $column;
-                        $destType = $mapping;
+                        $DestColumn = $Column;
+                        $DestType = $Mapping;
                     }
-                } elseif (is_array($mapping)) {
-                    if (!isset($mapping['Column'])) {
-                        trigger_error("Mapping for $column does not have a 'Column' defined.", E_USER_ERROR);
+                } elseif (is_array($Mapping)) {
+                    if (!isset($Mapping['Column'])) {
+                        trigger_error("Mapping for $Column does not have a 'Column' defined.", E_USER_ERROR);
                     }
 
-                    $destColumn = $mapping['Column'];
+                    $DestColumn = $Mapping['Column'];
 
-                    if (isset($mapping['Type'])) {
-                        $destType = $mapping['Type'];
-                    } elseif (isset($structure[$destColumn])) {
-                        $destType = $structure[$destColumn];
+                    if (isset($Mapping['Type'])) {
+                        $DestType = $Mapping['Type'];
+                    } elseif (isset($Structure[$DestColumn])) {
+                        $DestType = $Structure[$DestColumn];
                     } else {
-                        $destType = 'varchar(255)';
+                        $DestType = 'varchar(255)';
                     }
 //               $Mappings[$Column] = $DestColumn;
                 }
-            } elseif (array_key_exists($column, $structure)) {
-                $destColumn = $column;
-                $destType = $structure[$column];
+            } elseif (array_key_exists($Column, $Structure)) {
+                $DestColumn = $Column;
+                $DestType = $Structure[$Column];
 
                 // Verify column doesn't exist in Mapping array's Column element
-                $mappingExists = false;
-                foreach ($mappings as $testMapping) {
-                    if ($testMapping == $column) {
-                        $mappingExists = true;
-                    } elseif (is_array($testMapping) && array_key_exists('Column',
-                            $testMapping) && ($testMapping['Column'] == $column)
+                $MappingExists = false;
+                foreach ($Mappings as $TestMapping) {
+                    if ($TestMapping == $Column) {
+                        $MappingExists = true;
+                    } elseif (is_array($TestMapping) && array_key_exists('Column',
+                            $TestMapping) && ($TestMapping['Column'] == $Column)
                     ) {
-                        $mappingExists = true;
+                        $MappingExists = true;
                     }
                 }
 
                 // Also add the column to the mapping.
-                if (!$mappingExists) {
-                    $mappings[$column] = $destColumn;
+                if (!$MappingExists) {
+                    $Mappings[$Column] = $DestColumn;
                 }
             } else {
-                $destColumn = '';
-                $destType = '';
+                $DestColumn = '';
+                $DestType = '';
             }
 
             // Check to see if we have to add the column to the export structure.
-            if ($destColumn && !array_key_exists($destColumn, $exportStructure)) {
+            if ($DestColumn && !array_key_exists($DestColumn, $ExportStructure)) {
                 // TODO: Make sure $DestType is a valid MySQL type.
-                $exportStructure[$destColumn] = $destType;
+                $ExportStructure[$DestColumn] = $DestType;
             }
         }
 
         // Add filtered mappings since filters can add new columns.
-        foreach ($mappings as $source => $options) {
-            if (!is_array($options)) {
+        foreach ($Mappings as $Source => $Options) {
+            if (!is_array($Options)) {
                 // Force the mappings into the expanded array syntax for easier processing later.
-                $mappings[$source] = array('Column' => $options);
+                $Mappings[$Source] = array('Column' => $Options);
                 continue;
             }
 
-            if (!isset($options['Column'])) {
-                trigger_error("No column for $tableName(source).$source.", E_USER_NOTICE);
+            if (!isset($Options['Column'])) {
+                trigger_error("No column for $TableName(source).$Source.", E_USER_NOTICE);
                 continue;
             }
 
-            $destColumn = $options['Column'];
+            $DestColumn = $Options['Column'];
 
-            if (!array_key_exists($source, $row) && !isset($options['Type'])) {
-                trigger_error("No column for $tableName(source).$source.", E_USER_NOTICE);
+            if (!array_key_exists($Source, $Row) && !isset($Options['Type'])) {
+                trigger_error("No column for $TableName(source).$Source.", E_USER_NOTICE);
             }
 
-            if (isset($exportStructure[$destColumn])) {
+            if (isset($ExportStructure[$DestColumn])) {
                 continue;
             }
 
-            if (isset($structure[$destColumn])) {
-                $destType = $structure[$destColumn];
-            } elseif (isset($options['Type'])) {
-                $destType = $options['Type'];
+            if (isset($Structure[$DestColumn])) {
+                $DestType = $Structure[$DestColumn];
+            } elseif (isset($Options['Type'])) {
+                $DestType = $Options['Type'];
             } else {
-                trigger_error("No column for $tableName.$destColumn.", E_USER_NOTICE);
+                trigger_error("No column for $TableName.$DestColumn.", E_USER_NOTICE);
                 continue;
             }
 
-            $exportStructure[$destColumn] = $destType;
-            $mappings[$source] = $destColumn;
+            $ExportStructure[$DestColumn] = $DestType;
+            $Mappings[$Source] = $DestColumn;
         }
 
-        return $exportStructure;
+        return $ExportStructure;
     }
 
     /**
@@ -957,26 +957,26 @@ class ExportModel {
      * @param bool $Key
      * @return array
      */
-    public function getQueryStructure($query, $key = false) {
-        $queryStruct = rtrim($query, ';') . ' limit 1';
-        if (!$key) {
-            $key = md5($queryStruct);
+    public function getQueryStructure($Query, $Key = false) {
+        $QueryStruct = rtrim($Query, ';') . ' limit 1';
+        if (!$Key) {
+            $Key = md5($QueryStruct);
         }
-        if (isset($this->_queryStructures[$key])) {
-            return $this->_queryStructures[$key];
+        if (isset($this->_QueryStructures[$Key])) {
+            return $this->_QueryStructures[$Key];
         }
 
-        $r = $this->query($queryStruct, true);
+        $R = $this->query($QueryStruct, true);
         $i = 0;
-        $result = array();
-        while ($i < mysql_num_fields($r)) {
-            $meta = mysql_fetch_field($r, $i);
-            $result[$meta->name] = $meta->table;
+        $Result = array();
+        while ($i < mysql_num_fields($R)) {
+            $Meta = mysql_fetch_field($R, $i);
+            $Result[$Meta->name] = $Meta->table;
             $i++;
         }
-        $this->_queryStructures[$key] = $result;
+        $this->_QueryStructures[$Key] = $Result;
 
-        return $result;
+        return $Result;
     }
 
     /**
@@ -986,15 +986,15 @@ class ExportModel {
      * @param $Default
      * @return mixed
      */
-    public function getValue($sql, $default) {
-        $data = $this->get($sql);
-        if (count($data) > 0) {
-            $data = array_shift($data); // first row
-            $result = array_shift($data); // first column
+    public function getValue($Sql, $Default) {
+        $Data = $this->get($Sql);
+        if (count($Data) > 0) {
+            $Data = array_shift($Data); // first row
+            $Result = array_shift($Data); // first column
 
-            return $result;
+            return $Result;
         } else {
-            return $default;
+            return $Default;
         }
     }
 
@@ -1005,21 +1005,21 @@ class ExportModel {
      * @param $GlobalStructure
      * @return string
      */
-    protected function _getTableHeader($structure, $globalStructure) {
-        $tableHeader = '';
+    protected function _getTableHeader($Structure, $GlobalStructure) {
+        $TableHeader = '';
 
-        foreach ($structure as $column => $type) {
-            if (strlen($tableHeader) > 0) {
-                $tableHeader .= self::DELIM;
+        foreach ($Structure as $Column => $Type) {
+            if (strlen($TableHeader) > 0) {
+                $TableHeader .= self::DELIM;
             }
-            if (array_key_exists($column, $globalStructure)) {
-                $tableHeader .= $column;
+            if (array_key_exists($Column, $GlobalStructure)) {
+                $TableHeader .= $Column;
             } else {
-                $tableHeader .= $column . ':' . $type;
+                $TableHeader .= $Column . ':' . $Type;
             }
         }
 
-        return $tableHeader;
+        return $TableHeader;
     }
 
     /**
@@ -1028,9 +1028,9 @@ class ExportModel {
      * @param $Mappings
      * @return bool
      */
-    public function hasFilter(&$mappings) {
-        foreach ($mappings as $column => $info) {
-            if (is_array($info) && isset($info['Filter'])) {
+    public function hasFilter(&$Mappings) {
+        foreach ($Mappings as $Column => $Info) {
+            if (is_array($Info) && isset($Info['Filter'])) {
                 return true;
             }
         }
@@ -1045,27 +1045,27 @@ class ExportModel {
      * @param string $ColumnName
      * @param string $PK
      */
-    public function HTMLDecoderDb($tableName, $columnName, $PK) {
-        $common = array('&amp;' => '&', '&lt;' => '<', '&gt;' => '>', '&apos;' => "'", '&quot;' => '"', '&#39;' => "'");
-        foreach ($common as $from => $to) {
-            $fromQ = mysql_escape_string($from);
-            $toQ = mysql_escape_string($to);
-            $sql = "update :_{$tableName} set $columnName = replace($columnName, '$fromQ', '$toQ') where $columnName like '%$fromQ%'";
+    public function HTMLDecoderDb($TableName, $ColumnName, $PK) {
+        $Common = array('&amp;' => '&', '&lt;' => '<', '&gt;' => '>', '&apos;' => "'", '&quot;' => '"', '&#39;' => "'");
+        foreach ($Common as $From => $To) {
+            $FromQ = mysql_escape_string($From);
+            $ToQ = mysql_escape_string($To);
+            $Sql = "update :_{$TableName} set $ColumnName = replace($ColumnName, '$FromQ', '$ToQ') where $ColumnName like '%$FromQ%'";
 
-            $this->query($sql);
+            $this->query($Sql);
         }
 
         // Now decode the remaining rows.
-        $sql = "select * from :_$tableName where $columnName like '%&%;%'";
-        $result = $this->query($sql, true);
-        while ($row = mysql_fetch_assoc($result)) {
-            $from = $row[$columnName];
-            $to = HTMLDecoder($from);
+        $Sql = "select * from :_$TableName where $ColumnName like '%&%;%'";
+        $Result = $this->query($Sql, true);
+        while ($Row = mysql_fetch_assoc($Result)) {
+            $From = $Row[$ColumnName];
+            $To = HTMLDecoder($From);
 
-            if ($from != $to) {
-                $toQ = mysql_escape_string($to);
-                $sql = "update :_{$tableName} set $columnName = '$toQ' where $PK = {$row[$PK]}";
-                $this->query($sql, true);
+            if ($From != $To) {
+                $ToQ = mysql_escape_string($To);
+                $Sql = "update :_{$TableName} set $ColumnName = '$ToQ' where $PK = {$Row[$PK]}";
+                $this->query($Sql, true);
             }
         }
     }
@@ -1077,13 +1077,13 @@ class ExportModel {
      * @param $Table Name of the table the target index exists in
      * @return bool True if index exists, false otherwise
      */
-    public function indexExists($indexName, $table) {
-        $indexName = mysql_real_escape_string($indexName);
-        $table = mysql_real_escape_string($table);
+    public function indexExists($IndexName, $Table) {
+        $IndexName = mysql_real_escape_string($IndexName);
+        $Table = mysql_real_escape_string($Table);
 
-        $result = $this->query("show index from `{$table}` WHERE Key_name = '{$indexName}'", true);
+        $Result = $this->query("show index from `{$Table}` WHERE Key_name = '{$IndexName}'", true);
 
-        return $result && mysql_num_rows($result);
+        return $Result && mysql_num_rows($Result);
     }
 
     /**
@@ -1092,14 +1092,14 @@ class ExportModel {
      * @return resource
      */
     protected function _openFile() {
-        $this->path = str_replace(' ', '_', $this->path);
+        $this->Path = str_replace(' ', '_', $this->Path);
         if ($this->useCompression()) {
-            $fp = gzopen($this->path, 'wb');
+            $fp = gzopen($this->Path, 'wb');
         } else {
-            $fp = fopen($this->path, 'wb');
+            $fp = fopen($this->Path, 'wb');
         }
 
-        $this->file = $fp;
+        $this->File = $fp;
 
         return $fp;
     }
@@ -1112,18 +1112,18 @@ class ExportModel {
      * @param string $Query The sql to execute.
      * @return resource The query cursor.
      */
-    public function query($query, $buffer = false) {
-        if (!preg_match('`limit 1;$`', $query)) {
-            $this->queries[] = $query;
+    public function query($Query, $Buffer = false) {
+        if (!preg_match('`limit 1;$`', $Query)) {
+            $this->Queries[] = $Query;
         }
 
-        if ($this->destination == 'database' && $this->captureOnly) {
-            if (!preg_match('`^\s*select|show|describe|create`', $query)) {
+        if ($this->Destination == 'database' && $this->CaptureOnly) {
+            if (!preg_match('`^\s*select|show|describe|create`', $Query)) {
                 return 'SKIPPED';
             }
         }
 
-        return $this->_query($query, $buffer);
+        return $this->_query($Query, $Buffer);
     }
 
     /**
@@ -1134,39 +1134,39 @@ class ExportModel {
      * @param bool $Buffer
      * @return resource
      */
-    protected function _query($sql, $buffer = false) {
-        if (isset($this->_lastResult) && is_resource($this->_lastResult)) {
-            mysql_free_result($this->_lastResult);
+    protected function _query($Sql, $Buffer = false) {
+        if (isset($this->_LastResult) && is_resource($this->_LastResult)) {
+            mysql_free_result($this->_LastResult);
         }
-        $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
-        if ($this->sourcePrefix) {
-            $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
+        $Sql = str_replace(':_', $this->Prefix, $Sql); // replace prefix.
+        if ($this->SourcePrefix) {
+            $Sql = preg_replace("`\b{$this->SourcePrefix}`", $this->Prefix, $Sql); // replace prefix.
         }
 
-        $sql = rtrim($sql, ';') . ';';
+        $Sql = rtrim($Sql, ';') . ';';
 
-        $connection = @mysql_connect($this->_host, $this->_username, $this->_password);
-        mysql_select_db($this->_dbName);
-        mysql_query("set names {$this->characterSet}");
+        $Connection = @mysql_connect($this->_Host, $this->_Username, $this->_Password);
+        mysql_select_db($this->_DbName);
+        mysql_query("set names {$this->CharacterSet}");
 
-        if ($buffer) {
-            $result = mysql_query($sql, $connection);
+        if ($Buffer) {
+            $Result = mysql_query($Sql, $Connection);
         } else {
-            $result = mysql_unbuffered_query($sql, $connection);
-            if (is_resource($result)) {
-                $this->_lastResult = $result;
+            $Result = mysql_unbuffered_query($Sql, $Connection);
+            if (is_resource($Result)) {
+                $this->_LastResult = $Result;
             }
         }
 
-        if ($result === false) {
+        if ($Result === false) {
             echo '<pre>',
-            htmlspecialchars($sql),
-            htmlspecialchars(mysql_error($connection)),
+            htmlspecialchars($Sql),
+            htmlspecialchars(mysql_error($Connection)),
             '</pre>';
-            trigger_error(mysql_error($connection));
+            trigger_error(mysql_error($Connection));
         }
 
-        return $result;
+        return $Result;
     }
 
     /**
@@ -1174,15 +1174,15 @@ class ExportModel {
      *
      * @param string|array $SqlList An array of single query strings or a string of queries terminated with semi-colons.
      */
-    public function queryN($sqlList) {
-        if (!is_array($sqlList)) {
-            $sqlList = explode(';', $sqlList);
+    public function queryN($SqlList) {
+        if (!is_array($SqlList)) {
+            $SqlList = explode(';', $SqlList);
         }
 
-        foreach ($sqlList as $sql) {
-            $sql = trim($sql);
-            if ($sql) {
-                $this->query($sql);
+        foreach ($SqlList as $Sql) {
+            $Sql = trim($Sql);
+            if ($Sql) {
+                $this->query($Sql);
             }
         }
     }
@@ -1193,8 +1193,8 @@ class ExportModel {
      * @param string $TableName Name of the table to check
      * @return bool True if table should be exported, false otherwise
      */
-    public function shouldExport($tableName) {
-        return empty($this->restrictedTables) || in_array(strtolower($tableName), $this->restrictedTables);
+    public function shouldExport($TableName) {
+        return empty($this->RestrictedTables) || in_array(strtolower($TableName), $this->RestrictedTables);
     }
 
     /**
@@ -1205,11 +1205,11 @@ class ExportModel {
      * @param null $Password
      * @param null $DbName
      */
-    public function setConnection($host = null, $username = null, $password = null, $dbName = null) {
-        $this->_host = $host;
-        $this->_username = $username;
-        $this->_password = $password;
-        $this->_dbName = $dbName;
+    public function setConnection($Host = null, $Username = null, $Password = null, $DbName = null) {
+        $this->_Host = $Host;
+        $this->_Username = $Username;
+        $this->_Password = $Password;
+        $this->_DbName = $DbName;
     }
 
     /**
@@ -1217,9 +1217,9 @@ class ExportModel {
      *
      * @param $Msg
      */
-    public function status($msg) {
+    public function status($Msg) {
         if (defined('CONSOLE')) {
-            echo $msg;
+            echo $Msg;
         }
     }
 
@@ -1232,12 +1232,12 @@ class ExportModel {
      * @return array
      * @see vnExport::ExportTable()
      */
-    public function structures($newStructures = false) {
-        if (is_array($newStructures)) {
-            $this->_structures = $newStructures;
+    public function structures($NewStructures = false) {
+        if (is_array($NewStructures)) {
+            $this->_Structures = $NewStructures;
         }
 
-        return $this->_structures;
+        return $this->_Structures;
     }
 
     /**
@@ -1246,12 +1246,12 @@ class ExportModel {
      * @param bool $Value The value to set or NULL to just return the value.
      * @return bool
      */
-    public function useCompression($value = null) {
-        if ($value !== null) {
-            $this->_useCompression = $value;
+    public function useCompression($Value = null) {
+        if ($Value !== null) {
+            $this->_UseCompression = $Value;
         }
 
-        return $this->_useCompression && $this->destination == 'file' && function_exists('gzopen');
+        return $this->_UseCompression && $this->Destination == 'file' && function_exists('gzopen');
     }
 
     /**
@@ -1274,54 +1274,54 @@ class ExportModel {
      *  - false: If the table does not exist.
      *  - array: The names of the missing columns if one or more columns don't exist.
      */
-    public function exists($table, $columns = array()) {
-        static $_exists = array();
+    public function exists($Table, $Columns = array()) {
+        static $_Exists = array();
 
-        if (!isset($_exists[$table])) {
-            $result = $this->query("show table status like ':_$table'", true);
-            if (!$result) {
-                $_exists[$table] = false;
-            } elseif (!mysql_fetch_assoc($result)) {
-                $_exists[$table] = false;
+        if (!isset($_Exists[$Table])) {
+            $Result = $this->query("show table status like ':_$Table'", true);
+            if (!$Result) {
+                $_Exists[$Table] = false;
+            } elseif (!mysql_fetch_assoc($Result)) {
+                $_Exists[$Table] = false;
             } else {
-                mysql_free_result($result);
-                $desc = $this->query('describe :_' . $table);
-                if ($desc === false) {
-                    $_exists[$table] = false;
+                mysql_free_result($Result);
+                $Desc = $this->query('describe :_' . $Table);
+                if ($Desc === false) {
+                    $_Exists[$Table] = false;
                 } else {
-                    if (is_string($desc)) {
-                        die($desc);
+                    if (is_string($Desc)) {
+                        die($Desc);
                     }
 
-                    $cols = array();
-                    while (($TD = mysql_fetch_assoc($desc)) !== false) {
-                        $cols[$TD['Field']] = $TD;
+                    $Cols = array();
+                    while (($TD = mysql_fetch_assoc($Desc)) !== false) {
+                        $Cols[$TD['Field']] = $TD;
                     }
-                    mysql_free_result($desc);
-                    $_exists[$table] = $cols;
+                    mysql_free_result($Desc);
+                    $_Exists[$Table] = $Cols;
                 }
             }
         }
 
-        if ($_exists[$table] == false) {
+        if ($_Exists[$Table] == false) {
             return false;
         }
 
-        $columns = (array)$columns;
+        $Columns = (array)$Columns;
 
-        if (count($columns) == 0) {
+        if (count($Columns) == 0) {
             return true;
         }
 
-        $missing = array();
-        $cols = array_keys($_exists[$table]);
-        foreach ($columns as $column) {
-            if (!in_array($column, $cols)) {
-                $missing[] = $column;
+        $Missing = array();
+        $Cols = array_keys($_Exists[$Table]);
+        foreach ($Columns as $Column) {
+            if (!in_array($Column, $Cols)) {
+                $Missing[] = $Column;
             }
         }
 
-        return count($missing) == 0 ? true : $missing;
+        return count($Missing) == 0 ? true : $Missing;
     }
 
     /**
@@ -1330,68 +1330,68 @@ class ExportModel {
      * @param array $RequiredTables
      * @return array|string
      */
-    public function verifySource($requiredTables) {
-        $missingTables = false;
-        $countMissingTables = 0;
-        $missingColumns = array();
+    public function verifySource($RequiredTables) {
+        $MissingTables = false;
+        $CountMissingTables = 0;
+        $MissingColumns = array();
 
-        foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->query('describe :_' . $reqTable);
+        foreach ($RequiredTables as $ReqTable => $ReqColumns) {
+            $TableDescriptions = $this->query('describe :_' . $ReqTable);
             //echo 'describe '.$Prefix.$ReqTable;
-            if ($tableDescriptions === false) { // Table doesn't exist
-                $countMissingTables++;
-                if ($missingTables !== false) {
-                    $missingTables .= ', ' . $reqTable;
+            if ($TableDescriptions === false) { // Table doesn't exist
+                $CountMissingTables++;
+                if ($MissingTables !== false) {
+                    $MissingTables .= ', ' . $ReqTable;
                 } else {
-                    $missingTables = $reqTable;
+                    $MissingTables = $ReqTable;
                 }
             } else {
                 // Build array of columns in this table
-                $presentColumns = array();
-                while (($TD = mysql_fetch_assoc($tableDescriptions)) !== false) {
-                    $presentColumns[] = $TD['Field'];
+                $PresentColumns = array();
+                while (($TD = mysql_fetch_assoc($TableDescriptions)) !== false) {
+                    $PresentColumns[] = $TD['Field'];
                 }
                 // Compare with required columns
-                foreach ($reqColumns as $reqCol) {
-                    if (!in_array($reqCol, $presentColumns)) {
-                        $missingColumns[$reqTable][] = $reqCol;
+                foreach ($ReqColumns as $ReqCol) {
+                    if (!in_array($ReqCol, $PresentColumns)) {
+                        $MissingColumns[$ReqTable][] = $ReqCol;
                     }
                 }
 
-                mysql_free_result($tableDescriptions);
+                mysql_free_result($TableDescriptions);
             }
         }
 
         // Return results
-        if ($missingTables === false) {
-            if (count($missingColumns) > 0) {
-                $result = array();
+        if ($MissingTables === false) {
+            if (count($MissingColumns) > 0) {
+                $Result = array();
 
                 // Build a string of missing columns.
-                foreach ($missingColumns as $table => $columns) {
-                    $result[] = "The $table table is missing the following column(s): " . implode(', ', $columns);
+                foreach ($MissingColumns as $Table => $Columns) {
+                    $Result[] = "The $Table table is missing the following column(s): " . implode(', ', $Columns);
                 }
 
-                return implode("<br />\n", $result);
+                return implode("<br />\n", $Result);
             } else {
                 return true;
             } // Nothing missing!
-        } elseif ($countMissingTables == count($requiredTables)) {
-            $result = 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
+        } elseif ($CountMissingTables == count($RequiredTables)) {
+            $Result = 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
 
             // Guess the prefixes to notify the user.
-            $prefixes = $this->getDatabasePrefixes();
-            if (count($prefixes) == 1) {
-                $result .= ' Based on the database you provided, your database prefix is probably ' . implode(', ',
-                        $prefixes);
-            } elseif (count($prefixes) > 0) {
-                $result .= ' Based on the database you provided, your database prefix is probably one of the following: ' . implode(', ',
-                        $prefixes);
+            $Prefixes = $this->getDatabasePrefixes();
+            if (count($Prefixes) == 1) {
+                $Result .= ' Based on the database you provided, your database prefix is probably ' . implode(', ',
+                        $Prefixes);
+            } elseif (count($Prefixes) > 0) {
+                $Result .= ' Based on the database you provided, your database prefix is probably one of the following: ' . implode(', ',
+                        $Prefixes);
             }
 
-            return $result;
+            return $Result;
         } else {
-            return 'Missing required database tables: ' . $missingTables;
+            return 'Missing required database tables: ' . $MissingTables;
         }
     }
 
@@ -1402,31 +1402,31 @@ class ExportModel {
      * @param $TableName
      * @param $ExportStructure
      */
-    public function writeBeginTable($fp, $tableName, $exportStructure) {
-        $tableHeader = '';
+    public function writeBeginTable($fp, $TableName, $ExportStructure) {
+        $TableHeader = '';
 
-        foreach ($exportStructure as $key => $value) {
-            if (is_numeric($key)) {
-                $column = $value;
-                $type = '';
+        foreach ($ExportStructure as $Key => $Value) {
+            if (is_numeric($Key)) {
+                $Column = $Value;
+                $Type = '';
             } else {
-                $column = $key;
-                $type = $value;
+                $Column = $Key;
+                $Type = $Value;
             }
 
-            if (strlen($tableHeader) > 0) {
-                $tableHeader .= self::DELIM;
+            if (strlen($TableHeader) > 0) {
+                $TableHeader .= self::DELIM;
             }
 
-            if ($type) {
-                $tableHeader .= $column . ':' . $type;
+            if ($Type) {
+                $TableHeader .= $Column . ':' . $Type;
             } else {
-                $tableHeader .= $column;
+                $TableHeader .= $Column;
             }
         }
 
-        fwrite($fp, 'Table: ' . $tableName . self::NEWLINE);
-        fwrite($fp, $tableHeader . self::NEWLINE);
+        fwrite($fp, 'Table: ' . $TableName . self::NEWLINE);
+        fwrite($fp, $TableHeader . self::NEWLINE);
     }
 
     /**
@@ -1446,64 +1446,64 @@ class ExportModel {
      * @param $ExportStructure
      * @param $RevMappings
      */
-    public function writeRow($fp, $row, $exportStructure, $revMappings) {
-        $this->currentRow =& $row;
+    public function writeRow($fp, $Row, $ExportStructure, $RevMappings) {
+        $this->CurrentRow =& $Row;
 
         // Loop through the columns in the export structure and grab their values from the row.
-        $exRow = array();
-        foreach ($exportStructure as $field => $type) {
+        $ExRow = array();
+        foreach ($ExportStructure as $Field => $Type) {
             // Get the value of the export.
-            $value = null;
-            if (isset($revMappings[$field]) && isset($row[$revMappings[$field]['Column']])) {
+            $Value = null;
+            if (isset($RevMappings[$Field]) && isset($Row[$RevMappings[$Field]['Column']])) {
                 // The column is mapped.
-                $value = $row[$revMappings[$field]['Column']];
-            } elseif (array_key_exists($field, $row)) {
+                $Value = $Row[$RevMappings[$Field]['Column']];
+            } elseif (array_key_exists($Field, $Row)) {
                 // The column has an exact match in the export.
-                $value = $row[$field];
+                $Value = $Row[$Field];
             }
 
             // Check to see if there is a callback filter.
-            $filtered = false;
-            if (isset($revMappings[$field]['Filter'])) {
-                $callback = $revMappings[$field]['Filter'];
+            $Filtered = false;
+            if (isset($RevMappings[$Field]['Filter'])) {
+                $Callback = $RevMappings[$Field]['Filter'];
 
-                $row2 =& $row;
-                $value = call_user_func($callback, $value, $field, $row2, $field);
-                $row = $this->currentRow;
-                $filtered = true;
+                $Row2 =& $Row;
+                $Value = call_user_func($Callback, $Value, $Field, $Row2, $Field);
+                $Row = $this->CurrentRow;
+                $Filtered = true;
             }
 
             // Format the value for writing.
-            if (is_null($value)) {
-                $value = self::NULL;
-            } elseif (is_integer($value)) {
+            if (is_null($Value)) {
+                $Value = self::NULL;
+            } elseif (is_integer($Value)) {
                 // Do nothing, formats as is.
                 // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
-            } elseif (is_string($value) || is_numeric($value)) {
+            } elseif (is_string($Value) || is_numeric($Value)) {
                 // Check to see if there is a callback filter.
-                if (!isset($revMappings[$field])) {
+                if (!isset($RevMappings[$Field])) {
                     //$Value = call_user_func($Filters[$Field], $Value, $Field, $Row);
                 } else {
-                    if (self::$mb && mb_detect_encoding($value) != 'UTF-8') {
-                        $value = utf8_encode($value);
+                    if (self::$Mb && mb_detect_encoding($Value) != 'UTF-8') {
+                        $Value = utf8_encode($Value);
                     }
                 }
 
-                $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
-                $value = self::QUOTE
-                    . str_replace(self::$escapeSearch, self::$escapeReplace, $value)
+                $Value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $Value);
+                $Value = self::QUOTE
+                    . str_replace(self::$EscapeSearch, self::$EscapeReplace, $Value)
                     . self::QUOTE;
-            } elseif (is_bool($value)) {
-                $value = $value ? 1 : 0;
+            } elseif (is_bool($Value)) {
+                $Value = $Value ? 1 : 0;
             } else {
                 // Unknown format.
-                $value = self::NULL;
+                $Value = self::NULL;
             }
 
-            $exRow[] = $value;
+            $ExRow[] = $Value;
         }
         // Write the data.
-        fwrite($fp, implode(self::DELIM, $exRow));
+        fwrite($fp, implode(self::DELIM, $ExRow));
         // End the record.
         fwrite($fp, self::NEWLINE);
     }
@@ -1514,8 +1514,8 @@ class ExportModel {
      * @param string $ColumnName
      * @return string SQL.
      */
-    public static function fileExtension($columnName) {
-        return "right($columnName, instr(reverse($columnName), '.'))";
+    public static function fileExtension($ColumnName) {
+        return "right($ColumnName, instr(reverse($ColumnName), '.'))";
     }
 }
 

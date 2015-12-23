@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['vanilla1'] = array('name' => 'Vanilla 1', 'prefix' => 'LUM_');
-$supported['vanilla1']['features'] = array(
+$Supported['vanilla1'] = array('name' => 'Vanilla 1', 'prefix' => 'LUM_');
+$Supported['vanilla1']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -23,7 +23,7 @@ $supported['vanilla1']['features'] = array(
 class Vanilla1 extends ExportController {
 
     /** @var array Required tables => columns */
-    public $sourceTables = array(
+    public $SourceTables = array(
         'User' => array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
         'Role' => array('RoleID', 'Name', 'Description'),
         'Category' => array('CategoryID', 'Name', 'Description'),
@@ -58,19 +58,19 @@ class Vanilla1 extends ExportController {
      * @param ExportModel $Ex
      *
      */
-    protected function forumExport($ex) {
-        $this->ex = $ex;
+    protected function forumExport($Ex) {
+        $this->Ex = $Ex;
 
-        $characterSet = $ex->getCharacterSet('Comment');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('Comment');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
         // Begin
-        $ex->beginExport('', 'Vanilla 1.*');
+        $Ex->beginExport('', 'Vanilla 1.*');
 
         // Users
-        $user_Map = array(
+        $User_Map = array(
             'UserID' => 'UserID',
             'Name' => 'Name',
             'Password' => 'Password',
@@ -79,35 +79,35 @@ class Vanilla1 extends ExportController {
             'CountComments' => 'CountComments',
             'Discovery' => 'DiscoveryText'
         );
-        $ex->exportTable('User', "SELECT * FROM :_User", $user_Map);  // ":_" will be replaced by database prefix
+        $Ex->exportTable('User', "SELECT * FROM :_User", $User_Map);  // ":_" will be replaced by database prefix
 
         // Roles
 
         // Since the zero role is a valid role in Vanilla 1 then we'll have to reassign it.
-        $r = $ex->query('select max(RoleID) as RoleID from :_Role');
-        $zeroRoleID = 0;
-        if (is_resource($r)) {
-            while (($row = @mysql_fetch_assoc($r)) !== false) {
-                $zeroRoleID = $row['RoleID'];
+        $R = $Ex->query('select max(RoleID) as RoleID from :_Role');
+        $ZeroRoleID = 0;
+        if (is_resource($R)) {
+            while (($Row = @mysql_fetch_assoc($R)) !== false) {
+                $ZeroRoleID = $Row['RoleID'];
             }
         }
-        $zeroRoleID++;
+        $ZeroRoleID++;
 
         /*
             'RoleID' => 'int',
             'Name' => 'varchar(100)',
             'Description' => 'varchar(200)'
          */
-        $role_Map = array(
+        $Role_Map = array(
             'RoleID' => 'RoleID',
             'Name' => 'Name',
             'Description' => 'Description'
         );
-        $ex->exportTable('Role',
-            "select RoleID, Name, Description from :_Role union all select $zeroRoleID, 'Applicant', 'Created by the Vanilla Porter'",
-            $role_Map);
+        $Ex->exportTable('Role',
+            "select RoleID, Name, Description from :_Role union all select $ZeroRoleID, 'Applicant', 'Created by the Vanilla Porter'",
+            $Role_Map);
 
-        $permission_Map = array(
+        $Permission_Map = array(
             'RoleID' => 'RoleID',
             'PERMISSION_SIGN_IN' => 'Garden.SignIn.Allow',
             'Permissions' => array(
@@ -161,19 +161,19 @@ class Vanilla1 extends ExportController {
                 'Filter' => array($this, 'ForceBool')
             )
         );
-        $ex->exportTable('Permission', "select * from :_Role", $permission_Map);
+        $Ex->exportTable('Permission', "select * from :_Role", $Permission_Map);
 
         // UserRoles
         /*
             'UserID' => 'int',
             'RoleID' => 'int'
          */
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'UserID' => 'UserID',
             'RoleID' => 'RoleID'
         );
-        $ex->exportTable('UserRole',
-            "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User", $userRole_Map);
+        $Ex->exportTable('UserRole',
+            "select UserID, case RoleID when 0 then $ZeroRoleID else RoleID end as RoleID from :_User", $UserRole_Map);
 
         // Categories
         /*
@@ -186,12 +186,12 @@ class Vanilla1 extends ExportController {
             'DateUpdated' => 'datetime',
             'UpdateUserID' => 'int'
          */
-        $category_Map = array(
+        $Category_Map = array(
             'CategoryID' => 'CategoryID',
             'Name' => 'Name',
             'Description' => 'Description'
         );
-        $ex->exportTable('Category', "select CategoryID, Name, Description from :_Category", $category_Map);
+        $Ex->exportTable('Category', "select CategoryID, Name, Description from :_Category", $Category_Map);
 
         // Discussions
         /*
@@ -208,7 +208,7 @@ class Vanilla1 extends ExportController {
             'Announce' => 'tinyint',
             'Closed' => 'tinyint'
          */
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'DiscussionID' => 'DiscussionID',
             'Name' => 'Name',
             'CategoryID' => 'CategoryID',
@@ -223,7 +223,7 @@ class Vanilla1 extends ExportController {
             'Sink' => 'Sink',
             'LastUserID' => 'LastCommentUserID'
         );
-        $ex->exportTable('Discussion',
+        $Ex->exportTable('Discussion',
             "SELECT d.*,
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2,
@@ -232,7 +232,7 @@ class Vanilla1 extends ExportController {
          FROM :_Discussion d
          LEFT JOIN :_Comment c
             ON d.FirstCommentID = c.CommentID
-         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $discussion_Map);
+         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $Discussion_Map);
 
         // Comments
         /*
@@ -246,7 +246,7 @@ class Vanilla1 extends ExportController {
             'Body' => 'text',
             'Score' => 'float'
          */
-        $comment_Map = array(
+        $Comment_Map = array(
             'CommentID' => 'CommentID',
             'DiscussionID' => 'DiscussionID',
             'AuthUserID' => 'InsertUserID',
@@ -256,7 +256,7 @@ class Vanilla1 extends ExportController {
             'Body' => 'Body',
             'FormatType' => 'Format'
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          SELECT
             c.*
          FROM :_Comment c
@@ -265,9 +265,9 @@ class Vanilla1 extends ExportController {
          WHERE d.FirstCommentID <> c.CommentID
             AND c.Deleted = '0'
             AND coalesce(d.WhisperUserID, 0) = 0
-            AND coalesce(c.WhisperUserID, 0) = 0", $comment_Map);
+            AND coalesce(c.WhisperUserID, 0) = 0", $Comment_Map);
 
-        $ex->exportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          SELECT
             w.UserID,
             w.DiscussionID,
@@ -283,15 +283,15 @@ class Vanilla1 extends ExportController {
         // Create a mapping tables for conversations.
         // These mapping tables are used to group comments that a) are in the same discussion and b) are from and to the same users.
 
-        $ex->query("drop table if exists z_pmto");
+        $Ex->query("drop table if exists z_pmto");
 
-        $ex->query("create table z_pmto (
+        $Ex->query("create table z_pmto (
   CommentID int,
   UserID int,
   primary key(CommentID, UserID)
  )");
 
-        $ex->query("insert ignore z_pmto (
+        $Ex->query("insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -301,7 +301,7 @@ select distinct
 from :_Comment
 where coalesce(WhisperUserID, 0) <> 0");
 
-        $ex->query("insert ignore z_pmto (
+        $Ex->query("insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -311,7 +311,7 @@ select distinct
 from :_Comment
 where coalesce(WhisperUserID, 0) <> 0");
 
-        $ex->query("insert ignore z_pmto (
+        $Ex->query("insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -323,7 +323,7 @@ join :_Comment c
   on c.DiscussionID = d.DiscussionID
 where coalesce(d.WhisperUserID, 0) <> 0");
 
-        $ex->query("insert ignore z_pmto (
+        $Ex->query("insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -335,7 +335,7 @@ join :_Comment c
   on c.DiscussionID = d.DiscussionID
 where coalesce(d.WhisperUserID, 0) <> 0");
 
-        $ex->query("insert ignore z_pmto (
+        $Ex->query("insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -347,15 +347,15 @@ join :_Comment c
   on c.DiscussionID = d.DiscussionID
 where coalesce(d.WhisperUserID, 0) <> 0");
 
-        $ex->query("drop table if exists z_pmto2");
+        $Ex->query("drop table if exists z_pmto2");
 
-        $ex->query("create table z_pmto2 (
+        $Ex->query("create table z_pmto2 (
   CommentID int,
   UserIDs varchar(250),
   primary key (CommentID)
 )");
 
-        $ex->query("insert z_pmto2 (
+        $Ex->query("insert z_pmto2 (
   CommentID,
   UserIDs
 )
@@ -366,16 +366,16 @@ from z_pmto
 group by CommentID");
 
 
-        $ex->query("drop table if exists z_pm");
+        $Ex->query("drop table if exists z_pm");
 
-        $ex->query("create table z_pm (
+        $Ex->query("create table z_pm (
   CommentID int,
   DiscussionID int,
   UserIDs varchar(250),
   GroupID int
 )");
 
-        $ex->query("insert ignore z_pm (
+        $Ex->query("insert ignore z_pm (
   CommentID,
   DiscussionID
 )
@@ -385,7 +385,7 @@ select
 from :_Comment
 where coalesce(WhisperUserID, 0) <> 0");
 
-        $ex->query("insert ignore z_pm (
+        $Ex->query("insert ignore z_pm (
   CommentID,
   DiscussionID
 )
@@ -397,20 +397,20 @@ join :_Comment c
   on c.DiscussionID = d.DiscussionID
 where coalesce(d.WhisperUserID, 0) <> 0");
 
-        $ex->query("update z_pm pm
+        $Ex->query("update z_pm pm
 join z_pmto2 t
   on t.CommentID = pm.CommentID
 set pm.UserIDs = t.UserIDs");
 
-        $ex->query("drop table if exists z_pmgroup");
+        $Ex->query("drop table if exists z_pmgroup");
 
-        $ex->query("create table z_pmgroup (
+        $Ex->query("create table z_pmgroup (
   GroupID int,
   DiscussionID int,
   UserIDs varchar(250)
 )");
 
-        $ex->query("insert z_pmgroup (
+        $Ex->query("insert z_pmgroup (
   GroupID,
   DiscussionID,
   UserIDs
@@ -424,32 +424,32 @@ join z_pmto2 t2
   on pm.CommentID = t2.CommentID
 group by pm.DiscussionID, t2.UserIDs");
 
-        $ex->query("create index z_idx_pmgroup on z_pmgroup (DiscussionID, UserIDs)");
+        $Ex->query("create index z_idx_pmgroup on z_pmgroup (DiscussionID, UserIDs)");
 
-        $ex->query("create index z_idx_pmgroup2 on z_pmgroup (GroupID)");
+        $Ex->query("create index z_idx_pmgroup2 on z_pmgroup (GroupID)");
 
-        $ex->query("update z_pm pm
+        $Ex->query("update z_pm pm
 join z_pmgroup g
   on pm.DiscussionID = g.DiscussionID and pm.UserIDs = g.UserIDs
 set pm.GroupID = g.GroupID");
 
-        $conversation_Map = array(
+        $Conversation_Map = array(
             'AuthUserID' => 'InsertUserID',
             'DateCreated' => 'DateInserted',
             'DiscussionID' => array('Column' => 'DiscussionID', 'Type' => 'int'),
             'CommentID' => 'ConversationID',
             'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
         );
-        $ex->exportTable('Conversation',
+        $Ex->exportTable('Conversation',
             "select c.*, d.Name
 from :_Comment c
 join :_Discussion d
   on d.DiscussionID = c.DiscussionID
 join z_pmgroup g
-  on g.GroupID = c.CommentID;", $conversation_Map);
+  on g.GroupID = c.CommentID;", $Conversation_Map);
 
         // ConversationMessage.
-        $conversationMessage_Map = array(
+        $ConversationMessage_Map = array(
             'CommentID' => 'MessageID',
             'GroupID' => 'ConversationID',
             'Body' => 'Body',
@@ -457,11 +457,11 @@ join z_pmgroup g
             'AuthUserID' => 'InsertUserID',
             'DateCreated' => 'DateInserted'
         );
-        $ex->exportTable('ConversationMessage',
+        $Ex->exportTable('ConversationMessage',
             "select c.*, pm.GroupID
 from z_pm pm
 join :_Comment c
-  on pm.CommentID = c.CommentID", $conversationMessage_Map);
+  on pm.CommentID = c.CommentID", $ConversationMessage_Map);
 
         // UserConversation
         /*
@@ -469,26 +469,26 @@ join :_Comment c
            'ConversationID' => 'int',
            'LastMessageID' => 'int'
         */
-        $userConversation_Map = array(
+        $UserConversation_Map = array(
             'UserID' => 'UserID',
             'GroupID' => 'ConversationID'
         );
-        $ex->exportTable('UserConversation',
+        $Ex->exportTable('UserConversation',
             "select distinct
   pm.GroupID,
   t.UserID
 from z_pmto t
 join z_pm pm
-  on pm.CommentID = t.CommentID", $userConversation_Map);
+  on pm.CommentID = t.CommentID", $UserConversation_Map);
 
-        $ex->query("drop table z_pmto");
-        $ex->query("drop table z_pmto2");
-        $ex->query("drop table z_pm");
-        $ex->query("drop table z_pmgroup");
+        $Ex->query("drop table z_pmto");
+        $Ex->query("drop table z_pmto2");
+        $Ex->query("drop table z_pm");
+        $Ex->query("drop table z_pmgroup");
 
         // Media
-        if ($ex->exists('Attachment')) {
-            $media_Map = array(
+        if ($Ex->exists('Attachment')) {
+            $Media_Map = array(
                 'AttachmentID' => 'MediaID',
                 'Name' => 'Name',
                 'MimeType' => 'Type',
@@ -499,44 +499,44 @@ join z_pm pm
                 'CommentID' => 'ForeignID'
                 //'ForeignTable'
             );
-            $ex->exportTable('Media',
+            $Ex->exportTable('Media',
                 "select a.*, 'comment' as ForeignTable from :_Attachment a",
-                $media_Map);
+                $Media_Map);
         }
 
         // End
-        $ex->endExport();
+        $Ex->endExport();
     }
 
-    public function stripMediaPath($absPath) {
-        if (($pos = strpos($absPath, '/uploads/')) !== false) {
-            return substr($absPath, $pos + 9);
+    public function stripMediaPath($AbsPath) {
+        if (($Pos = strpos($AbsPath, '/uploads/')) !== false) {
+            return substr($AbsPath, $Pos + 9);
         }
 
-        return $absPath;
+        return $AbsPath;
     }
 
-    public function filterPermissions($permissions, $columnName, &$row) {
-        $permissions2 = unserialize($permissions);
+    public function filterPermissions($Permissions, $ColumnName, &$Row) {
+        $Permissions2 = unserialize($Permissions);
 
-        foreach ($permissions2 as $name => $value) {
-            if (is_null($value)) {
-                $permissions2[$name] = false;
+        foreach ($Permissions2 as $Name => $Value) {
+            if (is_null($Value)) {
+                $Permissions2[$Name] = false;
             }
         }
 
-        if (is_array($permissions2)) {
-            $row = array_merge($row, $permissions2);
-            $this->ex->currentRow = $row;
+        if (is_array($Permissions2)) {
+            $Row = array_merge($Row, $Permissions2);
+            $this->Ex->CurrentRow = $Row;
 
-            return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
+            return isset($Permissions2['PERMISSION_ADD_COMMENTS']) ? $Permissions2['PERMISSION_ADD_COMMENTS'] : false;
         }
 
         return false;
     }
 
-    public function forceBool($value) {
-        if ($value) {
+    public function forceBool($Value) {
+        if ($Value) {
             return true;
         }
 

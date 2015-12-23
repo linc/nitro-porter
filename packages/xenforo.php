@@ -9,11 +9,11 @@
  * @package VanillaPorter
  */
 
-$supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
-$supported['xenforo']['CommandLine'] = array(
+$Supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
+$Supported['xenforo']['CommandLine'] = array(
     'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
 );
-$supported['xenforo']['features'] = array(
+$Supported['xenforo']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -28,11 +28,11 @@ $supported['xenforo']['features'] = array(
 
 class Xenforo extends ExportController {
 
-    protected $processed;
-    protected $sourceFolder;
-    protected $targetFolder;
-    protected $folders;
-    protected $types;
+    protected $Processed;
+    protected $SourceFolder;
+    protected $TargetFolder;
+    protected $Folders;
+    protected $Types;
 
     /**
      * Export avatars into vanilla-compatibles names
@@ -40,99 +40,99 @@ class Xenforo extends ExportController {
     public function doAvatars() {
 
         // Check source folder
-        $this->sourceFolder = $this->param('avatarpath');
-        if (!is_dir($this->sourceFolder)) {
-            trigger_error("Source avatar folder '{$this->sourceFolder}' does not exist.");
+        $this->SourceFolder = $this->param('avatarpath');
+        if (!is_dir($this->SourceFolder)) {
+            trigger_error("Source avatar folder '{$this->SourceFolder}' does not exist.");
         }
 
         // Set up a target folder
-        $this->targetFolder = combinePaths(array($this->sourceFolder, 'xf'));
-        if (!is_dir($this->targetFolder)) {
-            @$made = mkdir($this->targetFolder, 0777, true);
-            if (!$made) {
-                trigger_error("Target avatar folder '{$this->targetFolder}' could not be created.");
+        $this->TargetFolder = combinePaths(array($this->SourceFolder, 'xf'));
+        if (!is_dir($this->TargetFolder)) {
+            @$Made = mkdir($this->TargetFolder, 0777, true);
+            if (!$Made) {
+                trigger_error("Target avatar folder '{$this->TargetFolder}' could not be created.");
             }
         }
 
         // Iterate
-        $this->folders = array(
+        $this->Folders = array(
             'Thumb' => 'm',
             'Profile' => 'l'
         );
 
-        $this->types = array(
+        $this->Types = array(
             'Thumb' => 'n',
             'Profile' => 'p'
         );
 
-        foreach ($this->folders as $type => $folder) {
+        foreach ($this->Folders as $Type => $Folder) {
 
-            $this->processed = 0;
-            $errors = array();
+            $this->Processed = 0;
+            $Errors = array();
 
-            $typeSourceFolder = combinePaths(array($this->sourceFolder, $folder));
-            echo "Processing '{$type}' files in {$typeSourceFolder}:\n";
-            $this->avatarFolder($typeSourceFolder, $type, $errors);
+            $TypeSourceFolder = combinePaths(array($this->SourceFolder, $Folder));
+            echo "Processing '{$Type}' files in {$TypeSourceFolder}:\n";
+            $this->avatarFolder($TypeSourceFolder, $Type, $Errors);
 
-            $nErrors = sizeof($errors);
+            $nErrors = sizeof($Errors);
             if ($nErrors) {
                 echo "{$nErrors} errors:\n";
-                foreach ($errors as $error) {
-                    echo "{$error}\n";
+                foreach ($Errors as $Error) {
+                    echo "{$Error}\n";
                 }
             }
 
         }
     }
 
-    protected function avatarFolder($folder, $type, &$errors) {
-        if (!is_dir($folder)) {
-            trigger_error("Target avatar folder '{$folder}' does not exist.");
+    protected function avatarFolder($Folder, $Type, &$Errors) {
+        if (!is_dir($Folder)) {
+            trigger_error("Target avatar folder '{$Folder}' does not exist.");
         }
-        $resFolder = opendir($folder);
+        $ResFolder = opendir($Folder);
 
-        $errors = array();
-        while (($file = readdir($resFolder)) !== false) {
-            if ($file == '.' || $file == '..') {
+        $Errors = array();
+        while (($File = readdir($ResFolder)) !== false) {
+            if ($File == '.' || $File == '..') {
                 continue;
             }
 
-            $fullPath = combinePaths(array($folder, $file));
+            $FullPath = combinePaths(array($Folder, $File));
 
             // Folder? Recurse
-            if (is_dir($fullPath)) {
-                $this->avatarFolder($fullPath, $type, $errors);
+            if (is_dir($FullPath)) {
+                $this->avatarFolder($FullPath, $Type, $Errors);
                 continue;
             }
 
-            $this->processed++;
+            $this->Processed++;
 
             // Determine target paths and name
-            $photo = trim($file);
-            $photoSrc = combinePaths(array($folder, $photo));
-            $photoFileName = basename($photoSrc);
-            $photoPath = dirname($photoSrc);
+            $Photo = trim($File);
+            $PhotoSrc = combinePaths(array($Folder, $Photo));
+            $PhotoFileName = basename($PhotoSrc);
+            $PhotoPath = dirname($PhotoSrc);
 
-            $stubFolder = getValue($type, $this->folders);
-            $trimFolder = combinePaths(array($this->sourceFolder, $stubFolder));
-            $photoPath = str_replace($trimFolder, '', $photoPath);
-            $photoFolder = combinePaths(array($this->targetFolder, $photoPath));
-            @mkdir($photoFolder, 0777, true);
+            $StubFolder = getValue($Type, $this->Folders);
+            $TrimFolder = combinePaths(array($this->SourceFolder, $StubFolder));
+            $PhotoPath = str_replace($TrimFolder, '', $PhotoPath);
+            $PhotoFolder = combinePaths(array($this->TargetFolder, $PhotoPath));
+            @mkdir($PhotoFolder, 0777, true);
 
-            if (!file_exists($photoSrc)) {
-                $errors[] = "Missing file: {$photoSrc}";
+            if (!file_exists($PhotoSrc)) {
+                $Errors[] = "Missing file: {$PhotoSrc}";
                 continue;
             }
 
-            $typePrefix = getValue($type, $this->types);
-            $photoDest = combinePaths(array($photoFolder, "{$typePrefix}{$photoFileName}"));
-            $copied = @copy($photoSrc, $photoDest);
-            if (!$copied) {
-                $errors[] = "! failed to copy photo '{$photoSrc}' (-> {$photoDest}).";
+            $TypePrefix = getValue($Type, $this->Types);
+            $PhotoDest = combinePaths(array($PhotoFolder, "{$TypePrefix}{$PhotoFileName}"));
+            $Copied = @copy($PhotoSrc, $PhotoDest);
+            if (!$Copied) {
+                $Errors[] = "! failed to copy photo '{$PhotoSrc}' (-> {$PhotoDest}).";
             }
 
-            if (!($this->processed % 100)) {
-                echo " - processed {$this->processed}\n";
+            if (!($this->Processed % 100)) {
+                echo " - processed {$this->Processed}\n";
             }
         }
     }
@@ -142,20 +142,20 @@ class Xenforo extends ExportController {
      * @param ExportModel $Ex
      */
 
-    protected function forumExport($ex) {
-        $this->ex = $ex;
+    protected function forumExport($Ex) {
+        $this->Ex = $Ex;
 
-        $cdn = $this->cdnPrefix();
+        $Cdn = $this->cdnPrefix();
 
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('posts');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
-        $ex->sourcePrefix = 'xf_';
+        $Ex->SourcePrefix = 'xf_';
 //      $Ex->UseCompression(FALSE);
         // Begin
-        $ex->beginExport('', 'xenforo', array('HashMethod' => 'xenforo'));
+        $Ex->beginExport('', 'xenforo', array('HashMethod' => 'xenforo'));
 
         // Export avatars
         if ($this->param('avatars')) {
@@ -163,14 +163,14 @@ class Xenforo extends ExportController {
         }
 
         // Users.
-        $user_Map = array(
+        $User_Map = array(
             'user_id' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
             'gender' => array(
                 'Column' => 'Gender',
-                'Filter' => function ($value) {
-                    switch ($value) {
+                'Filter' => function ($Value) {
+                    switch ($Value) {
                         case 'male':
                             return 'm';
                         case 'female':
@@ -189,32 +189,32 @@ class Xenforo extends ExportController {
             'hash_method' => 'HashMethod',
             'avatar' => 'Photo'
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select
             u.*,
             ua.data as password,
             'xenforo' as hash_method,
-            case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg') else null end as avatar
+            case when u.avatar_date > 0 then concat('{$Cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg') else null end as avatar
          from :_user u
          left join :_user_authenticate ua
-            on u.user_id = ua.user_id", $user_Map);
+            on u.user_id = ua.user_id", $User_Map);
 
         // Roles.
-        $role_Map = array(
+        $Role_Map = array(
             'user_group_id' => 'RoleID',
             'title' => 'Name'
         );
-        $ex->exportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
-         from :_user_group", $role_Map);
+         from :_user_group", $Role_Map);
 
         // User Roles.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'user_id' => 'UserID',
             'user_group_id' => 'RoleID'
         );
 
-        $ex->exportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select user_id, user_group_id
          from :_user
 
@@ -223,7 +223,7 @@ class Xenforo extends ExportController {
          select u.user_id, ua.user_group_id
          from :_user u
          join :_user_group ua
-            on find_in_set(ua.user_group_id, u.secondary_group_ids)", $userRole_Map);
+            on find_in_set(ua.user_group_id, u.secondary_group_ids)", $UserRole_Map);
 
         // Permission.
         $this->exportPermissions();
@@ -232,26 +232,26 @@ class Xenforo extends ExportController {
         $this->exportUserMeta();
 
         // Categories.
-        $category_Map = array(
+        $Category_Map = array(
             'node_id' => 'CategoryID',
             'title' => 'Name',
             'description' => 'Description',
             'parent_node_id' => array(
                 'Column' => 'ParentCategoryID',
-                'Filter' => function ($value) {
-                    return $value ? $value : null;
+                'Filter' => function ($Value) {
+                    return $Value ? $Value : null;
                 }
             ),
             'display_order' => 'Sort',
             'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
         );
-        $ex->exportTable('Category', "
+        $Ex->exportTable('Category', "
          select n.*
          from :_node n
-         ", $category_Map);
+         ", $Category_Map);
 
         // Discussions.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'thread_id' => 'DiscussionID',
             'node_id' => 'CategoryID',
             'title' => 'Name',
@@ -265,7 +265,7 @@ class Xenforo extends ExportController {
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select
             t.*,
             p.message,
@@ -275,11 +275,11 @@ class Xenforo extends ExportController {
          join :_post p
             on t.first_post_id = p.post_id
          left join :_ip ip
-            on p.ip_id = ip.ip_id", $discussion_Map);
+            on p.ip_id = ip.ip_id", $Discussion_Map);
 
 
         // Comments.
-        $comment_Map = array(
+        $Comment_Map = array(
             'post_id' => 'CommentID',
             'thread_id' => 'DiscussionID',
             'user_id' => 'InsertUserID',
@@ -288,7 +288,7 @@ class Xenforo extends ExportController {
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select
             p.*,
             'BBCode' as format,
@@ -299,20 +299,20 @@ class Xenforo extends ExportController {
          left join :_ip ip
             on p.ip_id = ip.ip_id
          where p.post_id <> t.first_post_id
-            and message_state = 'visible'", $comment_Map);
+            and message_state = 'visible'", $Comment_Map);
 
         // Conversation.
-        $conversation_Map = array(
+        $Conversation_Map = array(
             'conversation_id' => 'ConversationID',
             'title' => 'Subject',
             'user_id' => 'InsertUserID',
             'start_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
         );
-        $ex->exportTable('Conversation', "
+        $Ex->exportTable('Conversation', "
          select *
-         from :_conversation_master", $conversation_Map);
+         from :_conversation_master", $Conversation_Map);
 
-        $conversationMessage_Map = array(
+        $ConversationMessage_Map = array(
             'message_id' => 'MessageID',
             'conversation_id' => 'ConversationID',
             'message_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
@@ -321,21 +321,21 @@ class Xenforo extends ExportController {
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->exportTable('ConversationMessage', "
+        $Ex->exportTable('ConversationMessage', "
          select
             m.*,
             'BBCode' as format,
             ip.ip
          from :_conversation_message m
          left join :_ip ip
-            on m.ip_id = ip.ip_id", $conversationMessage_Map);
+            on m.ip_id = ip.ip_id", $ConversationMessage_Map);
 
-        $userConversation_Map = array(
+        $UserConversation_Map = array(
             'conversation_id' => 'ConversationID',
             'user_id' => 'UserID',
             'Deleted' => 'Deleted'
         );
-        $ex->exportTable('UserConversation', "
+        $Ex->exportTable('UserConversation', "
          select
             r.conversation_id,
             user_id,
@@ -349,69 +349,69 @@ class Xenforo extends ExportController {
             cu.owner_user_id,
             0
          from :_conversation_user cu
-         ", $userConversation_Map);
+         ", $UserConversation_Map);
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 
     public function exportPermissions() {
-        $ex = $this->ex;
+        $Ex = $this->Ex;
 
-        $permissions = array();
+        $Permissions = array();
 
         // Export the global permissions.
-        $r = $ex->query("
+        $r = $Ex->query("
          select
             pe.*,
             g.title
          from :_permission_entry pe
          join :_user_group g
             on pe.user_group_id = g.user_group_id");
-        $this->_exportPermissions($r, $permissions);
+        $this->_exportPermissions($r, $Permissions);
 
-        $r = $ex->query("
+        $r = $Ex->query("
           select
             pe.*,
             g.title
          from :_permission_entry_content pe
          join :_user_group g
             on pe.user_group_id = g.user_group_id");
-        $this->_exportPermissions($r, $permissions);
+        $this->_exportPermissions($r, $Permissions);
 
 
-        if (count($permissions) == 0) {
+        if (count($Permissions) == 0) {
             return;
         }
 
-        $permissions = array_values($permissions);
+        $Permissions = array_values($Permissions);
 
         // Now that we have all of the permission in an array let's export them.
-        $columns = $this->_exportPermissions(false);
+        $Columns = $this->_exportPermissions(false);
 
-        foreach ($columns as $index => $column) {
-            if (strpos($column, '.') !== false) {
-                $columns[$index] = array('Column' => $column, 'Type' => 'tinyint');
+        foreach ($Columns as $Index => $Column) {
+            if (strpos($Column, '.') !== false) {
+                $Columns[$Index] = array('Column' => $Column, 'Type' => 'tinyint');
             }
         }
-        $structure = $ex->getExportStructure($columns, 'Permission', $columns, 'Permission');
-        $revMappings = $ex->flipMappings($columns);
+        $Structure = $Ex->getExportStructure($Columns, 'Permission', $Columns, 'Permission');
+        $RevMappings = $Ex->flipMappings($Columns);
 
-        $ex->writeBeginTable($ex->file, 'Permission', $structure);
+        $Ex->writeBeginTable($Ex->File, 'Permission', $Structure);
         $count = 0;
-        foreach ($permissions as $row) {
-            $ex->writeRow($ex->file, $row, $structure, $revMappings);
+        foreach ($Permissions as $Row) {
+            $Ex->writeRow($Ex->File, $Row, $Structure, $RevMappings);
             $count++;
         }
-        $ex->writeEndTable($ex->file);
-        $ex->comment("Exported Table: Permission ($count rows)");
+        $Ex->writeEndTable($Ex->File);
+        $Ex->comment("Exported Table: Permission ($count rows)");
 
 //       var_export($Permissions);
     }
 
     public function exportUserMeta() {
-        $ex = $this->ex;
+        $Ex = $this->Ex;
 
-        $sql = "
+        $Sql = "
          select
            user_id as UserID,
            'Plugin.Signatures.Sig' as Name,
@@ -428,11 +428,11 @@ class Xenforo extends ExportController {
          from :_user_profile
          where nullif(signature, '') is not null";
 
-        $ex->exportTable('UserMeta', $sql);
+        $Ex->exportTable('UserMeta', $Sql);
     }
 
-    protected function _exportPermissions($r, &$perms = null) {
-        $map = array(
+    protected function _exportPermissions($r, &$Perms = null) {
+        $Map = array(
             'general.viewNode' => 'Vanilla.Discussions.View',
             'forum.deleteAnyPost' => 'Vanilla.Comments.Delete',
             'forum.deleteAnyThread' => 'Vanilla.Discussions.Delete',
@@ -450,7 +450,7 @@ class Xenforo extends ExportController {
         );
 
         if ($r === false) {
-            $result = array(
+            $Result = array(
                 'RoleID' => 'RoleID',
                 'JunctionTable' => 'JunctionTable',
                 'JunctionColumn' => 'JunctionColumn',
@@ -460,77 +460,77 @@ class Xenforo extends ExportController {
             );
 
             // Return an array of fieldnames.
-            foreach ($map as $columns) {
-                $columns = (array)$columns;
-                foreach ($columns as $column) {
-                    $result[$column] = $column;
+            foreach ($Map as $Columns) {
+                $Columns = (array)$Columns;
+                foreach ($Columns as $Column) {
+                    $Result[$Column] = $Column;
                 }
             }
 
-            return $result;
+            return $Result;
         }
 
         while ($row = mysql_fetch_assoc($r)) {
-            $roleID = $row['user_group_id'];
+            $RoleID = $row['user_group_id'];
 
-            $perm = "{$row['permission_group_id']}.{$row['permission_id']}";
+            $Perm = "{$row['permission_group_id']}.{$row['permission_id']}";
 
-            if (!isset($map[$perm])) {
+            if (!isset($Map[$Perm])) {
                 continue;
             }
 
-            $names = (array)$map[$perm];
+            $Names = (array)$Map[$Perm];
 
-            foreach ($names as $name) {
+            foreach ($Names as $Name) {
                 if (isset($row['content_id'])) {
                     if ($row['content_type'] != 'node') {
                         continue;
                     }
 
-                    $categoryID = $row['content_id'];
+                    $CategoryID = $row['content_id'];
                 } else {
-                    $categoryID = null;
+                    $CategoryID = null;
                 }
 
                 // Is this a per-category permission?
-                if (strpos($name, 'Vanilla.Discussions.') !== false || strpos($name, 'Vanilla.Comments.') !== false) {
-                    if (!$categoryID) {
-                        $categoryID = -1;
+                if (strpos($Name, 'Vanilla.Discussions.') !== false || strpos($Name, 'Vanilla.Comments.') !== false) {
+                    if (!$CategoryID) {
+                        $CategoryID = -1;
                     }
                 } else {
-                    $categoryID = null;
+                    $CategoryID = null;
                 }
 
 
-                $key = "{$roleID}_{$categoryID}";
+                $Key = "{$RoleID}_{$CategoryID}";
 
-                $perms[$key]['RoleID'] = $roleID;
-                $permRow = &$perms[$key];
-                if ($categoryID) {
-                    $permRow['JunctionTable'] = 'Category';
-                    $permRow['JunctionColumn'] = 'PermissionCategoryID';
-                    $permRow['JunctionID'] = $categoryID;
+                $Perms[$Key]['RoleID'] = $RoleID;
+                $PermRow = &$Perms[$Key];
+                if ($CategoryID) {
+                    $PermRow['JunctionTable'] = 'Category';
+                    $PermRow['JunctionColumn'] = 'PermissionCategoryID';
+                    $PermRow['JunctionID'] = $CategoryID;
                 }
 
-                $title = $row['title'];
-                $permRow['Title'] = $title;
-                if (stripos($title, 'Admin') !== false) {
-                    $permRow['_Permissions'] = 'all';
+                $Title = $row['title'];
+                $PermRow['Title'] = $Title;
+                if (stripos($Title, 'Admin') !== false) {
+                    $PermRow['_Permissions'] = 'all';
                 }
-                if (!$categoryID && stripos($title, 'Mod') !== false) {
-                    $permRow['Garden.Moderation.Manage'] = true;
+                if (!$CategoryID && stripos($Title, 'Mod') !== false) {
+                    $PermRow['Garden.Moderation.Manage'] = true;
                 }
 
                 // Set all of the permissions.
-                $permValue = $row['permission_value'];
-                if ($permValue == 'deny') {
-                    $permRow[$name] = false;
-                } elseif (in_array($permValue, array('allow', 'content_allow'))) {
-                    if (!isset($permRow[$name]) || $permRow[$name] !== false) {
-                        $permRow[$name] = true;
+                $PermValue = $row['permission_value'];
+                if ($PermValue == 'deny') {
+                    $PermRow[$Name] = false;
+                } elseif (in_array($PermValue, array('allow', 'content_allow'))) {
+                    if (!isset($PermRow[$Name]) || $PermRow[$Name] !== false) {
+                        $PermRow[$Name] = true;
                     }
-                } elseif (!isset($permRow[$name])) {
-                    $permRow[$name] = null;
+                } elseif (!isset($PermRow[$Name])) {
+                    $PermRow[$Name] = null;
                 }
             }
         }

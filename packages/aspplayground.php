@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['apg'] = array('name' => 'ASP Playground', 'prefix' => 'pgd_');
-$supported['apg']['features'] = array(
+$Supported['apg'] = array('name' => 'ASP Playground', 'prefix' => 'pgd_');
+$Supported['apg']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -19,18 +19,18 @@ class APG extends ExportController {
     /**
      * @param ExportModel $Ex
      */
-    public function forumExport($ex) {
+    public function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('Threads');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('Threads');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
-        $ex->beginExport('', 'ASP Playground');
-        $ex->sourcePrefix = 'pgd_';
+        $Ex->beginExport('', 'ASP Playground');
+        $Ex->SourcePrefix = 'pgd_';
 
         // User.
-        $user_Map = array(
+        $User_Map = array(
             'Mem' => 'UserID',
             'Login' => 'Name',
             'Email' => 'Email',
@@ -41,10 +41,10 @@ class APG extends ExportController {
             'dateSignUp' => 'DateInserted',
             'lastLogin' => 'DateLastActive',
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select m.*,
             'Text' as HashMethod
-         from :_Members m;", $user_Map);
+         from :_Members m;", $User_Map);
 
         // Role.
         /*$Role_Map = array(
@@ -57,13 +57,13 @@ class APG extends ExportController {
 
         // UserRole.
         // Make everyone a member since there's no used roles.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'Mem' => 'UserID'
         );
-        $ex->exportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $userRole_Map);
+        $Ex->exportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $UserRole_Map);
 
         // Signatures.
-        $ex->exportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select
             Mem,
             'Plugin.Signatures.Sig' as `Name`,
@@ -81,7 +81,7 @@ class APG extends ExportController {
          where signature <> '';");
 
         // Category.
-        $category_Map = array(
+        $Category_Map = array(
             'ForumID' => 'CategoryID',
             'ForumTitle' => 'Name',
             'ForumDesc' => 'Description',
@@ -89,12 +89,12 @@ class APG extends ExportController {
             'lastModTime' => 'DateUpdated'
         );
 
-        $ex->exportTable('Category', "
+        $Ex->exportTable('Category', "
          select f.*
-         from :_Forums f;", $category_Map);
+         from :_Forums f;", $Category_Map);
 
         // Discussion.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'messageID' => 'DiscussionID',
             'ForumID' => 'CategoryID',
             'mem' => 'InsertUserID',
@@ -103,16 +103,16 @@ class APG extends ExportController {
             'hits' => 'CountViews',
             'lastupdate' => 'DateLastComment'
         );
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select
             t.*,
             m.Body
          from :_Threads t
          left join :_Messages m on m.messageID = t.messageID
-         ;", $discussion_Map);
+         ;", $Discussion_Map);
 
         // Comment.
-        $comment_Map = array(
+        $Comment_Map = array(
             'messageID' => 'CommentID',
             'threadID' => 'DiscussionID',
             'parent' => array('Column' => 'ReplyToCommentID', 'Type' => 'int'),
@@ -121,10 +121,10 @@ class APG extends ExportController {
             'Body' => 'Body',
             'ip' => 'InsertIPAddress'
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select m.*,
             'BBCode' as Format
-         from :_Messages m;", $comment_Map);
+         from :_Messages m;", $Comment_Map);
 
         /*
         // Conversation.
@@ -173,18 +173,18 @@ class APG extends ExportController {
               on t.PM_ID = pm.PMessageID;", $ConversationMessage_Map);
         */
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 
-    public function cleanDate($value) {
-        if (!$value) {
+    public function cleanDate($Value) {
+        if (!$Value) {
             return null;
         }
-        if (substr($value, 0, 4) == '0000') {
+        if (substr($Value, 0, 4) == '0000') {
             return null;
         }
 
-        return $value;
+        return $Value;
     }
 
 }

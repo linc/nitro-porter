@@ -12,32 +12,32 @@
  * @param $Feature
  * @return string
  */
-function featureStatus($platform, $feature, $notes = true) {
-    global $supported;
+function featureStatus($Platform, $Feature, $Notes = true) {
+    global $Supported;
 
-    if (!isset($supported[$platform]['features'])) {
+    if (!isset($Supported[$Platform]['features'])) {
         return '<span class="No">No</span>';
     }
 
-    $available = $supported[$platform]['features'];
+    $Available = $Supported[$Platform]['features'];
 
     // Calculate feature availability.
-    $status = '<span class="No">&#x2717;</span>';
-    if (isset($available[$feature])) {
-        if ($available[$feature] === 1) {
-            $status = '<span class="Yes">&#x2713;</span>';
-        } elseif ($available[$feature]) {
-            if ($notes) {
+    $Status = '<span class="No">&#x2717;</span>';
+    if (isset($Available[$Feature])) {
+        if ($Available[$Feature] === 1) {
+            $Status = '<span class="Yes">&#x2713;</span>';
+        } elseif ($Available[$Feature]) {
+            if ($Notes) {
                 // Send the text of the note
-                $status = $available[$feature];
+                $Status = $Available[$Feature];
             } else {
                 // Say 'yes' for table shorthand
-                $status = '<span class="Yes">&#x2713;</span>';
+                $Status = '<span class="Yes">&#x2713;</span>';
             }
         }
     }
 
-    return $status;
+    return $Status;
 }
 
 /**
@@ -46,8 +46,8 @@ function featureStatus($platform, $feature, $notes = true) {
  * @param $Feature
  * @return string
  */
-function featureName($feature) {
-    return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
+function featureName($Feature) {
+    return ltrim(preg_replace('/[A-Z]/', ' $0', $Feature));
 }
 
 /**
@@ -61,21 +61,21 @@ function featureName($feature) {
  *
  * @return array
  */
-function vanillaFeatures($set = false) {
-    if (!$set) {
-        $set = array('core', 'addon');
+function vanillaFeatures($Set = false) {
+    if (!$Set) {
+        $Set = array('core', 'addon');
     }
 
-    $features = array();
-    if (is_array($set)) {
-        foreach ($set as $section) {
-            $features += vanillaFeatureSet($section);
+    $Features = array();
+    if (is_array($Set)) {
+        foreach ($Set as $Section) {
+            $Features += vanillaFeatureSet($Section);
         }
     } else {
-        $features = vanillaFeatureSet($set);
+        $Features = vanillaFeatureSet($Set);
     }
 
-    return $features;
+    return $Features;
 }
 
 /**
@@ -84,16 +84,16 @@ function vanillaFeatures($set = false) {
  * @param string $Section
  * @return array
  */
-function vanillaFeatureSet($section) {
-    switch ($section) {
+function vanillaFeatureSet($Section) {
+    switch ($Section) {
         case 'addon':
-            $set = array(
+            $Set = array(
                 'Tags' => 0,
 
             );
             break;
         case 'cloud':
-            $set = array(
+            $Set = array(
                 'Badges' => 0,
                 'Ranks' => 0,
                 'Polls' => 0,
@@ -102,7 +102,7 @@ function vanillaFeatureSet($section) {
             break;
         case 'core':
         default:
-            $set = array(
+            $Set = array(
                 'Comments' => 0,
                 'Discussions' => 0,
                 'Users' => 0,
@@ -123,7 +123,7 @@ function vanillaFeatureSet($section) {
             break;
     }
 
-    return $set;
+    return $Set;
 }
 
 ?>

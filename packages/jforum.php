@@ -8,8 +8,8 @@
  */
 
 // Add to the $Supported array so it appears in the dropdown menu. Uncomment next line.
-$supported['jforum'] = array('name' => 'jforum', 'prefix' => 'jforum_');
-$supported['jforum']['features'] = array(
+$Supported['jforum'] = array('name' => 'jforum', 'prefix' => 'jforum_');
+$Supported['jforum']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -31,7 +31,7 @@ class Jforum extends ExportController {
      *
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    protected $SourceTables = array(
         'forums' => array(), // This just requires the 'forum' table without caring about columns.
         'posts' => array(),
         'posts_text' => array(),
@@ -45,19 +45,19 @@ class Jforum extends ExportController {
      * @param ExportModel $Ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($Ex) {
 
-        $characterSet = $ex->getCharacterSet('posts_text');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
+        $CharacterSet = $Ex->getCharacterSet('posts_text');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
         }
 
         // Reiterate the platform name here to be included in the porter file header.
-        $ex->beginExport('', 'jforum');
+        $Ex->beginExport('', 'jforum');
 
 
         // User.
-        $user_Map = array(
+        $User_Map = array(
             'user_id' => 'UserID',
             'username' => 'Name',
             'user_email' => 'Email',
@@ -69,37 +69,37 @@ class Jforum extends ExportController {
             'user_from' => 'Location',
             'user_biography' => 'About',
         );
-        $ex->exportTable('User', "
+        $Ex->exportTable('User', "
          select u.*,
             'Reset' as HashMethod,
             user_regdate as user_regdate2
          from :_users u
-         ", $user_Map);
+         ", $User_Map);
 
 
         // Role.
-        $role_Map = array(
+        $Role_Map = array(
             'group_id' => 'RoleID',
             'group_name' => 'Name',
             'group_description' => 'Description',
         );
-        $ex->exportTable('Role', "
+        $Ex->exportTable('Role', "
          select *
-         from :_groups", $role_Map);
+         from :_groups", $Role_Map);
 
 
         // User Role.
-        $userRole_Map = array(
+        $UserRole_Map = array(
             'user_id' => 'UserID',
             'group_id' => 'RoleID',
         );
-        $ex->exportTable('UserRole', "
+        $Ex->exportTable('UserRole', "
          select u.*
-         from :_user_groups u", $userRole_Map);
+         from :_user_groups u", $UserRole_Map);
 
 
         // UserMeta.
-        $ex->exportTable('UserMeta', "
+        $Ex->exportTable('UserMeta', "
          select user_id as UserID,
             'Profile.Website' as `Name`,
             user_website as `Value`
@@ -131,8 +131,8 @@ class Jforum extends ExportController {
         // Category.
         // _categories is tier 1, _forum is tier 2.
         // Overlapping IDs, so fast-forward _categories by 1000.
-        $category_Map = array();
-        $ex->exportTable('Category', "
+        $Category_Map = array();
+        $Ex->exportTable('Category', "
          select
             c.categories_id+1000 as CategoryID,
             -1 as ParentCategoryID,
@@ -152,11 +152,11 @@ class Jforum extends ExportController {
             2 as Depth,
             null as Sort
          from :_forums f
-         ", $category_Map);
+         ", $Category_Map);
 
 
         // Discussion.
-        $discussion_Map = array(
+        $Discussion_Map = array(
             'topic_id' => 'DiscussionID',
             'forum_id' => 'CategoryID',
             'user_id' => 'InsertUserID',
@@ -169,18 +169,18 @@ class Jforum extends ExportController {
             'post_text' => 'Body',
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $ex->exportTable('Discussion', "
+        $Ex->exportTable('Discussion', "
          select *,
             t.forum_id as forum_id,
             if(t.topic_type>0,1,0) as topic_type,
             'BBCode' as Format
          from :_topics t
          left join :_posts_text p
-            on t.topic_first_post_id = p.post_id", $discussion_Map);
+            on t.topic_first_post_id = p.post_id", $Discussion_Map);
 
 
         // Comment.
-        $comment_Map = array(
+        $Comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
             'user_id' => 'InsertUserID',
@@ -189,78 +189,78 @@ class Jforum extends ExportController {
             'post_time' => 'DateInserted',
             'post_edit_time' => 'DateUpdated',
         );
-        $ex->exportTable('Comment', "
+        $Ex->exportTable('Comment', "
          select p.*, t.post_text, 'BBCode' as Format
          from :_posts p
          left join :_posts_text t
             on p.post_id = t.post_id
-         where p.post_id not in (select topic_first_post_id from :_topics)", $comment_Map);
+         where p.post_id not in (select topic_first_post_id from :_topics)", $Comment_Map);
 
 
         // UserDiscussion.
         // Guessing table is called "_watch" because they are all bookmarks.
-        $userDiscussion_Map = array(
+        $UserDiscussion_Map = array(
             'topic_id' => 'DiscussionID',
             'user_id' => 'UserID',
         );
-        $ex->exportTable('UserDiscussion', "
+        $Ex->exportTable('UserDiscussion', "
          select *,
             1 as Bookmarked,
             if(is_read,NOW(),null) as DateLastViewed
-         from :_topics_watch w", $userDiscussion_Map);
+         from :_topics_watch w", $UserDiscussion_Map);
 
 
         // Conversation.
         // Thread using tmp table based on the pair of users talking.
-        $ex->query('drop table if exists z_conversation;');
-        $ex->query('create table z_conversation (
+        $Ex->query('drop table if exists z_conversation;');
+        $Ex->query('create table z_conversation (
         ConversationID int unsigned NOT NULL AUTO_INCREMENT,
         LowUserID int unsigned,
         HighUserID int unsigned,
         PRIMARY KEY (ConversationID)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;');
-        $ex->query('insert into z_conversation (LowUserID, HighUserID)
+        $Ex->query('insert into z_conversation (LowUserID, HighUserID)
          select least(privmsgs_from_userid, privmsgs_to_userid),
             greatest(privmsgs_from_userid, privmsgs_to_userid)
          from :_privmsgs
          group by least(privmsgs_from_userid, privmsgs_to_userid),
             greatest(privmsgs_from_userid, privmsgs_to_userid)');
         // Replying on /dba/counts to rebuild most of this data later.
-        $conversation_Map = array(
+        $Conversation_Map = array(
             'privmsgs_from_userid' => 'InsertUserID',
             'privmsgs_date' => 'DateInserted',
             'privmsgs_subject' => 'Subject',
         );
-        $ex->exportTable('Conversation', "
+        $Ex->exportTable('Conversation', "
          select p.*, c.ConversationID
          from :_privmsgs p
          left join z_conversation c on c.HighUserID = greatest(p.privmsgs_from_userid, p.privmsgs_to_userid)
             and c.LowUserID = least(p.privmsgs_from_userid, p.privmsgs_to_userid)
          group by least(privmsgs_from_userid, privmsgs_to_userid),
-            greatest(privmsgs_from_userid, privmsgs_to_userid)", $conversation_Map);
+            greatest(privmsgs_from_userid, privmsgs_to_userid)", $Conversation_Map);
 
 
         // Conversation Message.
         // Messages with the same timestamps are sent/received copies.
         // Yes that'd probably break down on huge sites but it's too convenient to pass up for now.
-        $message_Map = array(
+        $Message_Map = array(
             'privmsgs_id' => 'MessageID',
             'privmsgs_from_userid' => 'InsertUserID',
             'privmsgs_date' => 'DateInserted',
             //'privmsgs_subject' => 'Subject',
             'privmsgs_text' => 'Body',
         );
-        $ex->exportTable('ConversationMessage', "
+        $Ex->exportTable('ConversationMessage', "
          select *, c.ConversationID, 'BBCode' as Format
          from :_privmsgs p
          left join :_privmsgs_text t on t.privmsgs_id = p.privmsgs_id
          left join z_conversation c on c.LowUserID = least(privmsgs_from_userid, privmsgs_to_userid)
             and c.HighUserID = greatest(privmsgs_from_userid, privmsgs_to_userid)
-         group by privmsgs_date", $message_Map);
+         group by privmsgs_date", $Message_Map);
 
 
         // UserConversation
-        $ex->exportTable('UserConversation', "
+        $Ex->exportTable('UserConversation', "
          select ConversationID, LowUserID as UserID, NOW() as DateLastViewed from z_conversation
          union
          select ConversationID, HighUserID as UserID, NOW() as DateLastViewed from z_conversation
@@ -268,7 +268,7 @@ class Jforum extends ExportController {
         // Needs afterward: update GDN_UserConversation set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)
 
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 }
 

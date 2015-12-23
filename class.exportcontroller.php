@@ -11,46 +11,46 @@
 abstract class ExportController {
 
     /** @var array Database connection info */
-    protected $dbInfo = array();
+    protected $DbInfo = array();
 
     /** @var array Required tables, columns set per exporter */
-    protected $sourceTables = array();
+    protected $SourceTables = array();
 
     /** @var ExportModel */
-    protected $ex = null;
+    protected $Ex = null;
 
     /** Forum-specific export routine */
-    abstract protected function forumExport($ex);
+    abstract protected function forumExport($Ex);
 
     /**
      * Construct and set the controller's properties from the posted form.
      */
     public function __construct() {
-        global $supported;
+        global $Supported;
 
         $this->handleInfoForm();
 
-        $this->ex = new ExportModel;
-        $this->ex->controller = $this;
-        $this->ex->setConnection(
-            $this->dbInfo['dbhost'],
-            $this->dbInfo['dbuser'],
-            $this->dbInfo['dbpass'],
-            $this->dbInfo['dbname']
+        $this->Ex = new ExportModel;
+        $this->Ex->Controller = $this;
+        $this->Ex->setConnection(
+            $this->DbInfo['dbhost'],
+            $this->DbInfo['dbuser'],
+            $this->DbInfo['dbpass'],
+            $this->DbInfo['dbname']
         );
 
         // That's not sexy but it gets the job done :D
         $lcClassName = strtolower(get_class($this));
-        $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
+        $hasDefaultPrefix = !empty($Supported[$lcClassName]['prefix']);
 
-        if (isset($this->dbInfo['prefix'])) {
-            $this->ex->prefix = $this->dbInfo['prefix'];
+        if (isset($this->DbInfo['prefix'])) {
+            $this->Ex->Prefix = $this->DbInfo['prefix'];
         } elseif ($hasDefaultPrefix) {
-            $this->ex->prefix = $supported[$lcClassName]['prefix'];
+            $this->Ex->Prefix = $Supported[$lcClassName]['prefix'];
         }
-        $this->ex->destination = $this->param('dest', 'file');
-        $this->ex->destDb = $this->param('destdb', null);
-        $this->ex->testMode = $this->param('test', false);
+        $this->Ex->Destination = $this->param('dest', 'file');
+        $this->Ex->DestDb = $this->param('destdb', null);
+        $this->Ex->TestMode = $this->param('test', false);
 
         /**
          * Selective exports
@@ -59,15 +59,15 @@ abstract class ExportController {
          * 3. Normalize case to lower
          * 4. Save to the ExportModel instance
          */
-        $restrictedTables = $this->param('tables', false);
-        if (!empty($restrictedTables)) {
-            $restrictedTables = explode(',', $restrictedTables);
+        $RestrictedTables = $this->param('tables', false);
+        if (!empty($RestrictedTables)) {
+            $RestrictedTables = explode(',', $RestrictedTables);
 
-            if (is_array($restrictedTables) && !empty($restrictedTables)) {
-                $restrictedTables = array_map('trim', $restrictedTables);
-                $restrictedTables = array_map('strtolower', $restrictedTables);
+            if (is_array($RestrictedTables) && !empty($RestrictedTables)) {
+                $RestrictedTables = array_map('trim', $RestrictedTables);
+                $RestrictedTables = array_map('strtolower', $RestrictedTables);
 
-                $this->ex->restrictedTables = $restrictedTables;
+                $this->Ex->RestrictedTables = $RestrictedTables;
             }
         }
     }
@@ -78,46 +78,46 @@ abstract class ExportController {
      * @return string
      */
     public function cdnPrefix() {
-        $cdn = rtrim($this->param('cdn', ''), '/');
-        if ($cdn) {
-            $cdn .= '/';
+        $Cdn = rtrim($this->param('cdn', ''), '/');
+        if ($Cdn) {
+            $Cdn .= '/';
         }
 
-        return $cdn;
+        return $Cdn;
     }
 
     /**
      * Logic for export process.
      */
     public function doExport() {
-        global $supported;
+        global $Supported;
 
         // Test connection
-        $msg = $this->testDatabase();
-        if ($msg === true) {
+        $Msg = $this->testDatabase();
+        if ($Msg === true) {
 
             // Test src tables' existence structure
-            $msg = $this->ex->verifySource($this->sourceTables);
-            if ($msg === true) {
+            $Msg = $this->Ex->verifySource($this->SourceTables);
+            if ($Msg === true) {
                 // Good src tables - Start dump
-                $this->ex->useCompression(true);
-                $this->ex->filenamePrefix = $this->dbInfo['dbname'];
+                $this->Ex->useCompression(true);
+                $this->Ex->FilenamePrefix = $this->DbInfo['dbname'];
                 set_time_limit(60 * 60);
 
 //            ob_start();
-                $this->forumExport($this->ex);
+                $this->forumExport($this->Ex);
 //            $Errors = ob_get_clean();
 
-                $msg = $this->ex->comments;
+                $Msg = $this->Ex->Comments;
 
                 // Write the results.  Send no path if we don't know where it went.
-                $relativePath = ($this->param('destpath', false)) ? false : $this->ex->path;
-                viewExportResult($msg, 'Info', $relativePath);
+                $RelativePath = ($this->param('destpath', false)) ? false : $this->Ex->Path;
+                viewExportResult($Msg, 'Info', $RelativePath);
             } else {
-                viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
+                viewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
             } // Back to form with error
         } else {
-            viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
+            viewForm(array('Supported' => $Supported, 'Msg' => $Msg, 'Info' => $this->DbInfo));
         } // Back to form with error
     }
 
@@ -125,7 +125,7 @@ abstract class ExportController {
      * User submitted db connection info.
      */
     public function handleInfoForm() {
-        $this->dbInfo = array(
+        $this->DbInfo = array(
             'dbhost' => $_POST['dbhost'],
             'dbuser' => $_POST['dbuser'],
             'dbpass' => $_POST['dbpass'],
@@ -142,13 +142,13 @@ abstract class ExportController {
      * @param mixed $Default Fallback value.
      * @return mixed Value of the parameter.
      */
-    public function param($name, $default = false) {
-        if (isset($_POST[$name])) {
-            return $_POST[$name];
-        } elseif (isset($_GET[$name])) {
-            return $_GET[$name];
+    public function param($Name, $Default = false) {
+        if (isset($_POST[$Name])) {
+            return $_POST[$Name];
+        } elseif (isset($_GET[$Name])) {
+            return $_GET[$Name];
         } else {
-            return $default;
+            return $Default;
         }
     }
 
@@ -160,21 +160,21 @@ abstract class ExportController {
     public function testDatabase() {
         // Connection
         if (!function_exists('mysql_connect')) {
-            $result = 'mysql_connect is an undefined function.  Verify MySQL extension is installed and enabled.';
-        } elseif ($c = @mysql_connect($this->dbInfo['dbhost'], $this->dbInfo['dbuser'], $this->dbInfo['dbpass'])) {
+            $Result = 'mysql_connect is an undefined function.  Verify MySQL extension is installed and enabled.';
+        } elseif ($C = @mysql_connect($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'])) {
             // Database
-            if (mysql_select_db($this->dbInfo['dbname'], $c)) {
-                mysql_close($c);
-                $result = true;
+            if (mysql_select_db($this->DbInfo['dbname'], $C)) {
+                mysql_close($C);
+                $Result = true;
             } else {
-                mysql_close($c);
-                $result = "Could not find database '{$this->dbInfo['dbname']}'.";
+                mysql_close($C);
+                $Result = "Could not find database '{$this->DbInfo['dbname']}'.";
             }
         } else {
-            $result = 'Could not connect to ' . $this->dbInfo['dbhost'] . ' as ' . $this->dbInfo['dbuser'] . ' with given password.';
+            $Result = 'Could not connect to ' . $this->DbInfo['dbhost'] . ' as ' . $this->DbInfo['dbuser'] . ' with given password.';
         }
 
-        return $result;
+        return $Result;
     }
 }
 

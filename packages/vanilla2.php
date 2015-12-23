@@ -7,8 +7,8 @@
  * @package VanillaPorter
  */
 
-$supported['vanilla2'] = array('name' => 'Vanilla 2', 'prefix' => 'GDN_');
-$supported['vanilla2']['features'] = array(
+$Supported['vanilla2'] = array('name' => 'Vanilla 2', 'prefix' => 'GDN_');
+$Supported['vanilla2']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -28,13 +28,13 @@ $supported['vanilla2']['features'] = array(
 class Vanilla2 extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $_sourceTables = array();
+    protected $_SourceTables = array();
 
     /**
      * @param ExportModel $Ex
      */
-    protected function forumExport($ex) {
-        $tables = array(
+    protected function forumExport($Ex) {
+        $Tables = array(
             'Activity',
             'Category',
             'Comment',
@@ -52,13 +52,13 @@ class Vanilla2 extends ExportController {
             'UserRole'
         );
 
-        $ex->beginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
+        $Ex->beginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
 
-        foreach ($tables as $tableName) {
-            $this->exportTable($ex, $tableName);
+        foreach ($Tables as $TableName) {
+            $this->exportTable($Ex, $TableName);
         }
 
-        $ex->endExport();
+        $Ex->endExport();
     }
 
     /**
@@ -66,13 +66,13 @@ class Vanilla2 extends ExportController {
      * @param ExportModel $Ex
      * @param string $TableName
      */
-    protected function exportTable($ex, $tableName) {
+    protected function exportTable($Ex, $TableName) {
         // Make sure the table exists.
-        if (!$ex->exists($tableName)) {
+        if (!$Ex->exists($TableName)) {
             return;
         }
 
-        $ex->exportTable($tableName, "select * from :_{$tableName}");
+        $Ex->exportTable($TableName, "select * from :_{$TableName}");
     }
 
 }
