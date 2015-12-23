@@ -478,6 +478,8 @@ join :_topics t
     protected function ExportUserNotes() {
         $Ex = $this->Ex;
 
+        $corruptedRecords = [];
+
         // User notes.
         $UserNote_Map = array(
             'log_id' => array('Column' => 'UserNoteID', 'Type' => 'int'),
@@ -501,10 +503,14 @@ join :_topics t
             'log_data' => array(
                 'Column' => 'Body',
                 'Type' => 'text',
-                'Filter' => function ($value) {
-                    $value = @unserialize($value);
+                'Filter' => function ($value, $field, $row) use (&$corruptedRecords) {
+                    $unserializedValue = @unserialize($value);
 
-                    return array_pop($value);
+                    if (!$unserializedValue) {
+                        $corruptedRecords[] = $row['log_id'];
+                        return '';
+                    }
+                    return array_pop($unserializedValue);
                 }
             )
         );
@@ -513,6 +519,11 @@ join :_topics t
          from :_log l
          where reportee_id > 0
             and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')", $UserNote_Map);
+
+
+        if (count($corruptedRecords) > 0) {
+            $Ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n".print_r($corruptedRecords, true));
+        }
     }
 
     /**
