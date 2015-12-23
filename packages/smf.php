@@ -399,7 +399,7 @@ join :_personal_messages pm2
 
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
         if ($extension) {
-            $mimeType = MimeTypeFromExtension('.'.$extension);
+            $mimeType = MimeTypeFromExtension('.'.strtolower($extension));
         }
 
         return $mimeType;

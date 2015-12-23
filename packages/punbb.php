@@ -334,7 +334,7 @@ class Punbb extends ExportController {
      * @return current value of the field or null if the file is not an image.
      */
     public function FilterThumbnailData($value, $field, $row) {
-        if (strpos($row['file_mime_type'], 'image/') === 0) {
+        if (strpos(strtolower($row['file_mime_type']), 'image/') === 0) {
             return $value;
         } else {
             return null;

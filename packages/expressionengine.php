@@ -415,7 +415,7 @@ class ExpressionEngine extends ExportController {
      * @return current value of the field or null if the file is not an image.
      */
     public function FilterThumbnailData($Value, $Field, $Row) {
-        if (strpos(MimeTypeFromExtension($Row['extension']), 'image/') === 0) {
+        if (strpos(MimeTypeFromExtension(strtolower($Row['extension'])), 'image/') === 0) {
             return $Value;
         } else {
             return null;

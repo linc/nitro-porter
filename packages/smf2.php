@@ -304,7 +304,7 @@ class SMF2 extends ExportController {
 
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
         if ($extension) {
-            $mimeType = MimeTypeFromExtension('.'.$extension);
+            $mimeType = MimeTypeFromExtension('.'.strtolower($extension));
         }
 
         return $mimeType;

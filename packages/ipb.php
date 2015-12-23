@@ -839,7 +839,7 @@ drop table tmp_group;");
      * @return current value of the field or null if the file is not an image.
      */
     public function FilterThumbnailData($Value, $Field, $Row) {
-        if (strpos($Row['atype_mimetype'], 'image/') === 0) {
+        if (strpos(strtolower($Row['atype_mimetype']), 'image/') === 0) {
             return $Value;
         } else {
             return null;
