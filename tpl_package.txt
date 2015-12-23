@@ -11,92 +11,100 @@ $supported['__NAME__'] = array('name'=> '__NAME__', 'prefix'=>'');
 $supported['__NAME__']['features'] = array('Users' => 1);
 
 class __NAME__ extends ExportController {
-   /**
-    * Main export process.
-    *
-    * @param ExportModel $ex
-    * @see $_structures in ExportModel for allowed destination tables & columns.
-    */
-   public function forumExport($ex) {
-      // Get the characterset for the comments.
-      // Usually the comments table is the best target for this.
-      $characterSet = $ex->getCharacterSet('posts');
-      if ($characterSet)
-         $ex->characterSet = $characterSet;
+    /**
+     * Main export process.
+     *
+     * @param ExportModel $ex
+     * @see $_structures in ExportModel for allowed destination tables & columns.
+     */
+    public function forumExport($ex) {
+        // Get the characterset for the comments.
+        // Usually the comments table is the best target for this.
+        $characterSet = $ex->getCharacterSet('posts');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
+        }
 
-      // Reiterate the platform name here to be included in the porter file header.
-      $ex->beginExport('', '__NAME__');
-
-
-      // User.
-      $user_Map = array(
-         //'Source' => 'Vanilla',
-      );
-      $ex->exportTable('User', "
-         select u.*
-         from :_tblUser u", $user_Map);
+        // Reiterate the platform name here to be included in the porter file header.
+        $ex->beginExport('', '__NAME__');
 
 
-      // Role.
-      $role_Map = array(
-         //'Source' => 'Vanilla',
-      );
-      $ex->exportTable('Role', "
-         select *
-         from :_tblGroup", $role_Map);
+        // User.
+        $user_Map = array(
+            //'Source' => 'Vanilla',
+        );
+        $ex->exportTable('User', "
+            select u.*
+            from :_tblUser u
+        ", $user_Map);
 
 
-      // User Role.
-      $userRole_Map = array(
-         //'SourceName' => 'VanillaName',
-      );
-      $ex->exportTable('UserRole', "
-         select u.*
-         from :_tblAuthor u", $userRole_Map);
-
-      // Category.
-      $category_Map = array(
-         //'SourceName' => 'VanillaName',
-      );
-      $ex->exportTable('Category', "
-         select *
-         from :_tblCategory c", $category_Map);
+        // Role.
+        $role_Map = array(
+            //'Source' => 'Vanilla',
+        );
+        $ex->exportTable('Role', "
+            select *
+            from :_tblGroup
+        ", $role_Map);
 
 
-      // Discussion.
-      $discussion_Map = array(
-         //'SourceName' => 'VanillaName',
-         //'SourceName' => array('Column' => 'VanillaName', 'Filter' => 'HTMLDecoder'),
-      );
-      $ex->exportTable('Discussion', "
-         select *,
-            FROM_UNIXTIME(Message_date) as Message_date
-         from :_tblTopic t", $discussion_Map);
+        // User Role.
+        $userRole_Map = array(
+            //'SourceName' => 'VanillaName',
+        );
+        $ex->exportTable('UserRole', "
+            select u.*
+            from :_tblAuthor u
+        ", $userRole_Map);
+
+        // Category.
+        $category_Map = array(
+            //'SourceName' => 'VanillaName',
+        );
+        $ex->exportTable('Category', "
+            select *
+            from :_tblCategory c
+        ", $category_Map);
 
 
-      // Comment.
-      $comment_Map = array(
-         //'SourceName' => 'VanillaName',
-      );
-      $ex->exportTable('Comment', "
-         select th.*
-         from :_tblThread th", $comment_Map);
+        // Discussion.
+        $discussion_Map = array(
+            //'SourceName' => 'VanillaName',
+            //'SourceName' => array('Column' => 'VanillaName', 'Filter' => 'HTMLDecoder'),
+        );
+        $ex->exportTable('Discussion', "
+            select
+                *,
+                FROM_UNIXTIME(Message_date) as Message_date
+            from :_tblTopic t
+        ", $discussion_Map);
 
 
-      // UserDiscussion.
+        // Comment.
+        $comment_Map = array(
+            //'SourceName' => 'VanillaName',
+        );
+        $ex->exportTable('Comment', "
+            select th.*
+            from :_tblThread th
+        ", $comment_Map);
 
-      // Permission.
 
-      // UserMeta.
+        // UserDiscussion.
 
-      // Media.
+        // Permission.
 
-      // Conversations.
+        // UserMeta.
 
-      // Polls.
+        // Media.
 
-      $ex->endExport();
-   }
+        // Conversations.
+
+        // Polls.
+
+        $ex->endExport();
+    }
 }
 
 // Closing PHP tag required. (make.php)
