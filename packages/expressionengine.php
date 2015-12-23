@@ -188,7 +188,7 @@ class ExpressionEngine extends ExportController {
         // Media.
         $Media_Map = array(
             'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'MimeTypeFromExtension')),
+            'extension' => array('Column' => 'Type', 'Filter' => 'MimeTypeFromExtension'),
             'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             'filesize' => 'Size',
