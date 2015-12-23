@@ -14,8 +14,8 @@ class __NAME__ extends ExportController {
    /**
     * Main export process.
     *
-    * @param ExportModel $Ex
-    * @see $_Structures in ExportModel for allowed destination tables & columns.
+    * @param ExportModel $ex
+    * @see $_structures in ExportModel for allowed destination tables & columns.
     */
    public function forumExport($ex) {
       // Get the characterset for the comments.
