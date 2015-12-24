@@ -319,7 +319,7 @@ class SMF2 extends ExportController {
      * @param string $value Current value
      * @param string $field Current field
      * @param array $row Contents of the current record.
-     * @return current value of the field or null if the file is not an image.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
     public function FilterThumbnailData($value, $field, $row) {
         $mimeType = $this->getMimeTypeFromFileName($row['Path']);

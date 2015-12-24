@@ -572,7 +572,7 @@ join :_topics t
      * @param string $Value Current value
      * @param string $Field Current field
      * @param array $Row Contents of the current record.
-     * @return current value of the field or null if the file is not an image.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
     public function FilterThumbnailData($Value, $Field, $Row) {
         if (strpos(strtolower($Row['mimetype']), 'image/') === 0) {
