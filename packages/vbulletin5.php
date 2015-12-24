@@ -492,13 +492,26 @@ class Vbulletin5 extends Vbulletin {
         /// Drafts
         // autosavetext table
 
+        $instance = $this;
         // Media
         $Media_Map = array(
             'nodeid' => 'MediaID',
             'filename' => 'Name',
             'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
             'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
-            'ThumbPath2' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'BuildMediaPath')),
+            'ThumbPath2' => array(
+                'Column' => 'ThumbPath',
+                'Filter' => function($Value, $Field, $Row) use ($instance) {
+                    $filteredData = $this->FilterThumbnailData($Value, $Field, $Row);
+
+                    if ($filteredData) {
+                        return $instance->BuildMediaPath($Value, $Field, $Row);
+                    } else {
+                        return null;
+                    }
+                }
+            ),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             'width' => 'ImageWidth',
             'height' => 'ImageHeight',
             'filesize' => 'Size',
@@ -508,6 +521,7 @@ class Vbulletin5 extends Vbulletin {
                 a.*,
                 filename as Path2,
                 filename as ThumbPath2,
+                128 as thumb_width,
                 FROM_UNIXTIME(f.dateline) as DateInserted,
                 f.userid as userid,
                 f.userid as InsertUserID,

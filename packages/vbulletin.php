@@ -908,15 +908,16 @@ class Vbulletin extends ExportController {
             'filethumb' => array(
                 'Column' => 'ThumbPath',
                 'Filter' => function($Value, $Field, $Row) use ($instance) {
-                    $MimeType = $instance->BuildMimeType($Row['extension'], $Field, $Row);
+                    $filteredData = $this->FilterThumbnailData($Value, $Field, $Row);
 
-                    if (substr($MimeType, 0, 6) == 'image/') {
+                    if ($filteredData) {
                         return $instance->BuildMediaPath($Value, $Field, $Row);
                     } else {
                         return null;
                     }
                 }
             ),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             'height' => array('Column' => 'ImageHeight', 'Filter' => array($this, 'BuildMediaDimension')),
             'width' => array('Column' => 'ImageWidth', 'Filter' => array($this, 'BuildMediaDimension')),
         );
@@ -940,23 +941,35 @@ class Vbulletin extends ExportController {
             if (!$Result) {
                 $Ex->Query('create index ix_thread_firstpostid on :_thread (firstpostid)');
             }
-            $MediaSql = "select
-            case when t.threadid is not null then 'discussion' when ct.class = 'Post' then 'comment' when ct.class = 'Thread' then 'discussion' else ct.class end as ForeignTable,
-            case when t.threadid is not null then t.threadid else a.contentid end as ForeignID,
-            FROM_UNIXTIME(a.dateline) as DateInserted,
-            'local' as StorageMethod,
-            a.*,
-            f.extension, f.filesize $AttachColumnsString,
-            f.width, f.height, null as filethumb
-         from :_attachment a
-         join :_contenttype ct
-            on a.contenttypeid = ct.contenttypeid
-         join :_filedata f
-            on f.filedataid = a.filedataid
-         left join :_thread t
-            on t.firstpostid = a.contentid and a.contenttypeid = 1
-         where a.contentid > 0
-            $DiscussionWhere";
+            $MediaSql = "
+                select
+                    case
+                        when t.threadid is not null then 'discussion'
+                        when ct.class = 'Post' then 'comment'
+                        when ct.class = 'Thread' then 'discussion'
+                        else ct.class
+                    end as ForeignTable,
+                    case
+                        when t.threadid is not null then t.threadid
+                        else a.contentid
+                    end as ForeignID,
+                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    'local' as StorageMethod,
+                    a.*,
+                    f.extension,
+                    f.filesize/*,*/
+                    $AttachColumnsString,
+                    f.width,
+                    f.height,
+                    'mock_value' as filethumb,
+                    128 as thumb_width
+                from :_attachment a
+                    join :_contenttype ct on a.contenttypeid = ct.contenttypeid
+                    join :_filedata f on f.filedataid = a.filedataid
+                    left join :_thread t on t.firstpostid = a.contentid and a.contenttypeid = 1
+                where a.contentid > 0
+                    $DiscussionWhere
+            ";
             $Ex->ExportTable('Media', $MediaSql, $Media_Map);
 
         } else {
@@ -965,32 +978,44 @@ class Vbulletin extends ExportController {
             // Left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
             // Lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
             $Extension = ExportModel::FileExtension('a.filename');
-            $MediaSql = "select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-               'local' as StorageMethod,
-               'discussion' as ForeignTable,
-               t.threadid as ForeignID,
-               FROM_UNIXTIME(a.dateline) as DateInserted,
-               '1' as height,
-               '1' as width,
-               null as filethumb
-            from :_thread t
-               left join :_attachment a ON a.postid = t.firstpostid
-            where a.attachmentid > 0
+            $MediaSql = "
+                select
+                    a.attachmentid,
+                    a.filename,
+                    $Extension as extension/*,*/
+                    $AttachColumnsString,
+                    a.userid,
+                    'local' as StorageMethod,
+                    'discussion' as ForeignTable,
+                    t.threadid as ForeignID,
+                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    '1' as height,
+                    '1' as width,
+                    'mock_value' as filethumb,
+                    128 as thumb_width
+                from :_thread t
+                    left join :_attachment a ON a.postid = t.firstpostid
+                where a.attachmentid > 0
 
-            union all
+                union all
 
-            select a.attachmentid, a.filename, $Extension as extension $AttachColumnsString, a.userid,
-               'local' as StorageMethod,
-               'comment' as ForeignTable,
-               a.postid as ForeignID,
-               FROM_UNIXTIME(a.dateline) as DateInserted,
-               '1' as height,
-               '1' as width,
-               null as filethumb
-            from :_post p
-               inner join :_thread t ON p.threadid = t.threadid
-               left join :_attachment a ON a.postid = p.postid
-            where p.postid <> t.firstpostid and  a.attachmentid > 0
+                select
+                    a.attachmentid,
+                    a.filename,
+                    $Extension as extension/*,*/
+                    $AttachColumnsString, a.userid,
+                    'local' as StorageMethod,
+                    'comment' as ForeignTable,
+                    a.postid as ForeignID,
+                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    '1' as height,
+                    '1' as width,
+                    'mock_value' as filethumb,
+                    128 as thumb_width
+                from :_post p
+                    inner join :_thread t ON p.threadid = t.threadid
+                    left join :_attachment a ON a.postid = p.postid
+                where p.postid <> t.firstpostid and a.attachmentid > 0
             ";
             $Ex->ExportTable('Media', $MediaSql, $Media_Map);
         }
@@ -1227,6 +1252,25 @@ class Vbulletin extends ExportController {
         }
 
         return $Value;
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_ExportTable
+     *
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
+     * @return current value of the field or null if the file is not an image.
+     */
+    public function FilterThumbnailData($value, $field, $row) {
+        if (strpos(MimeTypeFromExtension(strtolower($row['extension'])), 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
+        }
     }
 
     /**
