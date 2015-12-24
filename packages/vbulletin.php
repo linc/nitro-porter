@@ -194,7 +194,6 @@ class Vbulletin extends ExportController {
             $ForumWhere = '';
         }
 
-        // Determine the character set
         $CharacterSet = $Ex->GetCharacterSet('post');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
@@ -954,7 +953,6 @@ class Vbulletin extends ExportController {
                         else a.contentid
                     end as ForeignID,
                     FROM_UNIXTIME(a.dateline) as DateInserted,
-                    'local' as StorageMethod,
                     a.*,
                     f.extension,
                     f.filesize/*,*/
@@ -985,7 +983,6 @@ class Vbulletin extends ExportController {
                     $Extension as extension/*,*/
                     $AttachColumnsString,
                     a.userid,
-                    'local' as StorageMethod,
                     'discussion' as ForeignTable,
                     t.threadid as ForeignID,
                     FROM_UNIXTIME(a.dateline) as DateInserted,
@@ -1003,8 +1000,8 @@ class Vbulletin extends ExportController {
                     a.attachmentid,
                     a.filename,
                     $Extension as extension/*,*/
-                    $AttachColumnsString, a.userid,
-                    'local' as StorageMethod,
+                    $AttachColumnsString,
+                    a.userid,
                     'comment' as ForeignTable,
                     a.postid as ForeignID,
                     FROM_UNIXTIME(a.dateline) as DateInserted,

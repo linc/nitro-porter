@@ -46,6 +46,11 @@ class Punbb extends ExportController {
      */
     protected function ForumExport($Ex) {
 
+        $CharacterSet = $Ex->GetCharacterSet('posts');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
+        }
+
         $Ex->BeginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
 
         $this->cdn = $this->Param('cdn', '');

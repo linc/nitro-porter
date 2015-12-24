@@ -175,7 +175,6 @@ class IPB extends ExportController {
 
         $Ex->SourcePrefix = ':_';
 
-        // Get the characterset for the comments.
         $CharacterSet = $Ex->GetCharacterSet('posts');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
@@ -506,7 +505,6 @@ class IPB extends ExportController {
             'attach_filesize' => 'Size',
             'ForeignID' => 'ForeignID',
             'ForeignTable' => 'ForeignTable',
-            'StorageMethod' => 'StorageMethod',
             'img_width' => 'ImageWidth',
             'img_height' => 'ImageHeight'
         );
@@ -519,8 +517,7 @@ class IPB extends ExportController {
    case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
    case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
    case a.attach_img_width when 0 then a.attach_thumb_width else a.attach_img_width end as img_width,
-   case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height,
-   'local' as StorageMethod
+   case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height
 from :_attachments a
 join :_posts p
    on a.attach_rel_id = p.pid and a.attach_rel_module = 'post'

@@ -63,7 +63,7 @@ class Phpbb2 extends ExportController {
      * @param ExportModel $Ex
      */
     protected function ForumExport($Ex) {
-        // Get the characterset for the comments.
+
         $CharacterSet = $Ex->GetCharacterSet('posts_text');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
@@ -106,9 +106,13 @@ class Phpbb2 extends ExportController {
             'group_id' => 'RoleID'
         );
         // Skip pending memberships
-        $Ex->ExportTable('UserRole', 'select user_id, group_id from :_users
-         union
-         select user_id, group_id from :_user_group where user_pending = 0', $UserRole_Map);
+        $Ex->ExportTable('UserRole', '
+            select
+                user_id,
+                group_id
+            from :_user_group
+            where user_pending = 0
+        ;', $UserRole_Map);
 
         // Categories
         $Category_Map = array(

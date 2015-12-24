@@ -28,7 +28,8 @@ class Yaf extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
-        $CharacterSet = $Ex->GetCharacterSet('yaf_Topic');
+
+        $CharacterSet = $Ex->GetCharacterSet('Topic');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }
@@ -59,8 +60,8 @@ class Yaf extends ExportController {
             m.PasswordFormat,
             m.LastActivity,
             'yaf' as HashMethod
-         from yaf_User u
-         left join yaf_prov_Membership m
+         from :_User u
+         left join :_prov_Membership m
             on u.ProviderUserKey = m.UserID;", $User_Map);
 
         // Role.
@@ -70,14 +71,14 @@ class Yaf extends ExportController {
         );
         $Ex->ExportTable('Role', "
          select *
-         from yaf_Group;", $Role_Map);
+         from :_Group;", $Role_Map);
 
         // UserRole.
         $UserRole_Map = array(
             'UserID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', 'select * from yaf_UserGroup', $UserRole_Map);
+        $Ex->ExportTable('UserRole', 'select * from :_UserGroup', $UserRole_Map);
 
         // Rank.
         $Rank_Map = array(
@@ -91,7 +92,7 @@ class Yaf extends ExportController {
             r.*,
             RankID as Level,
             Name as Label
-         from yaf_Rank r;", $Rank_Map);
+         from :_Rank r;", $Rank_Map);
 
         // Signatures.
         $Ex->ExportTable('UserMeta', "
@@ -99,7 +100,7 @@ class Yaf extends ExportController {
             UserID,
             'Plugin.Signatures.Sig' as `Name`,
             Signature as `Value`
-         from yaf_User
+         from :_User
          where Signature <> ''
 
          union all
@@ -108,7 +109,7 @@ class Yaf extends ExportController {
             UserID,
             'Plugin.Signatures.Format' as `Name`,
             'BBCode' as `Value`
-         from yaf_User
+         from :_User
          where Signature <> '';");
 
         // Category.
@@ -127,7 +128,7 @@ class Yaf extends ExportController {
             f.Name,
             f.Description,
             f.SortOrder
-         from yaf_Forum f
+         from :_Forum f
 
          union all
 
@@ -137,7 +138,7 @@ class Yaf extends ExportController {
             c.Name,
             null,
             c.SortOrder
-         from yaf_Category c;", $Category_Map);
+         from :_Category c;", $Category_Map);
 
         // Discussion.
         $Discussion_Map = array(
@@ -154,7 +155,7 @@ class Yaf extends ExportController {
             case when t.Priority > 0 then 1 else 0 end as Announce,
             t.Flags & 1 as Closed,
             t.*
-         from yaf_Topic t
+         from :_Topic t
          where t.IsDeleted = 0;", $Discussion_Map);
 
         // Comment.
@@ -174,7 +175,7 @@ class Yaf extends ExportController {
          select
             case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
             m.*
-         from yaf_Message m
+         from :_Message m
          where IsDeleted = 0;", $Comment_Map);
 
         // Conversation.
@@ -191,7 +192,7 @@ class Yaf extends ExportController {
             pm.*,
             g.Title
          from z_pmgroup g
-         join yaf_PMessage pm
+         join :_PMessage pm
             on g.Group_ID = pm.PMessageID;", $Conversation_Map);
 
         // UserConversation.
@@ -220,7 +221,7 @@ class Yaf extends ExportController {
             pm.*,
             case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
             t.Group_ID
-         from yaf_PMessage pm
+         from :_PMessage pm
          join z_pmtext t
             on t.PM_ID = pm.PMessageID;", $ConversationMessage_Map);
 
@@ -272,7 +273,7 @@ class Yaf extends ExportController {
             PMessageID,
             FromUserID,
             0
-         from yaf_PMessage;
+         from :_PMessage;
 
          replace z_pmto (
             PM_ID,
@@ -283,7 +284,7 @@ class Yaf extends ExportController {
             PMessageID,
             UserID,
             IsDeleted
-         from yaf_UserPMessage;
+         from :_UserPMessage;
 
          drop table if exists z_pmto2;
          create table z_pmto2 (
@@ -320,7 +321,7 @@ class Yaf extends ExportController {
             PMessageID,
             Subject,
             case when Subject like 'Re:%' then trim(substring(Subject, 4)) else Subject end as Title2
-         from yaf_PMessage;
+         from :_PMessage;
 
          create index z_idx_pmtext on z_pmtext (PM_ID);
 

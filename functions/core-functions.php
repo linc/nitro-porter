@@ -6,7 +6,7 @@
  * @param $errno
  * @param $errstr
  */
-function ErrorHandler($errno, $errstr) {
+function ErrorHandler($errno, $errstr, $errFile, $errLine) {
     $ReportingLevel = error_reporting();
 
     // If error reporting is turned off, possibly by @.  Bail out.
@@ -15,7 +15,10 @@ function ErrorHandler($errno, $errstr) {
     }
 
     if (defined(DEBUG) || ($errno != E_DEPRECATED && $errno != E_USER_DEPRECATED)) {
-        echo "Error: ({$errno}) {$errstr}\n";
+        $baseDir = realpath(__DIR__.'/../').'/';
+        $errFile = str_replace($baseDir, null, $errFile);
+
+        echo "Error in $errFile line $errLine: ($errno) $errstr\n";
         die();
     }
 }

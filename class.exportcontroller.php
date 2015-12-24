@@ -26,13 +26,28 @@ abstract class ExportController {
      * Construct and set the controller's properties from the posted form.
      */
     public function __construct() {
+        global $Supported;
+
         $this->HandleInfoForm();
 
         $this->Ex = new ExportModel;
         $this->Ex->Controller = $this;
-        $this->Ex->SetConnection($this->DbInfo['dbhost'], $this->DbInfo['dbuser'], $this->DbInfo['dbpass'],
-            $this->DbInfo['dbname']);
-        $this->Ex->Prefix = $this->DbInfo['prefix'];
+        $this->Ex->SetConnection(
+            $this->DbInfo['dbhost'],
+            $this->DbInfo['dbuser'],
+            $this->DbInfo['dbpass'],
+            $this->DbInfo['dbname']
+        );
+
+        // That's not sexy but it gets the job done :D
+        $lcClassName = strtolower(get_class($this));
+        $hasDefaultPrefix = !empty($Supported[$lcClassName]['prefix']);
+
+        if (isset($this->DbInfo['prefix'])) {
+            $this->Ex->Prefix = $this->DbInfo['prefix'];
+        } elseif ($hasDefaultPrefix) {
+            $this->Ex->Prefix = $Supported[$lcClassName]['prefix'];
+        }
         $this->Ex->Destination = $this->Param('dest', 'file');
         $this->Ex->DestDb = $this->Param('destdb', null);
         $this->Ex->TestMode = $this->Param('test', false);
@@ -116,7 +131,7 @@ abstract class ExportController {
             'dbpass' => $_POST['dbpass'],
             'dbname' => $_POST['dbname'],
             'type' => $_POST['type'],
-            'prefix' => preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix'])
+            'prefix' => isset($_POST['prefix']) ? preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null,
         );
     }
 

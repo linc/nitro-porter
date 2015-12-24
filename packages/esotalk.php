@@ -27,9 +27,8 @@ class esotalk extends ExportController {
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
     public function ForumExport($Ex) {
-        // Get the characterset for the comments.
-        // Usually the comments table is the best target for this.
-        $CharacterSet = $Ex->GetCharacterSet(':_post');
+
+        $CharacterSet = $Ex->GetCharacterSet('post');
         if ($CharacterSet) {
             $Ex->CharacterSet = $CharacterSet;
         }

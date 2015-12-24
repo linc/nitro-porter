@@ -25,6 +25,12 @@ class Kunena extends ExportController {
      * @param ExportModel $Ex
      */
     public function ForumExport($Ex) {
+
+        $CharacterSet = $Ex->GetCharacterSet('mbox');
+        if ($CharacterSet) {
+            $Ex->CharacterSet = $CharacterSet;
+        }
+
         $Ex->DestPrefix = 'jos';
 
         $Ex->BeginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
@@ -165,7 +171,6 @@ class Kunena extends ExportController {
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
-            'local' as StorageMethod,
             case when m.id = m.thread then 'discussion' else 'comment' end as ForeignTable,
             m.time,
             concat(a.folder, '/', a.filename) as thumb_path,
