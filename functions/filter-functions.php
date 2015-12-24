@@ -428,27 +428,32 @@ function GuessFormat($Value) {
  * @return string
  */
 function MimeTypeFromExtension($Value) {
+
+    if (strpos($Value, '.') === 0) {
+        $Value = substr($Value, 1);
+    }
+
     switch ($Value) {
-        case '.png':
-        case '.jpg':
-        case '.jpeg':
-        case '.gif':
-        case '.bmp':
-            return 'image/' . substr($Value, 1);
-        case '.zip':
-        case '.doc':
-        case '.docx':
-        case '.pdf':
-        case '.xls':
-        case '.swf':
-            return 'application/' . substr($Value, 1);
-        case '.txt':
-        case '.htm':
-        case '.html':
-            return 'text/' . substr($Value, 1);
-        case '.mov':
-        case '.avi':
-            return 'video/' . substr($Value, 1);
+        case 'png':
+        case 'jpg':
+        case 'jpeg':
+        case 'gif':
+        case 'bmp':
+            return 'image/' . $Value;
+        case 'zip':
+        case 'doc':
+        case 'docx':
+        case 'pdf':
+        case 'xls':
+        case 'swf':
+            return 'application/' . $Value;
+        case 'txt':
+        case 'htm':
+        case 'html':
+            return 'text/' . $Value;
+        case 'mov':
+        case 'avi':
+            return 'video/' . $Value;
     }
 }
 
