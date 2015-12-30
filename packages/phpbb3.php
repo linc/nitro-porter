@@ -454,6 +454,8 @@ join z_pmgroup g
         $Media_Map = array(
             'attach_id' => 'MediaID',
             'real_filename' => 'Name',
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             'post_id' => 'InsertUserID',
             'mimetype' => 'Type',
             'filesize' => 'Size',
@@ -463,6 +465,8 @@ join z_pmgroup g
   case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
   case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
   concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as Path,
+  concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as thumb_path,
+  128 as thumb_width,
   FROM_UNIXTIME(a.filetime) as DateInserted,
   a.*
 from :_attachments a
@@ -554,6 +558,25 @@ join :_topics t
             $r);
 
         return $r;
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_ExportTable
+     *
+     * @param string $Value Current value
+     * @param string $Field Current field
+     * @param array $Row Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function FilterThumbnailData($Value, $Field, $Row) {
+        if (strpos(strtolower($Row['mimetype']), 'image/') === 0) {
+            return $Value;
+        } else {
+            return null;
+        }
     }
 }
 

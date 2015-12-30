@@ -232,15 +232,20 @@ class Punbb extends ExportController {
                 'filename' => 'Name',
                 'file_mime_type' => 'Type',
                 'size' => 'Size',
-                'owner_id' => 'InsertUserID'
+                'owner_id' => 'InsertUserID',
+                'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
+                'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
             );
             $Ex->ExportTable('Media', "
-          SELECT f.*,
-             concat({$this->cdn}, 'FileUpload/', f.file_path) AS Path,
-             from_unixtime(f.uploaded_at) AS DateInserted,
-             CASE WHEN post_id IS NULL THEN 'Discussion' ELSE 'Comment' END AS ForeignTable,
-             coalesce(post_id, topic_id) AS ForieignID
-          FROM :_attach_files f", $Media_Map);
+                select f.*,
+                    concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
+                    concat({$this->cdn}, 'FileUpload/', f.file_path) as thumb_path,
+                    128 as thumb_width,
+                    from_unixtime(f.uploaded_at) as DateInserted,
+                    case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
+                    coalesce(post_id, topic_id) as ForieignID
+                from :_attach_files f
+            ", $Media_Map);
         }
 
 
@@ -317,6 +322,25 @@ class Punbb extends ExportController {
             $AvatarBasename = basename($AvatarFilename);
 
             return "{$this->cdn}punbb/avatars/$AvatarBasename";
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_ExportTable
+     *
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function FilterThumbnailData($value, $field, $row) {
+        if (strpos(strtolower($row['file_mime_type']), 'image/') === 0) {
+            return $value;
         } else {
             return null;
         }
