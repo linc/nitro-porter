@@ -512,11 +512,7 @@ class ExportModel {
     /**
      *
      *
-<<<<<<< HEAD
      * @see _exportTable()
-=======
-     * @see _ExportTable()
->>>>>>> 5929985e87a302e045c314ddf2aa429c33145179
      * @param $tableName
      * @param $query
      * @param array $mappings
@@ -589,11 +585,7 @@ class ExportModel {
     /**
      *
      *
-<<<<<<< HEAD
      * @see _exportTableDB()
-=======
-     * @see _ExportTableDB()
->>>>>>> 5929985e87a302e045c314ddf2aa429c33145179
      * @param $tableName
      * @param $query
      * @param array $mappings
