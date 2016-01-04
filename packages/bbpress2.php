@@ -2,12 +2,12 @@
 /**
  * BBPress 2 exporter tool
  *
- * @copyright Vanilla Forums Inc. 2015
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
-$Supported['bbpress2'] = array('name'=>'bbPress 2', 'prefix' => 'wp_');
-$Supported['bbpress2']['features'] = array(
+$supported['bbpress2'] = array('name'=>'bbPress 2', 'prefix' => 'wp_');
+$supported['bbpress2']['features'] = array(
     'Comments'        => 1,
     'Discussions'     => 1,
     'Users'           => 1,
@@ -16,9 +16,9 @@ $Supported['bbpress2']['features'] = array(
     'Passwords'       => 1,
 );
 
-class BbPress2 extends ExportController {
+class BBPress2 extends ExportController {
     /** @var array Required tables => columns */
-    protected $SourceTables = array(
+    protected $sourceTables = array(
         'postmeta' => array(),
         'posts' => array(),
         'usermeta' => array(),
@@ -26,15 +26,15 @@ class BbPress2 extends ExportController {
     );
     /**
      * Forum-specific export format.
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($ex) {
         // Begin
-        $Ex->BeginExport('', 'bbPress 2.*', array('HashMethod' => 'Vanilla'));
+        $ex->beginExport('', 'bbPress 2.*', array('HashMethod' => 'Vanilla'));
 
         // Users
-        $Ex->Query("drop table if exists z_user;");
-        $Ex->Query("
+        $ex->query("drop table if exists z_user;");
+        $ex->query("
             create table `z_user` (
                 `ID` bigint(20) unsigned not null AUTO_INCREMENT,
                 `user_login` varchar(60) NOT NULL DEFAULT '',
@@ -47,7 +47,7 @@ class BbPress2 extends ExportController {
             )
         ;");
 
-        $UserQuery = "
+        $userQuery = "
             select
                 ID,
                 user_login,
@@ -58,9 +58,9 @@ class BbPress2 extends ExportController {
             from :_users
         ";
 
-        $Ex->Query("insert into z_user $UserQuery");
+        $ex->query("insert into z_user $userQuery");
 
-        $GuestUserQuery = "
+        $guestUserQuery = "
             select
                 user_login,
                 'JL2AC3ORF2ZHDU00Z8V0Z1LFC58TY6NWA6IC5M1MIGGDCHNE7K' AS user_pass,
@@ -83,7 +83,7 @@ class BbPress2 extends ExportController {
             group by user_email
         ";
 
-        $Ex->Query("
+        $ex->query("
             insert into z_user(
                 /* ID auto_increment yay! */
                 user_login,
@@ -91,7 +91,7 @@ class BbPress2 extends ExportController {
                 hash_method,
                 user_email,
                 user_registered
-            ) $GuestUserQuery");
+            ) $guestUserQuery");
 
         $user_Map = array(
             'ID'=>'UserID',
@@ -101,10 +101,10 @@ class BbPress2 extends ExportController {
             'user_email'=>'Email',
             'user_registered'=>'DateInserted',
         );
-        $Ex->ExportTable('User', "select * from z_user;", $user_Map);
+        $ex->exportTable('User', "select * from z_user;", $user_Map);
 
         // Roles
-        $Ex->ExportTable('Role', "
+        $ex->exportTable('Role', "
             select
                 1 as RoleID,
                 'Guest' as Name
@@ -115,10 +115,10 @@ class BbPress2 extends ExportController {
         ;");
 
         // UserRoles
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'user_id'=>'UserID'
         );
-        $Ex->ExportTable('UserRole', "
+        $ex->exportTable('UserRole', "
             select
                 distinct(user_id) as user_id,
                 case
@@ -138,27 +138,27 @@ class BbPress2 extends ExportController {
                 1 as RoleID
             from z_user
             where hash_method = 'Random'
-        ;", $UserRole_Map);
+        ;", $userRole_Map);
 
         // Categories
-        $Category_Map = array(
+        $category_Map = array(
             'ID'=>'CategoryID',
             'post_title'=>'Name',
             'post_content'=>'Description',
             'post_name'=>'UrlCode',
             'menu_order'=>'Sort',
         );
-        $Ex->ExportTable('Category', "
+        $ex->exportTable('Category', "
             select
                 *,
                 lower(post_name) as forum_slug,
                 nullif(post_parent, 0) as ParentCategoryID
             from :_posts
             where post_type = 'forum'
-        ;", $Category_Map);
+        ;", $category_Map);
 
         // Discussions
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'ID'=>'DiscussionID',
             'post_parent'=>'CategoryID',
             'post_author'=>'InsertUserID',
@@ -167,7 +167,7 @@ class BbPress2 extends ExportController {
             'post_date'=>'DateInserted',
             'menu_order'=>'Announce',
         );
-        $Ex->ExportTable('Discussion', "
+        $ex->exportTable('Discussion', "
             select
                 p.*,
                 if (p.post_author > 0, p.post_author, z_user.ID) as post_author, /* override post_author value from p.* */
@@ -177,10 +177,10 @@ class BbPress2 extends ExportController {
                 left join :_postmeta as pm on pm.post_id = p.ID AND pm.meta_key = '_bbp_anonymous_email'
                 left join z_user on z_user.user_email = pm.meta_value
             where post_type = 'topic'
-        ;", $Discussion_Map);
+        ;", $discussion_Map);
 
         // Comments
-        $Comment_Map = array(
+        $comment_Map = array(
             'ID' => 'CommentID',
             'post_parent_id' => 'DiscussionID',
             'post_content' => 'Body',//array('Column'=>'Body', 'Filter'=>'bbPressTrim'),
@@ -188,7 +188,7 @@ class BbPress2 extends ExportController {
             'post_author' => 'InsertUserID',
             'post_date' => 'DateInserted',
         );
-        $Ex->ExportTable('Comment', "
+        $ex->exportTable('Comment', "
             select
                 p.*,
                 if (p.post_author > 0, p.post_author, z_user.ID) as post_author, /* override post_author value from p.* */
@@ -202,15 +202,15 @@ class BbPress2 extends ExportController {
                 left join z_user on z_user.user_email = pm.meta_value
             where post_type = 'topic'
                 or post_type = 'reply'
-            ;", $Comment_Map);
+            ;", $comment_Map);
 
         // Cleanup
-        $Ex->Query("drop table if exists z_user;");
+        $ex->query("drop table if exists z_user;");
 
         // End
-        $Ex->EndExport();
+        $ex->endExport();
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>
-

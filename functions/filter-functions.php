@@ -2,7 +2,7 @@
 /**
  * Filter functions for passing thru values during export.
  *
- * @copyright Vanilla Forums Inc. 2010-2015
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
@@ -10,15 +10,15 @@
 /**
  * Don't allow zero-equivalent dates.
  *
- * @param $Value
+ * @param $value
  * @return string
  */
-function ForceDate($Value) {
-    if (!$Value || preg_match('`0000-00-00`', $Value)) {
+function forceDate($value) {
+    if (!$value || preg_match('`0000-00-00`', $value)) {
         return gmdate('Y-m-d H:i:s');
     }
 
-    return $Value;
+    return $value;
 }
 
 /**
@@ -27,7 +27,7 @@ function ForceDate($Value) {
  * @param $ip
  * @return string|null Valid IPv4 address or nuthin'.
  */
-function ForceIP4($ip) {
+function forceIP4($ip) {
     if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m)) {
         $ip = $m[1];
     } else {
@@ -44,8 +44,8 @@ function ForceIP4($ip) {
  * @param string $str A string to be formatted.
  * @return string
  */
-function FormatUrl($Str) {
-    $UrlTranslations = array(
+function formatUrl($str) {
+    $urlTranslations = array(
         '–' => '-',
         '—' => '-',
         'À' => 'A',
@@ -308,57 +308,57 @@ function FormatUrl($Str) {
     );
 
     // Preliminary decoding
-    $Str = strip_tags(html_entity_decode($Str, ENT_COMPAT, 'UTF-8'));
-    $Str = strtr($Str, $UrlTranslations);
-    $Str = preg_replace('`[\']`', '', $Str);
+    $str = strip_tags(html_entity_decode($str, ENT_COMPAT, 'UTF-8'));
+    $str = strtr($str, $urlTranslations);
+    $str = preg_replace('`[\']`', '', $str);
 
     // Test for Unicode PCRE support
     // On non-UTF8 systems this will result in a blank string.
-    $UnicodeSupport = (preg_replace('`[\pP]`u', '', 'P') != '');
+    $unicodeSupport = (preg_replace('`[\pP]`u', '', 'P') != '');
 
     // Convert punctuation, symbols, and spaces to hyphens
-    if ($UnicodeSupport) {
-        $Str = preg_replace('`[\pP\pS\s]`u', '-', $Str);
+    if ($unicodeSupport) {
+        $str = preg_replace('`[\pP\pS\s]`u', '-', $str);
     } else {
-        $Str = preg_replace('`[\s_[^\w\d]]`', '-', $Str);
+        $str = preg_replace('`[\s_[^\w\d]]`', '-', $str);
     }
 
     // Lowercase, no trailing or repeat hyphens
-    $Str = preg_replace('`-+`', '-', strtolower($Str));
-    $Str = trim($Str, '-');
+    $str = preg_replace('`-+`', '-', strtolower($str));
+    $str = trim($str, '-');
 
-    return rawurlencode($Str);
+    return rawurlencode($str);
 }
 
 /**
  * Decode the HTML out of a value.
  */
-function HTMLDecoder($Value) {
-    $CharacterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
+function HTMLDecoder($value) {
+    $characterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
 
-    switch ($CharacterSet) {
+    switch ($characterSet) {
         case 'latin1':
-            $CharacterSet = 'ISO-8859-1';
+            $characterSet = 'ISO-8859-1';
             break;
         case 'latin9':
-            $CharacterSet = 'ISO-8859-15';
+            $characterSet = 'ISO-8859-15';
             break;
         case 'utf8':
-            $CharacterSet = 'UTF-8';
+            $characterSet = 'UTF-8';
             break;
     }
 
-    return html_entity_decode($Value, ENT_QUOTES, $CharacterSet);
+    return html_entity_decode($value, ENT_QUOTES, $characterSet);
 }
 
 /**
  * Inverse int value.
  *
- * @param $Value
+ * @param $value
  * @return int
  */
-function NotFilter($Value) {
-    return (int)(!$Value);
+function notFilter($value) {
+    return (int)(!$value);
 }
 
 /**
@@ -366,39 +366,39 @@ function NotFilter($Value) {
  *
  * Do this in MySQL with FROM_UNIXTIME() instead whenever possible.
  *
- * @param $Value
+ * @param $value
  * @return null|string
  */
-function TimestampToDate($Value) {
-    if ($Value == null) {
+function timestampToDate($value) {
+    if ($value == null) {
         return null;
     } else {
-        return gmdate('Y-m-d H:i:s', $Value);
+        return gmdate('Y-m-d H:i:s', $value);
     }
 }
 
 /**
  * Wrapper for long2ip that nulls 'false' values.
  *
- * @param $Value
+ * @param $value
  * @return null|string
  */
-function long2ipf($Value) {
-    if (!$Value) {
+function long2ipf($value) {
+    if (!$value) {
         return null;
     }
 
-    return long2ip($Value);
+    return long2ip($value);
 }
 
 /**
  * Convert 'y/n' to boolean.
  *
- * @param $Value
+ * @param $value
  * @return int
  */
-function YNBool($Value) {
-    if ($Value == 'y') {
+function YNBool($value) {
+    if ($value == 'y') {
         return 1;
     } else {
         return 0;
@@ -408,13 +408,13 @@ function YNBool($Value) {
 /**
  * Guess the Format of the Body.
  *
- * @param $Value
+ * @param $value
  * @return string
  */
-function GuessFormat($Value) {
-    if (strpos($Value, '[') !== false) {
+function guessFormat($value) {
+    if (strpos($value, '[') !== false) {
         return 'BBCode';
-    } elseif (strpos($Value, '<') !== false) {
+    } elseif (strpos($value, '<') !== false) {
         return 'Html';
     } else {
         return 'BBCode';
@@ -424,53 +424,53 @@ function GuessFormat($Value) {
 /**
  * Derive mimetype from file extension.
  *
- * @param $Value
+ * @param $value
  * @return string
  */
-function MimeTypeFromExtension($Value) {
+function mimeTypeFromExtension($value) {
 
-    if (strpos($Value, '.') === 0) {
-        $Value = substr($Value, 1);
+    if (strpos($value, '.') === 0) {
+        $value = substr($value, 1);
     }
 
-    switch ($Value) {
+    switch ($value) {
         case 'png':
         case 'jpg':
         case 'jpeg':
         case 'gif':
         case 'bmp':
-            return 'image/' . $Value;
+            return 'image/' . $value;
         case 'zip':
         case 'doc':
         case 'docx':
         case 'pdf':
         case 'xls':
         case 'swf':
-            return 'application/' . $Value;
+            return 'application/' . $value;
         case 'txt':
         case 'htm':
         case 'html':
-            return 'text/' . $Value;
+            return 'text/' . $value;
         case 'mov':
         case 'avi':
-            return 'video/' . $Value;
+            return 'video/' . $value;
     }
 }
 
 /**
  * Change square brackets to braces.
  *
- * @param $Value
+ * @param $value
  * @return mixed
  */
-function CleanBodyBrackets($Value) {
-    if (strpos($Value, '[') !== false) {
-        $Result = str_replace(array('<', '>'), array('[', ']'), $Value);
+function cleanBodyBrackets($value) {
+    if (strpos($value, '[') !== false) {
+        $result = str_replace(array('<', '>'), array('[', ']'), $value);
 
-        return $Result;
+        return $result;
     }
 
-    return $Value;
+    return $value;
 }
 
 ?>

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Vanilla Forums Inc. 2010-2015
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
@@ -8,46 +8,46 @@
 /**
  * Get the data support status for a single platform feature.
  *
- * @param $Platform
- * @param $Feature
+ * @param $platform
+ * @param $feature
  * @return string
  */
-function FeatureStatus($Platform, $Feature, $Notes = true) {
-    global $Supported;
+function featureStatus($platform, $feature, $notes = true) {
+    global $supported;
 
-    if (!isset($Supported[$Platform]['features'])) {
+    if (!isset($supported[$platform]['features'])) {
         return '<span class="No">No</span>';
     }
 
-    $Available = $Supported[$Platform]['features'];
+    $available = $supported[$platform]['features'];
 
     // Calculate feature availability.
-    $Status = '<span class="No">&#x2717;</span>';
-    if (isset($Available[$Feature])) {
-        if ($Available[$Feature] === 1) {
-            $Status = '<span class="Yes">&#x2713;</span>';
-        } elseif ($Available[$Feature]) {
-            if ($Notes) {
+    $status = '<span class="No">&#x2717;</span>';
+    if (isset($available[$feature])) {
+        if ($available[$feature] === 1) {
+            $status = '<span class="Yes">&#x2713;</span>';
+        } elseif ($available[$feature]) {
+            if ($notes) {
                 // Send the text of the note
-                $Status = $Available[$Feature];
+                $status = $available[$feature];
             } else {
                 // Say 'yes' for table shorthand
-                $Status = '<span class="Yes">&#x2713;</span>';
+                $status = '<span class="Yes">&#x2713;</span>';
             }
         }
     }
 
-    return $Status;
+    return $status;
 }
 
 /**
  * Insert spaces into a CamelCaseName => Camel Case Name.
  *
- * @param $Feature
+ * @param $feature
  * @return string
  */
-function FeatureName($Feature) {
-    return ltrim(preg_replace('/[A-Z]/', ' $0', $Feature));
+function featureName($feature) {
+    return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
 }
 
 /**
@@ -61,39 +61,39 @@ function FeatureName($Feature) {
  *
  * @return array
  */
-function VanillaFeatures($Set = false) {
-    if (!$Set) {
-        $Set = array('core', 'addon');
+function vanillaFeatures($set = false) {
+    if (!$set) {
+        $set = array('core', 'addon');
     }
 
-    $Features = array();
-    if (is_array($Set)) {
-        foreach ($Set as $Section) {
-            $Features += VanillaFeatureSet($Section);
+    $features = array();
+    if (is_array($set)) {
+        foreach ($set as $section) {
+            $features += vanillaFeatureSet($section);
         }
     } else {
-        $Features = VanillaFeatureSet($Set);
+        $features = vanillaFeatureSet($set);
     }
 
-    return $Features;
+    return $features;
 }
 
 /**
  * Get features by availability in Vanilla.
  *
- * @param string $Section
+ * @param string $section
  * @return array
  */
-function VanillaFeatureSet($Section) {
-    switch ($Section) {
+function vanillaFeatureSet($section) {
+    switch ($section) {
         case 'addon':
-            $Set = array(
+            $set = array(
                 'Tags' => 0,
 
             );
             break;
         case 'cloud':
-            $Set = array(
+            $set = array(
                 'Badges' => 0,
                 'Ranks' => 0,
                 'Polls' => 0,
@@ -102,7 +102,7 @@ function VanillaFeatureSet($Section) {
             break;
         case 'core':
         default:
-            $Set = array(
+            $set = array(
                 'Comments' => 0,
                 'Discussions' => 0,
                 'Users' => 0,
@@ -123,7 +123,7 @@ function VanillaFeatureSet($Section) {
             break;
     }
 
-    return $Set;
+    return $set;
 }
 
 ?>
