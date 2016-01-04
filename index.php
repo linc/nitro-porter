@@ -6,7 +6,7 @@
  * To use this script, copy it to your web server and open it in your browser.
  * If you have a large database, make the directory writable so that the export file can be saved locally and zipped.
  *
- * @copyright 2009-2015 Vanilla Forums Inc.
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
