@@ -91,7 +91,7 @@ class SMF extends ExportController {
 
         // Categories
         $category_Map = array(
-            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity'))
+            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
 
         $ex->exportTable('Category',

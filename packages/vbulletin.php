@@ -1266,7 +1266,7 @@ class VBulletin extends ExportController {
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
     public function filterThumbnailData($value, $field, $row) {
-        if (strpos(MimeTypeFromExtension(strtolower($row['extension'])), 'image/') === 0) {
+        if (strpos(mimeTypeFromExtension(strtolower($row['extension'])), 'image/') === 0) {
             return $value;
         } else {
             return null;
