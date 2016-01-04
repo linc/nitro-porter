@@ -44,8 +44,8 @@ class Drupal extends ExportController {
             'Password' => 'Password',
             'mail' => 'Email',
             'photo' => 'Photo',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
-            'login' => array('Column' => 'DateLastActive', 'Filter' => 'TimestampToDate')
+            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'login' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable('User', "
          select u.*,
@@ -100,8 +100,8 @@ class Drupal extends ExportController {
             'title' => 'Name',
             'body' => 'Body',
             'uid' => 'InsertUserID',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
-            'DateUpdated' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
+            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'DateUpdated' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'sticky' => 'Announce',
             'tid' => 'CategoryID'
         );
@@ -119,7 +119,7 @@ class Drupal extends ExportController {
             'uid' => 'InsertUserID',
             'body' => array('Column' => 'Body'),
             'hostname' => 'InsertIPAddress',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
+            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable('Comment', "
          select
@@ -144,7 +144,7 @@ class Drupal extends ExportController {
             'uid' => 'InsertUserID',
             'comment' => array('Column' => 'Body'),
             'hostname' => 'InsertIPAddress',
-            'timeatamp' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
+            'timeatamp' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->ExportTable('Comment', "
            select c.*,
@@ -163,7 +163,7 @@ class Drupal extends ExportController {
             'filemime' => 'Type',
             'filesize' => 'Size',
             'uid' => 'InsertUserID',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
+            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->ExportTable('Media', "
            select f.*,

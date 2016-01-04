@@ -92,7 +92,7 @@ class SMF2 extends ExportController {
 
         // Categories
         $category_Map = array(
-            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity'))
+            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity'))
         );
 
         $ex->exportTable('Category',
@@ -121,7 +121,7 @@ class SMF2 extends ExportController {
         // Discussions
         $discussion_Map = array(
             'id_topic' => 'DiscussionID',
-            'subject' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity')),
+            'subject' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
             //,'Filter'=>'bb2html'),
             'body' => array('Column' => 'Body'),
             //,'Filter'=>'bb2html'),
@@ -190,8 +190,8 @@ class SMF2 extends ExportController {
                     return $this->getMimeTypeFromFileName($row['Path']);
                 }
             ),
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
         $ex->exportTable('Media', "
             select a.*,
@@ -319,14 +319,14 @@ class SMF2 extends ExportController {
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_ExportTable
+     * @see ExportModel::_exportTable
      *
      * @param string $value Current value
      * @param string $field Current field
      * @param array $row Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function FilterThumbnailData($value, $field, $row) {
+    public function filterThumbnailData($value, $field, $row) {
         $mimeType = $this->getMimeTypeFromFileName($row['Path']);
         if ($mimeType && strpos($mimeType, 'image/') === 0) {
             return $value;

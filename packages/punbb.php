@@ -67,7 +67,7 @@ class PunBB extends ExportController {
 
         // User.
         $user_Map = array(
-            'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'GetAvatarByID')),
+            'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'getAvatarByID')),
             'id' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
@@ -233,8 +233,8 @@ class PunBB extends ExportController {
                 'file_mime_type' => 'Type',
                 'size' => 'Size',
                 'owner_id' => 'InsertUserID',
-                'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
-                'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+                'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+                'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
             $ex->exportTable('Media', "
                 select f.*,
@@ -330,14 +330,14 @@ class PunBB extends ExportController {
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_ExportTable
+     * @see ExportModel::_exportTable
      *
      * @param string $value Current value
      * @param string $field Current field
      * @param array $row Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function FilterThumbnailData($value, $field, $row) {
+    public function filterThumbnailData($value, $field, $row) {
         if (strpos(strtolower($row['file_mime_type']), 'image/') === 0) {
             return $value;
         } else {

@@ -82,8 +82,8 @@ class ExpressionEngine extends ExportController {
             'Password2' => 'Password',
             'email' => 'Email',
             'ipaddress' => 'InsertIPAddress',
-            'join_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'TimestampToDate')),
-            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($ex, 'TimestampToDate')),
+            'join_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($ex, 'timestampToDate')),
             'timezone' => 'HourOffset',
             'location' => 'Location'
         );
@@ -149,10 +149,10 @@ class ExpressionEngine extends ExportController {
             'author_id' => 'InsertUserID',
             'title' => array('Column' => 'Name', 'Filter' => array($ex, 'HTMLDecoder')),
             'ip_address' => 'InsertIPAddress',
-            'body' => array('Column' => 'Body', 'Filter' => array($this, 'CleanBodyBrackets')),
-            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'GuessFormat')),
-            'topic_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'TimestampToDate')),
-            'topic_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'TimestampToDate')),
+            'body' => array('Column' => 'Body', 'Filter' => array($this, 'cleanBodyBrackets')),
+            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'guessFormat')),
+            'topic_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'topic_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
             'topic_edit_author' => 'UpdateUserID'
         );
         $ex->exportTable('Discussion', "
@@ -170,10 +170,10 @@ class ExpressionEngine extends ExportController {
             'topic_id' => 'DiscussionID',
             'author_id' => 'InsertUserID',
             'ip_address' => 'InsertIPAddress',
-            'body' => array('Column' => 'Body', 'Filter' => array($this, 'CleanBodyBrackets')),
-            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'GuessFormat')),
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'TimestampToDate')),
-            'post_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'TimestampToDate')),
+            'body' => array('Column' => 'Body', 'Filter' => array($this, 'cleanBodyBrackets')),
+            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'guessFormat')),
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'post_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
             'post_edit_author' => 'UpdateUserID'
         );
         $ex->exportTable('Comment', "
@@ -187,12 +187,12 @@ class ExpressionEngine extends ExportController {
         // Media.
         $media_Map = array(
             'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => 'MimeTypeFromExtension'),
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+            'extension' => array('Column' => 'Type', 'Filter' => 'mimeTypeFromExtension'),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             'filesize' => 'Size',
             'member_id' => 'InsertUserID',
-            'attachment_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'TimestampToDate')),
+            'attachment_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
             'filehash' => array('Column' => 'FileHash', 'Type' => 'varchar(100)')
         );
         $ex->exportTable('Media', "
@@ -221,7 +221,7 @@ class ExpressionEngine extends ExportController {
             'message_id' => 'ConversationID',
             'title2' => array('Column' => 'Subject', 'Type' => 'varchar(255)'),
             'sender_id' => 'InsertUserID',
-            'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'TimestampToDate')),
+            'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
         );
         $ex->exportTable('Conversation', "
          SELECT
@@ -249,7 +249,7 @@ class ExpressionEngine extends ExportController {
             'group_id' => 'ConversationID',
             'message_id' => 'MessageID',
             'message_body' => 'Body',
-            'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'TimestampToDate')),
+            'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
             'sender_id' => 'InsertUserID'
         );
         $ex->exportTable('ConversationMessage', "
@@ -405,16 +405,16 @@ class ExpressionEngine extends ExportController {
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_ExportTable
+     * @see ExportModel::_exportTable
      *
-     * @param string $Value Current value
-     * @param string $Field Current field
-     * @param array $Row Contents of the current record.
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function FilterThumbnailData($Value, $Field, $Row) {
-        if (strpos(MimeTypeFromExtension(strtolower($Row['extension'])), 'image/') === 0) {
-            return $Value;
+    public function filterThumbnailData($value, $field, $row) {
+        if (strpos(mimeTypeFromExtension(strtolower($row['extension'])), 'image/') === 0) {
+            return $value;
         } else {
             return null;
         }

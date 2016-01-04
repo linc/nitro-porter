@@ -163,7 +163,7 @@ left join :_categories c
         $comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
-            'post_text' => array('Column' => 'Body', 'Filter' => array($this, 'RemoveBBCodeUIDs')),
+            'post_text' => array('Column' => 'Body', 'Filter' => array($this, 'removeBBCodeUIDs')),
             'Format' => 'Format',
             'poster_id' => 'InsertUserID'
         );
@@ -283,7 +283,7 @@ join z_pmgroup g
         $conversationMessage_Map = array(
             'privmsgs_id' => 'MessageID',
             'groupid' => 'ConversationID',
-            'privmsgs_text' => array('Column' => 'Body', 'Filter' => array($this, 'RemoveBBCodeUIDs')),
+            'privmsgs_text' => array('Column' => 'Body', 'Filter' => array($this, 'removeBBCodeUIDs')),
             'privmsgs_from_userid' => 'InsertUserID'
         );
         $ex->exportTable('ConversationMessage',

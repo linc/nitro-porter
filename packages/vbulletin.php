@@ -905,8 +905,8 @@ class VBulletin extends ExportController {
             'filename' => 'Name',
             'filesize' => 'Size',
             'userid' => 'InsertUserID',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
+            'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
             'filethumb' => array(
                 'Column' => 'ThumbPath',
                 'Filter' => function($value, $field, $row) use ($instance) {
@@ -1086,7 +1086,7 @@ class VBulletin extends ExportController {
             'question' => 'Name',
             'threadid' => 'DiscussionID',
             'anonymous' => 'Anonymous',
-            'dateline' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'dateline' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'postuserid' => 'InsertUserID'
         );
         $ex->exportTable('Poll',
@@ -1104,7 +1104,7 @@ class VBulletin extends ExportController {
             'pollid' => 'PollID',
             'body' => 'Body', // calc
             'sort' => 'Sort', // calc
-            'dateline' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'dateline' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'postuserid' => 'InsertUserID'
         );
         $sql = "select
@@ -1143,7 +1143,7 @@ class VBulletin extends ExportController {
         $pollVote_Map = array(
             'userid' => 'UserID',
             'optionid' => 'PollOptionID',
-            'votedate' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
+            'votedate' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable('PollVote',
             "select pv.*, pollid * 1000 + voteoption as optionid

@@ -83,7 +83,7 @@ class Advancedforum extends ExportController {
 
         // Discussion.
         $discussion_Map = array(
-            'body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'TranslateFormatType'))
+            'body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'translateFormatType'))
         );
 
         $ex->exportTable('Discussion', "
@@ -101,7 +101,7 @@ class Advancedforum extends ExportController {
 
         // Comment.
         $comment_Map = array(
-            'comment_body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'TranslateFormatType'))
+            'comment_body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'translateFormatType'))
         );
         $ex->exportTable('Comment', "
             SELECT `c`.`cid` AS `CommentID`, `c`.`nid` AS `DiscussionID`, `c`.`uid` AS `InsertUserID`,

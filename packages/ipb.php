@@ -207,16 +207,16 @@ class IPB extends ExportController {
             $memberID => 'UserID',
             'members_display_name' => array('Column' => 'Name', 'Filter' => 'HtmlDecoder'),
             'email' => 'Email',
-            'joined' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'joined' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'firstvisit' => array(
                 'Column' => 'DateFirstVisit',
                 'SourceColumn' => 'joined',
-                'Filter' => 'TimestampToDate'
+                'Filter' => 'timestampToDate'
             ),
             'ip_address' => 'InsertIPAddress',
             'title' => 'Title',
             'time_offset' => 'HourOffset',
-            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'TimestampToDate'),
+            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate'),
             'member_banned' => 'Banned',
             'Photo' => 'Photo',
             'title' => 'Title',
@@ -419,10 +419,10 @@ class IPB extends ExportController {
             'description' => array('Column' => 'SubName', 'Type' => 'varchar(255)'),
             'forum_id' => 'CategoryID',
             'starter_id' => 'InsertUserID',
-            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'ip_address' => 'InsertIPAddress',
-            'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
-//          'last_post' => array('Column' => 'DateLastPost', 'Filter' => array($ex, 'TimestampToDate')),
+            'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
+//          'last_post' => array('Column' => 'DateLastPost', 'Filter' => array($ex, 'timestampToDate')),
             'posts' => 'CountComments',
             'views' => 'CountViews',
             'pinned' => 'Announce',
@@ -455,7 +455,7 @@ class IPB extends ExportController {
         $ex->query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
 
         $tagDiscussion_Map = array(
-            'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
         $sql = "select TagID, '0' as CategoryID, tag_meta_id as DiscussionID, t.tag_added
         from :_core_tags t
@@ -464,7 +464,7 @@ class IPB extends ExportController {
 
         $tag_Map = array(
             'FullName' => 'FullName',
-            'FullNameToName' => array('Column' => 'Name', 'Filter' => 'FormatUrl')
+            'FullNameToName' => array('Column' => 'Name', 'Filter' => 'formatUrl')
         );
         $sql = "select TagID, FullName, FullName as FullNameToName
         from z_tag zt";
@@ -476,8 +476,8 @@ class IPB extends ExportController {
             'topic_id' => 'DiscussionID',
             'author_id' => 'InsertUserID',
             'ip_address' => 'InsertIPAddress',
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
-            'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'post' => 'Body'
         );
         $sql = "
@@ -498,9 +498,9 @@ class IPB extends ExportController {
             'atype_mimetype' => 'Type',
             'attach_file' => 'Name',
             'attach_path' => 'Path',
-            'attach_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+            'attach_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             'attach_member_id' => 'InsertUserID',
             'attach_filesize' => 'Size',
             'ForeignID' => 'ForeignID',
@@ -680,7 +680,7 @@ EOT;
         $conversation_Map = array(
             'groupid' => 'ConversationID',
             'title2' => 'Subject',
-            'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'mt_from_id' => 'InsertUserID'
         );
         $sql = "select
@@ -697,7 +697,7 @@ join tmp_conversation tc
         $conversationMessage_Map = array(
             'msg_id' => 'MessageID',
             'groupid' => 'ConversationID',
-            'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'msg_post' => 'Body',
             'Format' => 'Format',
             'msg_author_id' => 'InsertUserID',
@@ -743,7 +743,7 @@ drop table tmp_group;");
         // Conversations.
         $conversation_Map = array(
             'mt_id' => 'ConversationID',
-            'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'mt_title' => 'Subject',
             'mt_starter_id' => 'InsertUserID'
         );
@@ -755,7 +755,7 @@ drop table tmp_group;");
         $conversationMessage_Map = array(
             'msg_id' => 'MessageID',
             'msg_topic_id' => 'ConversationID',
-            'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'msg_post' => 'Body',
             'Format' => 'Format',
             'msg_author_id' => 'InsertUserID',
@@ -808,7 +808,7 @@ drop table tmp_group;");
                         $this->ex->HTMLDecoderDb($table, $column, $PK);
                         unset($map[$column]['Filter']);
                         break;
-                    case 'TimestampToDate':
+                    case 'timestampToDate':
                         $selects[] = "from_unixtime($source) as {$column}_Date";
 
                         unset($map[$column]);
@@ -828,16 +828,16 @@ drop table tmp_group;");
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_ExportTable
+     * @see ExportModel::_exportTable
      *
-     * @param string $Value Current value
-     * @param string $Field Current field
-     * @param array $Row Contents of the current record.
+     * @param string $ralue Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function FilterThumbnailData($Value, $Field, $Row) {
-        if (strpos(strtolower($Row['atype_mimetype']), 'image/') === 0) {
-            return $Value;
+    public function filterThumbnailData($value, $field, $row) {
+        if (strpos(strtolower($row['atype_mimetype']), 'image/') === 0) {
+            return $value;
         } else {
             return null;
         }

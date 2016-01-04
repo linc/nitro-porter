@@ -104,12 +104,12 @@ class Kunena extends ExportController {
             'catid' => 'CategoryID',
             'userid' => 'InsertUserID',
             'subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-            'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'ip' => 'InsertIPAddress',
             'locked' => 'Closed',
             'hits' => 'CountViews',
             'modified_by' => 'UpdateUserID',
-            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
+            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'message' => 'Body',
             'Format' => 'Format'
         );
@@ -128,10 +128,10 @@ class Kunena extends ExportController {
             'id' => 'CommentID',
             'thread' => 'DiscussionID',
             'userid' => 'InsertUserID',
-            'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'ip' => 'InsertIPAddress',
             'modified_by' => 'UpdateUserID',
-            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
+            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'message' => 'Body',
             'Format' => 'Format'
         );
@@ -160,12 +160,12 @@ class Kunena extends ExportController {
             'mesid' => 'ForeignID',
             'userid' => 'InsertUserID',
             'size' => 'Size',
-            'path2' => array('Column' => 'Path', 'Filter' => 'UrlDecode'),
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+            'path2' => array('Column' => 'Path', 'Filter' => 'urlDecode'),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             'filetype' => 'Type',
-            'filename' => array('Column' => 'Name', 'Filter' => 'UrlDecode'),
-            'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'filename' => array('Column' => 'Name', 'Filter' => 'urlDecode'),
+            'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
         $ex->exportTable('Media', "
          select
@@ -186,16 +186,16 @@ class Kunena extends ExportController {
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_ExportTable
+     * @see ExportModel::_exportTable
      *
-     * @param string $Value Current value
-     * @param string $Field Current field
-     * @param array $Row Contents of the current record.
+     * @param string $ralue Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function FilterThumbnailData($Value, $Field, $Row) {
-        if (strpos(strtolower($Row['filetype']), 'image/') === 0) {
-            return $Value;
+    public function filterThumbnailData($value, $field, $row) {
+        if (strpos(strtolower($row['filetype']), 'image/') === 0) {
+            return $value;
         } else {
             return null;
         }

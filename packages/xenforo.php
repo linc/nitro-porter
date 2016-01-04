@@ -181,8 +181,8 @@ class Xenforo extends ExportController {
                 }
             ),
             'custom_title' => 'Title',
-            'register_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
-            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'TimestampToDate'),
+            'register_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate'),
             'is_admin' => 'Admin',
             'is_banned' => 'Banned',
             'password' => 'Password',
@@ -257,10 +257,10 @@ class Xenforo extends ExportController {
             'title' => 'Name',
             'view_count' => 'CountViews',
             'user_id' => 'InsertUserID',
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'sticky' => 'Announce',
             'discussion_open' => array('Column' => 'Closed', 'Filter' => 'NotFilter'),
-            'last_post_date' => array('Column' => 'DateLastComment', 'Filter' => 'TimestampToDate'),
+            'last_post_date' => array('Column' => 'DateLastComment', 'Filter' => 'timestampToDate'),
             'message' => 'Body',
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
@@ -283,7 +283,7 @@ class Xenforo extends ExportController {
             'post_id' => 'CommentID',
             'thread_id' => 'DiscussionID',
             'user_id' => 'InsertUserID',
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'message' => 'Body',
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
@@ -306,7 +306,7 @@ class Xenforo extends ExportController {
             'conversation_id' => 'ConversationID',
             'title' => 'Subject',
             'user_id' => 'InsertUserID',
-            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
+            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable('Conversation', "
          select *
@@ -315,7 +315,7 @@ class Xenforo extends ExportController {
         $conversationMessage_Map = array(
             'message_id' => 'MessageID',
             'conversation_id' => 'ConversationID',
-            'message_date' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'message_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'user_id' => 'InsertUserID',
             'message' => 'Body',
             'format' => 'Format',

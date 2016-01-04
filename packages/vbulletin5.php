@@ -196,7 +196,7 @@ class VBulletin5 extends VBulletin {
         // Permissions.
         $permissions_Map = array(
             'usergroupid' => 'RoleID',
-            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'SignInPermission')),
+            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
             'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
             'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
         );
@@ -497,21 +497,21 @@ class VBulletin5 extends VBulletin {
         $media_Map = array(
             'nodeid' => 'MediaID',
             'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'BuildMimeType')),
-            'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'BuildMediaPath')),
+            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
+            'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
             'ThumbPath2' => array(
                 'Column' => 'ThumbPath',
-                'Filter' => function($Value, $Field, $Row) use ($instance) {
-                    $filteredData = $this->FilterThumbnailData($Value, $Field, $Row);
+                'Filter' => function($value, $field, $row) use ($instance) {
+                    $filteredData = $this->filterThumbnailData($value, $field, $row);
 
                     if ($filteredData) {
-                        return $instance->BuildMediaPath($Value, $Field, $Row);
+                        return $instance->buildMediaPath($value, $field, $row);
                     } else {
                         return null;
                     }
                 }
             ),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             'width' => 'ImageWidth',
             'height' => 'ImageHeight',
             'filesize' => 'Size',
@@ -693,7 +693,7 @@ class VBulletin5 extends VBulletin {
             'title' => 'Name',
             'discussionid' => 'DiscussionID',
             'anonymous' => 'Anonymous',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'userid' => 'InsertUserId',
         );
         $ex->exportTable('Poll', "
@@ -718,7 +718,7 @@ class VBulletin5 extends VBulletin {
             'title' => 'Body',
             'format' => 'Format',
             'sort' => 'Sort',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'userid' => 'InsertUserID',
         );
         $sql = "
@@ -761,7 +761,7 @@ class VBulletin5 extends VBulletin {
         $pollVote_Map = array(
             'userid' => 'UserID',
             'polloptionid' => 'PollOptionID',
-            'votedate' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate')
+            'votedate' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable('PollVote', "
             select

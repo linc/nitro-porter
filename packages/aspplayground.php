@@ -47,12 +47,12 @@ class APG extends ExportController {
          from :_Members m;", $user_Map);
 
         // Role.
-        /*$Role_Map = array(
+        /*$role_Map = array(
             'GroupID' => 'RoleID',
             'Name' => 'Name');
         $ex->ExportTable('Role', "
            select *
-           from yaf_Group;", $Role_Map);
+           from yaf_Group;", $role_Map);
         */
 
         // UserRole.

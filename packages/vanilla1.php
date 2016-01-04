@@ -113,52 +113,52 @@ class Vanilla1 extends ExportController {
             'Permissions' => array(
                 'Column' => 'Vanilla.Comments.Add',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'FilterPermissions')
+                'Filter' => array($this, 'filterPermissions')
             ),
             'PERMISSION_START_DISCUSSION' => array(
                 'Column' => 'Vanilla.Discussions.Add',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_SINK_DISCUSSION' => array(
                 'Column' => 'Vanilla.Discussions.Sink',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_STICK_DISCUSSIONS' => array(
                 'Column' => 'Vanilla.Discussions.Announce',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_CLOSE_DISCUSSIONS' => array(
                 'Column' => 'Vanilla.Discussions.Close',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_EDIT_DISCUSSIONS' => array(
                 'Column' => 'Vanilla.Discussions.Edit',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_EDIT_COMMENTS' => array(
                 'Column' => 'Vanilla.Comments.Edit',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_APPROVE_APPLICANTS' => array(
                 'Column' => 'Garden.Moderation.Manage',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_EDIT_USERS' => array(
                 'Column' => 'Garden.Users.Edit',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             ),
             'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array(
                 'Column' => 'Garden.Settings.Manage',
                 'Type' => 'tinyint',
-                'Filter' => array($this, 'ForceBool')
+                'Filter' => array($this, 'forceBool')
             )
         );
         $ex->exportTable('Permission', "select * from :_Role", $permission_Map);
@@ -493,7 +493,7 @@ join z_pm pm
                 'Name' => 'Name',
                 'MimeType' => 'Type',
                 'Size' => 'Size',
-                'Path' => array('Column' => 'Path', 'Filter' => array($this, 'StripMediaPath')),
+                'Path' => array('Column' => 'Path', 'Filter' => array($this, 'stripMediaPath')),
                 'UserID' => 'InsertUserID',
                 'DateCreated' => 'DateInserted',
                 'CommentID' => 'ForeignID'

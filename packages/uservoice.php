@@ -54,7 +54,7 @@ class UserVoice extends ExportController {
 
         // Role.
         $role_Map = array(
-            'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'RoleIDConverter')),
+            'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'roleIDConverter')),
             'RoleName' => 'Name'
         );
         $ex->exportTable('Role', "
@@ -63,7 +63,7 @@ class UserVoice extends ExportController {
 
         // User Role.
         $userRole_Map = array(
-            'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'RoleIDConverter')),
+            'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'roleIDConverter')),
         );
         $ex->exportTable('UserRole', "
          select u.UserID, ur.RoleId

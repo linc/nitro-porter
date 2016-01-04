@@ -512,7 +512,7 @@ class ExportModel {
     /**
      *
      *
-     * @see _ExportTable()
+     * @see _exportTable()
      * @param $tableName
      * @param $query
      * @param array $mappings
@@ -585,7 +585,7 @@ class ExportModel {
     /**
      *
      *
-     * @see _ExportTableDB()
+     * @see _exportTableDB()
      * @param $tableName
      * @param $query
      * @param array $mappings

@@ -185,7 +185,7 @@ class PhpBB3 extends ExportController {
         $userMeta_Map = array(
             'user_id' => 'UserID',
             'name' => 'Name',
-            'user_sig' => array('Column' => 'Value', 'Filter' => array($this, 'RemoveBBCodeUIDs'))
+            'user_sig' => array('Column' => 'Value', 'Filter' => array($this, 'removeBBCodeUIDs'))
         );
         $ex->exportTable('UserMeta', "
          select user_id, 'Plugin.Signatures.Sig' as name, user_sig, user_sig_bbcode_uid as bbcode_uid
@@ -236,10 +236,10 @@ class PhpBB3 extends ExportController {
         $comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
-            'post_text' => array('Column' => 'Body', 'Filter' => array($this, 'RemoveBBCodeUIDs')),
+            'post_text' => array('Column' => 'Body', 'Filter' => array($this, 'removeBBCodeUIDs')),
             'Format' => 'Format',
             'poster_id' => 'InsertUserID',
-            'poster_ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'ForceIP4'),
+            'poster_ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'forceIP4'),
             'post_edit_user' => 'UpdateUserID'
         );
         $ex->exportTable('Comment', "select p.*,
@@ -353,7 +353,7 @@ set pm.groupid = g.groupid;");
             'poll_id' => 'PollID',
             'poll_title' => 'Name',
             'topic_id' => 'DiscussionID',
-            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'topic_poster' => 'InsertUserID',
             'anonymous' => 'Anonymous'
         );
@@ -373,7 +373,7 @@ set pm.groupid = g.groupid;");
             'poll_option_text' => 'Body',
             'format' => 'Format',
             'poll_option_total' => 'CountVotes',
-            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'topic_poster' => 'InsertUserID'
         );
         $ex->exportTable('PollOption', "
@@ -418,7 +418,7 @@ join z_pmgroup g
         $conversationMessage_Map = array(
             'msg_id' => 'MessageID',
             'groupid' => 'ConversationID',
-            'message_text' => array('Column' => 'Body', 'Filter' => array($this, 'RemoveBBCodeUIDs')),
+            'message_text' => array('Column' => 'Body', 'Filter' => array($this, 'removeBBCodeUIDs')),
             'author_id' => 'InsertUserID'
         );
         $ex->exportTable('ConversationMessage',
@@ -454,8 +454,8 @@ join z_pmgroup g
         $media_Map = array(
             'attach_id' => 'MediaID',
             'real_filename' => 'Name',
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'FilterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'FilterThumbnailData')),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             'post_id' => 'InsertUserID',
             'mimetype' => 'Type',
             'filesize' => 'Size',
@@ -488,7 +488,7 @@ join :_topics t
             'user_id' => array('Column' => 'InsertUserID', 'Type' => 'int'),
             'reportee_id' => array('Column' => 'UserID', 'Type' => 'int'),
             'log_ip' => array('Column' => 'InsertIPAddress', 'Type' => 'varchar(15)'),
-            'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => 'TimestampToDate'),
+            'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => 'timestampToDate'),
             'log_operation' => array(
                 'Column' => 'Type',
                 'Type' => 'varchar(10)',
@@ -564,16 +564,16 @@ join :_topics t
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_ExportTable
+     * @see ExportModel::_exportTable
      *
-     * @param string $Value Current value
-     * @param string $Field Current field
-     * @param array $Row Contents of the current record.
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function FilterThumbnailData($Value, $Field, $Row) {
-        if (strpos(strtolower($Row['mimetype']), 'image/') === 0) {
-            return $Value;
+    public function filterThumbnailData($value, $field, $row) {
+        if (strpos(strtolower($row['mimetype']), 'image/') === 0) {
+            return $value;
         } else {
             return null;
         }

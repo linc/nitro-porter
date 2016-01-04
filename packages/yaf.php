@@ -49,7 +49,7 @@ class Yaf extends ExportController {
             'RankID' => array('Column' => 'RankID', 'Type' => 'int'),
             'Points' => array('Column' => 'Points', 'Type' => 'int'),
             'LastActivity' => 'DateLastActive',
-            'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'ConvertPassword')),
+            'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'convertPassword')),
             'HashMethod' => 'HashMethod'
         );
         $ex->exportTable('User', "
@@ -168,7 +168,7 @@ class Yaf extends ExportController {
             'Message' => 'Body',
             'Format' => 'Format',
             'IP' => 'InsertIPAddress',
-            'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'CleanDate')),
+            'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'cleanDate')),
             'EditedBy' => 'UpdateUserID'
         );
         $ex->exportTable('Comment', "
