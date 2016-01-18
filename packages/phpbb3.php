@@ -506,7 +506,7 @@ join :_topics t
                 'Filter' => function ($value, $field, $row) use (&$corruptedRecords) {
                     $unserializedValue = @unserialize($value);
 
-                    if (!$unserializedValue) {
+                    if (!$unserializedValue || !is_array($unserializedValue)) {
                         $corruptedRecords[] = $row['log_id'];
                         return '';
                     }
