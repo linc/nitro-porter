@@ -225,6 +225,9 @@ function getOptFromArgv($shortCodes, $longCodes) {
 
     $options = array();
 
+    $shortCodesArray = array();
+    $longCodesArray = array();
+
     $matches = array();
     if (strlen($shortCodes) > 1 && preg_match_all('#([a-z\d])(:{0,2})#i', $shortCodes, $matches, PREG_SET_ORDER) != false) {
         foreach($matches as $match) {
