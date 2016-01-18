@@ -12,65 +12,83 @@ $globalOptions = array(
         'Req' => true,
         'Sx' => ':',
         'Field' => 'type',
-        'Short' => 't'
+        'Short' => 't',
     ),
-    'dbname' => array('Database name.', 'Req' => true, 'Sx' => ':', 'Field' => 'dbname', 'Short' => 'n'),
-    'user' => array('Database connection username.', 'Req' => true, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
+    'dbname' => array(
+        'Database name.',
+        'Req' => true,
+        'Sx' => ':',
+        'Field' => 'dbname',
+        'Short' => 'n',
+    ),
+    'user' => array(
+        'Database connection username.',
+        'Req' => true,
+        'Sx' => ':',
+        'Field' => 'dbuser',
+        'Short' => 'u',
+    ),
     'password' => array(
         'Database connection password.',
         'Sx' => '::',
         'Field' => 'dbpass',
         'Short' => 'p',
-        'Default' => ''
+        'Default' => '',
     ),
     'host' => array(
         'IP address or hostname to connect to. Default is 127.0.0.1.',
         'Sx' => ':',
         'Field' => 'dbhost',
         'Short' => 'o',
-        'Default' => '127.0.0.1'
+        'Default' => '127.0.0.1',
     ),
     'prefix' => array(
         'The table prefix in the database.',
         'Field' => 'prefix',
         'Sx' => ':',
+        'Short' => 'x',
         'Default' => 'PACKAGE_DEFAULT',
-        'Short' => 'x'
-    ),
-    'emptyprefix' => array(
-        'Force the package table prefix to be empty.',
-        'Field' => 'emptyprefix',
-        'Sx' => '',
-        'Default' => null
     ),
     'avatars' => array(
         'Enables exporting avatars from the database if supported.',
         'Sx' => '::',
         'Field' => 'avatars',
         'Short' => 'a',
-        'Default' => ''
+        'Default' => false,
     ),
     'cdn' => array(
         'Prefix to be applied to file paths.',
         'Field' => 'cdn',
         'Sx' => ':',
         'Short' => 'c',
-        'Default' => ''
+        'Default' => '',
     ),
     'files' => array(
         'Enables exporting attachments from database if supported.',
         'Sx' => '::',
         'Short' => 'f',
-        'Default' => ''
+        'Default' => false,
     ),
-    'destpath' => array('Define destination path for the export file.', 'Sx' => '::', 'Short' => 'd', 'Default' => ''),
-    'spawn' => array('Create a new package with this name.', 'Sx' => '::', 'Short' => 's', 'Default' => ''),
-    'help' => array('Show this help, duh.', 'Short' => 'h'),
+    'destpath' => array(
+        'Define destination path for the export file.',
+        'Sx' => '::',
+        'Short' => 'd',
+        'Default' => '.',
+    ),
+    'spawn' => array(
+        'Create a new package with this name.',
+        'Sx' => '::',
+        'Short' => 's',
+        'Default' => '',
+    ),
+    'help' => array(
+        'Show this help, duh.',
+        'Short' => 'h',
+    ),
     'tables' => array(
         'Selective export, limited to specified tables, if provided',
         'Sx' => ':',
         'Short' => 's',
-        'Default' => ''
     )
 );
 
@@ -143,11 +161,10 @@ function parseCommandLine($options = null, $files = null) {
     }
 
     $commandOptions = getAllCommandLineOptions();
+
     list($shortCodes, $longCodes) = getOptCodes($commandOptions);
 
-//   print_r($longCodes);
-
-    $opts = getopt($shortCodes, $longCodes);
+    $opts = getOptFromArgv($shortCodes, $longCodes);
 
     if (isset($opts['help']) || isset($opts['h'])) {
         writeCommandLineHelp();
@@ -191,12 +208,79 @@ function parseCommandLine($options = null, $files = null) {
     return $opts;
 }
 
+/**
+ * Basically does the same thing than getopt() with one minor difference.
+ *
+ * The difference is that an empty option (-o="" || -o= || --option="" || --option=)
+ * will show up in the result as if the the option is set with an empty value.
+ *
+ * @see getopt
+ *
+ * @param $shortCodes
+ * @param $longCodes
+ * @return array
+ */
+function getOptFromArgv($shortCodes, $longCodes) {
+    global $argv;
+
+    $options = array();
+
+    $matches = array();
+    if (strlen($shortCodes) > 1 && preg_match_all('#([a-z\d])(:{0,2})#i', $shortCodes, $matches, PREG_SET_ORDER) != false) {
+        foreach($matches as $match) {
+            $shortCodesArray[$match[1]] = strlen($match[2]);
+        }
+    }
+
+    foreach($longCodes as $longCode) {
+        $explodedLongCode = explode(':', $longCode);
+        $longCodesArray[$explodedLongCode[0]] = count($explodedLongCode) - 1;
+    }
+
+    $argvCount = count($argv);
+    for ($i = 1; $i < $argvCount; $i++) {
+        $currentArg = $argv[$i];
+
+        $matches = array();
+        if (preg_match('#^(-{1,2})([a-z\d]+)(?:=(.*))?$#i', $currentArg, $matches) === 1) {
+
+            $optionType = $matches[1];
+            $optionName = $matches[2];
+
+            $optionValue = isset($matches[3]) ? $matches[3] : null;
+
+            if ($optionType === '-') {
+                $argType = 'short';
+            } else {
+                $argType = 'long';
+            }
+
+            if (!isset(${$argType.'CodesArray'}[$optionName])) {
+                continue;
+            }
+
+            $optionValueRequirement = ${$argType.'CodesArray'}[$optionName];
+
+            if ($optionValueRequirement === 0) { // 0 = No value permitted
+                if ($optionValue !== null) {
+                    continue;
+                }
+            } elseif ($optionValueRequirement === 1) { // 1 = Value required
+                if ($optionValue === null) {
+                    continue;
+                }
+            }
+
+            $options[$optionName] = $optionValue;
+        }
+    }
+
+    return $options;
+}
+
 function validateCommandLine($values, $options) {
     $errors = array();
     $result = array();
-
-//   print_r($values);
-//   print_r($options);
 
     $type = v('type', $values, v('t', $values));
 
@@ -204,22 +288,20 @@ function validateCommandLine($values, $options) {
         $req = v('Req', $row);
         $short = v('Short', $row);
 
-        $sx = v('Sx', $row);
         $types = v('Types', $row);
 
         if ($types && !in_array($type, $types)) {
-//         echo "Skipping $longCode\n";
             continue;
         }
 
-        if (isset($values[$longCode])) {
+        if (array_key_exists($longCode, $values)) {
             $value = $values[$longCode];
-            if (!$value) {
+            if ($value === null) {
                 $value = true;
             }
-        } elseif ($short && isset($values[$short])) {
+        } elseif ($short && array_key_exists($short, $values)) {
             $value = $values[$short];
-            if (!$value) {
+            if ($value === null) {
                 $value = true;
             }
         } elseif (isset($row['Default'])) {
@@ -228,7 +310,7 @@ function validateCommandLine($values, $options) {
             $value = null;
         }
 
-        if (!$value) {
+        if ($value === null) {
             $default = v('Default', $row, null);
             if ($default === null) {
                 if ($req) {
