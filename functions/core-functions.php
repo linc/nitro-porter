@@ -1,4 +1,9 @@
 <?php
+/**
+ * @copyright 2009-2016 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
 
 /**
  * Error handler.
@@ -6,11 +11,11 @@
  * @param $errno
  * @param $errstr
  */
-function ErrorHandler($errno, $errstr, $errFile, $errLine) {
-    $ReportingLevel = error_reporting();
+function errorHandler($errno, $errstr, $errFile, $errLine) {
+    $reportingLevel = error_reporting();
 
     // If error reporting is turned off, possibly by @.  Bail out.
-    if (!$ReportingLevel) {
+    if (!$reportingLevel) {
         return;
     }
 
@@ -26,34 +31,34 @@ function ErrorHandler($errno, $errstr, $errFile, $errLine) {
 /**
  * Debug echo tool.
  *
- * @param $Var
- * @param string $Prefix
+ * @param $var
+ * @param string $prefix
  */
-function decho($Var, $Prefix = 'debug') {
-    echo '<pre><b>' . $Prefix . '</b>: ' . htmlspecialchars(print_r($Var, true)) . '</pre>';
+function decho($var, $prefix = 'debug') {
+    echo '<pre><b>' . $prefix . '</b>: ' . htmlspecialchars(print_r($var, true)) . '</pre>';
 }
 
 /**
  * Write out a value passed as bytes to its most readable format.
  */
-function FormatMemorySize($Bytes, $Precision = 1) {
-    $Units = array('B', 'K', 'M', 'G', 'T');
+function formatMemorySize($bytes, $precision = 1) {
+    $units = array('B', 'K', 'M', 'G', 'T');
 
-    $Bytes = max((int)$Bytes, 0);
-    $Pow = floor(($Bytes ? log($Bytes) : 0) / log(1024));
-    $Pow = min($Pow, count($Units) - 1);
+    $bytes = max((int)$bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
 
-    $Bytes /= pow(1024, $Pow);
+    $bytes /= pow(1024, $pow);
 
-    $Result = round($Bytes, $Precision) . $Units[$Pow];
+    $result = round($bytes, $precision) . $units[$pow];
 
-    return $Result;
+    return $result;
 }
 
 /**
  * Test filesystem permissions.
  */
-function TestWrite() {
+function testWrite() {
     // Create file
     $file = 'vanilla2test.txt';
     @touch($file);
@@ -69,255 +74,255 @@ function TestWrite() {
 /**
  *
  *
- * @param $Key
- * @param null $Collection
- * @param string $Default
+ * @param $key
+ * @param null $collection
+ * @param string $default
  * @return string
  */
-function GetValue($Key, $Collection = null, $Default = '') {
-    if (!$Collection) {
-        $Collection = $_POST;
+function getValue($key, $collection = null, $default = '') {
+    if (!$collection) {
+        $collection = $_POST;
     }
-    if (array_key_exists($Key, $Collection)) {
-        return $Collection[$Key];
+    if (array_key_exists($key, $collection)) {
+        return $collection[$key];
     }
 
-    return $Default;
+    return $default;
 }
 
 /**
  * Create a thumbnail from an image file.
  *
- * @param $Path
- * @param $ThumbPath
- * @param int $Height
- * @param int $Width
+ * @param $path
+ * @param $thumbPath
+ * @param int $height
+ * @param int $width
  * @return bool
  */
-function GenerateThumbnail($Path, $ThumbPath, $Height = 50, $Width = 50) {
-    list($WidthSource, $HeightSource, $Type) = getimagesize($Path);
+function generateThumbnail($path, $thumbPath, $height = 50, $width = 50) {
+    list($widthSource, $heightSource, $type) = getimagesize($path);
 
     $XCoord = 0;
     $YCoord = 0;
-    $HeightDiff = $HeightSource - $Height;
-    $WidthDiff = $WidthSource - $Width;
-    if ($WidthDiff > $HeightDiff) {
+    $heightDiff = $heightSource - $height;
+    $widthDiff = $widthSource - $width;
+    if ($widthDiff > $heightDiff) {
         // Crop the original width down
-        $NewWidthSource = round(($Width * $HeightSource) / $Height);
+        $newWidthSource = round(($width * $heightSource) / $height);
 
         // And set the original x position to the cropped start point.
-        $XCoord = round(($WidthSource - $NewWidthSource) / 2);
-        $WidthSource = $NewWidthSource;
+        $XCoord = round(($widthSource - $newWidthSource) / 2);
+        $widthSource = $newWidthSource;
     } else {
         // Crop the original height down
-        $NewHeightSource = round(($Height * $WidthSource) / $Width);
+        $newHeightSource = round(($height * $widthSource) / $width);
 
         // And set the original y position to the cropped start point.
-        $YCoord = round(($HeightSource - $NewHeightSource) / 2);
-        $HeightSource = $NewHeightSource;
+        $YCoord = round(($heightSource - $newHeightSource) / 2);
+        $heightSource = $newHeightSource;
     }
 
     try {
-        switch ($Type) {
+        switch ($type) {
             case 1:
-                $SourceImage = imagecreatefromgif($Path);
+                $sourceImage = imagecreatefromgif($path);
                 break;
             case 2:
-                $SourceImage = imagecreatefromjpeg($Path);
+                $sourceImage = imagecreatefromjpeg($path);
                 break;
             case 3:
-                $SourceImage = imagecreatefrompng($Path);
-                imagealphablending($SourceImage, true);
+                $sourceImage = imagecreatefrompng($path);
+                imagealphablending($sourceImage, true);
                 break;
         }
 
-        $TargetImage = imagecreatetruecolor($Width, $Height);
-        imagecopyresampled($TargetImage, $SourceImage, 0, 0, $XCoord, $YCoord, $Width, $Height, $WidthSource,
-            $HeightSource);
-        imagedestroy($SourceImage);
+        $targetImage = imagecreatetruecolor($width, $height);
+        imagecopyresampled($targetImage, $sourceImage, 0, 0, $XCoord, $YCoord, $width, $height, $widthSource,
+            $heightSource);
+        imagedestroy($sourceImage);
 
-        switch ($Type) {
+        switch ($type) {
             case 1:
-                imagegif($TargetImage, $ThumbPath);
+                imagegif($targetImage, $thumbPath);
                 break;
             case 2:
-                imagejpeg($TargetImage, $ThumbPath);
+                imagejpeg($targetImage, $thumbPath);
                 break;
             case 3:
-                imagepng($TargetImage, $ThumbPath);
+                imagepng($targetImage, $thumbPath);
                 break;
         }
-        imagedestroy($TargetImage);
+        imagedestroy($targetImage);
     } catch (Exception $e) {
-        echo "Could not generate a thumnail for " . $TargetImage;
+        echo "Could not generate a thumnail for " . $targetImage;
     }
 }
 
 /**
  *
  *
- * @param $Sql
+ * @param $sql
  * @return array
  */
-function ParseSelect($Sql) {
-    if (!preg_match('`^\s*select\s+(.+)\s+from\s+(.+)\s*`is', $Sql, $Matches)) {
-        trigger_error("Could not parse '$Sql'", E_USER_ERROR);
+function parseSelect($sql) {
+    if (!preg_match('`^\s*select\s+(.+)\s+from\s+(.+)\s*`is', $sql, $matches)) {
+        trigger_error("Could not parse '$sql'", E_USER_ERROR);
     }
-    $Result = array('Select' => array(), 'From' => '');
-    $Select = $Matches[1];
-    $From = $Matches[2];
+    $result = array('Select' => array(), 'From' => '');
+    $select = $matches[1];
+    $from = $matches[2];
 
     // Replace commas within function calls.
-    $Select = preg_replace_callback('`\(([^)]+?)\)`', '_ReplaceCommas', $Select);
-//   echo($Select);
-    $Parts = explode(',', $Select);
+    $select = preg_replace_callback('`\(([^)]+?)\)`', '_ReplaceCommas', $select);
+//   echo($select);
+    $parts = explode(',', $select);
 
-    $Selects = array();
-    foreach ($Parts as $Expr) {
-        $Expr = trim($Expr);
-        $Expr = str_replace('!COMMA!', ',', $Expr);
+    $selects = array();
+    foreach ($parts as $expr) {
+        $expr = trim($expr);
+        $expr = str_replace('!COMMA!', ',', $expr);
 
         // Check for the star match.
-        if (preg_match('`(\w+)\.\*`', $Expr, $Matches)) {
-            $Result['Star'] = $Matches[1];
+        if (preg_match('`(\w+)\.\*`', $expr, $matches)) {
+            $result['Star'] = $matches[1];
         }
 
         // Check for an alias.
-        if (preg_match('`^(.*)\sas\s(.*)$`is', $Expr, $Matches)) {
-//         decho($Matches, 'as');
-            $Alias = trim($Matches[2], '`');
-            $Selects[$Alias] = $Matches[1];
-        } elseif (preg_match('`^[a-z_]?[a-z0-9_]*$`i', $Expr)) {
+        if (preg_match('`^(.*)\sas\s(.*)$`is', $expr, $matches)) {
+//         decho($matches, 'as');
+            $alias = trim($matches[2], '`');
+            $selects[$alias] = $matches[1];
+        } elseif (preg_match('`^[a-z_]?[a-z0-9_]*$`i', $expr)) {
             // We are just selecting one column.
-            $Selects[$Expr] = $Expr;
-        } elseif (preg_match('`^[a-z_]?[a-z0-9_]*\.([a-z_]?[a-z0-9_]*)$`i', $Expr, $Matches)) {
+            $selects[$expr] = $expr;
+        } elseif (preg_match('`^[a-z_]?[a-z0-9_]*\.([a-z_]?[a-z0-9_]*)$`i', $expr, $matches)) {
             // We are looking at an alias'd select.
-            $Alias = $Matches[1];
-            $Selects[$Alias] = $Expr;
+            $alias = $matches[1];
+            $selects[$alias] = $expr;
         } else {
-            $Selects[] = $Expr;
+            $selects[] = $expr;
         }
     }
 
-    $Result['Select'] = $Selects;
-    $Result['From'] = $From;
-    $Result['Source'] = $Sql;
+    $result['Select'] = $selects;
+    $result['From'] = $from;
+    $result['Source'] = $sql;
 
-    return $Result;
+    return $result;
 }
 
 /**
  * Replace commas with a temporary placeholder.
  *
- * @param $Matches
+ * @param $matches
  * @return mixed
  */
-function _ReplaceCommas($Matches) {
-    return str_replace(',', '!COMMA!', $Matches[0]);
+function _replaceCommas($matches) {
+    return str_replace(',', '!COMMA!', $matches[0]);
 }
 
 /**
  *
- * @param type $Sql
- * @param array $Columns An array in the form Alias => Column or just Column
+ * @param type $sql
+ * @param array $columns An array in the form Alias => Column or just Column
  * @return type
  */
-function ReplaceSelect($Sql, $Columns) {
-    if (is_string($Sql)) {
-        $Parsed = ParseSelect($Sql);
+function replaceSelect($sql, $columns) {
+    if (is_string($sql)) {
+        $parsed = parseSelect($sql);
     } else {
-        $Parsed = $Sql;
+        $parsed = $sql;
     }
 
     // Set a prefix for new selects.
-    if (isset($Parsed['Star'])) {
-        $Px = $Parsed['Star'] . '.';
+    if (isset($parsed['Star'])) {
+        $px = $parsed['Star'] . '.';
     } else {
-        $Px = '';
+        $px = '';
     }
 
-    $Select = $Parsed['Select'];
+    $select = $parsed['Select'];
 
-    $NewSelect = array();
-    foreach ($Columns as $Index => $Value) {
-        if (is_numeric($Index)) {
-            $Alias = $Value;
+    $newSelect = array();
+    foreach ($columns as $index => $value) {
+        if (is_numeric($index)) {
+            $alias = $value;
         } else {
-            $Alias = $Index;
+            $alias = $index;
         }
 
-        if (isset($Select[$Value])) {
-            $NewSelect[$Alias] = $Select[$Value];
+        if (isset($select[$value])) {
+            $newSelect[$alias] = $select[$value];
         } else {
-            $NewSelect[$Alias] = $Px . $Value;
+            $newSelect[$alias] = $px . $value;
         }
     }
-    $Parsed['Select'] = $NewSelect;
+    $parsed['Select'] = $newSelect;
 
-    if (is_string($Sql)) {
-        return SelectString($Parsed);
+    if (is_string($sql)) {
+        return selectString($parsed);
     } else {
-        return $Parsed;
+        return $parsed;
     }
 }
 
 /**
  *
  *
- * @param $Parsed
+ * @param $parsed
  * @return string
  */
-function SelectString($Parsed) {
+function selectString($parsed) {
     // Build the select.
-    $Parts = $Parsed['Select'];
-    $Selects = array();
-    foreach ($Parts as $Alias => $Expr) {
-        if (is_numeric($Alias) || $Alias == $Expr) {
-            $Selects[] = $Expr;
+    $parts = $parsed['Select'];
+    $selects = array();
+    foreach ($parts as $alias => $expr) {
+        if (is_numeric($alias) || $alias == $expr) {
+            $selects[] = $expr;
         } else {
-            $Selects[] = "$Expr as `$Alias`";
+            $selects[] = "$expr as `$alias`";
         }
     }
-    $Select = implode(",\n  ", $Selects);
+    $select = implode(",\n  ", $selects);
 
-    $From = $Parsed['From'];
+    $from = $parsed['From'];
 
-    $Result = "select\n  $Select\nfrom $From";
+    $result = "select\n  $select\nfrom $from";
 
-    return $Result;
+    return $result;
 }
 
 /**
  *
  *
- * @param $Paths
- * @param string $Delimiter
+ * @param $paths
+ * @param string $delimiter
  * @return mixed
  */
-function CombinePaths($Paths, $Delimiter = '/') {
-    if (is_array($Paths)) {
-        $MungedPath = implode($Delimiter, $Paths);
-        $MungedPath = str_replace(array($Delimiter . $Delimiter . $Delimiter, $Delimiter . $Delimiter),
-            array($Delimiter, $Delimiter), $MungedPath);
+function combinePaths($paths, $delimiter = '/') {
+    if (is_array($paths)) {
+        $mungedPath = implode($delimiter, $paths);
+        $mungedPath = str_replace(array($delimiter . $delimiter . $delimiter, $delimiter . $delimiter),
+            array($delimiter, $delimiter), $mungedPath);
 
-        return str_replace(array('http:/', 'https:/'), array('http://', 'https://'), $MungedPath);
+        return str_replace(array('http:/', 'https:/'), array('http://', 'https://'), $mungedPath);
     } else {
-        return $Paths;
+        return $paths;
     }
 }
 
 /**
  * Take the template package, add our new name, and make a new package from it.
  *
- * @param string $Name
+ * @param string $name
  */
-function SpawnPackage($Name) {
+function spawnPackage($name) {
 
-    if ($Name && strlen($Name) > 2) {
-        $Name = preg_replace('/[^A-Za-z0-9]/', '', $Name);
-        $Template = file_get_contents(__DIR__ . '/../tpl_package.txt');
-        file_put_contents(__DIR__ . '/../packages/' . $Name . '.php', str_replace('__NAME__', $Name, $Template));
-        echo "Created new package: " . $Name . "\n";
+    if ($name && strlen($name) > 2) {
+        $name = preg_replace('/[^A-Za-z0-9]/', '', $name);
+        $template = file_get_contents(__DIR__ . '/../tpl_package.txt');
+        file_put_contents(__DIR__ . '/../packages/' . $name . '.php', str_replace('__NAME__', $name, $template));
+        echo "Created new package: " . $name . "\n";
     } else {
         echo "Invalid name: 2+ alphanumeric characters only.";
     }

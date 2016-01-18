@@ -1,16 +1,16 @@
 <?php
 /* Written by John Crenshaw for Priacta, Inc. */
-
 /**
  * SMF exporter tool
  *
- * @copyright Priacta, Inc. 2010
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @author John Crenshaw
  * @package VanillaPorter
  */
 
-$Supported['smf'] = array('name' => 'Simple Machines 1', 'prefix' => 'smf_'); // SMF
-$Supported['smf']['features'] = array(
+$supported['smf'] = array('name' => 'Simple Machines 1', 'prefix' => 'smf_'); // SMF
+$supported['smf']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -25,7 +25,7 @@ $Supported['smf']['features'] = array(
 class SMF extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $SourceTables = array(
+    protected $sourceTables = array(
         'boards' => array(),
         'messages' => array(),
         'personal_messages' => array(),
@@ -37,20 +37,20 @@ class SMF extends ExportController {
 
     /**
      * Forum-specific export format.
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('messages');
-        if ($CharacterSet) {
-            $Ex->CharacterSet = $CharacterSet;
+        $characterSet = $ex->getCharacterSet('messages');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
         }
 
         // Begin
-        $Ex->BeginExport('', 'SMF 1.*', array('HashMethod' => 'Django'));
+        $ex->beginExport('', 'SMF 1.*', array('HashMethod' => 'Django'));
 
         // Users
-        $User_Map = array(
+        $user_Map = array(
             'ID_MEMBER' => 'UserID',
             'memberName' => 'Name',
             'password' => 'Password',
@@ -64,7 +64,7 @@ class SMF extends ExportController {
             'DateLastActive' => 'DateLastActive',
             'DateUpdated' => 'DateUpdated'
         );
-        $Ex->ExportTable('User', "
+        $ex->exportTable('User', "
          select m.*,
             from_unixtime(dateRegistered) as DateInserted,
             from_unixtime(dateRegistered) as DateFirstVisit,
@@ -73,28 +73,28 @@ class SMF extends ExportController {
             concat('sha1$', lower(memberName), '$', passwd) as `password`,
             if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
          from :_members m
-         left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ", $User_Map);
+         left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ", $user_Map);
 
         // Roles
-        $Role_Map = array(
+        $role_Map = array(
             'ID_GROUP' => 'RoleID',
             'groupName' => 'Name'
         );
-        $Ex->ExportTable('Role', "select * from :_membergroups", $Role_Map);
+        $ex->exportTable('Role', "select * from :_membergroups", $role_Map);
 
         // UserRoles
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'ID_MEMBER' => 'UserID',
             'ID_GROUP' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', "select * from :_members", $UserRole_Map);
+        $ex->exportTable('UserRole', "select * from :_members", $userRole_Map);
 
         // Categories
-        $Category_Map = array(
-            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity'))
+        $category_Map = array(
+            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
 
-        $Ex->ExportTable('Category',
+        $ex->exportTable('Category',
             "
       select
         (`ID_CAT` + 1000000) as `CategoryID`,
@@ -115,12 +115,12 @@ class SMF extends ExportController {
         b.`boardOrder` as `Sort`
       from :_boards b
 
-     ", $Category_Map);
+     ", $category_Map);
 
         // Discussions
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'ID_TOPIC' => 'DiscussionID',
-            'subject' => array('Column' => 'Name', 'Filter' => array($this, 'DecodeNumericEntity')),
+            'subject' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
             //,'Filter'=>'bb2html'),
             'body' => array('Column' => 'Body'),
             //,'Filter'=>'bb2html'),
@@ -138,7 +138,7 @@ class SMF extends ExportController {
             'LastCommentUserID' => 'LastCommentUserID',
             'ID_LAST_MSG' => 'LastCommentID'
         );
-        $Ex->ExportTable('Discussion', "
+        $ex->exportTable('Discussion', "
       select t.*,
          (t.numReplies + 1) as CountComments,
          m.subject,
@@ -156,10 +156,10 @@ class SMF extends ExportController {
 
        -- where t.spam = 0 AND m.spam = 0;
 
-       ", $Discussion_Map);
+       ", $discussion_Map);
 
         // Comments
-        $Comment_Map = array(
+        $comment_Map = array(
             'ID_MSG' => 'CommentID',
             'ID_TOPIC' => 'DiscussionID',
             'Format' => 'Format',
@@ -167,43 +167,55 @@ class SMF extends ExportController {
             'ID_MEMBER' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
-        $Ex->ExportTable('Comment',
+        $ex->exportTable('Comment',
             "select m.*,
          from_unixtime(m.posterTime) AS DateInserted,
          'BBCode' as Format
        from :_messages m
        join :_topics t on m.ID_TOPIC = t.ID_TOPIC
        where m.ID_MSG <> t.ID_FIRST_MSG;
-       ", $Comment_Map);
+       ", $comment_Map);
 
         // Media
-        $Media_Map = array(
+        $media_Map = array(
             'ID_ATTACH' => 'MediaID',
             'ID_MSG' => 'ForeignID',
             'size' => 'Size',
             'height' => 'ImageHeight',
-            'width' => 'ImageWidth'
+            'width' => 'ImageWidth',
+            'extract_mimetype' => array(
+                'Column' => 'Type',
+                'Filter' => function($value, $field, $row) {
+                    return $this->getMimeTypeFromFileName($row['Path']);
+                }
+            ),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $Ex->ExportTable('Media',
-            "select a.*,
-         concat('attachments/', a.filename) as Path,
-         concat('attachments/', b.filename) as ThumbPath,
-         if(t.ID_TOPIC is null, 'Comment', 'Discussion') as ForeignTable
-       from :_attachments a
-       left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
-       left join :_topics t on a.ID_MSG = t.ID_FIRST_MSG
-       where a.attachmentType = 0
-         and a.ID_MSG > 0;", $Media_Map);
+        $ex->exportTable('Media', "
+            select
+                a.*,
+                concat('attachments/', a.filename) as Path,
+                IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
+                null as extract_mimetype,
+                b.width as thumb_width,
+                if(t.ID_TOPIC is null, 'Comment', 'Discussion') as ForeignTable
+            from :_attachments a
+                left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+                left join :_topics t on a.ID_MSG = t.ID_FIRST_MSG
+            where a.attachmentType = 0
+                and a.ID_MSG > 0
+        ", $media_Map);
 
         // Conversations need a bit more conversion so execute a series of queries for that.
-        $Ex->Query('create table :_smfpmto (
+        $ex->query('create table :_smfpmto (
   id int,
   to_id int,
   deleted tinyint,
   primary key(id, to_id)
 )');
 
-        $Ex->Query('insert :_smfpmto (
+        $ex->query('insert :_smfpmto (
   id,
   to_id,
   deleted
@@ -214,7 +226,7 @@ select
   deletedBySender
 from :_personal_messages');
 
-        $Ex->Query('insert ignore :_smfpmto (
+        $ex->query('insert ignore :_smfpmto (
   id,
   to_id,
   deleted
@@ -225,13 +237,13 @@ select
   deleted
 from :_pm_recipients');
 
-        $Ex->Query('create table :_smfpmto2 (
+        $ex->query('create table :_smfpmto2 (
   id int,
   to_ids varchar(255),
   primary key(id)
 )');
 
-        $Ex->Query('insert :_smfpmto2 (
+        $ex->query('insert :_smfpmto2 (
   id,
   to_ids
 )
@@ -241,7 +253,7 @@ select
 from :_smfpmto
 group by id');
 
-        $Ex->Query('create table :_smfpm (
+        $ex->query('create table :_smfpm (
   id int,
   group_id int,
   subject varchar(200),
@@ -249,10 +261,10 @@ group by id');
   from_id int,
   to_ids varchar(255))');
 
-        $Ex->Query('create index :_idx_smfpm2 on :_smfpm (subject2, from_id)');
-        $Ex->Query('create index :_idx_smfpmg on :_smfpm (group_id)');
+        $ex->query('create index :_idx_smfpm2 on :_smfpm (subject2, from_id)');
+        $ex->query('create index :_idx_smfpmg on :_smfpm (group_id)');
 
-        $Ex->Query('insert :_smfpm (
+        $ex->query('insert :_smfpm (
   id,
   subject,
   subject2,
@@ -269,33 +281,33 @@ from :_personal_messages pm
 join :_smfpmto2 to2
   on pm.ID_PM = to2.id');
 
-        $Ex->Query('create table :_smfgroups (
+        $ex->query('create table :_smfgroups (
   id int primary key,
   subject2 varchar(200),
   to_ids varchar(255)
 )');
 
-        $Ex->Query('insert :_smfgroups
+        $ex->query('insert :_smfgroups
 select
   min(id) as group_id, subject2, to_ids
 from :_smfpm
 group by subject2, to_ids');
 
-        $Ex->Query('create index :_idx_smfgroups on :_smfgroups (subject2, to_ids)');
+        $ex->query('create index :_idx_smfgroups on :_smfgroups (subject2, to_ids)');
 
-        $Ex->Query('update :_smfpm pm
+        $ex->query('update :_smfpm pm
 join :_smfgroups g
   on pm.subject2 = g.subject2 and pm.to_ids = g.to_ids
 set pm.group_id = g.id');
 
         // Conversation.
-        $Conv_Map = array(
+        $conv_Map = array(
             'id' => 'ConversationID',
             'from_id' => 'InsertUserID',
             'DateInserted' => 'DateInserted',
             'subject2' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
         );
-        $Ex->ExportTable('Conversation',
+        $ex->exportTable('Conversation',
             "select
   pm.group_id,
   pm.from_id,
@@ -304,17 +316,17 @@ set pm.group_id = g.id');
 from :_smfpm pm
 join :_personal_messages pm2
   on pm.id = pm2.ID_PM
-where pm.id = pm.group_id", $Conv_Map);
+where pm.id = pm.group_id", $conv_Map);
 
         // ConversationMessage.
-        $ConvMessage_Map = array(
+        $convMessage_Map = array(
             'id' => 'MessageID',
             'group_id' => 'ConversationID',
             'DateInserted' => 'DateInserted',
             'from_id' => 'InsertUserID',
             'body' => array('Column' => 'Body')
         );
-        $Ex->ExportTable('ConversationMessage',
+        $ex->exportTable('ConversationMessage',
             "select
   pm.id,
   pm.group_id,
@@ -324,15 +336,15 @@ where pm.id = pm.group_id", $Conv_Map);
   case when pm.subject = pm.subject2 then concat(pm.subject, '\n\n', pm2.body) else pm2.body end as body
 from :_smfpm pm
 join :_personal_messages pm2
-  on pm.id = pm2.ID_PM", $ConvMessage_Map);
+  on pm.id = pm2.ID_PM", $convMessage_Map);
 
         // UserConversation.
-        $UserConv_Map = array(
+        $userConv_Map = array(
             'to_id' => 'UserID',
             'group_id' => 'ConversationID',
             'deleted' => 'Deleted'
         );
-        $Ex->ExportTable('UserConversation',
+        $ex->exportTable('UserConversation',
 
             "select
    pm.group_id,
@@ -340,29 +352,29 @@ join :_personal_messages pm2
    t.deleted
  from :_smfpmto t
  join :_smfpm pm
-   on t.id = pm.group_id", $UserConv_Map);
+   on t.id = pm.group_id", $userConv_Map);
 
-        $Ex->Query('drop table :_smfpm');
-        $Ex->Query('drop table :_smfpmto');
-        $Ex->Query('drop table :_smfpmto2');
-        $Ex->Query('drop table :_smfgroups');
+        $ex->query('drop table :_smfpm');
+        $ex->query('drop table :_smfpmto');
+        $ex->query('drop table :_smfpmto2');
+        $ex->query('drop table :_smfgroups');
 
         // End
-        $Ex->EndExport();
-//      echo implode("\n\n", $Ex->Queries);
+        $ex->endExport();
+//      echo implode("\n\n", $ex->Queries);
     }
 
-    function DecodeNumericEntity($Text) {
+    public function decodeNumericEntity($text) {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
 
-            return mb_decode_numericentity($Text, $convmap, 'UTF-8');
+            return mb_decode_numericentity($text, $convmap, 'UTF-8');
         } else {
-            return $Text;
+            return $text;
         }
     }
 
-    function _pcreEntityToUtf($matches) {
+    public function _pcreEntityToUtf($matches) {
         $char = intval(is_array($matches) ? $matches[1] : $matches);
 
         if ($char < 0x80) {
@@ -380,6 +392,44 @@ join :_personal_messages pm2
             }
         }
     }
+
+    /**
+     * Determine mime type from file name
+     *
+     * @param string $fileName File name (Can be full path or file name only)
+     * @return null|string Mime type if it could be determined or null.
+     */
+    public function getMimeTypeFromFileName($fileName) {
+        $mimeType = null;
+
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        if ($extension) {
+            $mimeType = MimeTypeFromExtension('.'.strtolower($extension));
+        }
+
+        return $mimeType;
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_exportTable
+     *
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function filterThumbnailData($value, $field, $row) {
+        $mimeType = $this->getMimeTypeFromFileName($row['Path']);
+        if ($mimeType && strpos($mimeType, 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
+        }
+    }
 }
 
+// Closing PHP tag required. (make.php)
 ?>
