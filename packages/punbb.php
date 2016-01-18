@@ -1,17 +1,17 @@
 <?php
 /**
- * Punbb exporter tool
+ * PunBB exporter tool
  *
- * @copyright Vanilla Forums Inc. 2010
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 
-$Supported['punbb'] = array('name' => 'PunBB 1', 'prefix' => 'punbb_');
-$Supported['punbb']['CommandLine'] = array(
+$supported['punbb'] = array('name' => 'PunBB 1', 'prefix' => 'punbb_');
+$supported['punbb']['CommandLine'] = array(
     'avatarpath' => array('Full path of forum avatars.', 'Sx' => '::')
 );
-$Supported['punbb']['features'] = array(
+$supported['punbb']['features'] = array(
     'Avatars' => 1,
     'Comments' => 1,
     'Discussions' => 1,
@@ -25,49 +25,49 @@ $Supported['punbb']['features'] = array(
     'Passwords' => 1
 );
 
-class Punbb extends ExportController {
+class PunBB extends ExportController {
 
     /** @var bool Path to avatar images */
-    protected $AvatarPath = false;
+    protected $avatarPath = false;
 
     /** @var string CDN path prefix */
     protected $cdn = '';
 
     /** @var array Required tables => columns */
-    public $SourceTables = array();
+    public $sourceTables = array();
 
     /**
      * Forum-specific export format
      *
      * @todo Project file size / export time and possibly break into multiple files
      *
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      *
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($ex) {
 
-        $CharacterSet = $Ex->GetCharacterSet('posts');
-        if ($CharacterSet) {
-            $Ex->CharacterSet = $CharacterSet;
+        $characterSet = $ex->getCharacterSet('posts');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
         }
 
-        $Ex->BeginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
+        $ex->beginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
 
-        $this->cdn = $this->Param('cdn', '');
+        $this->cdn = $this->param('cdn', '');
 
-        if ($AvatarPath = $this->Param('avatarpath', false)) {
-            if (!$AvatarPath = realpath($AvatarPath)) {
-                echo "Unable to access path to avatars: $AvatarPath\n";
+        if ($avatarPath = $this->param('avatarpath', false)) {
+            if (!$avatarPath = realpath($avatarPath)) {
+                echo "Unable to access path to avatars: $avatarPath\n";
                 exit(1);
             }
 
-            $this->AvatarPath = $AvatarPath;
+            $this->avatarPath = $avatarPath;
         }
-        unset($AvatarPath);
+        unset($avatarPath);
 
         // User.
-        $User_Map = array(
-            'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'GetAvatarByID')),
+        $user_Map = array(
+            'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'getAvatarByID')),
             'id' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
@@ -75,24 +75,24 @@ class Punbb extends ExportController {
             'registration_ip' => 'InsertIPAddress',
             'PasswordHash' => 'Password'
         );
-        $Ex->ExportTable('User', "
+        $ex->exportTable('User', "
          SELECT
              u.*, u.id AS AvatarID,
              concat(u.password, '$', u.salt) AS PasswordHash,
              from_unixtime(registered) AS DateInserted,
              from_unixtime(last_visit) AS DateLastActive
          FROM :_users u
-         WHERE group_id <> 2", $User_Map);
+         WHERE group_id <> 2", $user_Map);
 
         // Role.
-        $Role_Map = array(
+        $role_Map = array(
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $Ex->ExportTable('Role', "SELECT * FROM :_groups", $Role_Map);
+        $ex->exportTable('Role', "SELECT * FROM :_groups", $role_Map);
 
         // Permission.
-        $Permission_Map = array(
+        $permission_Map = array(
             'g_id' => 'RoleID',
             'g_modertor' => 'Garden.Moderation.Manage',
             'g_mod_edit_users' => 'Garden.Users.Edit',
@@ -105,28 +105,28 @@ class Punbb extends ExportController {
             'g_pun_attachment_allow_upload' => 'Plugins.Attachments.Upload.Allow',
 
         );
-        $Permission_Map = $Ex->FixPermissionColumns($Permission_Map);
-        $Ex->ExportTable('Permission', "
+        $permission_Map = $ex->fixPermissionColumns($permission_Map);
+        $ex->exportTable('Permission', "
       SELECT
          g.*,
          g_post_replies AS `Garden.SignIn.Allow`,
          g_mod_edit_users AS `Garden.Users.Add`,
          CASE WHEN g_title = 'Administrators' THEN 'All' ELSE NULL END AS _Permissions
-      FROM :_groups g", $Permission_Map);
+      FROM :_groups g", $permission_Map);
 
         // UserRole.
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole',
+        $ex->exportTable('UserRole',
             "SELECT
             CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
             u.group_id
-          FROM :_users u", $UserRole_Map);
+          FROM :_users u", $userRole_Map);
 
         // Signatures.
-        $Ex->ExportTable('UserMeta', "
+        $ex->exportTable('UserMeta', "
          SELECT
          id,
          'Plugin.Signatures.Sig' AS Name,
@@ -136,14 +136,14 @@ class Punbb extends ExportController {
 
 
         // Category.
-        $Category_Map = array(
+        $category_Map = array(
             'id' => 'CategoryID',
             'forum_name' => 'Name',
             'forum_desc' => 'Description',
             'disp_position' => 'Sort',
             'parent_id' => 'ParentCategoryID'
         );
-        $Ex->ExportTable('Category', "
+        $ex->exportTable('Category', "
       SELECT
         id,
         forum_name,
@@ -159,10 +159,10 @@ class Punbb extends ExportController {
         '',
         disp_position,
         NULL
-      FROM :_categories", $Category_Map);
+      FROM :_categories", $category_Map);
 
         // Discussion.
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'id' => 'DiscussionID',
             'poster_id' => 'InsertUserID',
             'poster_ip' => 'InsertIPAddress',
@@ -173,7 +173,7 @@ class Punbb extends ExportController {
             'message' => 'Body'
 
         );
-        $Ex->ExportTable('Discussion', "
+        $ex->exportTable('Discussion', "
       SELECT t.*,
         from_unixtime(p.posted) AS DateInserted,
         p.poster_id,
@@ -186,17 +186,17 @@ class Punbb extends ExportController {
       LEFT JOIN :_posts p
         ON t.first_post_id = p.id
       LEFT JOIN :_users eu
-        ON eu.username = p.edited_by", $Discussion_Map);
+        ON eu.username = p.edited_by", $discussion_Map);
 
         // Comment.
-        $Comment_Map = array(
+        $comment_Map = array(
             'id' => 'CommentID',
             'topic_id' => 'DiscussionID',
             'poster_id' => 'InsertUserID',
             'poster_ip' => 'InsertIPAddress',
             'message' => 'Body'
         );
-        $Ex->ExportTable('Comment', "
+        $ex->exportTable('Comment', "
             SELECT p.*,
         'BBCode' AS Format,
         from_unixtime(p.posted) AS DateInserted,
@@ -207,76 +207,80 @@ class Punbb extends ExportController {
         ON t.id = p.topic_id
       LEFT JOIN :_users eu
         ON eu.username = p.edited_by
-      WHERE p.id <> t.first_post_id;", $Comment_Map);
+      WHERE p.id <> t.first_post_id;", $comment_Map);
 
-        if ($Ex->Exists('tags')) {
+        if ($ex->exists('tags')) {
             // Tag.
-            $Tag_Map = array(
+            $tag_Map = array(
                 'id' => 'TagID',
                 'tag' => 'Name'
             );
-            $Ex->ExportTable('Tag', "SELECT * FROM :_tags", $Tag_Map);
+            $ex->exportTable('Tag', "SELECT * FROM :_tags", $tag_Map);
 
             // TagDisucssion.
-            $TagDiscussionMap = array(
+            $tagDiscussionMap = array(
                 'topic_id' => 'DiscussionID',
                 'tag_id' => 'TagID'
             );
-            $Ex->ExportTable('TagDiscussion', "SELECT * FROM :_topic_tags", $TagDiscussionMap);
+            $ex->exportTable('TagDiscussion', "SELECT * FROM :_topic_tags", $tagDiscussionMap);
         }
 
-        if ($Ex->Exists('attach_files')) {
+        if ($ex->exists('attach_files')) {
             // Media.
-            $Media_Map = array(
+            $media_Map = array(
                 'id' => 'MediaID',
                 'filename' => 'Name',
                 'file_mime_type' => 'Type',
                 'size' => 'Size',
-                'owner_id' => 'InsertUserID'
+                'owner_id' => 'InsertUserID',
+                'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+                'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
-            $Ex->ExportTable('Media', "
-          SELECT f.*,
-             concat({$this->cdn}, 'FileUpload/', f.file_path) AS Path,
-             from_unixtime(f.uploaded_at) AS DateInserted,
-             CASE WHEN post_id IS NULL THEN 'Discussion' ELSE 'Comment' END AS ForeignTable,
-             coalesce(post_id, topic_id) AS ForieignID
-          FROM :_attach_files f", $Media_Map);
+            $ex->exportTable('Media', "
+                select f.*,
+                    concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
+                    concat({$this->cdn}, 'FileUpload/', f.file_path) as thumb_path,
+                    128 as thumb_width,
+                    from_unixtime(f.uploaded_at) as DateInserted,
+                    case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
+                    coalesce(post_id, topic_id) as ForieignID
+                from :_attach_files f
+            ", $media_Map);
         }
-
 
         // End
-        $Ex->EndExport();
+        $ex->endExport();
     }
 
-    function StripMediaPath($AbsPath) {
-        if (($Pos = strpos($AbsPath, '/uploads/')) !== false) {
-            return substr($AbsPath, $Pos + 9);
+    public function stripMediaPath($absPath) {
+        if (($pos = strpos($absPath, '/uploads/')) !== false) {
+            return substr($absPath, $pos + 9);
         }
 
-        return $AbsPath;
+        return $absPath;
     }
 
-    function FilterPermissions($Permissions, $ColumnName, &$Row) {
-        $Permissions2 = unserialize($Permissions);
+    public function filterPermissions($permissions, $columnName, &$row) {
+        $permissions2 = unserialize($permissions);
 
-        foreach ($Permissions2 as $Name => $Value) {
-            if (is_null($Value)) {
-                $Permissions2[$Name] = false;
+        foreach ($permissions2 as $name => $value) {
+            if (is_null($value)) {
+                $permissions2[$name] = false;
             }
         }
 
-        if (is_array($Permissions2)) {
-            $Row = array_merge($Row, $Permissions2);
-            $this->Ex->CurrentRow = $Row;
+        if (is_array($permissions2)) {
+            $row = array_merge($row, $permissions2);
+            $this->ex->currentRow = $row;
 
-            return isset($Permissions2['PERMISSION_ADD_COMMENTS']) ? $Permissions2['PERMISSION_ADD_COMMENTS'] : false;
+            return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
         }
 
         return false;
     }
 
-    function ForceBool($Value) {
-        if ($Value) {
+    public function forceBool($value) {
+        if ($value) {
             return true;
         }
 
@@ -286,41 +290,61 @@ class Punbb extends ExportController {
     /**
      * Take the user ID, avatar type value and generate a path to the avatar file.
      *
-     * @param $Value Row field value.
-     * @param $Field Name of the current field.
-     * @param $Row All of the current row values.
+     * @param $value Row field value.
+     * @param $field Name of the current field.
+     * @param $row All of the current row values.
      *
      * @return null|string
      */
-    function GetAvatarByID($Value, $Field, $Row) {
-        if (!$this->AvatarPath) {
+    public function getAvatarByID($value, $field, $row) {
+        if (!$this->avatarPath) {
             return null;
         }
 
-        switch ($Row['avatar']) {
+        switch ($row['avatar']) {
             case 1:
-                $Extension = 'gif';
+                $extension = 'gif';
                 break;
             case 2:
-                $Extension = 'jpg';
+                $extension = 'jpg';
                 break;
             case 3:
-                $Extension = 'png';
+                $extension = 'png';
                 break;
             default:
                 return null;
         }
 
-        $AvatarFilename = "{$this->AvatarPath}/{$Value}.$Extension";
+        $avatarFilename = "{$this->avatarPath}/{$value}.$extension";
 
-        if (file_exists($AvatarFilename)) {
-            $AvatarBasename = basename($AvatarFilename);
+        if (file_exists($avatarFilename)) {
+            $avatarBasename = basename($avatarFilename);
 
-            return "{$this->cdn}punbb/avatars/$AvatarBasename";
+            return "{$this->cdn}punbb/avatars/$avatarBasename";
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_exportTable
+     *
+     * @param string $value Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function filterThumbnailData($value, $field, $row) {
+        if (strpos(strtolower($row['file_mime_type']), 'image/') === 0) {
+            return $value;
         } else {
             return null;
         }
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>
