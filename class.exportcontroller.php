@@ -44,9 +44,13 @@ abstract class ExportController {
         $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
 
         if (isset($this->dbInfo['prefix'])) {
-            $this->ex->prefix = $this->dbInfo['prefix'];
-        } elseif ($hasDefaultPrefix) {
-            $this->ex->prefix = $supported[$lcClassName]['prefix'];
+            if ($this->dbInfo['prefix'] === 'PACKAGE_DEFAULT' && $hasDefaultPrefix) {
+                $this->ex->prefix = $supported[$lcClassName]['prefix'];
+            } else {
+                $this->ex->prefix = $this->dbInfo['prefix'];
+            }
+        } else {
+            $this->ex->prefix = '';
         }
         $this->ex->destination = $this->param('dest', 'file');
         $this->ex->destDb = $this->param('destdb', null);
@@ -131,7 +135,7 @@ abstract class ExportController {
             'dbpass' => $_POST['dbpass'],
             'dbname' => $_POST['dbname'],
             'type' => $_POST['type'],
-            'prefix' => isset($_POST['prefix']) ? preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null,
+            'prefix' => !isset($_POST['emptyprefix']) ? preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null,
         );
     }
 
