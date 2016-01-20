@@ -48,13 +48,16 @@ function getFile($filename, $endPhp = false) {
     $contents = file_get_contents($path);
 
     // MAKESKIP
-    $contents = preg_replace('/MAKESKIPSTART(.*)MAKESKIPEND/s', '[EXPORTERS]', $contents);
+    $contents = preg_replace('#MAKESKIPSTART(.*)MAKESKIPEND#s', '[EXPORTERS]', $contents);
 
     // Inline any stylesheet includes.
-    $contents = preg_replace_callback('/<link.*?href=[\'"](.*?)[\'"].*?\/>/i', 'ReplaceStyleCallback', $contents);
+    $contents = preg_replace_callback('#<link.+?href=[\'"](.*?)[\'"].*?/>#i', 'replaceStyleCallback', $contents);
+
+    // Inline any script includes.
+    $contents = preg_replace_callback('#<script.+?src=[\'"](.*?)[\'"].*?></script>#i', 'replaceScriptCallback', $contents);
 
     // Inline any includes.
-    $contents = preg_replace_callback('/include_once [\'"](.*?)[\'"]\;/', 'ReplaceIncludeCallback', $contents);
+    $contents = preg_replace_callback('/include_once [\'"](.*?)[\'"]\;/', 'replaceIncludeCallback', $contents);
 
     // End and begin the php context.
     if ($endPhp) {
@@ -76,6 +79,14 @@ function replaceStyleCallback($matches) {
     $path = $matches[1];
     $contents = file_get_contents(dirname(__FILE__) . '/' . $path);
     $result = "<!-- Contents included from $path -->\n<style>\n" . $contents . "\n</style>";
+
+    return $result;
+}
+
+function replaceScriptCallback($matches) {
+    $path = $matches[1];
+    $contents = file_get_contents(dirname(__FILE__) . '/' . $path);
+    $result = "<!-- Contents included from $path -->\n<script>\n" . $contents . "\n</script>";
 
     return $result;
 }
