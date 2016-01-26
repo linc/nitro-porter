@@ -73,7 +73,7 @@ $globalOptions = array(
         'Define destination path for the export file.',
         'Sx' => '::',
         'Short' => 'd',
-        'Default' => '.',
+        'Default' => './',
     ),
     'spawn' => array(
         'Create a new package with this name.',
