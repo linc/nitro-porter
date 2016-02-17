@@ -43,7 +43,7 @@ abstract class ExportController {
 
         // That's not sexy but it gets the job done :D
         $lcClassName = strtolower(get_class($this));
-        $hasDefaultPrefix = array_key_exists('prefix', $supported[$lcClassName]);
+        $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
 
         if (isset($this->dbInfo['prefix'])) {
             if ($this->dbInfo['prefix'] === 'PACKAGE_DEFAULT') {
