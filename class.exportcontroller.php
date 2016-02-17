@@ -39,19 +39,22 @@ abstract class ExportController {
             $this->dbInfo['dbname']
         );
 
+        $this->ex->prefix = '';
+
         // That's not sexy but it gets the job done :D
         $lcClassName = strtolower(get_class($this));
-        $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
+        $hasDefaultPrefix = array_key_exists('prefix', $supported[$lcClassName]);
 
         if (isset($this->dbInfo['prefix'])) {
-            if ($this->dbInfo['prefix'] === 'PACKAGE_DEFAULT' && $hasDefaultPrefix) {
-                $this->ex->prefix = $supported[$lcClassName]['prefix'];
+            if ($this->dbInfo['prefix'] === 'PACKAGE_DEFAULT') {
+                if ($hasDefaultPrefix) {
+                    $this->ex->prefix = $supported[$lcClassName]['prefix'];
+                }
             } else {
                 $this->ex->prefix = $this->dbInfo['prefix'];
             }
-        } else {
-            $this->ex->prefix = '';
         }
+
         $this->ex->destination = $this->param('dest', 'file');
         $this->ex->destDb = $this->param('destdb', null);
         $this->ex->testMode = $this->param('test', false);
