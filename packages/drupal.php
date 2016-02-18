@@ -178,7 +178,6 @@ class Drupal extends ExportController {
             'uid' => 'UserID',
             'thread_id' => 'ConversationID'
         );
-        // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
         $ex->exportTable('UserConversation', "
             select
                 pmi.uid,
