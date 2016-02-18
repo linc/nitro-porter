@@ -15,6 +15,7 @@ $supported['drupal']['features'] = array(
     'Categories' => 1,
     'Roles' => 1,
     'Avatars' => 1,
+    'PrivateMessages' => 1,
     'Signatures' => 1,
     'Passwords' => 1,
 );
@@ -136,6 +137,61 @@ class Drupal extends ExportController {
          left join node_revisions r
             on r.nid = n.nid
          where n.type = 'forum_reply'", $comment_Map);
+
+        // Conversations.
+        $conversation_Map = array(
+            'thread_id' => 'ConversationID',
+            'author' => 'InsertUserID',
+            'title' => 'Subject',
+        );
+        $ex->exportTable('Conversation', "
+            select
+                pmi.thread_id,
+                pmm.author,
+                pmm.subject as title,
+                FROM_UNIXTIME(pmm.timestamp) as DateInserted
+            from pm_message as pmm
+                inner join pm_index as pmi on pmi.mid = pmm.mid and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
+            group by pmi.thread_id
+        ;", $conversation_Map);
+
+        // Conversation Messages.
+        $conversationMessage_Map = array(
+            'mid' => 'MessageID',
+            'thread_id' => 'ConversationID',
+            'author' => 'InsertUserID'
+        );
+        $ex->exportTable('ConversationMessage', "
+            select
+                pmm.mid,
+                pmi.thread_id,
+                pmm.author,
+                FROM_UNIXTIME(pmm.timestamp) as DateInserted,
+                pmm.body as Body,
+                'Html' as Format
+            from pm_message as pmm
+                inner join pm_index as pmi on pmi.mid = pmm.mid AND pmi.deleted = 0 and pmi.uid > 0
+        ;", $conversationMessage_Map);
+
+        // User Conversation.
+        $userConversation_Map = array(
+            'uid' => 'UserID',
+            'thread_id' => 'ConversationID'
+        );
+        // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
+        $ex->exportTable('UserConversation', "
+            select
+                pmi.uid,
+                pmi.thread_id,
+                0 as Deleted
+            from pm_index as pmi
+                inner join pm_message as pmm ON pmm.mid = pmi.mid
+            where pmi.deleted = 0
+                and pmi.uid > 0
+            group by
+                pmi.uid,
+                pmi.thread_id
+        ;", $userConversation_Map);
 
         // Comments.
         /*$comment_Map = array(
