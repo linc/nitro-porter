@@ -154,7 +154,7 @@ class VBulletin5 extends VBulletin {
                 left join :_userban ub
                     on u.userid = ub.userid
                     and ub.liftdate <= now()
-         ;", $user_Map);  // ":_" will be replace by database prefix
+         ;", $user_Map);  // ":_" will be replaced by database prefix
         //ipdata - contains all IP records for user actions: view,visit,register,logon,logoff
 
 
@@ -304,7 +304,7 @@ class VBulletin5 extends VBulletin {
             exit("Missing node 'Forum'");
         }
 
-        // Go thru the category list 6 times to build a (up to) 6-deep hierarchy
+        // Go through the category list 6 times to build a (up to) 6-deep hierarchy
         $categoryIDs[] = $homeID;
         for ($i = 0; $i < 6; $i++) {
             foreach ($channels as $channel) {
@@ -485,9 +485,26 @@ class VBulletin5 extends VBulletin {
                 left join :_text t on t.nodeid = n.nodeid
             where c.class = 'Text'
                 and n.showpublished = 1
-                and parentid not in (" . implode(',', $categoryIDs) . ")
+                and parentid not in (".implode(',', $categoryIDs).")
+                and parentid in (select t2.nodeid from :_text as t2) /* exclude inner comments */
         ;", $comment_Map);
 
+        // Detect inner comments
+        $result = $ex->query("
+            select
+                n.nodeid
+            from :_node as n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+                left join :_text t on t.nodeid = n.nodeid
+            where
+                parentid not in (".implode(',', $categoryIDs).")
+                and parentid in (select t2.nodeid from :_text as t2)
+            limit 1
+        ", true);
+
+        if (mysql_num_rows($result)) {
+            $ex->comment('*** Inner comments detected but not imported.');
+        }
 
         /// Drafts
         // autosavetext table
