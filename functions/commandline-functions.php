@@ -1,301 +1,397 @@
 <?php
+/**
+ * @copyright 2009-2016 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @package VanillaPorter
+ */
 
-$GlobalOptions = array(
+$globalOptions = array(
     // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s
     'type' => array(
         'Type of forum we\'re freeing you from.',
         'Req' => true,
         'Sx' => ':',
         'Field' => 'type',
-        'Short' => 't'
+        'Short' => 't',
     ),
-    'dbname' => array('Database name.', 'Req' => true, 'Sx' => ':', 'Field' => 'dbname', 'Short' => 'n'),
-    'user' => array('Database connection username.', 'Req' => true, 'Sx' => ':', 'Field' => 'dbuser', 'Short' => 'u'),
+    'dbname' => array(
+        'Database name.',
+        'Req' => true,
+        'Sx' => ':',
+        'Field' => 'dbname',
+        'Short' => 'n',
+    ),
+    'user' => array(
+        'Database connection username.',
+        'Req' => true,
+        'Sx' => ':',
+        'Field' => 'dbuser',
+        'Short' => 'u',
+    ),
     'password' => array(
         'Database connection password.',
         'Sx' => '::',
         'Field' => 'dbpass',
         'Short' => 'p',
-        'Default' => ''
+        'Default' => '',
     ),
     'host' => array(
         'IP address or hostname to connect to. Default is 127.0.0.1.',
         'Sx' => ':',
         'Field' => 'dbhost',
         'Short' => 'o',
-        'Default' => '127.0.0.1'
+        'Default' => '127.0.0.1',
     ),
     'prefix' => array(
         'The table prefix in the database.',
         'Field' => 'prefix',
         'Sx' => ':',
-        'Default' => '',
-        'Short' => 'x'
+        'Short' => 'x',
+        'Default' => 'PACKAGE_DEFAULT',
     ),
     'avatars' => array(
         'Enables exporting avatars from the database if supported.',
         'Sx' => '::',
         'Field' => 'avatars',
         'Short' => 'a',
-        'Default' => ''
+        'Default' => false,
     ),
     'cdn' => array(
         'Prefix to be applied to file paths.',
         'Field' => 'cdn',
         'Sx' => ':',
         'Short' => 'c',
-        'Default' => ''
+        'Default' => '',
     ),
     'files' => array(
         'Enables exporting attachments from database if supported.',
         'Sx' => '::',
         'Short' => 'f',
-        'Default' => ''
+        'Default' => false,
     ),
-    'destpath' => array('Define destination path for the export file.', 'Sx' => '::', 'Short' => 'd', 'Default' => ''),
-    'spawn' => array('Create a new package with this name.', 'Sx' => '::', 'Short' => 's', 'Default' => ''),
-    'help' => array('Show this help, duh.', 'Short' => 'h'),
+    'destpath' => array(
+        'Define destination path for the export file.',
+        'Sx' => '::',
+        'Short' => 'd',
+        'Default' => './',
+    ),
+    'spawn' => array(
+        'Create a new package with this name.',
+        'Sx' => '::',
+        'Short' => 's',
+        'Default' => '',
+    ),
+    'help' => array(
+        'Show this help, duh.',
+        'Short' => 'h',
+    ),
     'tables' => array(
         'Selective export, limited to specified tables, if provided',
         'Sx' => ':',
         'Short' => 's',
-        'Default' => ''
     )
 );
 
 // Go through all of the supported types and add them to the type description.
-if (isset($Supported)) {
-    $GlobalOptions['type']['Values'] = array_keys($Supported);
+if (isset($supported)) {
+    $globalOptions['type']['Values'] = array_keys($supported);
 }
 
-function GetAllCommandLineOptions($Sections = false) {
-    global $GlobalOptions, $Supported;
+function getAllCommandLineOptions($sections = false) {
+    global $globalOptions, $supported;
 
-    if ($Sections) {
-        $Result['Global Options'] = $GlobalOptions;
+    if ($sections) {
+        $result['Global Options'] = $globalOptions;
     } else {
-        $Result = $GlobalOptions;
+        $result = $globalOptions;
     }
 
-    foreach ($Supported as $Type => $Options) {
-        $CommandLine = V('CommandLine', $Options);
-        if (!$CommandLine) {
+    foreach ($supported as $type => $options) {
+        $commandLine = v('CommandLine', $options);
+        if (!$commandLine) {
             continue;
         }
 
-        if ($Sections) {
-            $Result[$Options['name']] = $CommandLine;
+        if ($sections) {
+            $result[$options['name']] = $commandLine;
         } else {
             // We need to add the types to each command line option for validation purposes.
-            foreach ($CommandLine as $LongCode => $Row) {
-                if (isset($Result[$LongCode])) {
-                    $Result[$LongCode]['Types'][] = $Type;
+            foreach ($commandLine as $longCode => $row) {
+                if (isset($result[$longCode])) {
+                    $result[$longCode]['Types'][] = $type;
                 } else {
-                    $Row['Types'] = array($Type);
-                    $Result[$LongCode] = $Row;
+                    $row['Types'] = array($type);
+                    $result[$longCode] = $row;
                 }
             }
         }
     }
 
-    return $Result;
+    return $result;
 }
 
-function GetOptCodes($Options) {
-    $ShortCodes = '';
-    $LongCodes = array();
+function getOptCodes($options) {
+    $shortCodes = '';
+    $longCodes = array();
 
-    foreach ($Options as $LongCode => $Row) {
-        $Sx = V('Sx', $Row, '');
-        $Short = V('Short', $Row, '');
+    foreach ($options as $longCode => $row) {
+        $sx = v('Sx', $row, '');
+        $short = v('Short', $row, '');
 
-        if ($Short) {
-            $ShortCodes .= $Short . $Sx;
+        if ($short) {
+            $shortCodes .= $short . $sx;
         }
-        $LongCodes[] = $LongCode . $Sx;
+        $longCodes[] = $longCode . $sx;
     }
 
-    return array($ShortCodes, $LongCodes);
+    return array($shortCodes, $longCodes);
 }
 
-function parseCommandLine($Options = null, $Files = null) {
-    global $GlobalOptions, $Supported, $argv;
+function parseCommandLine($options = null, $files = null) {
+    global $globalOptions, $supported, $argv;
 
-    if (isset($Options)) {
-        $GlobalOptions = $Options;
+    if (isset($options)) {
+        $globalOptions = $options;
     }
-    if (!isset($GlobalOptions)) {
-        $GlobalOptions = array();
+    if (!isset($globalOptions)) {
+        $globalOptions = array();
     }
-    if (!isset($Supported)) {
-        $Supported = array();
+    if (!isset($supported)) {
+        $supported = array();
     }
 
-    $CommandOptions = GetAllCommandLineOptions();
-    list($ShortCodes, $LongCodes) = GetOptCodes($CommandOptions);
+    $commandOptions = getAllCommandLineOptions();
 
-//   print_r($LongCodes);
+    list($shortCodes, $longCodes) = getOptCodes($commandOptions);
 
-    $Opts = getopt($ShortCodes, $LongCodes);
+    $opts = getOptFromArgv($shortCodes, $longCodes);
 
-    if (isset($Opts['help']) || isset($Opts['h'])) {
-        WriteCommandLineHelp();
+    if (isset($opts['help']) || isset($opts['h'])) {
+        writeCommandLineHelp();
         die();
     }
 
     // Spawn new packages from the command line!
-    if (isset($Opts['spawn']) || isset($Opts['s'])) {
-        $Name = (isset($Opts['spawn'])) ? $Opts['spawn'] : $Opts['s'];
-        SpawnPackage($Name);
+    if (isset($opts['spawn']) || isset($opts['s'])) {
+        $name = (isset($opts['spawn'])) ? $opts['spawn'] : $opts['s'];
+        spawnPackage($name);
         die();
     }
 
-    $Opts = ValidateCommandLine($Opts, $CommandOptions);
+    $opts = validateCommandLine($opts, $commandOptions);
 
-    if (is_array($Files)) {
-        $Opts2 = array();
-        foreach ($Files as $Name) {
-            $Value = array_pop($argv);
-            if (!$Value) {
-                echo "Missing required parameter: $Name";
+    if (is_array($files)) {
+        $opts2 = array();
+        foreach ($files as $name) {
+            $value = array_pop($argv);
+            if (!$value) {
+                echo "Missing required parameter: $name";
             } else {
-                $Opts2[$Name] = $Value;
+                $opts2[$name] = $value;
             }
         }
-        if ($Opts2) {
-            if ($Opts === false) {
-                $Opts = $Opts2;
+        if ($opts2) {
+            if ($opts === false) {
+                $opts = $opts2;
             } else {
-                $Opts = array_merge($Opts, $Opts2);
+                $opts = array_merge($opts, $opts2);
             }
         }
     }
 
-    if ($Opts === false) {
+    if ($opts === false) {
         die();
     }
 
-    $_POST = $Opts;
+    $_POST = $opts;
 
-    return $Opts;
+    return $opts;
 }
 
-function validateCommandLine($Values, $Options) {
-    $Errors = array();
-    $Result = array();
+/**
+ * Basically does the same thing than getopt() with one minor difference.
+ *
+ * The difference is that an empty option (-o="" || -o= || --option="" || --option=)
+ * will show up in the result as if the the option is set with an empty value.
+ *
+ * @see getopt
+ *
+ * @param $shortCodes
+ * @param $longCodes
+ * @return array
+ */
+function getOptFromArgv($shortCodes, $longCodes) {
+    global $argv;
 
-//   print_r($Values);
-//   print_r($Options);
+    $options = array();
 
-    $Type = V('type', $Values, V('t', $Values));
+    $shortCodesArray = array();
+    $longCodesArray = array();
 
-    foreach ($Options as $LongCode => $Row) {
-        $Req = V('Req', $Row);
-        $Short = V('Short', $Row);
+    $matches = array();
+    if (strlen($shortCodes) > 1 && preg_match_all('#([a-z\d])(:{0,2})#i', $shortCodes, $matches, PREG_SET_ORDER) != false) {
+        foreach($matches as $match) {
+            $shortCodesArray[$match[1]] = strlen($match[2]);
+        }
+    }
 
-        $Sx = V('Sx', $Row);
-        $Types = V('Types', $Row);
+    foreach($longCodes as $longCode) {
+        $explodedLongCode = explode(':', $longCode);
+        $longCodesArray[$explodedLongCode[0]] = count($explodedLongCode) - 1;
+    }
 
-        if ($Types && !in_array($Type, $Types)) {
-//         echo "Skipping $LongCode\n";
+    $argvCount = count($argv);
+    for ($i = 1; $i < $argvCount; $i++) {
+        $currentArg = $argv[$i];
+
+        $matches = array();
+        if (preg_match('#^(-{1,2})([a-z\d]+)(?:=(.*))?$#i', $currentArg, $matches) === 1) {
+
+            $optionType = $matches[1];
+            $optionName = $matches[2];
+
+            $optionValue = isset($matches[3]) ? $matches[3] : null;
+
+            if ($optionType === '-') {
+                $argType = 'short';
+            } else {
+                $argType = 'long';
+            }
+
+            if (!isset(${$argType.'CodesArray'}[$optionName])) {
+                continue;
+            }
+
+            $optionValueRequirement = ${$argType.'CodesArray'}[$optionName];
+
+            if ($optionValueRequirement === 0) { // 0 = No value permitted
+                if ($optionValue !== null) {
+                    continue;
+                }
+            } elseif ($optionValueRequirement === 1) { // 1 = Value required
+                if ($optionValue === null) {
+                    continue;
+                }
+            }
+
+            $options[$optionName] = $optionValue;
+        }
+    }
+
+    return $options;
+}
+
+function validateCommandLine($values, $options) {
+    $errors = array();
+    $result = array();
+
+    $type = v('type', $values, v('t', $values));
+
+    foreach ($options as $longCode => $row) {
+        $req = v('Req', $row);
+        $short = v('Short', $row);
+
+        $types = v('Types', $row);
+
+        if ($types && !in_array($type, $types)) {
             continue;
         }
 
-        if (isset($Values[$LongCode])) {
-            $Value = $Values[$LongCode];
-            if (!$Value) {
-                $Value = true;
+        if (array_key_exists($longCode, $values)) {
+            $value = $values[$longCode];
+            if ($value === null) {
+                $value = true;
             }
-        } elseif ($Short && isset($Values[$Short])) {
-            $Value = $Values[$Short];
-            if (!$Value) {
-                $Value = true;
+        } elseif ($short && array_key_exists($short, $values)) {
+            $value = $values[$short];
+            if ($value === null) {
+                $value = true;
             }
-        } elseif (isset($Row['Default'])) {
-            $Value = $Row['Default'];
+        } elseif (isset($row['Default'])) {
+            $value = $row['Default'];
         } else {
-            $Value = null;
+            $value = null;
         }
 
-        if (!$Value) {
-            $Default = V('Default', $Row, null);
-            if ($Default === null) {
-                if ($Req) {
-                    $Errors[] = "Missing required parameter: $LongCode";
+        if ($value === null) {
+            $default = v('Default', $row, null);
+            if ($default === null) {
+                if ($req) {
+                    $errors[] = "Missing required parameter: $longCode";
                 }
 
                 continue;
             } else {
-                $Value = $Default;
+                $value = $default;
             }
         }
 
-        if ($AllowedValues = V('Values', $Row)) {
-            if (!in_array($Value, $AllowedValues)) {
-                $Errors[] = "Invalid value for parameter: $LongCode. Must be one of: " . implode(', ', $AllowedValues);
+        if ($allowedValues = v('Values', $row)) {
+            if (!in_array($value, $allowedValues)) {
+                $errors[] = "Invalid value for parameter: $longCode. Must be one of: " . implode(', ', $allowedValues);
                 continue;
             }
         }
 
-        $Field = V('Field', $Row, $LongCode);
-        $Result[$Field] = $Value;
+        $field = v('Field', $row, $longCode);
+        $result[$field] = $value;
     }
 
-    if (count($Errors)) {
-        echo implode("\n", $Errors) . "\n";
+    if (count($errors)) {
+        echo implode("\n", $errors) . "\n";
 
         return false;
     }
 
 
-    return $Result;
+    return $result;
 }
 
-function writeCommandLineHelp($Options = null, $Section = '') {
-    if ($Options === null) {
-        $Options = GetAllCommandLineOptions(true);
-        foreach ($Options as $Section => $Options) {
-            WriteCommandLineHelp($Options, $Section);
+function writeCommandLineHelp($options = null, $section = '') {
+    if ($options === null) {
+        $options = getAllCommandLineOptions(true);
+        foreach ($options as $section => $options) {
+            writeCommandLineHelp($options, $section);
         }
 
         return;
     }
 
-    echo "$Section\n";
-    foreach ($Options as $Longname => $Options) {
-        $Output = "  ";
+    echo "$section\n";
+    foreach ($options as $longname => $options) {
+        $output = "  ";
 
-        if (isset($Options['Short'])) {
-            $Output .= '-' . $Options['Short'] . ', ';
+        if (isset($options['Short'])) {
+            $output .= '-' . $options['Short'] . ', ';
         }
 
-        $Output .= "--$Longname";
+        $output .= "--$longname";
 
         // Align our descriptions by passing
-        $Output = str_pad($Output, 18, ' ');
+        $output = str_pad($output, 18, ' ');
 
-        if (V('Req', $Options)) {
-            $Output .= 'Required. ';
+        if (v('Req', $options)) {
+            $output .= 'Required. ';
         }
 
-        $Output .= "{$Options[0]}\n";
+        $output .= "{$options[0]}\n";
 
-        if ($Values = V('Values', $Options)) {
-            $Output .= '    Valid Values: ' . implode(', ', $Values) . "\n";
+        if ($values = v('Values', $options)) {
+            $output .= '    Valid Values: ' . implode(', ', $values) . "\n";
         }
 
-        echo $Output;
+        echo $output;
     }
 
     echo "\n";
 }
 
-function V($Name, $Array, $Default = null) {
-    if (isset($Array[$Name])) {
-        return $Array[$Name];
+function v($name, $array, $default = null) {
+    if (isset($array[$name])) {
+        return $array[$name];
     }
 
-    return $Default;
+    return $default;
 }
 
 ?>

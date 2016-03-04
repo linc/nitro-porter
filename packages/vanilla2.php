@@ -2,12 +2,13 @@
 /**
  * Vanilla 2 exporter tool
  *
- * @copyright Vanilla Forums Inc. 2010
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 
-$Supported['vanilla2']['features'] = array(
+$supported['vanilla2'] = array('name' => 'Vanilla 2', 'prefix' => 'GDN_');
+$supported['vanilla2']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -27,13 +28,13 @@ $Supported['vanilla2']['features'] = array(
 class Vanilla2 extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $_SourceTables = array();
+    protected $_sourceTables = array();
 
     /**
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      */
-    protected function ForumExport($Ex) {
-        $Tables = array(
+    protected function forumExport($ex) {
+        $tables = array(
             'Activity',
             'Category',
             'Comment',
@@ -51,29 +52,30 @@ class Vanilla2 extends ExportController {
             'UserRole'
         );
 
-        $Ex->BeginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
+        $ex->beginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
 
-        foreach ($Tables as $TableName) {
-            $this->ExportTable($Ex, $TableName);
+        foreach ($tables as $tableName) {
+            $this->exportTable($ex, $tableName);
         }
 
-        $Ex->EndExport();
+        $ex->endExport();
     }
 
     /**
      *
-     * @param ExportModel $Ex
-     * @param string $TableName
+     * @param ExportModel $ex
+     * @param string $tableName
      */
-    protected function ExportTable($Ex, $TableName) {
+    protected function exportTable($ex, $tableName) {
         // Make sure the table exists.
-        if (!$Ex->Exists($TableName)) {
+        if (!$ex->exists($tableName)) {
             return;
         }
 
-        $Ex->ExportTable($TableName, "select * from :_{$TableName}");
+        $ex->exportTable($tableName, "select * from :_{$tableName}");
     }
 
 }
 
+// Closing PHP tag required. (make.php)
 ?>

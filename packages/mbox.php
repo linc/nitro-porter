@@ -16,14 +16,14 @@
  * Import all CSVs to 1 table named ‘mbox’ with text fields:
  *    Subject, Sender, Body, Date, Folder (manually set to name of each mbox)
  *
- * @copyright Vanilla Forums 2013
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @author Lincoln Russell lincolnwebs.com
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 
-$Supported['mbox'] = array('name' => '.mbox files', 'prefix' => '');
-$Supported['mbox']['features'] = array(
+$supported['mbox'] = array('name' => '.mbox files', 'prefix' => '');
+$supported['mbox']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -33,182 +33,189 @@ $Supported['mbox']['features'] = array(
 class Mbox extends ExportController {
 
     /** @var array Required tables => columns */
-    protected $SourceTables = array(
+    protected $sourceTables = array(
         'mbox' => array('Subject', 'Sender', 'Date', 'Body', 'Folder')
     );
 
     /**
      * Forum-specific export format.
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      */
-    protected function ForumExport($Ex) {
+    protected function forumExport($ex) {
+
+        $characterSet = $ex->getCharacterSet('mbox');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
+        }
+
         // Begin
-        $Ex->BeginExport('', 'Mbox', array());
+        $ex->beginExport('', 'Mbox', array());
 
 
         // Temporary user table
-        $Ex->Query('create table :_mbox_user (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
-        $Result = $Ex->Query('select Sender from :_mbox group by Sender', true);
+        $ex->query('create table :_mbox_user (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
+        $result = $ex->query('select Sender from :_mbox group by Sender', true);
 
         // Users, pt 1: Build ref array; Parse name & email out - strip quotes, <, >
-        $Users = array();
-        while ($Row = mysql_fetch_assoc($Result)) {
+        $users = array();
+        while ($row = mysql_fetch_assoc($result)) {
             // Most senders are "Name <Email>"
-            $NameParts = explode('<', trim($Row['Sender'], '"'));
+            $nameParts = explode('<', trim($row['Sender'], '"'));
             // Sometimes the sender is just <email>
-            if ($NameParts[0] == '') {
-                $Name = trim(str_replace('>', '', $NameParts[1]));
+            if ($nameParts[0] == '') {
+                $name = trim(str_replace('>', '', $nameParts[1]));
             } else // Normal?
             {
-                $Name = trim(str_replace('\\', '', $NameParts[0]));
+                $name = trim(str_replace('\\', '', $nameParts[0]));
             }
-            if (strstr($Name, '@') !== false) {
+            if (strstr($name, '@') !== false) {
                 // Only wound up with an email
-                $Name = explode('@', $Name);
-                $Name = $Name[0];
+                $name = explode('@', $name);
+                $name = $name[0];
             }
-            $Email = $this->ParseEmail($Row['Sender']);
+            $email = $this->parseEmail($row['Sender']);
 
             // Compile by unique email
-            $Users[$Email] = $Name;
+            $users[$email] = $name;
         }
 
         // Users, pt 2: loop thru unique emails
-        foreach ($Users as $Email => $Name) {
-            $Ex->Query('insert into :_mbox_user (Name, Email)
-            values ("' . mysql_real_escape_string($Name) . '", "' . mysql_real_escape_string($Email) . '")');
-            $UserID = mysql_insert_id();
+        foreach ($users as $email => $name) {
+            $ex->query('insert into :_mbox_user (Name, Email)
+            values ("' . mysql_real_escape_string($name) . '", "' . mysql_real_escape_string($email) . '")');
+            $userID = mysql_insert_id();
             // Overwrite user list with new UserID instead of name
-            $Users[$Email] = $UserID;
+            $users[$email] = $userID;
         }
 
 
         // Temporary category table
-        $Ex->Query('create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
+        $ex->query('create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
          PRIMARY KEY (CategoryID))');
-        $Result = $Ex->Query('select Folder from :_mbox group by Folder', true);
+        $result = $ex->query('select Folder from :_mbox group by Folder', true);
         // Parse name out & build ref array
-        $Categories = array();
-        while ($Row = mysql_fetch_assoc($Result)) {
-            $Ex->Query('insert into :_mbox_category (Name)
-            values ("' . mysql_real_escape_string($Row["Folder"]) . '")');
-            $CategoryID = mysql_insert_id();
-            $Categories[$Row["Folder"]] = $CategoryID;
+        $categories = array();
+        while ($row = mysql_fetch_assoc($result)) {
+            $ex->query('insert into :_mbox_category (Name)
+            values ("' . mysql_real_escape_string($row["Folder"]) . '")');
+            $categoryID = mysql_insert_id();
+            $categories[$row["Folder"]] = $categoryID;
         }
 
 
         // Temporary post table
-        $Ex->Query('create table :_mbox_post (PostID int AUTO_INCREMENT, DiscussionID int,
+        $ex->query('create table :_mbox_post (PostID int AUTO_INCREMENT, DiscussionID int,
          IsDiscussion tinyint default 0, InsertUserID int, Name varchar(255), Body text, DateInserted datetime,
          CategoryID int, PRIMARY KEY (PostID))');
-        $Result = $Ex->Query('select * from :_mbox', true);
+        $result = $ex->query('select * from :_mbox', true);
         // Parse name, body, date, userid, categoryid
-        while ($Row = mysql_fetch_assoc($Result)) {
+        while ($row = mysql_fetch_assoc($result)) {
             // Assemble posts into a format we can actually export.
             // Subject: trim quotes, 're: ', 'fwd: ', 'fw: ', [category]
-            $Name = trim(preg_replace('#^(re:)|(fwd?:) #i', '', trim($Row['Subject'], '"')));
-            $Name = trim(preg_replace('#^\[[0-9a-zA-Z_-]*] #', '', $Name));
-            $Email = $this->ParseEmail($Row['Sender']);
-            $UserID = (isset($Users[$Email])) ? $Users[$Email] : 0;
-            $Ex->Query('insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
-            values ("' . mysql_real_escape_string($Name) . '",
-               ' . $UserID . ',
-               ' . $Categories[$Row['Folder']] . ',
-               from_unixtime(' . strtotime($Row['Date']) . '),
-               "' . mysql_real_escape_string($this->ParseBody($Row['Body'])) . '")');
+            $name = trim(preg_replace('#^(re:)|(fwd?:) #i', '', trim($row['Subject'], '"')));
+            $name = trim(preg_replace('#^\[[0-9a-zA-Z_-]*] #', '', $name));
+            $email = $this->parseEmail($row['Sender']);
+            $userID = (isset($users[$email])) ? $users[$email] : 0;
+            $ex->query('insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
+            values ("' . mysql_real_escape_string($name) . '",
+               ' . $userID . ',
+               ' . $categories[$row['Folder']] . ',
+               from_unixtime(' . strtotime($row['Date']) . '),
+               "' . mysql_real_escape_string($this->parseBody($row['Body'])) . '")');
         }
 
         // Decide which posts are OPs
-        $Result = $Ex->Query('select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name',
+        $result = $ex->query('select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name',
             true);
-        $Discussions = array();
-        while ($Row = mysql_fetch_assoc($Result)) {
-            $Discussions[] = $Row['PostID'];
+        $discussions = array();
+        while ($row = mysql_fetch_assoc($result)) {
+            $discussions[] = $row['PostID'];
         }
-        $Ex->Query('update :_mbox_post set IsDiscussion = 1 where PostID in (' . implode(",", $Discussions) . ')');
+        $ex->query('update :_mbox_post set IsDiscussion = 1 where PostID in (' . implode(",", $discussions) . ')');
 
         // Thread the comments
-        $Result = $Ex->Query('select c.PostID, d.PostID as DiscussionID from :_mbox_post c
+        $result = $ex->query('select c.PostID, d.PostID as DiscussionID from :_mbox_post c
          left join :_mbox_post d on c.Name like d.Name and d.IsDiscussion = 1
          where c.IsDiscussion = 0', true);
-        while ($Row = mysql_fetch_assoc($Result)) {
-            $Ex->Query('update :_mbox_post set DiscussionID = ' . $Row['DiscussionID'] . '  where PostID = ' . $Row['PostID']);
+        while ($row = mysql_fetch_assoc($result)) {
+            $ex->query('update :_mbox_post set DiscussionID = ' . $row['DiscussionID'] . '  where PostID = ' . $row['PostID']);
         }
 
 
         // Users
-        $User_Map = array();
-        $Ex->ExportTable('User', "
+        $user_Map = array();
+        $ex->exportTable('User', "
          select u.*,
             NOW() as DateInserted,
             'Reset' as HashMethod
-         from :_mbox_user u", $User_Map);
+         from :_mbox_user u", $user_Map);
 
 
         // Categories
-        $Category_Map = array();
-        $Ex->ExportTable('Category', "
+        $category_Map = array();
+        $ex->exportTable('Category', "
       select *
-      from :_mbox_category", $Category_Map);
+      from :_mbox_category", $category_Map);
 
 
         // Discussions
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'PostID' => 'DiscussionID'
         );
-        $Ex->ExportTable('Discussion', "
+        $ex->exportTable('Discussion', "
       select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID,
          'Html' as Format
-       from :_mbox_post p where IsDiscussion = 1", $Discussion_Map);
+       from :_mbox_post p where IsDiscussion = 1", $discussion_Map);
 
 
         // Comments
-        $Comment_Map = array(
+        $comment_Map = array(
             'PostID' => 'CommentID'
         );
-        $Ex->ExportTable('Comment',
+        $ex->exportTable('Comment',
             "select p.*,
          'Html' as Format
        from :_mbox_post p
-       where IsDiscussion = 0", $Comment_Map);
+       where IsDiscussion = 0", $comment_Map);
 
 
         // Remove Temporary tables
-        //$Ex->Query('drop table :_mbox_post');
-        //$Ex->Query('drop table :_mbox_category');
-        //$Ex->Query('drop table :_mbox_user');
+        //$ex->Query('drop table :_mbox_post');
+        //$ex->Query('drop table :_mbox_category');
+        //$ex->Query('drop table :_mbox_user');
 
         // End
-        $Ex->EndExport();
-//      echo implode("\n\n", $Ex->Queries);
+        $ex->endExport();
+//      echo implode("\n\n", $ex->Queries);
     }
 
     /**
      * Grab the email from the User field.
      */
-    public function ParseEmail($Email) {
-        $EmailBits = explode('<', $Email);
-        if (!isset($EmailBits[1])) {
-            return $Email;
+    public function parseEmail($email) {
+        $emailBits = explode('<', $email);
+        if (!isset($emailBits[1])) {
+            return $email;
         }
 
-        $EmailBits = explode('>', $EmailBits[1]);
+        $emailBits = explode('>', $emailBits[1]);
 
-        return trim($EmailBits[0]);
+        return trim($emailBits[0]);
     }
 
     /**
      * Body: strip headers, signatures, fwds.
      */
-    public function ParseBody($Body) {
-        $Body = preg_replace('#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#', '',
-            $Body);
-        $Body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $Body);
-        $Body = explode("____________", $Body);
-        $Body = explode("----- Original Message -----", $Body[0]);
+    public function parseBody($body) {
+        $body = preg_replace('#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#', '',
+            $body);
+        $body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $body);
+        $body = explode("____________", $body);
+        $body = explode("----- Original Message -----", $body[0]);
 
-        return trim($Body[0]);
+        return trim($body[0]);
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

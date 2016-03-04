@@ -2,13 +2,13 @@
 /**
  * YetAnotherForum.NET exporter tool
  *
- * @copyright Vanilla Forums Inc. 2010
- * @license Proprietary
+ * @copyright 2009-2016 Vanilla Forums Inc.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 
-$Supported['yaf'] = array('name' => 'YAF.NET', 'prefix' => 'yaf_'); // (Yet Another Forum)
-$Supported['yaf']['features'] = array(
+$supported['yaf'] = array('name' => 'YAF.NET', 'prefix' => 'yaf_'); // (Yet Another Forum)
+$supported['yaf']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -21,23 +21,24 @@ $Supported['yaf']['features'] = array(
 );
 
 class Yaf extends ExportController {
-    static $PasswordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
+    public static $passwordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
 
     /**
      *
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      */
-    public function ForumExport($Ex) {
-        $CharacterSet = $Ex->GetCharacterSet('yaf_Topic');
-        if ($CharacterSet) {
-            $Ex->CharacterSet = $CharacterSet;
+    public function forumExport($ex) {
+
+        $characterSet = $ex->getCharacterSet('Topic');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
         }
 
-        $Ex->BeginExport('', 'YAF.NET (Yet Another Forum)');
-        $Ex->SourcePrefix = 'yaf_';
+        $ex->beginExport('', 'YAF.NET (Yet Another Forum)');
+        $ex->sourcePrefix = 'yaf_';
 
         // User.
-        $User_Map = array(
+        $user_Map = array(
             'UserID' => 'UserID',
             'Name' => 'Name',
             'Email' => 'Email',
@@ -48,10 +49,10 @@ class Yaf extends ExportController {
             'RankID' => array('Column' => 'RankID', 'Type' => 'int'),
             'Points' => array('Column' => 'Points', 'Type' => 'int'),
             'LastActivity' => 'DateLastActive',
-            'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'ConvertPassword')),
+            'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'convertPassword')),
             'HashMethod' => 'HashMethod'
         );
-        $Ex->ExportTable('User', "
+        $ex->exportTable('User', "
          select
             u.*,
             m.Password as Password2,
@@ -59,47 +60,47 @@ class Yaf extends ExportController {
             m.PasswordFormat,
             m.LastActivity,
             'yaf' as HashMethod
-         from yaf_User u
-         left join yaf_prov_Membership m
-            on u.ProviderUserKey = m.UserID;", $User_Map);
+         from :_User u
+         left join :_prov_Membership m
+            on u.ProviderUserKey = m.UserID;", $user_Map);
 
         // Role.
-        $Role_Map = array(
+        $role_Map = array(
             'GroupID' => 'RoleID',
             'Name' => 'Name'
         );
-        $Ex->ExportTable('Role', "
+        $ex->exportTable('Role', "
          select *
-         from yaf_Group;", $Role_Map);
+         from :_Group;", $role_Map);
 
         // UserRole.
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'UserID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', 'select * from yaf_UserGroup', $UserRole_Map);
+        $ex->exportTable('UserRole', 'select * from :_UserGroup', $userRole_Map);
 
         // Rank.
-        $Rank_Map = array(
+        $rank_Map = array(
             'RankID' => 'RankID',
             'Level' => 'Level',
             'Name' => 'Name',
             'Label' => 'Label'
         );
-        $Ex->ExportTable('Rank', "
+        $ex->exportTable('Rank', "
          select
             r.*,
             RankID as Level,
             Name as Label
-         from yaf_Rank r;", $Rank_Map);
+         from :_Rank r;", $rank_Map);
 
         // Signatures.
-        $Ex->ExportTable('UserMeta', "
+        $ex->exportTable('UserMeta', "
          select
             UserID,
             'Plugin.Signatures.Sig' as `Name`,
             Signature as `Value`
-         from yaf_User
+         from :_User
          where Signature <> ''
 
          union all
@@ -108,11 +109,11 @@ class Yaf extends ExportController {
             UserID,
             'Plugin.Signatures.Format' as `Name`,
             'BBCode' as `Value`
-         from yaf_User
+         from :_User
          where Signature <> '';");
 
         // Category.
-        $Category_Map = array(
+        $category_Map = array(
             'ForumID' => 'CategoryID',
             'ParentID' => 'ParentCategoryID',
             'Name' => 'Name',
@@ -120,14 +121,14 @@ class Yaf extends ExportController {
             'SortOrder' => 'Sort'
         );
 
-        $Ex->ExportTable('Category', "
+        $ex->exportTable('Category', "
          select
             f.ForumID,
             case when f.ParentID = 0 then f.CategoryID * 1000 else f.ParentID end as ParentID,
             f.Name,
             f.Description,
             f.SortOrder
-         from yaf_Forum f
+         from :_Forum f
 
          union all
 
@@ -137,10 +138,10 @@ class Yaf extends ExportController {
             c.Name,
             null,
             c.SortOrder
-         from yaf_Category c;", $Category_Map);
+         from :_Category c;", $category_Map);
 
         // Discussion.
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'TopicID' => 'DiscussionID',
             'ForumID' => 'CategoryID',
             'UserID' => 'InsertUserID',
@@ -149,16 +150,16 @@ class Yaf extends ExportController {
             'Views' => 'CountViews',
             'Announce' => 'Announce'
         );
-        $Ex->ExportTable('Discussion', "
+        $ex->exportTable('Discussion', "
          select
             case when t.Priority > 0 then 1 else 0 end as Announce,
             t.Flags & 1 as Closed,
             t.*
-         from yaf_Topic t
-         where t.IsDeleted = 0;", $Discussion_Map);
+         from :_Topic t
+         where t.IsDeleted = 0;", $discussion_Map);
 
         // Comment.
-        $Comment_Map = array(
+        $comment_Map = array(
             'MessageID' => 'CommentID',
             'TopicID' => 'DiscussionID',
             'ReplyTo' => array('Column' => 'ReplyToCommentID', 'Type' => 'int'),
@@ -167,47 +168,47 @@ class Yaf extends ExportController {
             'Message' => 'Body',
             'Format' => 'Format',
             'IP' => 'InsertIPAddress',
-            'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'CleanDate')),
+            'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'cleanDate')),
             'EditedBy' => 'UpdateUserID'
         );
-        $Ex->ExportTable('Comment', "
+        $ex->exportTable('Comment', "
          select
             case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
             m.*
-         from yaf_Message m
-         where IsDeleted = 0;", $Comment_Map);
+         from :_Message m
+         where IsDeleted = 0;", $comment_Map);
 
         // Conversation.
-        $this->_ExportConversationTemps();
+        $this->_exportConversationTemps();
 
-        $Conversation_Map = array(
+        $conversation_Map = array(
             'PMessageID' => 'ConversationID',
             'FromUserID' => 'InsertUserID',
             'Created' => 'DateInserted',
             'Title' => array('Column' => 'Subject', 'Type' => 'varchar(512)')
         );
-        $Ex->ExportTable('Conversation', "
+        $ex->exportTable('Conversation', "
          select
             pm.*,
             g.Title
          from z_pmgroup g
-         join yaf_PMessage pm
-            on g.Group_ID = pm.PMessageID;", $Conversation_Map);
+         join :_PMessage pm
+            on g.Group_ID = pm.PMessageID;", $conversation_Map);
 
         // UserConversation.
-        $UserConversation_Map = array(
+        $userConversation_Map = array(
             'PM_ID' => 'ConversationID',
             'User_ID' => 'UserID',
             'Deleted' => 'Deleted'
         );
-        $Ex->ExportTable('UserConversation', "
+        $ex->exportTable('UserConversation', "
          select pto.*
          from z_pmto pto
          join z_pmgroup g
-            on pto.PM_ID = g.Group_ID;", $UserConversation_Map);
+            on pto.PM_ID = g.Group_ID;", $userConversation_Map);
 
         // ConversationMessage.
-        $ConversationMessage_Map = array(
+        $conversationMessage_Map = array(
             'PMessageID' => 'MessageID',
             'Group_ID' => 'ConversationID',
             'FromUserID' => 'InsertUserID',
@@ -215,45 +216,45 @@ class Yaf extends ExportController {
             'Body' => 'Body',
             'Format' => 'Format'
         );
-        $Ex->ExportTable('ConversationMessage', "
+        $ex->exportTable('ConversationMessage', "
          select
             pm.*,
             case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
             t.Group_ID
-         from yaf_PMessage pm
+         from :_PMessage pm
          join z_pmtext t
-            on t.PM_ID = pm.PMessageID;", $ConversationMessage_Map);
+            on t.PM_ID = pm.PMessageID;", $conversationMessage_Map);
 
-        $Ex->EndExport();
+        $ex->endExport();
     }
 
-    public function CleanDate($Value) {
-        if (!$Value) {
+    public function cleanDate($value) {
+        if (!$value) {
             return null;
         }
-        if (substr($Value, 0, 4) == '0000') {
+        if (substr($value, 0, 4) == '0000') {
             return null;
         }
 
-        return $Value;
+        return $value;
     }
 
-    public function ConvertPassword($Hash, $ColumnName, &$Row) {
-        $Salt = $Row['PasswordSalt'];
-        $Hash = $Row['Password2'];
-        $Method = $Row['PasswordFormat'];
-        if (isset(self::$PasswordFormats[$Method])) {
-            $Method = self::$PasswordFormats[$Method];
+    public function convertPassword($hash, $columnName, &$row) {
+        $salt = $row['PasswordSalt'];
+        $hash = $row['Password2'];
+        $method = $row['PasswordFormat'];
+        if (isset(self::$passwordFormats[$method])) {
+            $method = self::$passwordFormats[$method];
         } else {
-            $Method = 'sha1';
+            $method = 'sha1';
         }
-        $Result = $Method . '$' . $Salt . '$' . $Hash . '$';
+        $result = $method . '$' . $salt . '$' . $hash . '$';
 
-        return $Result;
+        return $result;
     }
 
-    protected function _ExportConversationTemps() {
-        $Sql = "
+    protected function _exportConversationTemps() {
+        $sql = "
          drop table if exists z_pmto;
 
          create table z_pmto (
@@ -272,7 +273,7 @@ class Yaf extends ExportController {
             PMessageID,
             FromUserID,
             0
-         from yaf_PMessage;
+         from :_PMessage;
 
          replace z_pmto (
             PM_ID,
@@ -283,7 +284,7 @@ class Yaf extends ExportController {
             PMessageID,
             UserID,
             IsDeleted
-         from yaf_UserPMessage;
+         from :_UserPMessage;
 
          drop table if exists z_pmto2;
          create table z_pmto2 (
@@ -320,7 +321,7 @@ class Yaf extends ExportController {
             PMessageID,
             Subject,
             case when Subject like 'Re:%' then trim(substring(Subject, 4)) else Subject end as Title2
-         from yaf_PMessage;
+         from :_PMessage;
 
          create index z_idx_pmtext on z_pmtext (PM_ID);
 
@@ -359,8 +360,9 @@ class Yaf extends ExportController {
                  on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
                set pm.Group_ID = g.Group_ID;";
 
-        $this->Ex->QueryN($Sql);
+        $this->ex->queryN($sql);
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>

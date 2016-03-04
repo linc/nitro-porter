@@ -2,13 +2,13 @@
 /**
  * Joomla Kunena exporter tool
  *
- * @copyright Vanilla Forums Inc. 2010
+ * @copyright 2009-2016 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 
-$Supported['kunena'] = array('name' => 'Joomla Kunena', 'prefix' => 'jos_');
-$Supported['kunena']['features'] = array(
+$supported['kunena'] = array('name' => 'Joomla Kunena', 'prefix' => 'jos_');
+$supported['kunena']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
@@ -22,15 +22,21 @@ $Supported['kunena']['features'] = array(
 
 class Kunena extends ExportController {
     /**
-     * @param ExportModel $Ex
+     * @param ExportModel $ex
      */
-    public function ForumExport($Ex) {
-        $Ex->DestPrefix = 'jos';
+    public function forumExport($ex) {
 
-        $Ex->BeginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
+        $characterSet = $ex->getCharacterSet('mbox');
+        if ($characterSet) {
+            $ex->characterSet = $characterSet;
+        }
+
+        $ex->destPrefix = 'jos';
+
+        $ex->beginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
 
         // User.
-        $User_Map = array(
+        $user_Map = array(
             'id' => 'UserID',
             'name' => 'Name',
             'email' => 'Email',
@@ -44,7 +50,7 @@ class Kunena extends ExportController {
             'admin' => array('Column' => 'Admin', 'Type' => 'tinyint(1)'),
             'Photo' => 'Photo'
         );
-        $Ex->ExportTable('User', "
+        $ex->exportTable('User', "
          SELECT
             u.*,
             case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
@@ -54,26 +60,26 @@ class Kunena extends ExportController {
             !ku.hideemail as showemail
          FROM :_users u
          left join :_kunena_users ku
-            on ku.userid = u.id", $User_Map);
+            on ku.userid = u.id", $user_Map);
 
         // Role.
-        $Role_Map = array(
+        $role_Map = array(
             'rank_id' => 'RoleID',
             'rank_title' => 'Name',
         );
-        $Ex->ExportTable('Role', "select * from :_kunena_ranks", $Role_Map);
+        $ex->exportTable('Role', "select * from :_kunena_ranks", $role_Map);
 
         // UserRole.
-        $UserRole_Map = array(
+        $userRole_Map = array(
             'id' => 'UserID',
             'rank' => 'RoleID'
         );
-        $Ex->ExportTable('UserRole', "
+        $ex->exportTable('UserRole', "
          select *
-         from :_users u", $UserRole_Map);
+         from :_users u", $userRole_Map);
 
         // Permission.
-//      $Ex->ExportTable('Permission',
+//      $ex->ExportTable('Permission',
 //      "select 2 as RoleID, 'View' as _Permissions
 //      union
 //      select 3 as RoleID, 'View' as _Permissions
@@ -81,7 +87,7 @@ class Kunena extends ExportController {
 //      select 16 as RoleID, 'All' as _Permissions", array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
 
         // Category.
-        $Category_Map = array(
+        $category_Map = array(
             'id' => 'CategoryID',
             'parent' => 'ParentCategoryID',
             'name' => 'Name',
@@ -89,25 +95,25 @@ class Kunena extends ExportController {
             'description' => 'Description',
 
         );
-        $Ex->ExportTable('Category', "
-         select * from :_kunena_categories", $Category_Map);
+        $ex->exportTable('Category', "
+         select * from :_kunena_categories", $category_Map);
 
         // Discussion.
-        $Discussion_Map = array(
+        $discussion_Map = array(
             'id' => 'DiscussionID',
             'catid' => 'CategoryID',
             'userid' => 'InsertUserID',
             'subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-            'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'ip' => 'InsertIPAddress',
             'locked' => 'Closed',
             'hits' => 'CountViews',
             'modified_by' => 'UpdateUserID',
-            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
+            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $Ex->ExportTable('Discussion', "
+        $ex->exportTable('Discussion', "
          select
             t.*,
             txt.message,
@@ -115,21 +121,21 @@ class Kunena extends ExportController {
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread = t.id", $Discussion_Map);
+         where t.thread = t.id", $discussion_Map);
 
         // Comment.
-        $Comment_Map = array(
+        $comment_Map = array(
             'id' => 'CommentID',
             'thread' => 'DiscussionID',
             'userid' => 'InsertUserID',
-            'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'ip' => 'InsertIPAddress',
             'modified_by' => 'UpdateUserID',
-            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'TimestampToDate'),
+            'modified_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $Ex->ExportTable('Comment', "
+        $ex->exportTable('Comment', "
          select
             t.*,
             txt.message,
@@ -137,41 +143,64 @@ class Kunena extends ExportController {
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread <> t.id", $Comment_Map);
+         where t.thread <> t.id", $comment_Map);
 
         // UserDiscussion.
-        $UserDiscussion_Map = array(
+        $userDiscussion_Map = array(
             'thread' => 'DiscussionID',
             'userid' => 'UserID'
         );
-        $Ex->ExportTable('UserDiscussion', "
+        $ex->exportTable('UserDiscussion', "
          select t.*, 1 as Bookmarked
-         from :_kunena_subscriptions t", $UserDiscussion_Map);
+         from :_kunena_subscriptions t", $userDiscussion_Map);
 
         // Media.
-        $Media_Map = array(
+        $media_Map = array(
             'id' => 'MediaID',
             'mesid' => 'ForeignID',
             'userid' => 'InsertUserID',
             'size' => 'Size',
-            'path2' => array('Column' => 'Path', 'Filter' => 'UrlDecode'),
+            'path2' => array('Column' => 'Path', 'Filter' => 'urlDecode'),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             'filetype' => 'Type',
-            'filename' => array('Column' => 'Name', 'Filter' => 'UrlDecode'),
-            'time' => array('Column' => 'DateInserted', 'Filter' => 'TimestampToDate'),
+            'filename' => array('Column' => 'Name', 'Filter' => 'urlDecode'),
+            'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
-        $Ex->ExportTable('Media', "
+        $ex->exportTable('Media', "
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
-            'local' as StorageMethod,
             case when m.id = m.thread then 'discussion' else 'comment' end as ForeignTable,
-            m.time
+            m.time,
+            concat(a.folder, '/', a.filename) as thumb_path,
+            128 as thumb_width
          from :_kunena_attachments a
          join :_kunena_messages m
-            on m.id = a.mesid", $Media_Map);
+            on m.id = a.mesid", $media_Map);
 
-        $Ex->EndExport();
+        $ex->endExport();
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see ExportModel::_exportTable
+     *
+     * @param string $ralue Current value
+     * @param string $field Current field
+     * @param array $row Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function filterThumbnailData($value, $field, $row) {
+        if (strpos(strtolower($row['filetype']), 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
+        }
     }
 }
 
+// Closing PHP tag required. (make.php)
 ?>
