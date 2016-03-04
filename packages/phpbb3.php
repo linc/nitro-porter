@@ -104,6 +104,7 @@ class PhpBB3 extends ExportController {
         $ex->exportTable('User', "select *,
             case user_avatar_type
                when 1 then concat('$cdn', 'phpbb/', '$px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
+               when 'avatar.driver.upload' then concat('$cdn', 'phpbb/', '$px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
                when 2 then user_avatar
                else null end as photo,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
