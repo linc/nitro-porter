@@ -138,7 +138,8 @@ function vanillaStructure() {
             'UpdateIPAddress' => 'varchar(15)',
             'Flag' => 'tinyint',
             'Score' => 'float',
-            'Attributes' => 'text'
+            'Attributes' => 'text',
+            'QnA' => 'varchar(255)', // 'Accepted', 'Rejected'
         ),
         'Conversation' => array(
             'ConversationID' => 'int',
@@ -195,7 +196,8 @@ function vanillaStructure() {
             'Score' => 'float',
             'Attributes' => 'text',
             'RegardingID' => 'int',
-            'GroupID' => 'int'
+            'GroupID' => 'int',
+            'QnA' => 'varchar(255)', // 'Accepted', 'Answered', 'Rejected', 'Unanswered',
         ),
         'Draft' => array(
             'DraftID' => 'int',
