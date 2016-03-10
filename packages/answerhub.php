@@ -18,8 +18,11 @@ $supported['answerhub']['CommandLine'] = array(
     ),
 );
 $supported['answerhub']['features'] = array(
-    'Users' => 1,
+    'Categories' => 1,
+    'Comments' => 1,
+    'Discussions' => 1,
     'Roles' => 1,
+    'Users' => 1,
 );
 
 class AnswerHub extends ExportController {
