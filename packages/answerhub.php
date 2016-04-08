@@ -67,7 +67,7 @@ class AnswerHub extends ExportController {
                 user_email.c_email,
                 0 as Admin
             from :_network6_authoritables as user
-                 left join :_network6_user_emails as user_email on user_email.c_id = user.c_id
+                 left join :_network6_user_emails as user_email on user_email.c_user = user.c_id
             where user.c_type = 'user'
                 and user.c_name != '\$\$ANON_USER\$\$'
 
