@@ -1094,7 +1094,8 @@ class VBulletin extends ExportController {
             p.*,
             t.threadid,
             t.postuserid,
-            !p.public as anonymous
+            !p.public as anonymous,
+            'Poll' as Type
          from :_poll p
          join :_thread t
             on p.pollid = t.pollid", $poll_Map);
