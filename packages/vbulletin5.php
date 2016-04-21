@@ -467,6 +467,52 @@ class VBulletin5 extends VBulletin {
 
 
         // Comment.
+        // Detect inner comments (Can happen if a plugin is used)
+        $innerCommentQuery = "
+            select
+                node.nodeid,
+                nodePP.nodeid as parentid,
+                node.userid,
+                t.rawtext,
+                'BBCode' as Format,
+                FROM_UNIXTIME(node.publishdate) as DateInserted
+            from :_node as node
+                inner join :_contenttype as ct on ct.contenttypeid = node.contenttypeid and ct.class = 'Text' /*Inner Comment*/
+                inner join :_node as nodeP on nodeP.nodeid = node.parentid
+                inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid and ctP.class = 'Text'/*Comment*/
+                inner join :_node as nodePP on nodePP.nodeid = nodeP.parentid
+                inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid and ctPP.class = 'Text'/*Discussion*/
+                left join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
+                left join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid and ctPPP.class = 'Channel'/*Category*/
+                left join :_text t on t.nodeid = node.nodeid
+            where node.showpublished = 1
+        ";
+        $result = $ex->query($innerCommentQuery.' limit 1', true);
+
+        $innerCommentSQLFix = null;
+        if (mysql_num_rows($result)) {
+            $ex->query("
+                create table `vBulletinInnerCommentTable` (
+                    `nodeid` int(10) unsigned not null,
+                    `parentid` int(11) not null,
+                    `userid` int(10) unsigned default null,
+                    `rawtext` mediumtext,
+                    `Format` varchar(10) not null,
+                    `DateInserted` datetime not null,
+                    primary key (`nodeid`)
+                )
+            ;");
+            $ex->query("insert into vBulletinInnerCommentTable $innerCommentQuery");
+
+            $innerCommentSQLFix = "
+                and n.nodeid not in (select nodeid from vBulletinInnerCommentTable)
+
+            union all
+
+            select * from vBulletinInnerCommentTable
+            ";
+        }
+
         $comment_Map = array(
             'nodeid' => 'CommentID',
             'rawtext' => 'Body',
@@ -476,7 +522,9 @@ class VBulletin5 extends VBulletin {
 
         $ex->exportTable('Comment', "
             select
-                n.*,
+                n.nodeid,
+                n.parentid,
+                n.userid,
                 t.rawtext,
                 'BBCode' as Format,
                 FROM_UNIXTIME(publishdate) as DateInserted
@@ -486,24 +534,11 @@ class VBulletin5 extends VBulletin {
             where c.class = 'Text'
                 and n.showpublished = 1
                 and parentid not in (".implode(',', $categoryIDs).")
-                and parentid in (select t2.nodeid from :_text as t2) /* exclude inner comments */
-        ;", $comment_Map);
+                $innerCommentSQLFix
+        ", $comment_Map);
 
-        // Detect inner comments
-        $result = $ex->query("
-            select
-                n.nodeid
-            from :_node as n
-                left join :_contenttype c on n.contenttypeid = c.contenttypeid
-                left join :_text t on t.nodeid = n.nodeid
-            where
-                parentid not in (".implode(',', $categoryIDs).")
-                and parentid in (select t2.nodeid from :_text as t2)
-            limit 1
-        ", true);
-
-        if (mysql_num_rows($result)) {
-            $ex->comment('*** Inner comments detected but not imported.');
+        if ($innerCommentSQLFix !== null) {
+            $ex->query("drop table if exists vBulletinInnerCommentTable");
         }
 
         /// Drafts
