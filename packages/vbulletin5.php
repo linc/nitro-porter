@@ -482,8 +482,8 @@ class VBulletin5 extends VBulletin {
                 inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid and ctP.class = 'Text'/*Comment*/
                 inner join :_node as nodePP on nodePP.nodeid = nodeP.parentid
                 inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid and ctPP.class = 'Text'/*Discussion*/
-                left join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
-                left join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid and ctPPP.class = 'Channel'/*Category*/
+                inner join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
+                inner join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid and ctPPP.class = 'Channel'/*Category*/
                 left join :_text t on t.nodeid = node.nodeid
             where node.showpublished = 1
         ";
