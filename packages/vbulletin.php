@@ -485,7 +485,8 @@ class VBulletin extends ExportController {
             if(convert(sticky,char(1))>0,2,0) as Announce,
             FROM_UNIXTIME(t.dateline) as DateInserted,
             FROM_UNIXTIME(lastpost) as DateUpdated,
-            FROM_UNIXTIME(lastpost) as DateLastComment
+            FROM_UNIXTIME(lastpost) as DateLastComment,
+            if (t.pollid > 0, 'Poll', null) as Type
          from :_thread t
             left join :_deletionlog d on (d.type='thread' and d.primaryid=t.threadid)
             left join :_post p on p.postid = t.firstpostid
@@ -1094,8 +1095,7 @@ class VBulletin extends ExportController {
             p.*,
             t.threadid,
             t.postuserid,
-            !p.public as anonymous,
-            'Poll' as Type
+            !p.public as anonymous
          from :_poll p
          join :_thread t
             on p.pollid = t.pollid", $poll_Map);
