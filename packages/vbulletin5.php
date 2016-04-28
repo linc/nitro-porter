@@ -154,7 +154,7 @@ class VBulletin5 extends VBulletin {
                 left join :_userban ub
                     on u.userid = ub.userid
                     and ub.liftdate <= now()
-         ;", $user_Map);  // ":_" will be replace by database prefix
+         ;", $user_Map);  // ":_" will be replaced by database prefix
         //ipdata - contains all IP records for user actions: view,visit,register,logon,logoff
 
 
@@ -304,7 +304,7 @@ class VBulletin5 extends VBulletin {
             exit("Missing node 'Forum'");
         }
 
-        // Go thru the category list 6 times to build a (up to) 6-deep hierarchy
+        // Go through the category list 6 times to build a (up to) 6-deep hierarchy
         $categoryIDs[] = $homeID;
         for ($i = 0; $i < 6; $i++) {
             foreach ($channels as $channel) {
@@ -467,6 +467,52 @@ class VBulletin5 extends VBulletin {
 
 
         // Comment.
+        // Detect inner comments (Can happen if a plugin is used)
+        $innerCommentQuery = "
+            select
+                node.nodeid,
+                nodePP.nodeid as parentid,
+                node.userid,
+                t.rawtext,
+                'BBCode' as Format,
+                FROM_UNIXTIME(node.publishdate) as DateInserted
+            from :_node as node
+                inner join :_contenttype as ct on ct.contenttypeid = node.contenttypeid and ct.class = 'Text' /*Inner Comment*/
+                inner join :_node as nodeP on nodeP.nodeid = node.parentid
+                inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid and ctP.class = 'Text'/*Comment*/
+                inner join :_node as nodePP on nodePP.nodeid = nodeP.parentid
+                inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid and ctPP.class = 'Text'/*Discussion*/
+                inner join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
+                inner join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid and ctPPP.class = 'Channel'/*Category*/
+                left join :_text t on t.nodeid = node.nodeid
+            where node.showpublished = 1
+        ";
+        $result = $ex->query($innerCommentQuery.' limit 1', true);
+
+        $innerCommentSQLFix = null;
+        if (mysql_num_rows($result)) {
+            $ex->query("
+                create table `vBulletinInnerCommentTable` (
+                    `nodeid` int(10) unsigned not null,
+                    `parentid` int(11) not null,
+                    `userid` int(10) unsigned default null,
+                    `rawtext` mediumtext,
+                    `Format` varchar(10) not null,
+                    `DateInserted` datetime not null,
+                    primary key (`nodeid`)
+                )
+            ;");
+            $ex->query("insert into vBulletinInnerCommentTable $innerCommentQuery");
+
+            $innerCommentSQLFix = "
+                and n.nodeid not in (select nodeid from vBulletinInnerCommentTable)
+
+            union all
+
+            select * from vBulletinInnerCommentTable
+            ";
+        }
+
         $comment_Map = array(
             'nodeid' => 'CommentID',
             'rawtext' => 'Body',
@@ -476,7 +522,9 @@ class VBulletin5 extends VBulletin {
 
         $ex->exportTable('Comment', "
             select
-                n.*,
+                n.nodeid,
+                n.parentid,
+                n.userid,
                 t.rawtext,
                 'BBCode' as Format,
                 FROM_UNIXTIME(publishdate) as DateInserted
@@ -485,9 +533,13 @@ class VBulletin5 extends VBulletin {
                 left join :_text t on t.nodeid = n.nodeid
             where c.class = 'Text'
                 and n.showpublished = 1
-                and parentid not in (" . implode(',', $categoryIDs) . ")
-        ;", $comment_Map);
+                and parentid not in (".implode(',', $categoryIDs).")
+                $innerCommentSQLFix
+        ", $comment_Map);
 
+        if ($innerCommentSQLFix !== null) {
+            $ex->query("drop table if exists vBulletinInnerCommentTable");
+        }
 
         /// Drafts
         // autosavetext table
