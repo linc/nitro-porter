@@ -940,8 +940,8 @@ class VBulletin extends ExportController {
         if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true) {
             // Exporting 4.x with 'filedata' table.
             // Build an index to join on.
-            $result = $ex->query('show index from :_thread where Key_name = "ix_thread_firstpostid"');
-            if (!$result) {
+            $result = $ex->query('show index from :_thread where Key_name = "ix_thread_firstpostid"', true);
+            if (!mysql_num_rows($result)) {
                 $ex->query('create index ix_thread_firstpostid on :_thread (firstpostid)');
             }
             $mediaSql = "
