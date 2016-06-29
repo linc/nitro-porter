@@ -272,11 +272,11 @@ class VBulletin extends ExportController {
             select u.*,
                 ipaddress as ipaddress2,
                 concat(`password`, salt) as password2,
-                DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
-                FROM_UNIXTIME(joindate) as DateFirstVisit,
-                FROM_UNIXTIME(lastvisit) as DateLastActive,
-                FROM_UNIXTIME(joindate) as DateInserted,
-                FROM_UNIXTIME(lastactivity) as DateUpdated,
+                date_format(birthday_search, get_format(DATE, 'ISO')) as DateOfBirth,
+                from_unixtime(joindate) as DateFirstVisit,
+                from_unixtime(lastvisit) as DateLastActive,
+                from_unixtime(joindate) as DateInserted,
+                from_unixtime(lastactivity) as DateUpdated,
                 case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
                      when av.avatarpath is not null then av.avatarpath
                      else null
@@ -303,7 +303,7 @@ class VBulletin extends ExportController {
             'userid' => 'UserID',
             'usergroupid' => 'RoleID'
         );
-        $ex->query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED NOT NULL, usergroupid INT UNSIGNED NOT NULL)");
+        $ex->query("create temporary table VbulletinRoles (userid int unsigned not null, usergroupid int unsigned not null)");
         # Put primary groups into tmp table
         $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         # Put stupid CSV column into tmp table
@@ -340,8 +340,8 @@ class VBulletin extends ExportController {
         $ex->query("
             create temporary table VbulletinUserMeta(
                 `UserID` int not null,
-                `Name` varchar(255) NOT NULL,
-                `Value` text NOT NULL
+                `Name` varchar(255) not null,
+                `Value` text not null
             );
         ");
         # Standard vB user data
@@ -517,9 +517,9 @@ class VBulletin extends ExportController {
                 replycount+1 as CountComments,
                 convert(ABS(open-1),char(1)) as Closed,
                 if(convert(sticky,char(1))>0,2,0) as Announce,
-                FROM_UNIXTIME(t.dateline) as DateInserted,
-                FROM_UNIXTIME(lastpost) as DateUpdated,
-                FROM_UNIXTIME(lastpost) as DateLastComment,
+                from_unixtime(t.dateline) as DateInserted,
+                from_unixtime(lastpost) as DateUpdated,
+                from_unixtime(lastpost) as DateLastComment,
                 if (t.pollid > 0, 'Poll', null) as Type
             from :_thread as t
                 left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
@@ -549,8 +549,8 @@ class VBulletin extends ExportController {
                 'BBCode' as Format,
                 p.userid as InsertUserID,
                 p.userid as UpdateUserID,
-                FROM_UNIXTIME(p.dateline) as DateInserted,
-                FROM_UNIXTIME(p.dateline) as DateUpdated
+                from_unixtime(p.dateline) as DateInserted,
+                from_unixtime(p.dateline) as DateUpdated
             from :_post as p
                 inner join :_thread as t on p.threadid = t.threadid
                 left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
@@ -571,7 +571,7 @@ class VBulletin extends ExportController {
                 st.userid as UserID,
                 st.threadid as DiscussionID,
                 '1' as Bookmarked,
-                FROM_UNIXTIME(tr.readtime) as DateLastViewed
+                from_unixtime(tr.readtime) as DateLastViewed
             from :_subscribethread as st
                 left join :_threadread as tr on tr.userid = st.userid and tr.threadid = st.threadid
             $minDiscussionWhere
@@ -580,7 +580,7 @@ class VBulletin extends ExportController {
             select
                 tr.userid as UserID,
                 tr.threadid as DiscussionID,
-                FROM_UNIXTIME(tr.readtime) as DateLastViewed,
+                from_unixtime(tr.readtime) as DateLastViewed,
                 case
                     when st.threadid is not null then 1
                     else 0
@@ -607,9 +607,9 @@ class VBulletin extends ExportController {
                 select
                     vm.*,
                     '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
-                    FROM_UNIXTIME(vm.dateline) as DateInserted,
-                    FROM_UNIXTIME(vm.dateline) as DateUpdated,
-                    INET_NTOA(vm.ipaddress) as InsertIPAddress,
+                    from_unixtime(vm.dateline) as DateInserted,
+                    from_unixtime(vm.dateline) as DateUpdated,
+                    inet_ntoa(vm.ipaddress) as InsertIPAddress,
                     vm.postuserid as InsertUserID,
                     -1 as NotifyUserID,
                     'BBCode' as Format,
@@ -636,7 +636,7 @@ class VBulletin extends ExportController {
             $ex->query("drop table if exists z_ipbanlist");
             $ex->query("
                 create table z_ipbanlist(
-                    id int(11) unsigned not null AUTO_INCREMENT,
+                    id int(11) unsigned not null auto_increment,
                     ipaddress varchar(50) default null,
                     primary key (id),
                     unique key ipaddress (ipaddress)
@@ -834,7 +834,7 @@ class VBulletin extends ExportController {
             select
                 pm.*,
                 g.title as title2,
-                FROM_UNIXTIME(pm.dateline) as DateInserted
+                from_unixtime(pm.dateline) as DateInserted
             from :_pmtext pm
                 join z_pmgroup g on g.group_id = pm.pmtextid
         ", $conversation_Map);
@@ -851,7 +851,7 @@ class VBulletin extends ExportController {
                 pm.*,
                 pm2.group_id,
                 'BBCode' as Format,
-                FROM_UNIXTIME(pm.dateline) as DateInserted
+                from_unixtime(pm.dateline) as DateInserted
             from :_pmtext pm
             join z_pmtext pm2 on pm.pmtextid = pm2.pmtextid
         ", $conversationMessage_Map);
@@ -870,9 +870,9 @@ class VBulletin extends ExportController {
         ", $userConversation_Map);
 
         $ex->query("drop table if exists z_pmto");
-        $ex->query("drop table if exists z_pmto2;");
-        $ex->query("drop table if exists z_pmtext;");
-        $ex->query("drop table if exists z_pmgroup;");
+        $ex->query("drop table if exists z_pmto2");
+        $ex->query("drop table if exists z_pmtext");
+        $ex->query("drop table if exists z_pmgroup");
     }
 
     /**
@@ -1010,7 +1010,7 @@ class VBulletin extends ExportController {
                         when t.threadid is not null then t.threadid
                         else a.contentid
                     end as ForeignID,
-                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    from_unixtime(a.dateline) as DateInserted,
                     a.*,
                     f.extension,
                     f.filesize/*,*/
@@ -1043,7 +1043,7 @@ class VBulletin extends ExportController {
                     a.userid,
                     'discussion' as ForeignTable,
                     t.threadid as ForeignID,
-                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    from_unixtime(a.dateline) as DateInserted,
                     '1' as height,
                     '1' as width,
                     'mock_value' as filethumb,
@@ -1062,7 +1062,7 @@ class VBulletin extends ExportController {
                     a.userid,
                     'comment' as ForeignTable,
                     a.postid as ForeignID,
-                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    from_unixtime(a.dateline) as DateInserted,
                     '1' as height,
                     '1' as width,
                     'mock_value' as filethumb,
