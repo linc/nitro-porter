@@ -216,9 +216,8 @@ class Jforum extends ExportController {
                 $postTextColumm
             from :_posts as p
                 $postTextSource
-            where p.post_id not in (
-                select topic_first_post_id from :_topics
-            )
+                left join jforum_topics as t on t.topic_first_post_id = p.post_id
+            where t.topic_first_post_id is null
          ", $comment_Map);
 
 
@@ -240,6 +239,10 @@ class Jforum extends ExportController {
 
         // Conversation.
         // Thread using tmp table based on the pair of users talking.
+        $result = $ex->query('show index from :_privmsgs where Key_name = "ix_zconversation_from_to"', true);
+        if (!mysql_num_rows($result)) {
+            $ex->query('create index ix_zconversation_from_to on :_privmsgs (privmsgs_from_userid, privmsgs_to_userid)');
+        }
         $ex->query("drop table if exists z_conversation;");
         $ex->query("
             create table z_conversation (
@@ -247,6 +250,7 @@ class Jforum extends ExportController {
                 LowUserID int unsigned,
                 HighUserID int unsigned,
                 PRIMARY KEY (ConversationID)
+                INDEX idx_lowuser_highuser (LowUserID, HighUserID)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
         ");
         $ex->query("
@@ -294,7 +298,7 @@ class Jforum extends ExportController {
                 p.privmsgs_id as MessageID,
                 p.privmsgs_from_userid as InsertUserID,
                 p.privmsgs_date as DateInserted,
-                p.privmsgs_text as Body,
+                t.privmsgs_text as Body,
                 c.ConversationID,
                 'BBCode' as Format
             from :_privmsgs p
