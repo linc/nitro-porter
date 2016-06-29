@@ -66,17 +66,18 @@ $supported['vbulletin']['features'] = array(
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
-
 class VBulletin extends ExportController {
     /* @var string SQL fragment to build new path to attachments. */
     public $attachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/', f.filehash, '_', a.attachmentid,'.', f.extension) as Path";
 
     /* @var string SQL fragment to build new path to user photo. */
-    public $avatarSelect = "case
-      when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
-      when av.avatarpath is not null then av.avatarpath
-      else null
-      end as customphoto";
+    public $avatarSelect = "
+        case
+            when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
+            when av.avatarpath is not null then av.avatarpath
+            else null
+        end as customphoto
+    ";
 
     /* @var array Default permissions to map. */
     public static $permissions = array(
@@ -192,7 +193,7 @@ class VBulletin extends ExportController {
         // Allow limited export of 1 category via ?forumid=ID
         $forumID = $this->param('forumid');
         if ($forumID) {
-            $forumWhere = ' and t.forumid ' . (strpos($forumID, ', ') === false ? "= $forumID" : "in ($forumID)");
+            $forumWhere = ' and t.forumid '.(strpos($forumID, ', ') === false ? "= $forumID" : "in ($forumID)");
         } else {
             $forumWhere = '';
         }
@@ -220,7 +221,7 @@ class VBulletin extends ExportController {
         $minDate = $this->param('mindate');
         if ($minDate) {
             $minDate = strtotime($minDate);
-            $ex->comment("Min topic date ($minDate): " . date('c', $minDate));
+            $ex->comment("Min topic date ($minDate): ".date('c', $minDate));
         }
         $now = time();
 
@@ -267,29 +268,27 @@ class VBulletin extends ExportController {
             $user_Map['customphoto'] = 'Photo';
         }
 
-        $ex->exportTable('User', "select u.*,
-            ipaddress as ipaddress2,
-            concat(`password`, salt) as password2,
-            DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
-            FROM_UNIXTIME(joindate) as DateFirstVisit,
-            FROM_UNIXTIME(lastvisit) as DateLastActive,
-            FROM_UNIXTIME(joindate) as DateInserted,
-            FROM_UNIXTIME(lastactivity) as DateUpdated,
-            case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
-                 when av.avatarpath is not null then av.avatarpath
-                 else null
-                 end as filephoto,
-            {$this->avatarSelect},
-            case when ub.userid is not null then 1 else 0 end as Banned,
-            'vbulletin' as HashMethod
-         from :_user u
-         left join :_customavatar a
-            on u.userid = a.userid
-         left join :_avatar av
-            on u.avatarid = av.avatarid
-         left join :_userban ub
-              on u.userid = ub.userid and ub.liftdate <= now() ",
-            $user_Map);  // ":_" will be replace by database prefix
+        $ex->exportTable('User', "
+            select u.*,
+                ipaddress as ipaddress2,
+                concat(`password`, salt) as password2,
+                date_format(birthday_search, get_format(DATE, 'ISO')) as DateOfBirth,
+                from_unixtime(joindate) as DateFirstVisit,
+                from_unixtime(lastvisit) as DateLastActive,
+                from_unixtime(joindate) as DateInserted,
+                from_unixtime(lastactivity) as DateUpdated,
+                case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
+                     when av.avatarpath is not null then av.avatarpath
+                     else null
+                     end as filephoto,
+                {$this->avatarSelect},
+                case when ub.userid is not null then 1 else 0 end as Banned,
+                'vbulletin' as HashMethod
+            from :_user u
+                left join :_customavatar a on u.userid = a.userid
+                left join :_avatar av on u.avatarid = av.avatarid
+                left join :_userban ub on u.userid = ub.userid and ub.liftdate <= now()
+        ", $user_Map);  // ":_" will be replace by database prefix
 
         // Roles
         $role_Map = array(
@@ -304,7 +303,7 @@ class VBulletin extends ExportController {
             'userid' => 'UserID',
             'usergroupid' => 'RoleID'
         );
-        $ex->query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED NOT NULL, usergroupid INT UNSIGNED NOT NULL)");
+        $ex->query("create temporary table VbulletinRoles (userid int unsigned not null, usergroupid int unsigned not null)");
         # Put primary groups into tmp table
         $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         # Put stupid CSV column into tmp table
@@ -325,7 +324,7 @@ class VBulletin extends ExportController {
         }
         # Export from our tmp table and drop
         $ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
-        $ex->query("DROP TABLE IF EXISTS VbulletinRoles");
+        $ex->query("drop table if exists VbulletinRoles");
 
         // Permissions.
         $permissions_Map = array(
@@ -337,11 +336,14 @@ class VBulletin extends ExportController {
         $this->addPermissionColumns(self::$permissions, $permissions_Map);
         $ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
 
-//      $ex->EndExport();
-//      return;
-
         // UserMeta
-        $ex->query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT NOT NULL ,`Name` VARCHAR( 255 ) NOT NULL ,`Value` text NOT NULL)");
+        $ex->query("
+            create temporary table VbulletinUserMeta(
+                `UserID` int not null,
+                `Name` varchar(255) not null,
+                `Value` text not null
+            );
+        ");
         # Standard vB user data
         $userFields = array(
             'usertitle' => 'Title',
@@ -350,43 +352,64 @@ class VBulletin extends ExportController {
             'styleid' => 'StyleID'
         );
         foreach ($userFields as $field => $insertAs) {
-            $ex->query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$insertAs', $field from :_user where $field != ''");
+            $ex->query("
+                insert into VbulletinUserMeta (UserID, Name, Value)
+                    select
+                        userid,
+                        'Profile.$insertAs',
+                        $field
+                    from :_user where $field != ''
+            ");
         }
         # Dynamic vB user data (userfield)
-        $profileFields = $ex->query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
+        $profileFields = $ex->query("
+            select
+                varname,
+                text
+            from :_phrase
+            where product='vbulletin'
+                and fieldname='cprofilefield'
+                and varname like 'field%_title'
+        ");
+
         if (is_resource($profileFields)) {
             $profileQueries = array();
             while ($field = @mysql_fetch_assoc($profileFields)) {
                 $column = str_replace('_title', '', $field['varname']);
                 $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $field['text']);
-                $profileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
-               select userid, 'Profile." . $name . "', " . $column . " from :_userfield where " . $column . " != ''";
+                $profileQueries[] = "
+                    insert into VbulletinUserMeta(UserID, Name, Value)
+                        select
+                            userid,
+                            'Profile.".$name."',
+                            ".$column."
+                        from :_userfield
+                        where ".$column." != ''
+                ";
             }
             foreach ($profileQueries as $query) {
                 $ex->query($query);
             }
         }
 
-
         // Signatures
-        $sql = "
-         select
-            userid as UserID,
-            'Plugin.Signatures.Sig' as Name,
-            signature as Value
-         from :_usertextfield
-         where nullif(signature, '') is not null
+        $ex->exportTable('UserMeta', "
+            select
+                userid as UserID,
+                'Plugin.Signatures.Sig' as Name,
+                signature as Value
+            from :_usertextfield
+            where nullif(signature, '') is not null
 
-         union
+            union
 
-         select
-            userid,
-            'Plugin.Signatures.Format',
-            'BBCode'
-         from :_usertextfield
-         where nullif(signature, '') is not null";
-        $ex->exportTable('UserMeta', $sql);
-
+            select
+                userid,
+                'Plugin.Signatures.Format',
+                'BBCode'
+            from :_usertextfield
+            where nullif(signature, '') is not null
+        ");
 
         // Ranks
         $rank_Map = array(
@@ -415,9 +438,13 @@ class VBulletin extends ExportController {
             )
         );
         $ex->exportTable('Rank', "
-         select ut.*, ut.title as title2, 0 as level
-         from :_usertitle ut
-         order by ut.minposts", $rank_Map);
+            select
+                ut.*,
+                ut.title as title2,
+                0 as level
+            from :_usertitle as ut
+            order by ut.minposts
+        ", $rank_Map);
 
 
         // Categories
@@ -428,29 +455,34 @@ class VBulletin extends ExportController {
             'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
             'parentid' => 'ParentCategoryID'
         );
-        $ex->exportTable('Category', "select f.*, title as Name2
-         from :_forum f
-         where 1 = 1 $forumWhere", $category_Map);
+        $ex->exportTable('Category', "
+            select
+                f.*,
+                title as Name2
+            from :_forum as f
+            where 1 = 1
+                $forumWhere
+        ", $category_Map);
 
         $minDiscussionID = false;
         $minDiscussionWhere = false;
         if ($minDate) {
             $minDiscussionID = $ex->getValue("
-            select max(threadid)
-            from :_thread
-            where dateline < $minDate
+                select max(threadid)
+                from :_thread
+                where dateline < $minDate
             ", false);
 
             $minDiscussionID2 = $ex->getValue("
-            select min(threadid)
-            from :_thread
-            where dateline >= $minDate
+                select min(threadid)
+                from :_thread
+                where dateline >= $minDate
             ", false);
 
             // The two discussion IDs should be the same, but let's average them.
             $minDiscussionID = floor(($minDiscussionID + $minDiscussionID2) / 2);
 
-            $ex->comment('Min topic id: ' . $minDiscussionID);
+            $ex->comment('Min topic id: '.$minDiscussionID);
         }
 
         // Discussions
@@ -475,25 +507,28 @@ class VBulletin extends ExportController {
             $minDiscussionWhere = "and t.threadid > $minDiscussionID";
         }
 
-        $ex->exportTable('Discussion', "select t.*,
-            t.postuserid as postuserid2,
-            p.ipaddress,
-            p.pagetext as Body,
-            'BBCode' as Format,
-            replycount+1 as CountComments,
-            convert(ABS(open-1),char(1)) as Closed,
-            if(convert(sticky,char(1))>0,2,0) as Announce,
-            FROM_UNIXTIME(t.dateline) as DateInserted,
-            FROM_UNIXTIME(lastpost) as DateUpdated,
-            FROM_UNIXTIME(lastpost) as DateLastComment,
-            if (t.pollid > 0, 'Poll', null) as Type
-         from :_thread t
-            left join :_deletionlog d on (d.type='thread' and d.primaryid=t.threadid)
-            left join :_post p on p.postid = t.firstpostid
-         where d.primaryid is null
-            and t.visible = 1
+        $ex->exportTable('Discussion', "
+            select
+                t.*,
+                t.postuserid as postuserid2,
+                p.ipaddress,
+                p.pagetext as Body,
+                'BBCode' as Format,
+                replycount+1 as CountComments,
+                convert(ABS(open-1),char(1)) as Closed,
+                if(convert(sticky,char(1))>0,2,0) as Announce,
+                from_unixtime(t.dateline) as DateInserted,
+                from_unixtime(lastpost) as DateUpdated,
+                from_unixtime(lastpost) as DateLastComment,
+                if (t.pollid > 0, 'Poll', null) as Type
+            from :_thread as t
+                left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
+                left join :_post as p on p.postid = t.firstpostid
+            where d.primaryid is null
+                and t.visible = 1
             $minDiscussionWhere
-            $forumWhere", $discussion_Map);
+            $forumWhere
+        ", $discussion_Map);
 
         // Comments
         $comment_Map = array(
@@ -508,43 +543,51 @@ class VBulletin extends ExportController {
             $minDiscussionWhere = "and p.threadid > $minDiscussionID";
         }
 
-        $ex->exportTable('Comment', "select p.*,
-            'BBCode' as Format,
-            p.userid as InsertUserID,
-            p.userid as UpdateUserID,
-         FROM_UNIXTIME(p.dateline) as DateInserted,
-            FROM_UNIXTIME(p.dateline) as DateUpdated
-         from :_post p
-         inner join :_thread t
-            on p.threadid = t.threadid
-         left join :_deletionlog d
-            on (d.type='post' and d.primaryid=p.postid)
-         where p.postid <> t.firstpostid
-            and d.primaryid is null
-            and p.visible = 1
-            $minDiscussionWhere
-            $forumWhere", $comment_Map);
+        $ex->exportTable('Comment', "
+            select
+                p.*,
+                'BBCode' as Format,
+                p.userid as InsertUserID,
+                p.userid as UpdateUserID,
+                from_unixtime(p.dateline) as DateInserted,
+                from_unixtime(p.dateline) as DateUpdated
+            from :_post as p
+                inner join :_thread as t on p.threadid = t.threadid
+                left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
+            where p.postid <> t.firstpostid
+                and d.primaryid is null
+                and p.visible = 1
+                $minDiscussionWhere
+                $forumWhere
+        ", $comment_Map);
 
         // UserDiscussion
         if ($minDiscussionID) {
             $minDiscussionWhere = "where st.threadid > $minDiscussionID";
         }
 
-        $ex->exportTable('UserDiscussion', "select
-            st.userid as UserID,
-            st.threadid as DiscussionID,
-            '1' as Bookmarked,
-            FROM_UNIXTIME(tr.readtime) as DateLastViewed
-         from :_subscribethread st
-         left join :_threadread tr on tr.userid = st.userid and tr.threadid = st.threadid
-         $minDiscussionWhere");
-        /*$ex->exportTable('UserDiscussion', "select
-             tr.userid as UserID,
-             tr.threadid as DiscussionID,
-             FROM_UNIXTIME(tr.readtime) as DateLastViewed,
-             case when st.threadid is not null then 1 else 0 end as Bookmarked
-           from :_threadread tr
-           left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid");*/
+        $ex->exportTable('UserDiscussion', "
+            select
+                st.userid as UserID,
+                st.threadid as DiscussionID,
+                '1' as Bookmarked,
+                from_unixtime(tr.readtime) as DateLastViewed
+            from :_subscribethread as st
+                left join :_threadread as tr on tr.userid = st.userid and tr.threadid = st.threadid
+            $minDiscussionWhere
+        ");
+        /*$ex->exportTable('UserDiscussion', "
+            select
+                tr.userid as UserID,
+                tr.threadid as DiscussionID,
+                from_unixtime(tr.readtime) as DateLastViewed,
+                case
+                    when st.threadid is not null then 1
+                    else 0
+                end as Bookmarked
+            from :_threadread tr
+            left join :_subscribethread st on tr.userid = st.userid and tr.threadid = st.threadid
+        ");*/
 
         // Activity (from visitor messages in vBulletin 3.8+)
         if ($ex->exists('visitormessage')) {
@@ -560,18 +603,21 @@ class VBulletin extends ExportController {
                 'NotifyUserID' => 'NotifyUserID',
                 'Format' => 'Format'
             );
-            $ex->exportTable('Activity', "select *,
-               '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
-               FROM_UNIXTIME(dateline) as DateInserted,
-               FROM_UNIXTIME(dateline) as DateUpdated,
-               INET_NTOA(ipaddress) as InsertIPAddress,
-               postuserid as InsertUserID,
-               -1 as NotifyUserID,
-               'BBCode' as Format,
-               'WallPost' as ActivityType
-            from :_visitormessage
-            where state='visible'
-               $minDiscussionWhere", $activity_Map);
+            $ex->exportTable('Activity', "
+                select
+                    vm.*,
+                    '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
+                    from_unixtime(vm.dateline) as DateInserted,
+                    from_unixtime(vm.dateline) as DateUpdated,
+                    inet_ntoa(vm.ipaddress) as InsertIPAddress,
+                    vm.postuserid as InsertUserID,
+                    -1 as NotifyUserID,
+                    'BBCode' as Format,
+                    'WallPost' as ActivityType
+                from :_visitormessage as vm
+                where state='visible'
+                    $minDiscussionWhere
+            ", $activity_Map);
         }
 
         $this->_exportConversations($minDate);
@@ -587,20 +633,21 @@ class VBulletin extends ExportController {
         $ipBanlist = $this->param('ipbanlist');
         if ($ipBanlist) {
 
-            $ex->query("DROP TABLE IF EXISTS `z_ipbanlist` ");
-            $ex->query("CREATE TABLE `z_ipbanlist` (
-            `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-            `ipaddress` varchar(50) DEFAULT NULL,
-           PRIMARY KEY (`id`),
-           UNIQUE KEY `ipaddress` (`ipaddress`)
-
-         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+            $ex->query("drop table if exists z_ipbanlist");
+            $ex->query("
+                create table z_ipbanlist(
+                    id int(11) unsigned not null auto_increment,
+                    ipaddress varchar(50) default null,
+                    primary key (id),
+                    unique key ipaddress (ipaddress)
+                ) engine=InnoDB default charset=utf8
+            ");
 
             $result = $ex->query("select value from :_setting where varname = 'banip'");
             $row = mysql_fetch_assoc($result);
 
             if ($row) {
-                $insertSql = 'INSERT IGNORE INTO `z_ipbanlist` (`ipaddress`) values ';
+                $insertSql = 'insert ignore into z_ipbanlist(ipaddress) values ';
                 $ipString = str_replace("\r", "", $row['value']);
                 $IPs = explode("\n", $ipString);
                 foreach ($IPs as $IP) {
@@ -608,22 +655,26 @@ class VBulletin extends ExportController {
                     if (empty($IP)) {
                         continue;
                     }
-                    $insertSql .= '(\'' . mysql_real_escape_string($IP) . '\'), ';
+                    $insertSql .= '(\''.mysql_real_escape_string($IP).'\'), ';
                 }
                 $insertSql = substr($insertSql, 0, -2);
                 $ex->query($insertSql);
 
                 $ban_Map = array();
-                $ex->exportTable('Ban',
-                    "select 'IPAddress' as BanType, ipaddress as BanValue, 'Imported ban' as Notes, NOW() as DateInserted
-                  FROM `z_ipbanlist`",
-                    $ban_Map);
 
-                $ex->query('DROP table if exists `z_ipbanlist` ');
+                $ex->exportTable('Ban', "
+                    select
+                        'IPAddress' as BanType,
+                        ipaddress as BanValue,
+                        'Imported ban' as Notes,
+                        NOW() as DateInserted
+                    from z_ipbanlist
+                ", $ban_Map);
+
+                $ex->query('drop table if exists z_ipbanlist');
 
             }
         }
-
 
         // End
         $ex->endExport();
@@ -634,144 +685,144 @@ class VBulletin extends ExportController {
 
         if ($minDate) {
             $minID = $ex->getValue("
-            select max(pmtextid)
-            from :_pmtext
-            where dateline < $minDate
+                select max(pmtextid)
+                from :_pmtext
+                where dateline < $minDate
             ", false);
         } else {
             $minID = false;
         }
         $minWhere = '';
 
-        $ex->query('drop table if exists z_pmto');
-        $ex->query('create table z_pmto (
-        pmtextid int unsigned,
-        userid int unsigned,
-        primary key(pmtextid, userid)
-      )');
+        $ex->query("drop table if exists z_pmto");
+        $ex->query("
+            create table z_pmto (
+                pmtextid int unsigned,
+                userid int unsigned,
+                primary key(pmtextid, userid)
+        )");
 
         if ($minID) {
             $minWhere = "where pmtextid > $minID";
         }
 
-        $ex->query("insert ignore z_pmto (
-        pmtextid,
-        userid
-      )
-      select
-        pmtextid,
-        userid
-      from :_pm
-      $minWhere");
+        $ex->query("
+            insert ignore into z_pmto(pmtextid, userid)
+                select
+                    pmtextid,
+                    userid
+                from :_pm
+                $minWhere
+        ");
 
-        $ex->query("insert ignore z_pmto (
-        pmtextid,
-        userid
-      )
-      select
-        pmtextid,
-        fromuserid
-      from :_pmtext
-      $minWhere;");
+        $ex->query("
+            insert ignore into z_pmto(pmtextid, userid)
+                select
+                    pmtextid,
+                    fromuserid
+                from :_pmtext
+                $minWhere
+        ");
 
-        $ex->query("insert ignore z_pmto (
-        pmtextid,
-        userid
-      )
-      select
-        pm.pmtextid,
-        r.userid
-      from :_pm pm
-      join :_pmreceipt r
-        on pm.pmid = r.pmid
-      $minWhere;");
+        $ex->query("
+            insert ignore into z_pmto(pmtextid, userid)
+                select
+                    pm.pmtextid,
+                    r.userid
+                from :_pm pm
+                    join :_pmreceipt r on pm.pmid = r.pmid
+                $minWhere
+        ");
 
-        $ex->query("insert ignore z_pmto (
-        pmtextid,
-        userid
-      )
-      select
-        pm.pmtextid,
-        r.touserid
-      from :_pm pm
-      join :_pmreceipt r
-        on pm.pmid = r.pmid
-      $minWhere;");
+        $ex->query("
+            insert ignore into z_pmto(pmtextid, userid)
+                select
+                    pm.pmtextid,
+                    r.touserid
+                from :_pm pm
+                    join :_pmreceipt r on pm.pmid = r.pmid
+                $minWhere
+        ");
 
         $ex->query('drop table if exists z_pmto2;');
-        $ex->query('create table z_pmto2 (
-        pmtextid int unsigned,
-        userids varchar(250),
-        primary key (pmtextid)
-      );');
+        $ex->query("
+            create table z_pmto2 (
+                pmtextid int unsigned,
+                userids varchar(250),
+                primary key (pmtextid)
+            );
+        ");
 
-        $ex->query('insert z_pmto2 (
-        pmtextid,
-        userids
-      )
-      select
-        pmtextid,
-        group_concat(userid order by userid)
-      from z_pmto t
-      group by t.pmtextid;');
+        $ex->query("
+            insert into z_pmto2(pmtextid, userids)
+                select
+                    pmtextid,
+                    group_concat(userid order by userid)
+                from z_pmto t
+                group by t.pmtextid
+        ");
 
-        $ex->query('drop table if exists z_pmtext;');
-        $ex->query('create table z_pmtext (
-        pmtextid int unsigned,
-        title varchar(250),
-        title2 varchar(250),
-        userids varchar(250),
-        group_id int unsigned
-      );');
+        $ex->query("drop table if exists z_pmtext;");
+        $ex->query("
+            create table z_pmtext (
+                pmtextid int unsigned,
+                title varchar(250),
+                title2 varchar(250),
+                userids varchar(250),
+                group_id int unsigned
+            );
+        ");
 
-        $ex->query("insert z_pmtext (
-        pmtextid,
-        title,
-        title2
-      )
-      select
-        pmtextid,
-        title,
-        case when title like 'Re: %' then trim(substring(title, 4)) else title end as title2
-      from :_pmtext pm
-      $minWhere;");
-        $ex->query('create index z_idx_pmtext on z_pmtext (pmtextid);');
+        $ex->query("
+            insert into z_pmtext(pmtextid, title, title2)
+                select
+                    pmtextid,
+                    title,
+                    case
+                        when title like 'Re: %' then trim(substring(title, 4))
+                        else title
+                    end as title2
+                from :_pmtext pm
+                $minWhere
+        ");
+        $ex->query("create index z_idx_pmtext on z_pmtext(pmtextid)");
 
-        $ex->query('update z_pmtext pm
-      join z_pmto2 t
-        on pm.pmtextid = t.pmtextid
-      set pm.userids = t.userids;');
+        $ex->query("
+            update z_pmtext pm
+                join z_pmto2 t on pm.pmtextid = t.pmtextid
+            set pm.userids = t.userids;
+        ");
 
         // A conversation is a group of pmtexts with the same title and same users.
 
-        $ex->query('drop table if exists z_pmgroup;');
-        $ex->query('create table z_pmgroup (
-        group_id int unsigned,
-        title varchar(250),
-        userids varchar(250)
-      );');
+        $ex->query("drop table if exists z_pmgroup;");
+        $ex->query("
+            create table z_pmgroup(
+                group_id int unsigned,
+                title varchar(250),
+                userids varchar(250)
+            );
+        ");
 
-        $ex->query("insert z_pmgroup (
-        group_id,
-        title,
-        userids
-      )
-      select
-        min(pm.pmtextid),
-        pm.title2,
-        t2.userids
-      from z_pmtext pm
-      join z_pmto2 t2
-        on pm.pmtextid = t2.pmtextid
-      group by pm.title2, t2.userids;");
+        $ex->query("
+            insert into z_pmgroup(group_id, title, userids)
+                select
+                    min(pm.pmtextid),
+                    pm.title2,
+                    t2.userids
+                from z_pmtext pm
+                    join z_pmto2 t2 on pm.pmtextid = t2.pmtextid
+                group by pm.title2, t2.userids;
+        ");
 
-        $ex->query('create index z_idx_pmgroup on z_pmgroup (title, userids);');
-        $ex->query('create index z_idx_pmgroup2 on z_pmgroup (group_id);');
+        $ex->query("create index z_idx_pmgroup on z_pmgroup (title, userids);");
+        $ex->query("create index z_idx_pmgroup2 on z_pmgroup (group_id);");
 
-        $ex->query('update z_pmtext pm
-      join z_pmgroup g
-        on pm.title2 = g.title and pm.userids = g.userids
-      set pm.group_id = g.group_id;');
+        $ex->query("
+            update z_pmtext pm
+                join z_pmgroup g on pm.title2 = g.title and pm.userids = g.userids
+            set pm.group_id = g.group_id
+        ");
 
         // Conversations.
         $conversation_Map = array(
@@ -779,14 +830,14 @@ class VBulletin extends ExportController {
             'fromuserid' => 'InsertUserID',
             'title2' => array('Column' => 'Subject', 'Type' => 'varchar(250)')
         );
-        $ex->exportTable('Conversation',
-            'select
-         pm.*,
-         g.title as title2,
-         FROM_UNIXTIME(pm.dateline) as DateInserted
-       from :_pmtext pm
-       join z_pmgroup g
-         on g.group_id = pm.pmtextid', $conversation_Map);
+        $ex->exportTable('Conversation', "
+            select
+                pm.*,
+                g.title as title2,
+                from_unixtime(pm.dateline) as DateInserted
+            from :_pmtext pm
+                join z_pmgroup g on g.group_id = pm.pmtextid
+        ", $conversation_Map);
 
         // Coversation Messages.
         $conversationMessage_Map = array(
@@ -795,33 +846,33 @@ class VBulletin extends ExportController {
             'message' => 'Body',
             'fromuserid' => 'InsertUserID'
         );
-        $ex->exportTable('ConversationMessage',
-            "select
-         pm.*,
-         pm2.group_id,
-         'BBCode' as Format,
-         FROM_UNIXTIME(pm.dateline) as DateInserted
-       from :_pmtext pm
-       join z_pmtext pm2
-         on pm.pmtextid = pm2.pmtextid", $conversationMessage_Map);
+        $ex->exportTable('ConversationMessage', "
+            select
+                pm.*,
+                pm2.group_id,
+                'BBCode' as Format,
+                from_unixtime(pm.dateline) as DateInserted
+            from :_pmtext pm
+            join z_pmtext pm2 on pm.pmtextid = pm2.pmtextid
+        ", $conversationMessage_Map);
 
         // User Conversation.
         $userConversation_Map = array(
             'userid' => 'UserID',
             'group_id' => 'ConversationID'
         );
-        $ex->exportTable('UserConversation',
-            "select
-         g.group_id,
-         t.userid
-       from z_pmto t
-       join z_pmgroup g
-         on g.group_id = t.pmtextid;", $userConversation_Map);
+        $ex->exportTable('UserConversation', "
+            select
+                g.group_id,
+                t.userid
+            from z_pmto t
+            join z_pmgroup g on g.group_id = t.pmtextid;
+        ", $userConversation_Map);
 
-        $ex->query('drop table if exists z_pmto');
-        $ex->query('drop table if exists z_pmto2;');
-        $ex->query('drop table if exists z_pmtext;');
-        $ex->query('drop table if exists z_pmgroup;');
+        $ex->query("drop table if exists z_pmto");
+        $ex->query("drop table if exists z_pmto2");
+        $ex->query("drop table if exists z_pmtext");
+        $ex->query("drop table if exists z_pmgroup");
     }
 
     /**
@@ -843,14 +894,16 @@ class VBulletin extends ExportController {
         if ($attachments) {
             $identity = 'f.attachmentid';
             if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true
-                || $ex->exists('attach') === true) {
+                || $ex->exists('attach') === true
+            ) {
                 $identity = 'f.filedataid';
             }
 
-            $sql = "select
-               f.filedata,
-               $extension as extension,
-               concat('attachments/', f.userid, '/', $identity, '.', lower(extension)) as Path
+            $sql = "
+                select
+                   f.filedata,
+                   $extension as extension,
+                   concat('attachments/', f.userid, '/', $identity, '.', lower(extension)) as Path
                from ";
 
             // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
@@ -866,11 +919,12 @@ class VBulletin extends ExportController {
         }
 
         if ($customAvatars) {
-            $sql = "select
-               a.filedata,
-               case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
-                  else null end as customphoto
-            from :_customavatar a
+            $sql = "
+                select
+                   a.filedata,
+                   case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
+                      else null end as customphoto
+                from :_customavatar a
             ";
             $sql = str_replace('u.userid', 'a.userid', $sql);
             $ex->exportBlobs($sql, 'filedata', 'customphoto', 80);
@@ -878,12 +932,12 @@ class VBulletin extends ExportController {
 
         // Export the group icons no matter what.
         if ($ex->exists('socialgroupicon', 'thumbnail_filedata') && ($attachments || $customAvatars)) {
-            $sql = "
-            select
-               i.filedata,
-               concat('vb/groupicons/', i.groupid, '.', i.extension) as path
-            from :_socialgroupicon i";
-            $ex->exportBlobs($sql, 'filedata', 'path');
+            $ex->exportBlobs("
+                select
+                   i.filedata,
+                   concat('vb/groupicons/', i.groupid, '.', i.extension) as path
+                from :_socialgroupicon i
+            ", 'filedata', 'path');
         }
     }
 
@@ -910,7 +964,7 @@ class VBulletin extends ExportController {
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
             'filethumb' => array(
                 'Column' => 'ThumbPath',
-                'Filter' => function($value, $field, $row) use ($instance) {
+                'Filter' => function ($value, $field, $row) use ($instance) {
                     $filteredData = $this->filterThumbnailData($value, $field, $row);
 
                     if ($filteredData) {
@@ -956,7 +1010,7 @@ class VBulletin extends ExportController {
                         when t.threadid is not null then t.threadid
                         else a.contentid
                     end as ForeignID,
-                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    from_unixtime(a.dateline) as DateInserted,
                     a.*,
                     f.extension,
                     f.filesize/*,*/
@@ -989,7 +1043,7 @@ class VBulletin extends ExportController {
                     a.userid,
                     'discussion' as ForeignTable,
                     t.threadid as ForeignID,
-                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    from_unixtime(a.dateline) as DateInserted,
                     '1' as height,
                     '1' as width,
                     'mock_value' as filethumb,
@@ -1008,7 +1062,7 @@ class VBulletin extends ExportController {
                     a.userid,
                     'comment' as ForeignTable,
                     a.postid as ForeignID,
-                    FROM_UNIXTIME(a.dateline) as DateInserted,
+                    from_unixtime(a.dateline) as DateInserted,
                     '1' as height,
                     '1' as width,
                     'mock_value' as filethumb,
@@ -1037,7 +1091,7 @@ class VBulletin extends ExportController {
                     if (!empty($cdn)) {
                         $filePath = str_replace($cdn, '', $filePath);
                     }
-                    $fullPath = $attachmentPath . $filePath;
+                    $fullPath = $attachmentPath.$filePath;
                     if (file_exists($fullPath)) {
                         continue;
                     }
@@ -1053,7 +1107,7 @@ class VBulletin extends ExportController {
 
                     //check if md5 hash in root
                     if (getValue('hash', $row)) {
-                        $md5Filename = $attachmentPath . $row['hash'] . '.' . $row['extension'];
+                        $md5Filename = $attachmentPath.$row['hash'].'.'.$row['extension'];
                         if (file_exists($md5Filename)) {
                             // rename file
                             rename($md5Filename, $fullPath);
@@ -1090,15 +1144,15 @@ class VBulletin extends ExportController {
             'dateline' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'postuserid' => 'InsertUserID'
         );
-        $ex->exportTable('Poll',
-            "select
-            p.*,
-            t.threadid,
-            t.postuserid,
-            !p.public as anonymous
-         from :_poll p
-         join :_thread t
-            on p.pollid = t.pollid", $poll_Map);
+        $ex->exportTable('Poll', "
+            select
+                p.*,
+                t.threadid,
+                t.postuserid,
+                !p.public as anonymous
+            from :_poll p
+                join :_thread t on p.pollid = t.pollid
+            ", $poll_Map);
 
         $pollOption_Map = array(
             'optionid' => 'PollOptionID', // calc
@@ -1108,13 +1162,14 @@ class VBulletin extends ExportController {
             'dateline' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'postuserid' => 'InsertUserID'
         );
-        $sql = "select
-         p.*,
-         'BBCode' as Format,
-         t.postuserid
-      from :_poll p
-      join :_thread t
-         on p.pollid = t.pollid";
+        $sql = "
+            select
+                p.*,
+                'BBCode' as Format,
+                t.postuserid
+            from :_poll p
+                join :_thread t on p.pollid = t.pollid
+        ";
 
         // Some custom programming needs to be done here so let's do that.
         $exportStructure = $ex->getExportStructure($pollOption_Map, 'PollOption', $pollOption_Map);
@@ -1146,9 +1201,12 @@ class VBulletin extends ExportController {
             'optionid' => 'PollOptionID',
             'votedate' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable('PollVote',
-            "select pv.*, pollid * 1000 + voteoption as optionid
-         from :_pollvote pv", $pollVote_Map);
+        $ex->exportTable('PollVote', "
+            select
+                pv.*,
+                pollid * 1000 + voteoption as optionid
+            from :_pollvote pv
+        ", $pollVote_Map);
     }
 
     /**
@@ -1173,7 +1231,7 @@ class VBulletin extends ExportController {
     public function buildMediaPath($value, $field, $row) {
         if (isset($row['hash']) && $row['hash'] != '') {
             // Old school! (2.x)
-            $filePath = $row['hash'] . '.' . $row['extension'];
+            $filePath = $row['hash'].'.'.$row['extension'];
         } else { // Newer than 3.0
             // Build user directory path
             $n = strlen($row['userid']);
@@ -1188,13 +1246,13 @@ class VBulletin extends ExportController {
             // If we're exporting blobs, simplify the folder structure.
             // Otherwise, we need to preserve vBulletin's eleventy subfolders.
             $separator = ($this->param('files', false)) ? '' : '/';
-            $filePath = implode($separator, $dirParts) . '/' . $identity . '.' . $row['extension'];
+            $filePath = implode($separator, $dirParts).'/'.$identity.'.'.$row['extension'];
         }
 
         // Use 'cdn' parameter to define path prefix, ex: ?cdn=~cf/
         $cdn = $this->param('cdn', '');
 
-        return $cdn . 'attachments/' . $filePath;
+        return $cdn.'attachments/'.$filePath;
     }
 
     /**
@@ -1235,11 +1293,11 @@ class VBulletin extends ExportController {
             case 'jpg':
             case 'gif':
             case 'png':
-                $value = 'image/' . $value;
+                $value = 'image/'.$value;
                 break;
             case 'pdf':
             case 'zip':
-                $value = 'application/' . $value;
+                $value = 'application/'.$value;
                 break;
             case 'doc':
                 $value = 'application/msword';
