@@ -249,7 +249,7 @@ class Jforum extends ExportController {
                 ConversationID int unsigned NOT NULL AUTO_INCREMENT,
                 LowUserID int unsigned,
                 HighUserID int unsigned,
-                PRIMARY KEY (ConversationID)
+                PRIMARY KEY (ConversationID),
                 INDEX idx_lowuser_highuser (LowUserID, HighUserID)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
         ");
