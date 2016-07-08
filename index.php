@@ -53,7 +53,9 @@ $supported = array(
 // MAKESKIPSTART
 $paths = glob(dirname(__FILE__) . '/packages/*.php');
 foreach ($paths as $path) {
-    include_once $path;
+    if (is_readable($path)) {
+        include_once $path;
+    }
 }
 // MAKESKIPEND
 
