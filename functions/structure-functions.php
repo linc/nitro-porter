@@ -121,7 +121,9 @@ function vanillaStructure() {
             'LastDateInserted' => 'datetime',
             'AllowedDiscussionTypes' => 'varchar(255)',
             'DefaultDiscussionType' => 'varchar(10)',
-            'AllowGroups' => 'tinyint'
+            'AllowGroups' => 'tinyint',
+            'IdeationType' => 'varchar(255)', // up, up-down
+            'Score' => 'float',
         ),
         'Comment' => array(
             'CommentID' => 'int',
@@ -447,6 +449,13 @@ function vanillaStructure() {
             'UserID' => 'int',
             'CountSpam' => 'smallint',
             'CountDeletedSpam' => 'smallint'
+        ),
+        'Status' => array( // Ideation
+            'StatusID' => 'int',
+            'Name' => 'varchar(100)',
+            'State' => 'varchar(255)', // Open, Closed
+            'TagID' => 'int',
+            'IsDefault' => 'tinyint',
         ),
         'Tag' => array(
             'TagID' => 'int',
