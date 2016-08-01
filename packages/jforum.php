@@ -325,9 +325,10 @@ class Jforum extends ExportController {
                 now() as DateLastViewed
             from z_conversation
          ");
-        // Needs afterward: update GDN_UserConversation set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)
 
-
+        $ex->comment('Run the following query after the import: ');
+        $ex->comment('update GDN_UserConversation set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)');
+        
         $ex->endExport();
     }
 }
