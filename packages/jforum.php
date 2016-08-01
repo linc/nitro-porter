@@ -192,7 +192,7 @@ class Jforum extends ExportController {
                 t.topic_views as CountViews,
                 t.topic_replies as CountComments,
                 t.topic_status as Closed,
-                if(t.topic_type > 0, 1, 0) as Announce,
+                if (t.topic_type > 0, 1, 0) as Announce,
                 $postTextColumm,
                 'BBCode' as Format
             from :_topics as t
@@ -232,7 +232,7 @@ class Jforum extends ExportController {
                 w.topic_id as DiscussionID,
                 w.user_id as UserID,
                 1 as Bookmarked,
-                if(w.is_read, NOW(), null) as DateLastViewed
+                if (w.is_read, now(), null) as DateLastViewed
             from :_topics_watch as w
          ", $userDiscussion_Map);
 
@@ -246,12 +246,12 @@ class Jforum extends ExportController {
         $ex->query("drop table if exists z_conversation;");
         $ex->query("
             create table z_conversation (
-                ConversationID int unsigned NOT NULL AUTO_INCREMENT,
+                ConversationID int unsigned not null auto_increment,
                 LowUserID int unsigned,
                 HighUserID int unsigned,
-                PRIMARY KEY (ConversationID),
-                INDEX idx_lowuser_highuser (LowUserID, HighUserID)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+                primary key (ConversationID),
+                index idx_lowuser_highuser (LowUserID, HighUserID)
+            ) engine=InnoDB default charset=utf8 collate=utf8_unicode_ci;
         ");
         $ex->query("
             insert into z_conversation (LowUserID, HighUserID)
@@ -314,7 +314,7 @@ class Jforum extends ExportController {
             select
                 ConversationID,
                 LowUserID as UserID,
-                NOW() as DateLastViewed
+                now() as DateLastViewed
             from z_conversation
 
             union
@@ -322,7 +322,7 @@ class Jforum extends ExportController {
             select
                 ConversationID,
                 HighUserID as UserID,
-                NOW() as DateLastViewed
+                now() as DateLastViewed
             from z_conversation
          ");
         // Needs afterward: update GDN_UserConversation set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)
