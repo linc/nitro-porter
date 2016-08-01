@@ -328,7 +328,7 @@ class Jforum extends ExportController {
 
         $ex->comment('Run the following query after the import: ');
         $ex->comment('update GDN_UserConversation set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)');
-        
+
         $ex->endExport();
     }
 }
