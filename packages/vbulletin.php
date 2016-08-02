@@ -173,8 +173,6 @@ class VBulletin extends ExportController {
             'aim',
             'icq',
             'yahoo',
-            'msn',
-            'skype',
             'styleid',
             'avatarid'
         ),
@@ -232,14 +230,6 @@ class VBulletin extends ExportController {
 
         // Users
         $user_Map = array(
-            'userid' => 'UserID',
-            'username' => 'Name',
-            'password2' => 'Password',
-            'email' => 'Email',
-            'referrerid' => 'InviteUserID',
-            'timezoneoffset' => 'HourOffset',
-            'ipaddress' => 'LastIPAddress',
-            'ipaddress2' => 'InsertIPAddress',
             'usertitle' => array(
                 'Column' => 'Title',
                 'Filter' => function ($value) {
@@ -269,9 +259,18 @@ class VBulletin extends ExportController {
         }
 
         $ex->exportTable('User', "
-            select u.*,
-                ipaddress as ipaddress2,
-                concat(`password`, salt) as password2,
+            select
+                u.userid as UserID,
+                u.username as Name,
+                u.email as Email,
+                u.referrerid as InviteUserID,
+                u.timezoneoffset as HourOffset,
+                u.timezoneoffset as HourOffset,
+                u.ipaddress as LastIPAddress,
+                u.ipaddress as InsertIPAddress,
+                u.usertitle,
+                u.posts,
+                concat(`password`, salt) as Password,
                 date_format(birthday_search, get_format(DATE, 'ISO')) as DateOfBirth,
                 from_unixtime(joindate) as DateFirstVisit,
                 from_unixtime(lastvisit) as DateLastActive,
@@ -303,11 +302,12 @@ class VBulletin extends ExportController {
             'userid' => 'UserID',
             'usergroupid' => 'RoleID'
         );
-        $ex->query("create temporary table VbulletinRoles (userid int unsigned not null, usergroupid int unsigned not null)");
+        $ex->query("drop table if exists VbulletinRoles");
+        $ex->query("create table VbulletinRoles (userid int unsigned not null, usergroupid int unsigned not null)");
         # Put primary groups into tmp table
         $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         # Put stupid CSV column into tmp table
-        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user", true);
+        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user");
         if (is_resource($secondaryRoles)) {
             while (($row = @mysql_fetch_assoc($secondaryRoles)) !== false) {
                 if ($row['membergroupids'] != '') {
@@ -316,8 +316,7 @@ class VBulletin extends ExportController {
                         if (!$groupID) {
                             continue;
                         }
-                        $ex->query("insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})",
-                            true);
+                        $ex->query("insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})", true);
                     }
                 }
             }
@@ -336,9 +335,10 @@ class VBulletin extends ExportController {
         $this->addPermissionColumns(self::$permissions, $permissions_Map);
         $ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
 
+        $ex->query("drop table if exists VbulletinUserMeta");
         // UserMeta
         $ex->query("
-            create temporary table VbulletinUserMeta(
+            create table VbulletinUserMeta(
                 `UserID` int not null,
                 `Name` varchar(255) not null,
                 `Value` text not null
@@ -348,9 +348,13 @@ class VBulletin extends ExportController {
         $userFields = array(
             'usertitle' => 'Title',
             'homepage' => 'Website',
-            'skype' => 'Skype',
             'styleid' => 'StyleID'
         );
+
+        if ($ex->exists('user', array('skype')) === true) {
+            $userFields['skype'] = 'Skype';
+        }
+
         foreach ($userFields as $field => $insertAs) {
             $ex->query("
                 insert into VbulletinUserMeta (UserID, Name, Value)
@@ -361,34 +365,37 @@ class VBulletin extends ExportController {
                     from :_user where $field != ''
             ");
         }
-        # Dynamic vB user data (userfield)
-        $profileFields = $ex->query("
-            select
-                varname,
-                text
-            from :_phrase
-            where product='vbulletin'
-                and fieldname='cprofilefield'
-                and varname like 'field%_title'
-        ");
 
-        if (is_resource($profileFields)) {
-            $profileQueries = array();
-            while ($field = @mysql_fetch_assoc($profileFields)) {
-                $column = str_replace('_title', '', $field['varname']);
-                $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $field['text']);
-                $profileQueries[] = "
-                    insert into VbulletinUserMeta(UserID, Name, Value)
-                        select
-                            userid,
-                            'Profile.".$name."',
-                            ".$column."
-                        from :_userfield
-                        where ".$column." != ''
-                ";
-            }
-            foreach ($profileQueries as $query) {
-                $ex->query($query);
+        if ($ex->exists('phrase', array('product', 'fieldname')) === true) {
+            # Dynamic vB user data (userfield)
+            $profileFields = $ex->query("
+                select
+                    varname,
+                    text
+                from :_phrase
+                where product='vbulletin'
+                    and fieldname='cprofilefield'
+                    and varname like 'field%_title'
+            ");
+
+            if (is_resource($profileFields)) {
+                $profileQueries = array();
+                while ($field = @mysql_fetch_assoc($profileFields)) {
+                    $column = str_replace('_title', '', $field['varname']);
+                    $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $field['text']);
+                    $profileQueries[] = "
+                        insert into VbulletinUserMeta(UserID, Name, Value)
+                            select
+                                userid,
+                                'Profile.".$name."',
+                                ".$column."
+                            from :_userfield
+                            where ".$column." != ''
+                    ";
+                }
+                foreach ($profileQueries as $query) {
+                    $ex->query($query);
+                }
             }
         }
 
@@ -449,16 +456,16 @@ class VBulletin extends ExportController {
 
         // Categories
         $category_Map = array(
-            'forumid' => 'CategoryID',
-            'description' => 'Description',
-            'Name2' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
-            'parentid' => 'ParentCategoryID'
         );
         $ex->exportTable('Category', "
             select
-                f.*,
-                title as Name2
+                f.forumid as CategoryID,
+                f.description as Description,
+                f.parentid as ParentCategoryID,
+                f.title,
+                f.displayorder
             from :_forum as f
             where 1 = 1
                 $forumWhere
@@ -487,14 +494,7 @@ class VBulletin extends ExportController {
 
         // Discussions
         $discussion_Map = array(
-            'threadid' => 'DiscussionID',
-            'forumid' => 'CategoryID',
-            'postuserid' => 'InsertUserID',
-            'postuserid2' => 'UpdateUserID',
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-            'Format' => 'Format',
-            'views' => 'CountViews',
-            'ipaddress' => 'InsertIPAddress'
         );
 
         if ($ex->destination == 'database') {
@@ -509,14 +509,18 @@ class VBulletin extends ExportController {
 
         $ex->exportTable('Discussion', "
             select
-                t.*,
-                t.postuserid as postuserid2,
-                p.ipaddress,
+                t.threadid as DiscussionID,
+                t.forumid as CategoryID,
+                t.postuserid as InsertUserID,
+                t.postuserid as UpdateUserID,
+                t.views as CountViews,
+                t.title,
+                p.ipaddress as InsertIPAddress,
                 p.pagetext as Body,
                 'BBCode' as Format,
                 replycount+1 as CountComments,
-                convert(ABS(open-1),char(1)) as Closed,
-                if(convert(sticky,char(1))>0,2,0) as Announce,
+                convert(ABS(open-1), char(1)) as Closed,
+                if(convert(sticky, char(1)) > 0, 2, 0) as Announce,
                 from_unixtime(t.dateline) as DateInserted,
                 from_unixtime(lastpost) as DateUpdated,
                 from_unixtime(lastpost) as DateLastComment,
@@ -531,21 +535,17 @@ class VBulletin extends ExportController {
         ", $discussion_Map);
 
         // Comments
-        $comment_Map = array(
-            'postid' => 'CommentID',
-            'threadid' => 'DiscussionID',
-            'pagetext' => 'Body',
-            'Format' => 'Format',
-            'ipaddress' => 'InsertIPAddress'
-        );
-
+        $comment_Map = array();
         if ($minDiscussionID) {
             $minDiscussionWhere = "and p.threadid > $minDiscussionID";
         }
 
         $ex->exportTable('Comment', "
             select
-                p.*,
+                p.postid as CommentID,
+                p.threadid as DiscussionID,
+                p.pagetext as Body,
+                p.ipaddress as InsertIPAddress,
                 'BBCode' as Format,
                 p.userid as InsertUserID,
                 p.userid as UpdateUserID,
@@ -566,15 +566,23 @@ class VBulletin extends ExportController {
             $minDiscussionWhere = "where st.threadid > $minDiscussionID";
         }
 
+        if ($ex->exists('threadread', array('readtime')) === true) {
+            $threadReadTime = 'from_unixtime(tr.readtime)';
+            $threadReadJoin = 'left join :_threadread as tr on tr.userid = st.userid and tr.threadid = st.threadid';
+        } else {
+            $threadReadTime = 'now()';
+            $threadReadJoin = null;
+        }
+
         $ex->exportTable('UserDiscussion', "
             select
                 st.userid as UserID,
                 st.threadid as DiscussionID,
-                '1' as Bookmarked,
-                from_unixtime(tr.readtime) as DateLastViewed
+                $threadReadTime as DateLastViewed,
+                '1' as Bookmarked
             from :_subscribethread as st
-                left join :_threadread as tr on tr.userid = st.userid and tr.threadid = st.threadid
-            $minDiscussionWhere
+                $threadReadJoin
+                $minDiscussionWhere
         ");
         /*$ex->exportTable('UserDiscussion', "
             select
@@ -590,7 +598,7 @@ class VBulletin extends ExportController {
         ");*/
 
         // Activity (from visitor messages in vBulletin 3.8+)
-        if ($ex->exists('visitormessage')) {
+        if ($ex->exists('visitormessage') === true) {
             if ($minDiscussionID) {
                 $minDiscussionWhere = "and dateline > $minDiscussionID";
             }
@@ -625,7 +633,7 @@ class VBulletin extends ExportController {
         $this->_exportPolls();
 
         // Media
-        if ($ex->exists('attachment')) {
+        if ($ex->exists('attachment') === true) {
             $this->exportMedia($minDiscussionID);
         }
 
@@ -885,25 +893,24 @@ class VBulletin extends ExportController {
      */
     public function exportBlobs($attachments = true, $customAvatars = true) {
         $ex = $this->ex;
-        if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true) {
-            $extension = ExportModel::fileExtension('a.filename');
-        } else {
-            $extension = ExportModel::fileExtension('filename');
-        }
 
         if ($attachments) {
             $identity = 'f.attachmentid';
-            if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true
-                || $ex->exists('attach') === true
-            ) {
+
+            if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true) {
+                $extension = ExportModel::fileExtension('a.filename');
                 $identity = 'f.filedataid';
+            } elseif ($ex->exists('attach') === true) {
+                $identity = 'f.filedataid';
+            } else {
+                $extension = ExportModel::fileExtension('filename');
             }
 
             $sql = "
                 select
                    f.filedata,
                    $extension as extension,
-                   concat('attachments/', f.userid, '/', $identity, '.', lower(extension)) as Path
+                   concat('attachments/', f.userid, '/', $identity, '.', lower($extension)) as Path
                from ";
 
             // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
@@ -919,19 +926,27 @@ class VBulletin extends ExportController {
         }
 
         if ($customAvatars) {
+            if ($ex->exists('customavatar', array('avatardata')) === true) {
+                $avatarDataColumn = 'avatardata';
+            } else {
+                $avatarDataColumn = 'filedata';
+            }
+
             $sql = "
                 select
-                   a.filedata,
-                   case when a.userid is not null then concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
-                      else null end as customphoto
+                   a.$avatarDataColumn,
+                   if (a.userid is not null,
+                       concat('customavatars/', a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.'))),
+                       null
+                   ) as customphoto
                 from :_customavatar a
             ";
             $sql = str_replace('u.userid', 'a.userid', $sql);
-            $ex->exportBlobs($sql, 'filedata', 'customphoto', 80);
+            $ex->exportBlobs($sql, $avatarDataColumn, 'customphoto', 80);
         }
 
         // Export the group icons no matter what.
-        if ($ex->exists('socialgroupicon', 'thumbnail_filedata') && ($attachments || $customAvatars)) {
+        if ($ex->exists('socialgroupicon', 'thumbnail_filedata') === true && ($attachments || $customAvatars)) {
             $ex->exportBlobs("
                 select
                    i.filedata,
@@ -1265,10 +1280,10 @@ class VBulletin extends ExportController {
     public function buildMediaDimension($value, $field, $row) {
         // Non-images get no height/width
         $ex = $this->ex;
-        if ($ex->exists('attachment', array('extension'))) {
+        if ($ex->exists('attachment', array('extension')) === true) {
             $extension = $row['extension'];
         } else {
-            $extension = end(explode('.', $row['filename']));
+            $extension = pathinfo($row['filename'], PATHINFO_EXTENSION);
         }
         if (in_array(strtolower($extension), array('jpg', 'gif', 'png', 'jpeg'))) {
             return null;

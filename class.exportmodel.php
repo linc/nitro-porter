@@ -311,7 +311,7 @@ class ExportModel {
      * @param bool $thumbnail
      */
     public function exportBlobs($sql, $blobColumn, $pathColumn, $thumbnail = false) {
-        $this->comment("Exporting blobs...");
+        $this->comment('Exporting blobs...');
 
         $result = $this->query($sql);
         $count = 0;
@@ -1515,7 +1515,7 @@ class ExportModel {
      * @return string SQL.
      */
     public static function fileExtension($columnName) {
-        return "right($columnName, instr(reverse($columnName), '.'))";
+        return "right($columnName, instr(reverse($columnName), '.') - 1)";
     }
 }
 
