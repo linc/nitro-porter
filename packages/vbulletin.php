@@ -511,6 +511,7 @@ class VBulletin extends ExportController {
             select
                 t.*,
                 t.postuserid as postuserid2,
+                p.postid as ForeignID,
                 p.ipaddress,
                 p.pagetext as Body,
                 'BBCode' as Format,
