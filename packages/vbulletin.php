@@ -38,7 +38,8 @@ $supported['vbulletin']['CommandLine'] = array(
     'mindate' => array('A date to import from. Like selective amnesia.'),
     //'forumid' => array('Only export 1 forum'),
     //'ipbanlist' => array('Export IP ban list, which is a terrible idea.'),
-    'filepath' => array('Full path of file attachments to be renamed.', 'Sx' => '::')
+    'filepath' => array('Full path of file attachments to be renamed.', 'Sx' => '::'),
+    'filesHashSeparator' => array('Separator used to split the hash of attachments. ("" or "/")', 'Sx' => '::'),
 );
 $supported['vbulletin']['features'] = array(
     'Comments' => 1,
@@ -205,8 +206,7 @@ class VBulletin extends ExportController {
         $ex->beginExport('', 'vBulletin 3.* and 4.*');
         $this->exportBlobs(
             $this->param('files'),
-            $this->param('avatars'),
-            $forumWhere
+            $this->param('avatars')
         );
 
         if ($this->param('noexport')) {
@@ -1260,7 +1260,7 @@ class VBulletin extends ExportController {
 
             // If we're exporting blobs, simplify the folder structure.
             // Otherwise, we need to preserve vBulletin's eleventy subfolders.
-            $separator = ($this->param('files', false)) ? '' : '/';
+            $separator = $this->param('filesHashSeparator', '');
             $filePath = implode($separator, $dirParts).'/'.$identity.'.'.$row['extension'];
         }
 
