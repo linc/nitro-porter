@@ -515,6 +515,7 @@ class VBulletin extends ExportController {
                 t.postuserid as UpdateUserID,
                 t.views as CountViews,
                 t.title,
+                p.postid as ForeignID,
                 p.ipaddress as InsertIPAddress,
                 p.pagetext as Body,
                 'BBCode' as Format,
