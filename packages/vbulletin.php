@@ -362,7 +362,7 @@ class VBulletin extends ExportController {
                         userid,
                         'Profile.$insertAs',
                         $field
-                    from :_user where $field != ''
+                    from :_user where $field != '' and $field != 'http://'
             ");
         }
 
@@ -399,7 +399,7 @@ class VBulletin extends ExportController {
             }
         }
 
-        // Signatures
+        // Users meta informations
         $ex->exportTable('UserMeta', "
             select
                 userid as UserID,
@@ -416,6 +416,12 @@ class VBulletin extends ExportController {
                 'BBCode'
             from :_usertextfield
             where nullif(signature, '') is not null
+
+            union
+
+            select
+                *
+            from VbulletinUserMeta
         ");
 
         // Ranks
