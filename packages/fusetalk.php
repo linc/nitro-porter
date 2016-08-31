@@ -241,7 +241,7 @@ class FuseTalk extends ExportController {
                 threads.iuserid as InsertUserID,
                 threads.dtinsertdate as DateInserted,
                 'HTML' as Format,
-                if (threads.vchalertthread = 'Yes' AND threads.dtstaydate > now(), 2, 0) as Announce,
+                if (threads.vchalertthread = 'Yes' and threads.dtstaydate > now(), 2, 0) as Announce,
                 if (threads.vchthreadlock = 'Locked', 1, 0) as Closed
             from :_threads as threads
         ", $discussion_Map);
