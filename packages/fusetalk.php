@@ -63,6 +63,10 @@ class FuseTalk extends ExportController {
         if (!mysql_num_rows($result)) {
             $ex->query('create index ix_users_userid on :_users (iuserid)');
         }
+        $result = $ex->query('show index from :_banning where Key_name = "ix_banning_banstring"', true);
+        if (!mysql_num_rows($result)) {
+            $ex->query('create index ix_banning_banstring on :_banning (vchbanstring)');
+        }
         $result = $ex->query('show index from :_forumusers where Key_name = "ix_forumusers_userid"', true);
         if (!mysql_num_rows($result)) {
             $ex->query('create index ix_forumusers_userid on :_forumusers (iuserid)');
@@ -95,13 +99,15 @@ class FuseTalk extends ExportController {
                 user.vchemailaddress as Email,
                 user.vchpassword as Password,
                 'md5' as HashMethod,
-                IF(forumusers.vchauthoricon is not null, concat('authoricons/', forumusers.vchauthoricon), null)  as Photo,
+                if (forumusers.vchauthoricon is not null, concat('authoricons/', forumusers.vchauthoricon), null) as Photo,
                 user.dtinsertdate as DateInserted,
                 user.dtlastvisiteddate as DateLastActive,
                 user.bapproved as Confirmed,
-                IF (user.iuserlevel = 0, 1, 0) as Admin
+                if (user.iuserlevel = 0, 1, 0) as Admin,
+                if (b.vchbanstring is null, 0, 1) as Banned
             from :_users as user
                 left join :_forumusers as forumusers using (iuserid)
+                left join :_banning AS b on b.vchbanstring = user.vchemailaddress
          ;", $user_Map);  // ":_" will be replaced by database prefix
 
         $memberRoleID = 1;
@@ -109,6 +115,25 @@ class FuseTalk extends ExportController {
         if ($row = mysql_fetch_assoc($result)) {
             $memberRoleID += $row['maxRoleID'];
         }
+
+        // UserMeta. (Signatures)
+        $ex->exportTable('UserMeta', "
+            select
+                user.iuserid as UserID,
+                'Plugin.Signatures.Sig' as Name,
+                user.txsignature as Value
+            from :_users as user
+            where nullif(nullif(user.txsignature, ''), char(0)) is not null
+
+            union all
+
+            select
+                user.iuserid,
+                'Plugin.Signatures.Format',
+                'Html'
+            from :_users as user
+            where nullif(nullif(user.txsignature, ''), char(0)) is not null
+        ");
 
         // Role.
         $role_Map = array();
@@ -131,7 +156,7 @@ class FuseTalk extends ExportController {
         $ex->exportTable('UserRole', "
             select
                 user.iuserid as UserID,
-                IFNULL(user_role.igroupid, $memberRoleID) as RoleID
+                ifnull (user_role.igroupid, $memberRoleID) as RoleID
             from :_users as user
                 left join :_groupusers as user_role using (iuserid)
         ", $userRole_Map);
