@@ -127,7 +127,7 @@ class Esotalk extends ExportController {
 				on p.conversationId = c.conversationId
 			where private = 0
 			group by c.conversationId
-			group by p.time", $discussion_Map);
+			order by p.time", $discussion_Map);
 
 
         // Comment.
