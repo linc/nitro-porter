@@ -104,10 +104,12 @@ class FuseTalk extends ExportController {
                 user.dtlastvisiteddate as DateLastActive,
                 user.bapproved as Confirmed,
                 if (user.iuserlevel = 0, 1, 0) as Admin,
-                if (b.vchbanstring is null, 0, 1) as Banned
+                if (coalesce(bemail.vchbanstring, bname.vchbanstring, 0) != 0, 1, 0) as Banned
             from :_users as user
                 left join :_forumusers as forumusers using (iuserid)
-                left join :_banning AS b on b.vchbanstring = user.vchemailaddress
+                left join :_banning as bemail on b.vchbanstring = user.vchemailaddress
+                left join :_banning as bname on b.vchbanstring = user.vchnickname
+            group by user.iuserid
          ;", $user_Map);  // ":_" will be replaced by database prefix
 
         $memberRoleID = 1;
