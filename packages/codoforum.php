@@ -28,7 +28,7 @@ $supported['codoforum'] = array(
 
 class Codoforum extends ExportController {
     protected $sourceTables = array(
-        'users' => array('id', 'name', 'mail', 'user_status', 'pass', 'signature'),
+        'users' => array('id', 'username', 'mail', 'user_status', 'pass', 'signature'),
         'roles' => array('rid', 'rname'),
         'user_roles' => array('uid', 'rid'),
         'categories' => array('cat_id', 'cat_name'),
@@ -52,7 +52,7 @@ class Codoforum extends ExportController {
         // User.
         $user_Map = array(
             'id' => 'UserID',
-            'name' => 'Name',
+            'username' => 'Name',
             'mail' => 'Email',
             'user_status' => 'Verified',
             'pass' => 'Password',
@@ -109,7 +109,7 @@ class Codoforum extends ExportController {
             'title' => 'Name',
         );
         $ex->exportTable('Discussion', "
-         select *, FROM_UNIXTIME(topic_created) as Message_date, FROM_UNIXTIME(last_post_time) as DateLastComment
+         select *, FROM_UNIXTIME(topic_created) as DateInserted, FROM_UNIXTIME(last_post_time) as DateLastComment
          from :_topics t", $discussion_Map);
 
         // Comment.
@@ -120,7 +120,7 @@ class Codoforum extends ExportController {
             'imessage' => array('Column' => 'Body'),
         );
         $ex->exportTable('Comment', "
-         select th.*, 'Markdown' as Format, FROM_UNIXTIME(post_created) as Message_date
+         select th.*, 'Markdown' as Format, FROM_UNIXTIME(post_created) as DateInserted
          from :_posts th", $comment_Map);
 
         // TODO UserDiscussion.
