@@ -58,7 +58,7 @@ class Codoforum extends ExportController {
             'pass' => 'Password',
         );
         $ex->exportTable('User', "
-         select u.*, FROM_UNIXTIME(created) as DateFirstVisit
+         select u.*, FROM_UNIXTIME(created) as DateFirstVisit, 'Vanilla' as HashMethod
          from :_users u
          ", $user_Map);
 
