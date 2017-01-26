@@ -166,7 +166,7 @@ function parseCommandLine($options = null, $files = null) {
 
     $opts = getOptFromArgv($shortCodes, $longCodes);
 
-    if (isset($opts['help']) || isset($opts['h'])) {
+    if (array_key_exists('help', $opts) || array_key_exists('h', $opts)) {
         writeCommandLineHelp();
         die();
     }
