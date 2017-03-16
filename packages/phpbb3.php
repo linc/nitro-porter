@@ -255,7 +255,7 @@ class PhpBB3 extends ExportController {
             select t.*,
                 'BBCode' as Format,
                 case t.topic_status when 1 then 1 else 0 end as Closed,
-                case t.topic_type when 1 then 1 else 0 end as Announce,
+                case t.topic_type when 1 then 1 when 2 then 2 else 0 end as Announce,
                 case when t.poll_start > 0 then 'poll' else null end as type,
                 FROM_UNIXTIME(t.topic_time) as DateInserted,
                 FROM_UNIXTIME(t.topic_last_post_time) as DateUpdated,
