@@ -178,7 +178,7 @@ class MODXDiscuss extends ExportController {
         $ex->exportTable('Category', "
          select
             id as CategoryID,
-            parent as ParentCategoryID,
+            case parent when 0 then '-1' else parent end as ParentCategoryID,
             name as `Name`,
             description as `Description`,
             'Heading' as `DisplayAs`,
@@ -200,27 +200,25 @@ class MODXDiscuss extends ExportController {
         // Discussion.
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
         $discussion_Map = array(
-            't.id' => 'DiscussionID',
-            't.board' => 'CategoryID',
-            't.title' => 'Name',
-            // 't.title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-            // 't.author_first' => 'InsertUserID',
-            't.replies' => 'CountComments',
-            't.views' => 'CountViews',
-            't.locked' => 'Closed',
-            't.sticky' => 'Announce',
-            'p.message' => 'Body',
-            'BBCode' => 'Format',
-            'p.author' => 'InsertUserID',
-            'p.createdon' => 'DateInserted',
-            'editedby2' => 'UpdateUserID',
-            'p.editedon' => 'DateUpdated',
-            'p.ip' => 'InsertIPAddress',
+            'title2' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $ex->exportTable('Discussion', "
-         select t.*, p.*,
-          case p.editedby when 0 then null else p.editedby end as editedby2
+         select
+          t.id as `DiscussionID`,
+          t.board as `CategoryID`,
+          t.title as `title2`,
+          t.replies as `CountComments`,
+          t.views as `CountViews`,
+          t.locked as `Closed`,
+          t.sticky as `Announce`,
+          p.message as `Body`,
+          'BBCode' as `Format`,
+          p.author as `InsertUserID`,
+          p.createdon as `DateInserted`,
+          p.editedon as `DateUpdated`,
+          p.ip as `InsertIPAddress`,
+          case p.editedby when 0 then null else p.editedby end as `UpdateUserID`
          from :_threads t
          join :_posts p
             on t.id = p.thread
