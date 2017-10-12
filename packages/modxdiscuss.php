@@ -41,7 +41,7 @@ class MODXDiscuss extends ExportController {
         'categories' => array(), // This just requires the 'forum' table without caring about columns.
         'boards' => array(),
         'posts' => array(),
-        'topics' => array(),
+        'threads' => array(),
         'users' => array('user', 'username', 'email', 'createdon', 'gender', 'birthdate', 'location', 'confirmed', 'last_login', 'last_active', 'title', 'avatar', 'show_email'), // Require specific cols on 'users'
     );
 
@@ -122,8 +122,8 @@ class MODXDiscuss extends ExportController {
             'roleID' => 'RoleID',
         );
         $ex->exportTable('UserRole', "
-         select u.*, 32 as roleID 
-         from :_tblAuthor u", $userRole_Map);
+         select u.*, '32' as roleID 
+         from :_moderators u", $userRole_Map);
 
         // Permission.
         // Feel free to add a permission export if this is a major platform or it will see reuse.
@@ -178,54 +178,74 @@ class MODXDiscuss extends ExportController {
         $ex->exportTable('Category', "
          select
             id as CategoryID,
-            name as `Name`,
-            description as `Description`,
-            'Heading' as `DisplayAs`,
-            rank as `Sort`
-         from :_categories
-         
-         union
-         
-         select
-            category as ParentCategoryID,
+            parent as ParentCategoryID,
             name as `Name`,
             description as `Description`,
             'Heading' as `DisplayAs`,
             rank as `Sort`
          from :_boards
-        ");
+
+         union
+
+         select
+            (select max(id) from :_boards) + id as CategoryID,
+            '-1' as ParentCategoryID,
+            name as `Name`,
+            description as `Description`,
+            'Heading' as `DisplayAs`,
+            rank as `Sort`
+         from :_categories
+         ");
 
         // Discussion.
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
         $discussion_Map = array(
-            'Topic_ID' => 'DiscussionID',
-            'Forum_ID' => 'CategoryID',
-            'Author_ID' => 'InsertUserID',
-            'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            't.id' => 'DiscussionID',
+            't.board' => 'CategoryID',
+            't.title' => 'Name',
+            // 't.title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            // 't.author_first' => 'InsertUserID',
+            't.replies' => 'CountComments',
+            't.views' => 'CountViews',
+            't.locked' => 'Closed',
+            't.sticky' => 'Announce',
+            'p.message' => 'Body',
+            'BBCode' => 'Format',
+            'p.author' => 'InsertUserID',
+            'p.createdon' => 'DateInserted',
+            'editedby2' => 'UpdateUserID',
+            'p.editedon' => 'DateUpdated',
+            'p.ip' => 'InsertIPAddress',
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $ex->exportTable('Discussion', "
-         select *,
-            FROM_UNIXTIME(Message_date) as Message_date
-         from :_tblTopic t
-         join :_tblThread th
-            on t.Start_Thread_ID = th.Thread_ID", $discussion_Map);
+         select t.*, p.*,
+          case p.editedby when 0 then null else p.editedby end as editedby2
+         from :_threads t
+         join :_posts p
+            on t.id = p.thread
+        ", $discussion_Map);
 
         // Comment.
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
         $comment_Map = array(
-            'Thread_ID' => 'CommentID',
-            'Topic_ID' => 'DiscussionID',
-            'Author_ID' => 'InsertUserID',
-            'IP_addr' => 'InsertIPAddress',
-            'Message' => array('Column' => 'Body'),
-            'Format' => 'Format',
-            'Message_date' => array('Column' => 'DateInserted')
+            'id' => 'CommentID',
+            'thread' => 'DiscussionID',
+            'message' => 'Body',
+            'BBCode' => 'Format',
+            'author' => 'InsertUserID',
+            'createdon' => 'DateInserted',
+            'editedby2' => 'UpdateUserID',
+            'p.editedon' => 'DateUpdated',
+            'p.ip' => 'InsertIPAddress',
         );
         $ex->exportTable('Comment', "
-         select th.*
-         from :_tblThread th", $comment_Map);
+         select p.*,
+          case p.editedby when 0 then null else p.editedby end as editedby2
+         from :_posts p
+         where p.parent <> 0
+        ", $comment_Map);
 
         // UserDiscussion.
         // This is the table for assigning bookmarks/subscribed threads.
