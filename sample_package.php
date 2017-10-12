@@ -8,11 +8,11 @@
  */
 
 // Add to the $Supported array so it appears in the dropdown menu. Uncomment next line.
-//$Supported['samplename'] = array('name'=> 'Proper Platform Name', 'prefix'=>'x_');
+//$supported['samplename'] = array('name'=> 'Proper Platform Name', 'prefix'=>'x_');
 
 // Optionally, add the features you are supporting. Set all values to 1 or a string for support notes.
 // See functions/feature-functions.php VanillaFeatureSet() for array keys.
-//$Supported['samplename']['features'] = array('Users' => 1);
+//$supported['samplename']['features'] = array('Users' => 1);
 
 class SampleName extends ExportController {
     /**
