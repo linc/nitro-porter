@@ -100,7 +100,8 @@ abstract class ExportController {
         global $supported;
 
         // Test connection
-        $msg = $this->testDatabase();
+        //$msg = $this->testDatabase();
+        $msg = $this->testDatabase2();
         if ($msg === true) {
 
             // Test src tables' existence structure
@@ -183,6 +184,29 @@ abstract class ExportController {
 
         return $result;
     }
+
+    public function testDatabase2() {
+
+        // Connection
+        if (function_exists('mysql_connect')) {
+            if($c = @mysql_connect($this->dbInfo['dbhost'], $this->dbInfo['dbuser'], $this->dbInfo['dbpass'])) {
+                // Database
+                if (mysql_select_db($this->dbInfo['dbname'], $c)) {
+                    mysql_close($c);
+                    $result = true;
+                } else {
+                    mysql_close($c);
+                    $result = "Could not find database '{$this->dbInfo['dbname']}'.";
+                }
+            } else {
+                $result = 'Could not connect to ' . $this->dbInfo['dbhost'] . ' as ' . $this->dbInfo['dbuser'] . ' with given password.';
+            }
+        } else {
+            $result = 'mysql_connect is an undefined function.  Verify MySQL extension is installed and enabled.';
+        }
+        return $result;
+    }
+
 }
 
 ?>

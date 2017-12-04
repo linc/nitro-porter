@@ -975,7 +975,6 @@ class ExportModel {
             $i++;
         }
         $this->_queryStructures[$key] = $result;
-
         return $result;
     }
 
