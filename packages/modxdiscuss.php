@@ -7,12 +7,12 @@
  * @package VanillaPorter
  */
 
-// Add to the $Supported array so it appears in the dropdown menu. Uncomment next line.
-$Supported['modxdiscuss'] = array('name'=> 'MODX Discuss Extension', 'prefix'=>'modx_discuss_');
+// Add to the $supported array so it appears in the dropdown menu. Uncomment next line.
+$supported['modxdiscuss'] = array('name'=> 'MODX Discuss Extension', 'prefix'=>'modx_discuss_');
 
 // Optionally, add the features you are supporting. Set all values to 1 or a string for support notes.
 // See functions/feature-functions.php VanillaFeatureSet() for array keys.
-$Supported['modxdiscuss']['features'] = array(
+$supported['modxdiscuss']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
     'Users' => 1,
