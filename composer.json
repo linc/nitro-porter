@@ -1,7 +1,7 @@
 {
     "name": "vanilla/porter",
     "description": "Vanilla Porter is a tool for exporting other forums to Vanilla.",
-    "license": "GPLv2",
+    "license": "GPL-2.0",
     "authors": [
         {
             "name": "Todd Burry",
