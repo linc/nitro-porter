@@ -344,6 +344,7 @@ function HTMLDecoder($value) {
             $characterSet = 'ISO-8859-15';
             break;
         case 'utf8':
+        case 'utf8mb4':
             $characterSet = 'UTF-8';
             break;
     }
