@@ -154,7 +154,7 @@ left join :_categories c
         $ex->exportTable('Discussion', "select t.*,
         'BBCode' as Format,
          case t.topic_status when 1 then 1 else 0 end as Closed,
-         case t.topic_type when 1 then 1 else 0 end as Announce,
+         case t.topic_type when 1 then 2 else 0 end as Announce,
          FROM_UNIXTIME(t.topic_time) as DateInserted
         from :_topics t",
             $discussion_Map);
@@ -317,6 +317,24 @@ join z_pmgroup g
         $ex->query('drop table if exists z_pmto2;');
         $ex->query('drop table if exists z_pm;');
         $ex->query('drop table if exists z_pmgroup;');
+
+        // Media
+        $ex->exportTable('Media', "
+            select
+                ad.attach_id as MediaID,
+                ad.real_filename as Name,
+                concat('attachments/',ad.physical_filename) as Path,
+                concat('attachments/',ad.physical_filename) as ThumbPath,
+                if(ad.mimetype = '', 'application/octet-stream', ad.mimetype) as Type,
+                ad.filesize as Size,
+                FROM_UNIXTIME(ad.filetime) as DateInserted,
+                ifnull(t.topic_id, a.post_id) as ForeignID,
+                if(t.topic_id is not null, 'discussion', 'comment') as ForeignTable,
+                a.user_id_1 as InsertUserID
+            from :_attachments_desc ad
+            inner join :_attachments a on a.attach_id = ad.attach_id
+            left join :_topics t on t.topic_first_post_id = a.post_id
+        ");
 
         // End
         $ex->endExport();
