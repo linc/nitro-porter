@@ -501,6 +501,10 @@ class VBulletin extends ExportController {
         // Discussions
         $discussion_Map = array(
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
+                    return preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
+                }
+            ),
         );
 
         if ($ex->destination == 'database') {
@@ -523,7 +527,7 @@ class VBulletin extends ExportController {
                 t.title,
                 p.postid as ForeignID,
                 p.ipaddress as InsertIPAddress,
-                p.pagetext as Body,
+                p.pagetext,
                 'BBCode' as Format,
                 replycount+1 as CountComments,
                 convert(ABS(open-1), char(1)) as Closed,
@@ -541,7 +545,12 @@ class VBulletin extends ExportController {
         ", $discussion_Map);
 
         // Comments
-        $comment_Map = array();
+        $comment_Map = array(
+            'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
+                    return preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
+                }
+            ),
+        );
         if ($minDiscussionID) {
             $minDiscussionWhere = "and p.threadid > $minDiscussionID";
         }
@@ -550,7 +559,7 @@ class VBulletin extends ExportController {
             select
                 p.postid as CommentID,
                 p.threadid as DiscussionID,
-                p.pagetext as Body,
+                p.pagetext,
                 p.ipaddress as InsertIPAddress,
                 'BBCode' as Format,
                 p.userid as InsertUserID,
