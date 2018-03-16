@@ -1071,7 +1071,9 @@ class ExportModel {
      * @param $indexName Name of the index to verify
      * @param $table Name of the table the target index exists in
      * @return bool True if index exists, false otherwise
-     *//*
+     */
+
+    /*
     public function indexExists($indexName, $table) {
         $indexName = mysql_real_escape_string($indexName);
         $table = mysql_real_escape_string($table);
@@ -1132,6 +1134,7 @@ class ExportModel {
      * @param bool $buffer
      * @return resource
      */
+    /*
     protected function _query($sql, $buffer = false) {
         if (isset($this->_lastResult) && is_resource($this->_lastResult)) {
             mysql_free_result($this->_lastResult);
@@ -1166,6 +1169,7 @@ class ExportModel {
 
         return $result;
     }
+    */
 
     /**
      * Send multiple SQL queries.
@@ -1512,6 +1516,12 @@ class ExportModel {
         return "right($columnName, instr(reverse($columnName), '.') - 1)";
     }
 
+    /**
+     * Execute a SQL query on the current connection.
+     *
+     * @param $sql
+     * @return ResultSet instance of ResultSet of success false on failure
+     */
     public function newQuery($sql) {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
         if ($this->sourcePrefix) {
@@ -1524,11 +1534,24 @@ class ExportModel {
         return $dbResource->query($sql);
     }
 
+    /**
+     * Escaping string using the db resource
+     *
+     * @param $string
+     * @return string escaped string
+     */
     public function escape($string) {
         $dbResource = $this->_dbFactory->getInstance();
         return $dbResource->escape($string);
     }
 
+    /**
+     * Determine if an index exists in a table
+     *
+     * @param $indexName
+     * @param $table
+     * @return bool
+     */
     public function indexExists($indexName, $table) {
         $dbResource = $this->_dbFactory->getInstance();
         $indexName = $dbResource->escape($indexName);
@@ -1536,7 +1559,7 @@ class ExportModel {
 
         $result = $this->query("show index from `{$table}` WHERE Key_name = '{$indexName}'");
 
-        return ($result->nextResultRow() !== false);
+        return $result->nextResultRow() !== false;
     }
 
 }
