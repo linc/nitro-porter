@@ -31,6 +31,7 @@ if (PHP_SAPI == 'cli') {
 global $supported;
 
 // Support Files
+include_once 'config.php';
 include_once 'class.exportmodel.php';
 include_once 'class.exportcontroller.php';
 include_once 'functions/core-functions.php';
@@ -39,6 +40,11 @@ include_once 'functions/filter-functions.php';
 include_once 'functions/commandline-functions.php';
 include_once 'functions/structure-functions.php';
 include_once 'functions/feature-functions.php';
+include_once 'database/class.dbfactory.php';
+include_once 'database/interface.dbresource.php';
+include_once 'database/class.resultset.php';
+include_once 'database/class.mysqlidb.php';
+include_once 'database/class.mysqldb.php';
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");

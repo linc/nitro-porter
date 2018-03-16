@@ -108,10 +108,14 @@ class ExportModel {
     /** @var string Database username. */
     protected $_username;
 
+    protected $_dbFactory;
+
     /**
      * Setup.
      */
-    public function __construct() {
+    public function __construct(DbFactory $dbFactory) {
+
+        $this->_dbFactory = $dbFactory;
         self::$mb = function_exists('mb_detect_encoding');
 
         // Set the search and replace to escape strings.
@@ -422,12 +426,12 @@ class ExportModel {
         $IDName = 'NOTSET';
         $firstQuery = true;
 
-        $data = $this->query($query);
+        $data = $this->newQuery($query);
 
         // Loop through the data and write it to the file.
         $rowCount = 0;
         if ($data !== false) {
-            while (($row = mysql_fetch_assoc($data)) !== false) {
+            while ($row = $data->nextResultRow()) {
                 $row = (array)$row; // export%202010-05-06%20210937.txt
                 $this->currentRow =& $row;
                 $rowCount++;
@@ -443,16 +447,10 @@ class ExportModel {
                 $this->writeRow($fp, $row, $exportStructure, $revMappings);
             }
         }
-        if ($data !== false) {
-            mysql_free_result($data);
-        }
         unset($data);
-
         if (!isset($options['NoEndline'])) {
             $this->writeEndTable($fp);
         }
-
-        mysql_close();
 
         return $rowCount;
     }
@@ -713,15 +711,14 @@ class ExportModel {
     /**
      * Execute an sql statement and return the result.
      *
-     * @param type $sql
-     * @param type $indexColumn
+     * @param string $sql
+     * @param bool $indexColumn
      * @return type
      */
     public function get($sql, $indexColumn = false) {
-        $r = $this->_query($sql, true);
-        $result = array();
+        $r = $this->newQuery($sql);
 
-        while ($row = mysql_fetch_assoc($r)) {
+        while ($row = ($r->nextResultRow())) {
             if ($indexColumn) {
                 $result[$row[$indexColumn]] = $row;
             } else {
@@ -744,26 +741,25 @@ class ExportModel {
         if (!$data) {
             return false;
         }
-        if ($statusRow = mysql_fetch_assoc($data)) {
+        if ($statusRow = $data->nextResultRow()) {
             $collation = $statusRow['Collation'];
         } else {
             return false;
         }
+        unset($data);
 
         // Grab the character set from the database.
         $data = $this->query("show collation like '$collation'");
         if (!$data) {
             return false;
         }
-        if ($collationRow = mysql_fetch_assoc($data)) {
+        if ($collationRow = $data->nextResultRow()) {
             $characterSet = $collationRow['Charset'];
             if (!defined('PORTER_CHARACTER_SET')) {
                 define('PORTER_CHARACTER_SET', $characterSet);
             }
-
             return $characterSet;
         }
-
         return false;
     }
 
@@ -1075,7 +1071,7 @@ class ExportModel {
      * @param $indexName Name of the index to verify
      * @param $table Name of the table the target index exists in
      * @return bool True if index exists, false otherwise
-     */
+     *//*
     public function indexExists($indexName, $table) {
         $indexName = mysql_real_escape_string($indexName);
         $table = mysql_real_escape_string($table);
@@ -1083,7 +1079,7 @@ class ExportModel {
         $result = $this->query("show index from `{$table}` WHERE Key_name = '{$indexName}'", true);
 
         return $result && mysql_num_rows($result);
-    }
+    }*/
 
     /**
      *
@@ -1122,7 +1118,10 @@ class ExportModel {
             }
         }
 
-        return $this->_query($query, $buffer);
+        // NEW
+        return $this->newQuery($query);
+
+        //return $this->_query($query, $buffer);
     }
 
     /**
@@ -1277,13 +1276,12 @@ class ExportModel {
         static $_exists = array();
 
         if (!isset($_exists[$table])) {
-            $result = $this->query("show table status like ':_$table'", true);
+            $result = $this->query("show table status like ':_$table'");
             if (!$result) {
                 $_exists[$table] = false;
-            } elseif (!mysql_fetch_assoc($result)) {
+            } elseif (!$result->nextResultRow()) {
                 $_exists[$table] = false;
             } else {
-                mysql_free_result($result);
                 $desc = $this->query('describe :_' . $table);
                 if ($desc === false) {
                     $_exists[$table] = false;
@@ -1293,10 +1291,9 @@ class ExportModel {
                     }
 
                     $cols = array();
-                    while (($TD = mysql_fetch_assoc($desc)) !== false) {
+                    while (($TD = $desc->nextResultRow()) !== false) {
                         $cols[$TD['Field']] = $TD;
                     }
-                    mysql_free_result($desc);
                     $_exists[$table] = $cols;
                 }
             }
@@ -1335,7 +1332,8 @@ class ExportModel {
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->query('describe :_' . $reqTable);
+            $tableDescriptions = $this->newQuery('describe :_' . $reqTable);
+
             //echo 'describe '.$prefix.$reqTable;
             if ($tableDescriptions === false) { // Table doesn't exist
                 $countMissingTables++;
@@ -1347,7 +1345,7 @@ class ExportModel {
             } else {
                 // Build array of columns in this table
                 $presentColumns = array();
-                while (($TD = mysql_fetch_assoc($tableDescriptions)) !== false) {
+                while (($TD = $tableDescriptions->nextResultRow()) !== false) {
                     $presentColumns[] = $TD['Field'];
                 }
                 // Compare with required columns
@@ -1356,11 +1354,8 @@ class ExportModel {
                         $missingColumns[$reqTable][] = $reqCol;
                     }
                 }
-
-                mysql_free_result($tableDescriptions);
             }
         }
-
         // Return results
         if ($missingTables === false) {
             if (count($missingColumns) > 0) {
@@ -1516,6 +1511,34 @@ class ExportModel {
     public static function fileExtension($columnName) {
         return "right($columnName, instr(reverse($columnName), '.') - 1)";
     }
+
+    public function newQuery($sql) {
+        $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
+        if ($this->sourcePrefix) {
+            $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
+        }
+
+        $sql = rtrim($sql, ';') . ';';
+
+        $dbResource = $this->_dbFactory->getInstance();
+        return $dbResource->query($sql);
+    }
+
+    public function escape($string) {
+        $dbResource = $this->_dbFactory->getInstance();
+        return $dbResource->escape($string);
+    }
+
+    public function indexExists($indexName, $table) {
+        $dbResource = $this->_dbFactory->getInstance();
+        $indexName = $dbResource->escape($indexName);
+        $table = $dbResource->escape($table);
+
+        $result = $this->query("show index from `{$table}` WHERE Key_name = '{$indexName}'");
+
+        return ($result->nextResultRow() !== false);
+    }
+
 }
 
 ?>
