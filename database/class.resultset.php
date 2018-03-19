@@ -11,7 +11,7 @@ class ResultSet {
 
     /**
      * ResultSet constructor.
-     * 
+     *
      * @param DbResource $dbResource
      */
     public function __construct(DbResource $dbResource) {

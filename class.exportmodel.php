@@ -140,6 +140,7 @@ class ExportModel {
      * @return resource Pointer to the file created.
      */
     public function beginExport($path = '', $source = '', $header = array()) {
+
         $this->comments = array();
         $this->beginTime = microtime(true);
 
@@ -274,7 +275,8 @@ class ExportModel {
      * @param $query
      * @param array $mappings
      */
-    protected function _exportTableImport($tableName, $query, $mappings = array()) {
+    // Deprecated. To be deleted.
+    /*protected function _exportTableImport($tableName, $query, $mappings = array()) {
         // Backup the settings.
         $destinationBak = $this->destination;
         $this->destination = 'file';
@@ -304,7 +306,7 @@ class ExportModel {
         // Restore the settings.
         $this->destination = $destinationBak;
         $this->file = $_fileBak;
-    }
+    }*/
 
     /**
      * Convert database blobs into files.
@@ -319,7 +321,7 @@ class ExportModel {
 
         $result = $this->query($sql);
         $count = 0;
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             // vBulletin attachment hack (can't do this in MySQL)
             if (strpos($row[$pathColumn], '.attach') && strpos($row[$pathColumn], 'attachments/') !== false) {
                 $pathParts = explode('/', $row[$pathColumn]); // 3 parts
@@ -395,7 +397,6 @@ class ExportModel {
 
             return;
         }
-
         if ($this->destination == 'database') {
             $this->_exportTableDB($tableName, $query, $mappings);
 
@@ -405,12 +406,6 @@ class ExportModel {
         // Check for a chunked query.
         $query = str_replace('{from}', -2000000000, $query);
         $query = str_replace('{to}', 2000000000, $query);
-
-        if (strpos($query, '{from}') !== false) {
-            $this->_exportTableDBChunked($tableName, $query, $mappings);
-
-            return;
-        }
 
         // If we are in test mode then limit the query.
         if ($this->testMode && $this->testLimit) {
@@ -422,11 +417,9 @@ class ExportModel {
 
         $structure = $this->_structures[$tableName];
 
-        $lastID = 0;
-        $IDName = 'NOTSET';
         $firstQuery = true;
 
-        $data = $this->newQuery($query);
+        $data = $this->_query($query);
 
         // Loop through the data and write it to the file.
         $rowCount = 0;
@@ -480,7 +473,7 @@ class ExportModel {
         }
 
         // Get the export structure.
-        while (($row = mysql_fetch_assoc($data)) !== false) {
+        while (($row = $data->nextResultRow()) !== false) {
             $row = (array)$row;
 
             // Get the export structure.
@@ -488,7 +481,6 @@ class ExportModel {
 
             break;
         }
-        mysql_close($data);
 
         // Build the create table statement.
         $columnDefs = array();
@@ -515,7 +507,8 @@ class ExportModel {
      * @param $query
      * @param array $mappings
      */
-    protected function _exportTableDB($tableName, $query, $mappings = array()) {
+    // Deprecated. To be deleted.
+    /*protected function _exportTableDB($tableName, $query, $mappings = array()) {
         if ($this->hasFilter($mappings) || strpos($query, 'union all') !== false) {
             $this->_exportTableImport($tableName, $query, $mappings);
 
@@ -578,7 +571,7 @@ class ExportModel {
             . $query;
 
         $this->query($insertSql);
-    }
+    }*/
 
     /**
      *
@@ -588,7 +581,8 @@ class ExportModel {
      * @param $query
      * @param array $mappings
      */
-    protected function _exportTableDBChunked($tableName, $query, $mappings = array()) {
+    // Deprecated. To be deleted.
+    /*protected function _exportTableDBChunked($tableName, $query, $mappings = array()) {
         // Grab the table name from the first from.
         if (preg_match('`\sfrom\s([^\s]+)`', $query, $matches)) {
             $from = $matches[1];
@@ -600,8 +594,8 @@ class ExportModel {
 
         $sql = "show table status like '{$from}';";
         $r = $this->query($sql, true);
-        $row = mysql_fetch_assoc($r);
-        mysql_free_result($r);
+        $row = $r->nextResultRow();
+        $r->close();
         $max = $row['Auto_increment'];
 
         if (!$max) {
@@ -615,10 +609,10 @@ class ExportModel {
             $sql = str_replace(array('{from}', '{to}'), array($from, $to), $query);
             $this->_exportTableDB($tableName, $sql, $mappings);
         }
-    }
+    }*/
 
     /**
-     *
+     * Applying filter to permission column.
      *
      * @param $columns
      * @return array
@@ -636,7 +630,7 @@ class ExportModel {
     }
 
     /**
-     *
+     * Flip keys and values of associative array.
      *
      * @param $mappings
      * @return array
@@ -683,7 +677,8 @@ class ExportModel {
      * @param $value
      * @return int|mixed|string
      */
-    public static function formatValue($value) {
+    // Deprecated, not used anywhere. To be deleted.
+    /*public static function formatValue($value) {
         // Format the value for writing.
         if (is_null($value)) {
             $value = self::NULL;
@@ -706,17 +701,17 @@ class ExportModel {
         }
 
         return $value;
-    }
+    }*/
 
     /**
-     * Execute an sql statement and return the result.
+     * Execute an sql statement and return the entire result as an associative array.
      *
      * @param string $sql
      * @param bool $indexColumn
      * @return type
      */
-    public function get($sql, $indexColumn = false) {
-        $r = $this->newQuery($sql);
+    private function get($sql, $indexColumn = false) {
+        $r = $this->_query($sql);
 
         while ($row = ($r->nextResultRow())) {
             if ($indexColumn) {
@@ -812,7 +807,8 @@ class ExportModel {
      * @param $b
      * @return string
      */
-    protected function _getPrefix($a, $b) {
+    // Deprecated, not used anywhere. To be deleted.
+    /*protected function _getPrefix($a, $b) {
         $length = min(strlen($a), strlen($b));
         $prefix = '';
 
@@ -825,7 +821,7 @@ class ExportModel {
         }
 
         return $prefix;
-    }
+    }*/
 
     /**
      *
@@ -953,6 +949,7 @@ class ExportModel {
      * @param bool $key
      * @return array
      */
+    // Deprecated. To be deleted.
     public function getQueryStructure($query, $key = false) {
         $queryStruct = rtrim($query, ';') . ' limit 1';
         if (!$key) {
@@ -962,9 +959,10 @@ class ExportModel {
             return $this->_queryStructures[$key];
         }
 
-        $r = $this->query($queryStruct, true);
+        $r = $this->get($queryStruct);
         $i = 0;
         $result = array();
+        // Deprecated. To be deleted.
         while ($i < mysql_num_fields($r)) {
             $meta = mysql_fetch_field($r, $i);
             $result[$meta->name] = $meta->table;
@@ -1000,7 +998,8 @@ class ExportModel {
      * @param $globalStructure
      * @return string
      */
-    protected function _getTableHeader($structure, $globalStructure) {
+    // Deprecated. To be deleted.
+    /*protected function _getTableHeader($structure, $globalStructure) {
         $tableHeader = '';
 
         foreach ($structure as $column => $type) {
@@ -1015,7 +1014,7 @@ class ExportModel {
         }
 
         return $tableHeader;
-    }
+    }*/
 
     /**
      * Are there any filters set on this table?
@@ -1023,7 +1022,8 @@ class ExportModel {
      * @param $mappings
      * @return bool
      */
-    public function hasFilter(&$mappings) {
+    // Deprecated. To be deleted.
+    /*public function hasFilter(&$mappings) {
         foreach ($mappings as $column => $info) {
             if (is_array($info) && isset($info['Filter'])) {
                 return true;
@@ -1031,7 +1031,7 @@ class ExportModel {
         }
 
         return false;
-    }
+    }*/
 
     /**
      * Do standard HTML decoding in SQL to speed things up.
@@ -1040,7 +1040,8 @@ class ExportModel {
      * @param string $columnName
      * @param string $PK
      */
-    public function HTMLDecoderDb($tableName, $columnName, $PK) {
+    // Deprecated. To be deleted.
+    /*public function HTMLDecoderDb($tableName, $columnName, $PK) {
         $common = array('&amp;' => '&', '&lt;' => '<', '&gt;' => '>', '&apos;' => "'", '&quot;' => '"', '&#39;' => "'");
         foreach ($common as $from => $to) {
             $fromQ = mysql_escape_string($from);
@@ -1063,24 +1064,6 @@ class ExportModel {
                 $this->query($sql, true);
             }
         }
-    }
-
-    /**
-     * Determine if an index exists in a table
-     *
-     * @param $indexName Name of the index to verify
-     * @param $table Name of the table the target index exists in
-     * @return bool True if index exists, false otherwise
-     */
-
-    /*
-    public function indexExists($indexName, $table) {
-        $indexName = mysql_real_escape_string($indexName);
-        $table = mysql_real_escape_string($table);
-
-        $result = $this->query("show index from `{$table}` WHERE Key_name = '{$indexName}'", true);
-
-        return $result && mysql_num_rows($result);
     }*/
 
     /**
@@ -1109,7 +1092,7 @@ class ExportModel {
      * @param string $query The sql to execute.
      * @return resource The query cursor.
      */
-    public function query($query, $buffer = false) {
+    public function query($query) {
         if (!preg_match('`limit 1;$`', $query)) {
             $this->queries[] = $query;
         }
@@ -1120,56 +1103,8 @@ class ExportModel {
             }
         }
 
-        // NEW
-        return $this->newQuery($query);
-
-        //return $this->_query($query, $buffer);
+        return $this->_query($query);
     }
-
-    /**
-     * Execute a SQL query on the current connection.
-     *
-     * @see Query()
-     * @param $sql
-     * @param bool $buffer
-     * @return resource
-     */
-    /*
-    protected function _query($sql, $buffer = false) {
-        if (isset($this->_lastResult) && is_resource($this->_lastResult)) {
-            mysql_free_result($this->_lastResult);
-        }
-        $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
-        if ($this->sourcePrefix) {
-            $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
-        }
-
-        $sql = rtrim($sql, ';') . ';';
-
-        $connection = @mysql_connect($this->_host, $this->_username, $this->_password);
-        mysql_select_db($this->_dbName);
-        mysql_query("set names {$this->characterSet}");
-
-        if ($buffer) {
-            $result = mysql_query($sql, $connection);
-        } else {
-            $result = mysql_unbuffered_query($sql, $connection);
-            if (is_resource($result)) {
-                $this->_lastResult = $result;
-            }
-        }
-
-        if ($result === false) {
-            echo '<pre>',
-            htmlspecialchars($sql),
-            htmlspecialchars(mysql_error($connection)),
-            '</pre>';
-            trigger_error(mysql_error($connection));
-        }
-
-        return $result;
-    }
-    */
 
     /**
      * Send multiple SQL queries.
@@ -1207,12 +1142,13 @@ class ExportModel {
      * @param null $password
      * @param null $dbName
      */
-    public function setConnection($host = null, $username = null, $password = null, $dbName = null) {
+    // Deprecated. To be deleted.
+    /*public function setConnection($host = null, $username = null, $password = null, $dbName = null) {
         $this->_host = $host;
         $this->_username = $username;
         $this->_password = $password;
         $this->_dbName = $dbName;
-    }
+    }*/
 
     /**
      * Echo a status message to the console.
@@ -1336,7 +1272,7 @@ class ExportModel {
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->newQuery('describe :_' . $reqTable);
+            $tableDescriptions = $this->_query('describe :_' . $reqTable);
 
             //echo 'describe '.$prefix.$reqTable;
             if ($tableDescriptions === false) { // Table doesn't exist
@@ -1522,7 +1458,7 @@ class ExportModel {
      * @param $sql
      * @return ResultSet instance of ResultSet of success false on failure
      */
-    public function newQuery($sql) {
+    public function _query($sql) {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
         if ($this->sourcePrefix) {
             $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
