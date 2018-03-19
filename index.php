@@ -45,6 +45,7 @@ include_once 'database/interface.dbresource.php';
 include_once 'database/class.resultset.php';
 include_once 'database/class.mysqlidb.php';
 include_once 'database/class.mysqldb.php';
+include_once 'database/class.pdodb.php';
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");

@@ -1,29 +1,32 @@
 <?php
 
 /**
- * Class MysqliDB
+ * Class MysqlDB
  */
-class MysqliDB implements DbResource {
-
+class PdoDB implements DbResource {
+    /**
+     * @var mysql resource
+     */
     private $link = null;
+
+    /**
+     * @var query result
+     */
     private $result = null;
 
     /**
      * {@inheritdoc}
      */
     public function __construct(array $args) {
-        if (!function_exists('mysql_connect')) {
-            die('MySQL extension not found. Make sure the necessary extensions are installed.');
+        if (!defined('PDO::ATTR_DRIVER_NAME')) {
+            die('PDO extension not found. Make sure the necessary extensions are installed.');
         }
         try {
-            $this->link = mysqli_connect($args['dbhost'], $args['dbuser'], $args['dbpass'], $args['dbname']);
-            if (!$this->link) {
-                die('Could not connect: ' . mysqli_error());
-            }
+            $this->link = new PDO('mysql:host='.$args['dbhost'].';dbname='.$args['dbname'], $args['dbuser'], $args['dbpass']);
+            $this->link->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         } catch (Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5
             echo $t . PHP_EOL;
-            die();
         } catch (Exception $e) {
             // Executed only in PHP 5, will not be reached in PHP 7
             echo $e . PHP_EOL;
@@ -35,16 +38,15 @@ class MysqliDB implements DbResource {
      * {@inheritdoc}
      */
     public function query($sql) {
-        if (isset($this->result) && $this->result instanceof mysqli_result) {
-            mysqli_free_result($this->result);
+        if (isset($this->result)) {
+            $this->result->closeCursor();
         }
-        $result = $this->link->query($sql, MYSQLI_USE_RESULT);
+        $this->result = $this->link->query($sql);
 
-        if ($result === false) {
+        if ($this->result === false) {
             $this->error($sql);
             return false;
         }
-        $this->result = $result;
         return new ResultSet($this);
     }
 
@@ -54,23 +56,22 @@ class MysqliDB implements DbResource {
     public function error($sql) {
         echo '<pre>',
         htmlspecialchars($sql),
-        htmlspecialchars(mysqli_error($this->link)),
+        htmlspecialchars(mysql_error($this->link)),
         '</pre>';
-        trigger_error(mysqli_error($this->link));
+        trigger_error(mysql_error($this->link));
     }
 
     /**
      * {@inheritdoc}
      */
     public function nextRow() {
-        $row = mysqli_fetch_assoc($this->result);
+        $row = $this->result->fetch(PDO::FETCH_ASSOC);
 
         if (isset($row)) {
             return $row;
         }
 
-        mysqli_free_result($this->result);
-
+        $this->result->closeCursor();
         return false;
     }
 
@@ -78,18 +79,17 @@ class MysqliDB implements DbResource {
      * {@inheritdoc}
      */
     public function escape($sql) {
-        return mysqli_real_escape_string($this->link, $sql);
+        return $this->link->quote($sql);
     }
 
     /**
      * {@inheritdoc}
      */
     public function close() {
-        mysqli_close($this->link);
+        $this->result->closeCursor();
         $this->link = null;
     }
 }
 
 // Closing PHP tag required. (make.php)
 ?>
-
