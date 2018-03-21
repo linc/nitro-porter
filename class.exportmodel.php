@@ -710,7 +710,7 @@ class ExportModel {
      * @param bool $indexColumn
      * @return type
      */
-    private function get($sql, $indexColumn = false) {
+    public function get($sql, $indexColumn = false) {
         $r = $this->_query($sql);
 
         while ($row = ($r->nextResultRow())) {
@@ -1458,7 +1458,7 @@ class ExportModel {
      * @param $sql
      * @return ResultSet instance of ResultSet of success false on failure
      */
-    public function _query($sql) {
+    private function _query($sql) {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
         if ($this->sourcePrefix) {
             $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
