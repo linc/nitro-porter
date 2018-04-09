@@ -499,7 +499,7 @@ function vanillaStructure() {
             'DateFirstVisit' => 'datetime',
             'DateLastActive' => 'datetime',
             'LastIPAddress' => 'varchar(15)',
-            'AllIPAddresses' => 'varchar(100)',
+            //'AllIPAddresses' => 'varchar(100)',
             'DateInserted' => 'datetime',
             'InsertIPAddress' => 'varchar(15)',
             'DateUpdated' => 'datetime',
