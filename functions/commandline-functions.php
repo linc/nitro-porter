@@ -6,7 +6,7 @@
  */
 
 $globalOptions = array(
-    // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s
+    // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s, b
     'type' => array(
         'Type of forum we\'re freeing you from.',
         'Req' => true,
@@ -88,7 +88,6 @@ $globalOptions = array(
     'tables' => array(
         'Selective export, limited to specified tables, if provided',
         'Sx' => ':',
-        'Short' => 't',
     )
 );
 
