@@ -6,7 +6,7 @@
  *    Expression: forumdisplay\.php\?([0-9]+)-([a-zA-Z0-9-_]+)
  *    Target: /categories/$2
  *
- * @copyright 2009-2016 Vanilla Forums Inc.
+ * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */

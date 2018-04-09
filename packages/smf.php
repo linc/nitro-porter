@@ -3,7 +3,7 @@
 /**
  * SMF exporter tool
  *
- * @copyright 2009-2016 Vanilla Forums Inc.
+ * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author John Crenshaw
  * @package VanillaPorter
