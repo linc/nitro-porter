@@ -88,7 +88,6 @@ $globalOptions = array(
     'tables' => array(
         'Selective export, limited to specified tables, if provided',
         'Sx' => ':',
-        'Short' => 'b',
     )
 );
 
