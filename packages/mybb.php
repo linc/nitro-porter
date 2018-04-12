@@ -2,7 +2,7 @@
 /**
  * MyBB exporter tool.
  *
- * @copyright 2009-2016 Vanilla Forums Inc.
+ * @copyright 2009-2018 Vanilla Forums Inc.
  * @license GNU GPL2
  * @package VanillaPorter
  * @see functions.commandline.php for command line usage.
