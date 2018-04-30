@@ -128,7 +128,10 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50) {
                 $sourceImage = imagecreatefromgif($path);
                 break;
             case 2:
-                $sourceImage = imagecreatefromjpeg($path);
+                $sourceImage = @imagecreatefromjpeg($path);
+                if (!$sourceImage) {
+                    $sourceImage = imagecreatefromstring(file_get_contents($path));
+                }
                 break;
             case 3:
                 $sourceImage = imagecreatefrompng($path);
