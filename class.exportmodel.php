@@ -108,13 +108,14 @@ class ExportModel {
     /** @var string Database username. */
     protected $_username;
 
+    /** @var object Instance DbFactory */
     protected $_dbFactory;
+
 
     /**
      * Setup.
      */
-    public function __construct(DbFactory $dbFactory) {
-
+    public function __construct($dbFactory) {
         $this->_dbFactory = $dbFactory;
         self::$mb = function_exists('mb_detect_encoding');
 
@@ -267,46 +268,6 @@ class ExportModel {
             fwrite($this->file, self::NEWLINE);
         }
     }
-
-    /**
-     *
-     *
-     * @param $tableName
-     * @param $query
-     * @param array $mappings
-     */
-    // Deprecated. To be deleted.
-    /*protected function _exportTableImport($tableName, $query, $mappings = array()) {
-        // Backup the settings.
-        $destinationBak = $this->destination;
-        $this->destination = 'file';
-
-        $_fileBak = $this->file;
-        $path = dirname(__FILE__) . '/' . $tableName . '.csv';
-        $this->comment("Exporting To: $path");
-        $fp = fopen($path, 'wb');
-        $this->file = $fp;
-
-        // First export the file to a file.
-        $this->_exportTable($tableName, $query, $mappings, array('NoEndline' => true));
-
-        // Now define a table to import into.
-        $this->_createExportTable($tableName, $query, $mappings);
-
-        // Now load the data.
-        $sql = "load data local infile '$path' into table {$this->destDb}.{$this->destPrefix}$tableName
-         character set utf8
-         columns terminated by ','
-         optionally enclosed by '\"'
-         escaped by '\\\\'
-         lines terminated by '\\n'
-         ignore 2 lines";
-        $this->query($sql);
-
-        // Restore the settings.
-        $this->destination = $destinationBak;
-        $this->file = $_fileBak;
-    }*/
 
     /**
      * Convert database blobs into files.
@@ -500,118 +461,6 @@ class ExportModel {
     }
 
     /**
-     *
-     *
-     * @see _exportTable()
-     * @param $tableName
-     * @param $query
-     * @param array $mappings
-     */
-    // Deprecated. To be deleted.
-    /*protected function _exportTableDB($tableName, $query, $mappings = array()) {
-        if ($this->hasFilter($mappings) || strpos($query, 'union all') !== false) {
-            $this->_exportTableImport($tableName, $query, $mappings);
-
-            return;
-        }
-
-        // Check for a chunked query.
-        if (strpos($query, '{from}') !== false) {
-            $this->_exportTableDBChunked($tableName, $query, $mappings);
-
-            return;
-        }
-
-        $destDb = '';
-        if (isset($this->destDb)) {
-            $destDb = $this->destDb . '.';
-        }
-
-        // Limit the query to grab any additional columns.
-        $queryStruct = $this->getQueryStructure($query, $tableName);
-        $structure = $this->_structures[$tableName];
-
-        $exportStructure = $this->getExportStructure($queryStruct, $structure, $mappings, $tableName);
-
-        $mappings = $this->flipMappings($mappings);
-
-        // Build the create table statement.
-        $columnDefs = array();
-        foreach ($exportStructure as $columnName => $type) {
-            $columnDefs[] = "`$columnName` $type";
-        }
-        if ($this->scriptCreateTable) {
-            $this->query("drop table if exists {$destDb}{$this->destPrefix}$tableName");
-            $createSql = "create table {$destDb}{$this->destPrefix}$tableName (\n  " . implode(",\n  ",
-                    $columnDefs) . "\n) engine=innodb";
-            $this->query($createSql);
-        }
-
-        $query = rtrim($query, ';');
-        // Build the insert statement.
-        if ($this->testMode && $this->testLimit) {
-            $query .= " limit {$this->testLimit}";
-        }
-
-        $insertColumns = array();
-        $selectColumns = array();
-        foreach ($exportStructure as $columnName => $type) {
-            $insertColumns[] = '`' . $columnName . '`';
-            if (isset($mappings[$columnName])) {
-                $selectColumns[$columnName] = $mappings[$columnName];
-            } else {
-                $selectColumns[$columnName] = $columnName;
-            }
-        }
-
-        $query = replaceSelect($query, $selectColumns);
-
-        $insertSql = "replace {$destDb}{$this->destPrefix}$tableName"
-            . " (\n  " . implode(",\n   ", $insertColumns) . "\n)\n"
-            . $query;
-
-        $this->query($insertSql);
-    }*/
-
-    /**
-     *
-     *
-     * @see _exportTableDB()
-     * @param $tableName
-     * @param $query
-     * @param array $mappings
-     */
-    // Deprecated. To be deleted.
-    /*protected function _exportTableDBChunked($tableName, $query, $mappings = array()) {
-        // Grab the table name from the first from.
-        if (preg_match('`\sfrom\s([^\s]+)`', $query, $matches)) {
-            $from = $matches[1];
-        } else {
-            trigger_error("Could not figure out table for $tableName chunking.", E_USER_WARNING);
-
-            return;
-        }
-
-        $sql = "show table status like '{$from}';";
-        $r = $this->query($sql, true);
-        $row = $r->nextResultRow();
-        $r->close();
-        $max = $row['Auto_increment'];
-
-        if (!$max) {
-            $max = 2000000;
-        }
-
-        for ($i = 0; $i < $max; $i += $this->chunkSize) {
-            $from = $i;
-            $to = $from + $this->chunkSize - 1;
-
-            $sql = str_replace(array('{from}', '{to}'), array($from, $to), $query);
-            $this->_exportTableDB($tableName, $sql, $mappings);
-        }
-    }*/
-
-    /**
      * Applying filter to permission column.
      *
      * @param $columns
@@ -670,38 +519,6 @@ class ExportModel {
 
         return $result;
     }
-
-    /**
-     *
-     *
-     * @param $value
-     * @return int|mixed|string
-     */
-    // Deprecated, not used anywhere. To be deleted.
-    /*public static function formatValue($value) {
-        // Format the value for writing.
-        if (is_null($value)) {
-            $value = self::NULL;
-        } elseif (is_numeric($value)) {
-            // Do nothing, formats as is.
-        } elseif (is_string($value)) {
-            if (self::$mb && mb_detect_encoding($value) != 'UTF-8') {
-                $value = utf8_encode($value);
-            }
-
-            $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
-            $value = self::QUOTE
-                . str_replace(self::$escapeSearch, self::$escapeReplace, $value)
-                . self::QUOTE;
-        } elseif (is_bool($value)) {
-            $value = $value ? 1 : 0;
-        } else {
-            // Unknown format.
-            $value = self::NULL;
-        }
-
-        return $value;
-    }*/
 
     /**
      * Execute an sql statement and return the entire result as an associative array.
@@ -799,29 +616,6 @@ class ExportModel {
 
         return $prefixes;
     }
-
-    /**
-     *
-     *
-     * @param $a
-     * @param $b
-     * @return string
-     */
-    // Deprecated, not used anywhere. To be deleted.
-    /*protected function _getPrefix($a, $b) {
-        $length = min(strlen($a), strlen($b));
-        $prefix = '';
-
-        for ($i = 0; $i < $length; $i++) {
-            if ($a[$i] == $b[$i]) {
-                $prefix .= $a[$i];
-            } else {
-                break;
-            }
-        }
-
-        return $prefix;
-    }*/
 
     /**
      *
@@ -945,36 +739,6 @@ class ExportModel {
     /**
      *
      *
-     * @param $query
-     * @param bool $key
-     * @return array
-     */
-    // Deprecated. To be deleted.
-    public function getQueryStructure($query, $key = false) {
-        $queryStruct = rtrim($query, ';') . ' limit 1';
-        if (!$key) {
-            $key = md5($queryStruct);
-        }
-        if (isset($this->_queryStructures[$key])) {
-            return $this->_queryStructures[$key];
-        }
-
-        $r = $this->get($queryStruct);
-        $i = 0;
-        $result = array();
-        // Deprecated. To be deleted.
-        while ($i < mysql_num_fields($r)) {
-            $meta = mysql_fetch_field($r, $i);
-            $result[$meta->name] = $meta->table;
-            $i++;
-        }
-        $this->_queryStructures[$key] = $result;
-        return $result;
-    }
-
-    /**
-     *
-     *
      * @param $sql
      * @param $default
      * @return mixed
@@ -990,31 +754,6 @@ class ExportModel {
             return $default;
         }
     }
-
-    /**
-     *
-     *
-     * @param $structure
-     * @param $globalStructure
-     * @return string
-     */
-    // Deprecated. To be deleted.
-    /*protected function _getTableHeader($structure, $globalStructure) {
-        $tableHeader = '';
-
-        foreach ($structure as $column => $type) {
-            if (strlen($tableHeader) > 0) {
-                $tableHeader .= self::DELIM;
-            }
-            if (array_key_exists($column, $globalStructure)) {
-                $tableHeader .= $column;
-            } else {
-                $tableHeader .= $column . ':' . $type;
-            }
-        }
-
-        return $tableHeader;
-    }*/
 
     /**
      * Are there any filters set on this table?
@@ -1489,11 +1228,7 @@ class ExportModel {
      * @return bool
      */
     public function indexExists($indexName, $table) {
-        $dbResource = $this->_dbFactory->getInstance();
-        $indexName = $dbResource->escape($indexName);
-        $table = $dbResource->escape($table);
-
-        $result = $this->query("show index from `{$table}` WHERE Key_name = '{$indexName}'");
+        $result = $this->query("show index from `$table` WHERE Key_name = '$indexName'");
 
         return $result->nextResultRow() !== false;
     }

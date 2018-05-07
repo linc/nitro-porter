@@ -5,15 +5,18 @@
  */
 class MysqliDB implements DbResource {
 
+    /** @var mysql resource */
     private $link = null;
+
+    /** @var query result */
     private $result = null;
 
     /**
      * {@inheritdoc}
      */
     public function __construct(array $args) {
-        if (!function_exists('mysql_connect')) {
-            die('MySQL extension not found. Make sure the necessary extensions are installed.');
+        if (!function_exists('mysqli_connect')) {
+            die('MySQLi extension not found. See config.php and make sure the necessary extensions are installed.');
         }
         try {
             $this->link = mysqli_connect($args['dbhost'], $args['dbuser'], $args['dbpass'], $args['dbname']);
@@ -67,11 +70,10 @@ class MysqliDB implements DbResource {
 
         if (isset($row)) {
             return $row;
+        } else {
+            mysqli_free_result($this->result);
+            return false;
         }
-
-        mysqli_free_result($this->result);
-
-        return false;
     }
 
     /**

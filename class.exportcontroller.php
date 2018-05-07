@@ -29,8 +29,8 @@ abstract class ExportController {
         global $supported;
 
         $this->handleInfoForm();
-
-        $this->ex = new ExportModel(new DbFactory($this->dbInfo));
+        $dbfactory = new DbFactory($this->dbInfo, DB_EXTENSION);
+        $this->ex = new ExportModel($dbfactory);
         $this->ex->controller = $this;
         $this->ex->prefix = '';
 
@@ -93,7 +93,6 @@ abstract class ExportController {
         global $supported;
 
         // Test connection
-        //$msg = $this->testDatabase();
         $msg = $this->testDatabase();
         if ($msg === true) {
 
@@ -158,7 +157,7 @@ abstract class ExportController {
      * @return string|bool True on success, message on failure.
      */
     public function testDatabase() {
-        $dbFactory = new DbFactory($this->dbInfo);
+        $dbFactory = new DbFactory($this->dbInfo, DB_EXTENSION);
         // Will die on error
         $dbFactory->getInstance();
 

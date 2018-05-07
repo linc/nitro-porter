@@ -4,14 +4,10 @@
  * Class MysqlDB
  */
 class MysqlDB implements DbResource {
-    /**
-     * @var mysql resource
-     */
+    /** @var mysql resource */
     private $link = null;
 
-    /**
-     * @var query result
-     */
+    /** @var query result */
     private $result = null;
 
     /**
@@ -30,6 +26,7 @@ class MysqlDB implements DbResource {
         } catch (Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5
             echo $t . PHP_EOL;
+            die();
         } catch (Exception $e) {
             // Executed only in PHP 5, will not be reached in PHP 7
             echo $e . PHP_EOL;
@@ -72,11 +69,10 @@ class MysqlDB implements DbResource {
 
         if (isset($row)) {
             return $row;
+        } else  {
+            mysql_free_result($this->result);
+            return false;
         }
-
-        mysql_free_result($this->result);
-        mysql_close($this->link);
-        return false;
     }
 
     /**

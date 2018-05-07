@@ -19,7 +19,7 @@ class PdoDB implements DbResource {
      */
     public function __construct(array $args) {
         if (!defined('PDO::ATTR_DRIVER_NAME')) {
-            die('PDO extension not found. Make sure the necessary extensions are installed.');
+            die('PDO extension not found. See config.php and make sure the necessary extensions are installed.');
         }
         try {
             $this->link = new PDO('mysql:host='.$args['dbhost'].';dbname='.$args['dbname'], $args['dbuser'], $args['dbpass']);
@@ -27,6 +27,7 @@ class PdoDB implements DbResource {
         } catch (Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5
             echo $t . PHP_EOL;
+            die();
         } catch (Exception $e) {
             // Executed only in PHP 5, will not be reached in PHP 7
             echo $e . PHP_EOL;
@@ -55,10 +56,9 @@ class PdoDB implements DbResource {
      */
     public function error($sql) {
         echo '<pre>',
-        htmlspecialchars($sql),
-        htmlspecialchars(mysql_error($this->link)),
-        '</pre>';
-        trigger_error(mysql_error($this->link));
+        htmlspecialchars($sql);
+        print_r($this->link->errorInfo());
+        echo '</pre>';
     }
 
     /**

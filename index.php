@@ -31,7 +31,7 @@ if (PHP_SAPI == 'cli') {
 global $supported;
 
 // Support Files
-include_once 'config.php';
+$config = include_once 'config.php';
 include_once 'class.exportmodel.php';
 include_once 'class.exportcontroller.php';
 include_once 'functions/core-functions.php';
@@ -49,6 +49,12 @@ include_once 'database/class.pdodb.php';
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");
+if(isset($config['database']['extension'])) {
+    define('DB_EXTENSION', $config['database']['extension']);
+} else {
+    die('There is an error in your config. You need to set your database extension properly.');
+}
+
 
 // Set Vanilla to appear first in the list.
 $supported = array(
