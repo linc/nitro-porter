@@ -29,16 +29,9 @@ abstract class ExportController {
         global $supported;
 
         $this->handleInfoForm();
-
-        $this->ex = new ExportModel;
+        $dbfactory = new DbFactory($this->dbInfo, DB_EXTENSION);
+        $this->ex = new ExportModel($dbfactory);
         $this->ex->controller = $this;
-        $this->ex->setConnection(
-            $this->dbInfo['dbhost'],
-            $this->dbInfo['dbuser'],
-            $this->dbInfo['dbpass'],
-            $this->dbInfo['dbname']
-        );
-
         $this->ex->prefix = '';
 
         // That's not sexy but it gets the job done :D
@@ -110,7 +103,6 @@ abstract class ExportController {
                 $this->ex->useCompression(true);
                 $this->ex->filenamePrefix = $this->dbInfo['dbname'];
                 increaseMaxExecutionTime(3600);
-
 //            ob_start();
                 $this->forumExport($this->ex);
 //            $Errors = ob_get_clean();
@@ -165,23 +157,11 @@ abstract class ExportController {
      * @return string|bool True on success, message on failure.
      */
     public function testDatabase() {
-        // Connection
-        if (!function_exists('mysql_connect')) {
-            $result = 'mysql_connect is an undefined function.  Verify MySQL extension is installed and enabled.';
-        } elseif ($c = @mysql_connect($this->dbInfo['dbhost'], $this->dbInfo['dbuser'], $this->dbInfo['dbpass'])) {
-            // Database
-            if (mysql_select_db($this->dbInfo['dbname'], $c)) {
-                mysql_close($c);
-                $result = true;
-            } else {
-                mysql_close($c);
-                $result = "Could not find database '{$this->dbInfo['dbname']}'.";
-            }
-        } else {
-            $result = 'Could not connect to ' . $this->dbInfo['dbhost'] . ' as ' . $this->dbInfo['dbuser'] . ' with given password.';
-        }
+        $dbFactory = new DbFactory($this->dbInfo, DB_EXTENSION);
+        // Will die on error
+        $dbFactory->getInstance();
 
-        return $result;
+        return true;
     }
 }
 
