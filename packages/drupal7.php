@@ -147,6 +147,8 @@ class Drupal7 extends ExportController {
             join field_data_field_file fdff on fdff.field_file_fid = fm.fid
             where (fdff.entity_type = 'node' or fdff.entity_type = 'comment') and (fdff.bundle = 'comment_node_forum' or fdff.bundle = 'forum')
          ");
+
+        $ex->endExport();
     }
 }
 
