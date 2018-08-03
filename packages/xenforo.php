@@ -12,6 +12,8 @@
 $supported['xenforo'] = array('name' => 'Xenforo', 'prefix' => 'xf_');
 $supported['xenforo']['CommandLine'] = array(
     'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
+    'attachmentpath' => array('Full path of source attachments to process.', 'Sx' => ':', 'Field' => 'attachmentpath'),
+    'attachment' => array('Set to 1 to export attachments.', 'Sx' => ':', 'Field' => 'attachment'),
 );
 $supported['xenforo']['features'] = array(
     'Comments' => 1,
@@ -20,6 +22,7 @@ $supported['xenforo']['features'] = array(
     'Categories' => 1,
     'Roles' => 1,
     'Avatars' => 1,
+    'Attachments' => 1,
     'Passwords' => 1,
     'PrivateMessages' => 1,
     'Permissions' => 1,
@@ -33,6 +36,57 @@ class Xenforo extends ExportController {
     protected $targetFolder;
     protected $folders;
     protected $types;
+
+    /**
+     * Export attachments into vanilla-compatibles names
+     */
+    public function doAttachments() {
+        // Check source folder
+        $this->sourceFolder = $this->param('attachmentpath');
+        if (!is_dir($this->sourceFolder)) {
+            trigger_error("Source attachment folder '{$this->sourceFolder}' does not exist.");
+        }
+
+        // Set up a target folder
+        $this->targetFolder = combinePaths(array($this->sourceFolder, 'xf_attachments'));
+        if (!is_dir($this->targetFolder)) {
+            @$made = mkdir($this->targetFolder, 0777, true);
+            if (!$made) {
+                trigger_error("Target attachment folder '{$this->targetFolder}' could not be created.");
+            }
+        }
+
+        $r = $this->ex->query("
+            select
+                ad.data_id,
+                ad.filename,
+                ad.file_hash
+            from
+                :_attachment a
+            join
+                :_attachment_data ad on a.data_id = ad.data_id
+            where
+                a.content_type = 'post'
+        ");
+
+        echo 'Converting attachments...'.PHP_EOL;
+
+        $found = 0;
+        while ($row = $r->nextResultRow()) {
+            $dataId = $row['data_id'];
+            $filename = $row['filename'];
+            $filehash = $row['file_hash'];
+
+            $oldname = $dataId.'-'.$filehash.'.data';
+
+            if(file_exists($this->sourceFolder.$oldname)) {
+                $found++;
+                copy($this->sourceFolder.$oldname, $this->targetFolder.'/'.$dataId.'-'.str_replace(' ', '_',$filename));
+            }
+        }
+
+        echo $found.' files were converted.'.PHP_EOL;
+    }
 
     /**
      * Export avatars into vanilla-compatibles names
@@ -160,6 +214,11 @@ class Xenforo extends ExportController {
         // Export avatars
         if ($this->param('avatars')) {
             $this->doAvatars();
+        }
+
+        // Export attachments
+        if ($this->param('attachment')) {
+            $this->doAttachments();
         }
 
         // Users.
@@ -300,6 +359,32 @@ class Xenforo extends ExportController {
             on p.ip_id = ip.ip_id
          where p.post_id <> t.first_post_id
             and message_state = 'visible'", $comment_Map);
+
+        $ex->exportTable('Media', "
+            select
+                a.attachment_id as MediaID,
+                ad.filename as Name,
+                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as Path,
+                ad.file_size as Size,
+                ad.user_id as InsertUserID,
+                from_unixtime(ad.upload_date) as DateInserted,
+                if(t.thread_id is null, a.content_id, t.thread_id) as ForeignID,
+                if(t.thread_id is null, 'comment', 'discussion') as ForeignTable,
+                ad.width as ImageWidth,
+                ad.height as ImageHeight,
+                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
+            from
+                :_attachment a
+            left join
+                xf_post p on p.post_id = a.content_id
+            left join
+                :_thread t on t.first_post_id = a.content_id
+            join
+                :_attachment_data ad on ad.data_id = a.data_id
+            where
+                a.content_type = 'post'
+                and p.message_state <> 'deleted'
+        ");
 
         // Conversation.
         $conversation_Map = array(
@@ -470,7 +555,7 @@ class Xenforo extends ExportController {
             return $result;
         }
 
-        while ($row = mysql_fetch_assoc($r)) {
+        while ($row = $r->nextResultRow()) {
             $roleID = $row['user_group_id'];
 
             $perm = "{$row['permission_group_id']}.{$row['permission_id']}";
