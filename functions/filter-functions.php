@@ -379,13 +379,13 @@ function timestampToDate($value) {
 }
 
 /**
- * Wrapper for long2ip that nulls 'false' values.
+ * Wrapper for long2ip that nulls 'non-digit' values.
  *
  * @param $value
  * @return null|string
  */
 function long2ipf($value) {
-    if (!$value) {
+    if (!ctype_digit($value)) {
         return null;
     }
 
