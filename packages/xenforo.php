@@ -69,8 +69,6 @@ class Xenforo extends ExportController {
                 a.content_type = 'post'
         ");
 
-        echo 'Converting attachments...'.PHP_EOL;
-
         $found = 0;
         while ($row = $r->nextResultRow()) {
             $dataId = $row['data_id'];
@@ -85,7 +83,7 @@ class Xenforo extends ExportController {
             }
         }
 
-        echo $found.' files were converted.'.PHP_EOL;
+        $this->ex->comment("Attachments: ".$found." attachment(s) were found and converted during the process.");
     }
 
     /**
