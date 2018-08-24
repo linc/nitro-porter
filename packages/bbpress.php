@@ -167,7 +167,7 @@ class BBPress extends ExportController {
                 $to = $ex->query("select object_id, meta_value from :_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
                     true);
                 if (is_resource($to)) {
-                    while (($row = @mysql_fetch_assoc($to)) !== false) {
+                    while ($row = $to->nextResultRow()) {
                         $thread = $row['object_id'];
                         $tos = explode(',', trim($row['meta_value'], ','));
                         $toIns = '';
@@ -178,7 +178,6 @@ class BBPress extends ExportController {
 
                         $ex->query("insert bbpmto (UserID, ConversationID) values $toIns", true);
                     }
-                    mysql_free_result($to);
 
                     $ex->exportTable('UserConversation', 'select * from bbpmto');
                 }
