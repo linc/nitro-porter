@@ -59,32 +59,25 @@ class FuseTalk extends ExportController {
 
         $ex->comment("Creating indexes... ");
 
-        $result = $ex->query('show index from :_users where Key_name = "ix_users_userid"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_users_userid', ':_users')) {
             $ex->query('create index ix_users_userid on :_users (iuserid)');
         }
-        $result = $ex->query('show index from :_banning where Key_name = "ix_banning_banstring"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_banning_banstring', ':_banning')) {
             $ex->query('create index ix_banning_banstring on :_banning (vchbanstring)');
         }
-        $result = $ex->query('show index from :_forumusers where Key_name = "ix_forumusers_userid"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_forumusers_userid', ':_forumusers')) {
             $ex->query('create index ix_forumusers_userid on :_forumusers (iuserid)');
         }
-        $result = $ex->query('show index from :_groupusers where Key_name = "ix_groupusers_userid"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_groupusers_userid', ':_groupusers')) {
             $ex->query('create index ix_groupusers_userid on :_groupusers (iuserid)');
         }
-        $result = $ex->query('show index from :_privatemessages where Key_name = "ix_privatemessages_vchusagestatus"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_privatemessages_vchusagestatus', ':_privatemessages')) {
             $ex->query('create index ix_privatemessages_vchusagestatus on :_privatemessages (vchusagestatus)');
         }
-        $result = $ex->query('show index from :_threads where Key_name = "ix_threads_id_pollflag"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_threads_id_pollflag', ':_threads')) {
             $ex->query('create index ix_threads_id_pollflag on :_threads (ithreadid, vchpollflag)');
         }
-        $result = $ex->query('show index from :_threads where Key_name = "ix_threads_poll"', true);
-        if (!mysql_num_rows($result)) {
+        if (!$ex->indexExists('ix_threads_poll', ':_threads')) {
             $ex->query('create index ix_threads_poll on :_threads (vchpollflag)');
         }
 
@@ -114,7 +107,7 @@ class FuseTalk extends ExportController {
 
         $memberRoleID = 1;
         $result = $ex->query("select max(igroupid) as maxRoleID from :_groups", true);
-        if ($row = mysql_fetch_assoc($result)) {
+        if ($row = $result->nextResultRow()) {
             $memberRoleID += $row['maxRoleID'];
         }
 
