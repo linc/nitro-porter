@@ -87,7 +87,7 @@ class Vanilla1 extends ExportController {
         $r = $ex->query('select max(RoleID) as RoleID from :_Role');
         $zeroRoleID = 0;
         if (is_resource($r)) {
-            while (($row = @mysql_fetch_assoc($r)) !== false) {
+            while ($row = $r->nextResultRow()) {
                 $zeroRoleID = $row['RoleID'];
             }
         }
