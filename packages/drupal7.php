@@ -81,7 +81,7 @@ class Drupal7 extends ExportController {
         $ex->exportTable('UserRole', "
             select 
                 uid as UserID,
-                rid as RoldID
+                rid as RoleID
             from :_users_roles
          ");
 
@@ -105,7 +105,7 @@ class Drupal7 extends ExportController {
                 n.nid as DiscussionID,
                 n.uid as InsertUserID,
                 from_unixtime(n.created) as DateInserted,
-                from_unixtime(n.changed) as DateUpdated,
+                if(n.created <> n.changed, from_unixtime(n.changed), null) as DateUpdated,
                 if(n.sticky = 1, 2, 0) as Announce,
                 f.tid as CategoryID,
                 n.title as Name,
@@ -124,7 +124,7 @@ class Drupal7 extends ExportController {
                 c.nid as DiscussionID,
                 c.uid as InsertUserID,
                 from_unixtime(c.created) as DateInserted,
-                from_unixtime(c.changed) as DateUpdated,
+                if(n.created <> n.changed, from_unixtime(n.changed), null) as DateUpdated,
                 frcb.comment_body_value as Body,
                 'BBcode' as Format
             from comment c
@@ -135,10 +135,10 @@ class Drupal7 extends ExportController {
         // Media.
         $ex->exportTable('Media', "
             select
-				fm.fid as MediaID,
-				fm.filemime as Type,
+                fm.fid as MediaID,
+                fm.filemime as Type,
                 fdff.entity_id as ForeignID,
-                if(fdff.entity_type = 'node', 'discussion', 'comment') as ForeinTable,
+                if(fdff.entity_type = 'node', 'discussion', 'comment') as ForeignTable,
                 fm.filename as Name,
                 concat('drupal_attachments/',substring(fm.uri, 10)) as Path,
                 fm.filesize as Size,
