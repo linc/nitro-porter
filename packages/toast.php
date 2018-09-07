@@ -52,8 +52,7 @@ class Toast extends ExportController {
         // Determine safe RoleID to use for non-existant Member role
         $lastRoleID = 1001;
         $lastRoleResult = $ex->query("select max(ID) as LastID from :_Group");
-        if ($lastRoleResult) {
-            $lastRole = mysql_fetch_array($lastRoleResult);
+        if ($lastRole = $lastRoleResult->nextResultRow()) {
             $lastRoleID = $lastRole['LastID'] + 1;
         }
 
