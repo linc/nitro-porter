@@ -58,7 +58,7 @@ class Mbox extends ExportController {
 
         // Users, pt 1: Build ref array; Parse name & email out - strip quotes, <, >
         $users = array();
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             // Most senders are "Name <Email>"
             $nameParts = explode('<', trim($row['Sender'], '"'));
             // Sometimes the sender is just <email>
@@ -82,8 +82,12 @@ class Mbox extends ExportController {
         // Users, pt 2: loop thru unique emails
         foreach ($users as $email => $name) {
             $ex->query('insert into :_mbox_user (Name, Email)
-            values ("' . mysql_real_escape_string($name) . '", "' . mysql_real_escape_string($email) . '")');
-            $userID = mysql_insert_id();
+            values ("' . $ex->escape($name) . '", "' . $ex->escape($email) . '")');
+            $userID = 0;
+            $maxRes = $ex->query("select max(UserID) as id from :_mbox_user");
+            while($max = $maxRes->nextResultRow()) {
+                $userID = $max['id'];
+            }
             // Overwrite user list with new UserID instead of name
             $users[$email] = $userID;
         }
@@ -95,10 +99,14 @@ class Mbox extends ExportController {
         $result = $ex->query('select Folder from :_mbox group by Folder', true);
         // Parse name out & build ref array
         $categories = array();
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             $ex->query('insert into :_mbox_category (Name)
-            values ("' . mysql_real_escape_string($row["Folder"]) . '")');
-            $categoryID = mysql_insert_id();
+            values ("' . $ex->escape($row["Folder"]) . '")');
+            $categoryID = 0;
+            $maxRes = $ex->query("select max(CategoryID) as id from :_mbox_category");
+            while($max = $maxRes->nextResultRow()) {
+                $categoryID = $max['id'];
+            }
             $categories[$row["Folder"]] = $categoryID;
         }
 
@@ -109,7 +117,7 @@ class Mbox extends ExportController {
          CategoryID int, PRIMARY KEY (PostID))');
         $result = $ex->query('select * from :_mbox', true);
         // Parse name, body, date, userid, categoryid
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             // Assemble posts into a format we can actually export.
             // Subject: trim quotes, 're: ', 'fwd: ', 'fw: ', [category]
             $name = trim(preg_replace('#^(re:)|(fwd?:) #i', '', trim($row['Subject'], '"')));
@@ -117,18 +125,18 @@ class Mbox extends ExportController {
             $email = $this->parseEmail($row['Sender']);
             $userID = (isset($users[$email])) ? $users[$email] : 0;
             $ex->query('insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
-            values ("' . mysql_real_escape_string($name) . '",
+            values ("' . $ex->escape($name) . '",
                ' . $userID . ',
                ' . $categories[$row['Folder']] . ',
                from_unixtime(' . strtotime($row['Date']) . '),
-               "' . mysql_real_escape_string($this->parseBody($row['Body'])) . '")');
+               "' . $ex->escape($this->parseBody($row['Body'])) . '")');
         }
 
         // Decide which posts are OPs
         $result = $ex->query('select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name',
             true);
         $discussions = array();
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             $discussions[] = $row['PostID'];
         }
         $ex->query('update :_mbox_post set IsDiscussion = 1 where PostID in (' . implode(",", $discussions) . ')');
@@ -137,7 +145,7 @@ class Mbox extends ExportController {
         $result = $ex->query('select c.PostID, d.PostID as DiscussionID from :_mbox_post c
          left join :_mbox_post d on c.Name like d.Name and d.IsDiscussion = 1
          where c.IsDiscussion = 0', true);
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             $ex->query('update :_mbox_post set DiscussionID = ' . $row['DiscussionID'] . '  where PostID = ' . $row['PostID']);
         }
 
