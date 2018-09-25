@@ -589,7 +589,7 @@ class ExportModel {
 
         // Get the names in an array for easier parsing.
         $tables = array();
-        while (($row = mysql_fetch_array($data, MYSQL_NUM)) !== false) {
+        while ($row = $data->nextResultRow(false)) {
             $tables[] = $row[0];
         }
         sort($tables);

@@ -64,8 +64,8 @@ class PdoDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function nextRow() {
-        $row = $this->result->fetch(PDO::FETCH_ASSOC);
+    public function nextRow($assoc) {
+        $row = $this->result->fetch($assoc ? PDO::FETCH_ASSOC : PDO::FETCH_NUM);
 
         if (isset($row)) {
             return $row;
