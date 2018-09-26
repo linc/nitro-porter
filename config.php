@@ -1,9 +1,4 @@
 <?php
-return [
-    'database' => [
-        // Define the wanted extension, accepted options are mysql, mysqli and pdo.
-        'extension' => 'pdo',
-    ],
-];
+define('DB_EXTENSION', 'pdo');
 // Closing PHP tag required. (make.php)
 ?>

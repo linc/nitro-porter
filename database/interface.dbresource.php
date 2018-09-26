@@ -21,10 +21,11 @@ interface DbResource {
     public function error($sql);
 
     /**
-     * Fetch the new result row as an associative array.
+     * Fetch the new result row.
+     * @param bool $assoc
      * @return array|bool returns the next row if possible false if we've reached the end of the result set.
      */
-    public function nextRow();
+    public function nextRow($assoc);
 
     /**
      * Escape string

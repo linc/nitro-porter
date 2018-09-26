@@ -65,8 +65,12 @@ class MysqliDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function nextRow() {
-        $row = mysqli_fetch_assoc($this->result);
+    public function nextRow($assoc) {
+        if ($assoc) {
+            $row = mysqli_fetch_assoc($this->result);
+        } else {
+            $row = mysqli_fetch_row($this->result);
+        }
 
         if (isset($row)) {
             return $row;

@@ -64,8 +64,12 @@ class MysqlDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function nextRow() {
-        $row = mysql_fetch_assoc($this->result);
+    public function nextRow($assoc) {
+        if ($assoc) {
+            $row = mysql_fetch_assoc($this->result);
+        } else {
+            $row = mysql_fetch_row($this->result);
+        }
 
         if (isset($row)) {
             return $row;

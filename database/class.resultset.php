@@ -19,12 +19,12 @@ class ResultSet {
     }
 
     /**
-     * Iterate to new result row via the db resource
-     *
+     * Iterate to new result row via the db resource.
+     * @param bool $assoc will return result row as an enumerated array if false.
      * @return array|bool
      */
-    public function nextResultRow() {
-        return $this->dbResource->nextRow();
+    public function nextResultRow($assoc = true) {
+        return $this->dbResource->nextRow($assoc);
     }
 }
 
