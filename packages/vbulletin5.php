@@ -172,13 +172,14 @@ class VBulletin5 extends VBulletin {
             'userid' => 'UserID',
             'usergroupid' => 'RoleID'
         );
-        $ex->query("CREATE TEMPORARY TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
+        $ex->query("drop table if exists VbulletinRoles");
+        $ex->query("CREATE TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
         # Put primary groups into tmp table
         $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         # Put stupid CSV column into tmp table
         $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user", true);
         if (is_resource($secondaryRoles)) {
-            while (($row = @mysql_fetch_assoc($secondaryRoles)) !== false) {
+            while (($row = $secondaryRoles->nextResultRow()) !== false) {
                 if ($row['membergroupids'] != '') {
                     $groups = explode(',', $row['membergroupids']);
                     foreach ($groups as $groupID) {
@@ -214,7 +215,7 @@ class VBulletin5 extends VBulletin {
         $ProfileFields = $ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
         if (is_resource($ProfileFields)) {
            $ProfileQueries = array();
-           while ($Field = @mysql_fetch_assoc($ProfileFields)) {
+           while ($Field = $ProfileFields->nextResultRow()) {
               $Column = str_replace('_title', '', $Field['varname']);
               $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
               $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
@@ -290,7 +291,7 @@ class VBulletin5 extends VBulletin {
             where ct.class = 'Channel'
         ;");
 
-        while ($channel = mysql_fetch_array($channelResult)) {
+        while ($channel = $channelResult->nextResultRow()) {
             $channels[$channel['nodeid']] = $channel;
             if ($channel['title'] == 'Forum') {
                 $homeID = $channel['nodeid'];
@@ -490,7 +491,7 @@ class VBulletin5 extends VBulletin {
         $result = $ex->query($innerCommentQuery.' limit 1', true);
 
         $innerCommentSQLFix = null;
-        if (mysql_num_rows($result)) {
+        if ($result->nextResultRow()) {
             $ex->query("
                 create table `vBulletinInnerCommentTable` (
                     `nodeid` int(10) unsigned not null,
@@ -664,7 +665,7 @@ class VBulletin5 extends VBulletin {
         $sql = "show tables like ':_poll';";
         $result = $this->ex->query($sql, true);
 
-        if (mysql_num_rows($result) === 1) {
+        if ($result->nextResultRow()) {
             $sql = "
                 select count(*) AS Count
                 from :_poll as p
@@ -675,7 +676,7 @@ class VBulletin5 extends VBulletin {
             ;";
 
             $result = $this->ex->query($sql);
-            if ($row = mysql_fetch_assoc($result)) {
+            if ($row = $result->nextResultRow()) {
                 $count = $row['Count'];
             }
         }
@@ -795,7 +796,8 @@ class VBulletin5 extends VBulletin {
         $result = $ex->query($sql);
         $currentPollID = null;
         $currentSortID = 0;
-        while ($row = mysql_fetch_assoc($result)) {
+        $pollCount = 0;
+        while ($row = $result->nextResultRow()) {
 
             if ($currentPollID !== $row['nodeid']) {
                 $currentPollID = $row['nodeid'];
@@ -805,10 +807,10 @@ class VBulletin5 extends VBulletin {
             $row['sort'] = ++$currentSortID;
 
             $ex->writeRow($fp, $row, $exportStructure, $revMappings);
+            $pollCount++;
         }
         $ex->writeEndTable($fp);
-        $ex->comment("Exported Table: PollOption (".mysql_num_rows($result)." rows)");
-        mysql_free_result($result);
+        $ex->comment("Exported Table: PollOption (".$pollCount." rows)");
 
         $pollVote_Map = array(
             'userid' => 'UserID',

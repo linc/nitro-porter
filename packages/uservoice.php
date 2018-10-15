@@ -185,7 +185,7 @@ class UserVoice extends ExportController {
         $path = '/www/porter/userpics';
         $count = 0;
 
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             // Build path
             if (!file_exists(dirname($path))) {
                 $r = mkdir(dirname($path), 0777, true);
@@ -226,7 +226,7 @@ class UserVoice extends ExportController {
         $path = '/www/porter/attach';
         $count = 0;
 
-        while ($row = mysql_fetch_assoc($result)) {
+        while ($row = $result->nextResultRow()) {
             // Build path
             if (!file_exists(dirname($path))) {
                 $r = mkdir(dirname($path), 0777, true);

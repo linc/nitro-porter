@@ -44,7 +44,7 @@ class AnswerHub extends ExportController {
         $ex->beginExport('', 'AnswerHub');
 
         $result = $ex->query("select c_reserved as lastID from :_id_generators where c_identifier = 'AUTHORITABLE'", true);
-        if ($row = mysql_fetch_assoc($result)) {
+        if ($row = $result->nextResultRow()) {
             $lastID = $row['lastID'];
         }
         if (!isset($lastID)) {

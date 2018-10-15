@@ -309,7 +309,7 @@ class VBulletin extends ExportController {
         # Put stupid CSV column into tmp table
         $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user");
         if (is_resource($secondaryRoles)) {
-            while (($row = @mysql_fetch_assoc($secondaryRoles)) !== false) {
+            while ($row = $secondaryRoles->nextResultRow()) {
                 if ($row['membergroupids'] != '') {
                     $groups = explode(',', $row['membergroupids']);
                     foreach ($groups as $groupID) {
@@ -380,7 +380,7 @@ class VBulletin extends ExportController {
 
             if (is_resource($profileFields)) {
                 $profileQueries = array();
-                while ($field = @mysql_fetch_assoc($profileFields)) {
+                while ($field = $profileFields->nextResultRow()) {
                     $column = str_replace('_title', '', $field['varname']);
                     $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $field['text']);
                     $profileQueries[] = "
@@ -666,7 +666,7 @@ class VBulletin extends ExportController {
             ");
 
             $result = $ex->query("select value from :_setting where varname = 'banip'");
-            $row = mysql_fetch_assoc($result);
+            $row = $result->nextResultRow();
 
             if ($row) {
                 $insertSql = 'insert ignore into z_ipbanlist(ipaddress) values ';
@@ -677,7 +677,7 @@ class VBulletin extends ExportController {
                     if (empty($IP)) {
                         continue;
                     }
-                    $insertSql .= '(\''.mysql_real_escape_string($IP).'\'), ';
+                    $insertSql .= '(\''.$ex->escape($IP).'\'), ';
                 }
                 $insertSql = substr($insertSql, 0, -2);
                 $ex->query($insertSql);
@@ -1023,8 +1023,7 @@ class VBulletin extends ExportController {
         if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true) {
             // Exporting 4.x with 'filedata' table.
             // Build an index to join on.
-            $result = $ex->query('show index from :_thread where Key_name = "ix_thread_firstpostid"', true);
-            if (!mysql_num_rows($result)) {
+            if (!$ex->indexExists('ix_thread_firstpostid', ':_thread')) {
                 $ex->query('create index ix_thread_firstpostid on :_thread (firstpostid)');
             }
             $mediaSql = "
@@ -1113,7 +1112,7 @@ class VBulletin extends ExportController {
             if (is_dir($attachmentPath)) {
                 $ex->comment("Checking files");
                 $result = $ex->query($mediaSql);
-                while ($row = mysql_fetch_assoc($result)) {
+                while ($row = $result->nextResultRow()) {
                     $filePath = $this->buildMediaPath('', '', $row);
                     $cdn = $this->param('cdn', '');
 
@@ -1208,7 +1207,7 @@ class VBulletin extends ExportController {
 
         $r = $ex->query($sql);
         $rowCount = 0;
-        while ($row = mysql_fetch_assoc($r)) {
+        while ($row = $r->nextResultRow()) {
             $options = explode('|||', $row['options']);
 
             foreach ($options as $i => $option) {
@@ -1221,7 +1220,6 @@ class VBulletin extends ExportController {
                 $rowCount++;
             }
         }
-        mysql_free_result($r);
         $ex->writeEndTable($fp);
         $ex->comment("Exported Table: PollOption ($rowCount rows)");
 
@@ -1389,7 +1387,7 @@ class VBulletin extends ExportController {
     public function getConfig($name) {
         $sql = "select * from :_setting where varname = '$name'";
         $result = $this->ex->query($sql, true);
-        if ($row = mysql_fetch_assoc($result)) {
+        if ($row = $result->nextResultRow()) {
             return $row['value'];
         }
 

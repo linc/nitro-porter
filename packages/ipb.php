@@ -88,7 +88,7 @@ class IPB extends ExportController {
         $skipped = 0;
         $completed = 0;
         $errors = array();
-        while (($row = mysql_fetch_assoc($userList)) !== false) {
+        while ($row = $userList->nextResultRow()) {
             $processed++;
             $error = false;
 
