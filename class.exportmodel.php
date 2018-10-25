@@ -1233,6 +1233,18 @@ class ExportModel {
         return $result->nextResultRow() !== false;
     }
 
+    /**
+     * Determine if a table exists
+     *
+     * @param $tableName
+     * @return bool
+     */
+    public function tableExists($tableName) {
+        $result = $this->query("show tables like '$tableName'");
+
+        return !empty($result->nextResultRow());
+    }
+
 }
 
 ?>
