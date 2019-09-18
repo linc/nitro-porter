@@ -127,7 +127,7 @@ abstract class ExportController {
         $this->dbInfo = array(
             'dbhost' => $_POST['dbhost'],
             'dbuser' => $_POST['dbuser'],
-            'dbpass' => $_POST['dbpass'],
+            'dbpass' => defined('CONSOLE') ? $_POST['dbpass'] : htmlspecialchars_decode($_POST['dbpass']),
             'dbname' => $_POST['dbname'],
             'type' => $_POST['type'],
             'prefix' => !isset($_POST['emptyprefix']) ? preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null,

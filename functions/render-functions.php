@@ -90,7 +90,7 @@ function viewForm($data) {
         To see what data we can grab from your platform,
         <a href="?features=1" style="text-decoration:underline;">see this table</a>.
     </div>
-    <form action="<?php echo $_SERVER['PHP_SELF'] . '?' . http_build_query($_GET); ?>" method="post">
+    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?' . http_build_query($_GET); ?>" method="post">
         <input type="hidden" name="step" value="info"/>
 
         <div class="Form">
@@ -145,7 +145,7 @@ function viewForm($data) {
                 </li>
                 <li>
                     <label>Database Password
-                        <input class="InputBox" type="password" name="dbpass" value="<?php echo getValue('dbpass') ?>"/>
+                        <input class="InputBox" type="password" name="dbpass" value="<?php echo htmlspecialchars(getValue('dbpass')) ?>"/>
                     </label>
                 </li>
                 <li>
@@ -263,7 +263,7 @@ function viewFeatureList($platform, $features = array()) {
     pageHeader();
 
     echo '<div class="Info">';
-    echo '<h2>' . $supported[$platform]['name'] . '</h2>';
+    echo '<h2>' . htmlspecialchars($supported[$platform]['name']) . '</h2>';
     echo '<dl>';
 
     foreach ($features as $feature => $trash) {
