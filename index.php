@@ -97,7 +97,7 @@ if (isset($_REQUEST['features'])) {
         }
         $controller->$method();
     } else {
-        echo 'Invalid type specified: ' . $_POST['type'];
+        echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
     }
 } else {
     // Show the web UI to start an export.
