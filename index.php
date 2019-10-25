@@ -6,12 +6,12 @@
  * To use this script, copy it to your web server and open it in your browser.
  * If you have a large database, make the directory writable so that the export file can be saved locally and zipped.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
+ * @copyright 2009-2019 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
 define('APPLICATION', 'Porter');
-define('APPLICATION_VERSION', '2.3');
+define('APPLICATION_VERSION', '2.5');
 
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
 ini_set('display_errors', 'on');
