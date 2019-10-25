@@ -529,6 +529,7 @@ class ExportModel {
      */
     public function get($sql, $indexColumn = false) {
         $r = $this->_query($sql);
+        $result = [];
 
         while ($row = ($r->nextResultRow())) {
             if ($indexColumn) {
