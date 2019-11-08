@@ -139,32 +139,6 @@ class PunBB extends ExportController {
             u.signature != ''
         
         union
-
-        select
-            u.id as UserID,
-            'Plugin.Signatures.HideAll' AS Name,
-            0 as Value
-        from 
-            :_users u
-        where 
-            u.signature is not null 
-        and 
-            u.signature != ''
-        
-        union
-        
-        select
-            u.id as UserID,
-            'Plugin.Signatures.HideImages' AS Name,
-            0 as Value
-        from 
-            :_users u
-        where 
-            u.signature is not null 
-        and 
-            u.signature != ''
-        
-        union
         
         select
             u.id as UserID,
