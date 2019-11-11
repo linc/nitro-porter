@@ -149,7 +149,8 @@ class PunBB extends ExportController {
         where 
             u.signature is not null 
         and 
-            u.signature !='' ", array('id ' => 'UserID', 'signature' => 'Value'));
+            u.signature !='' 
+        ");
 
 
         // Category.
