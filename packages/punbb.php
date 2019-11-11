@@ -127,12 +127,30 @@ class PunBB extends ExportController {
 
         // Signatures.
         $ex->exportTable('UserMeta', "
-         SELECT
-         id,
-         'Plugin.Signatures.Sig' AS Name,
-         signature
-      FROM :_users u
-      WHERE u.signature IS NOT NULL", array('id ' => 'UserID', 'signature' => 'Value'));
+        select
+           u.id as UserID,
+           'Plugin.Signatures.Format' AS Name,
+           'BBCode' as Value
+        from 
+           :_users u
+        where 
+            u.signature is not null 
+        and 
+            u.signature != ''
+        
+        union
+        
+        select
+            u.id as UserID,
+            'Plugin.Signatures.Sig' AS Name,
+            signature as Value
+        from 
+            :_users u
+        where 
+            u.signature is not null 
+        and 
+            u.signature !='' 
+        ");
 
 
         // Category.
