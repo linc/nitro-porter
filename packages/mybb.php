@@ -20,7 +20,7 @@ $supported['mybb']['features'] = array(
     'Avatars' => 1,
     'PrivateMessages' => 0,
     'Signatures' => 0,
-    'Attachments' => 0,
+    'Attachments' => 1,
     'Bookmarks' => 1,
     'Permissions' => 0,
     'Badges' => 0,
@@ -139,6 +139,28 @@ class MyBB extends ExportController {
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
          from :_posts p", $comment_Map);
+
+        // Media
+        $media_Map = array(
+            'aid' => 'MediaID',
+            'pid' => 'ForeignID',
+            'uid' => 'InsertUserId',
+            'filesize' => 'Size',
+            'filename' => 'Name',
+            'height' => 'ImageHeight',
+            'width' => 'ImageWidth',
+            'filetype' => 'Type',
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
+        );
+        $ex->exportTable('Media', "
+            select a.*,
+                600 as thumb_width,
+                concat('attachments/', a.thumbnail) as ThumbPath,
+                concat('attachments/', a.attachname) as Path,
+                'Comment' as ForeignTable
+            from :_attachments a
+            where a.pid > 0
+        ", $media_Map);
 
         // UserDiscussion.
         $userDiscussion_Map = array(
