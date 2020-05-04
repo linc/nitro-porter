@@ -3,7 +3,7 @@ Vanilla Porter
 
 Vanilla Porter is a nifty tool for exporting your old & busted forum into a fresh Vanilla Forum. It will create a zipped text file that can be imported directly to Vanilla via the Dashboard.
 
-**Do NOT user Vanilla Porter for UPGRADING**. It is for _migrating_ from other forums, including the incompatible Vanilla 1.x series.
+**Do NOT use Vanilla Porter for UPGRADING**. It is for _migrating_ from other forums, including the incompatible Vanilla 1.x series.
 
 ### Requirements
 
