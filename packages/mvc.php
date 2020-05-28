@@ -17,7 +17,7 @@ $supported['mvc']['features'] = array(
     'Categories' => 1,
     'Roles' => 1,
     'Avatars' => 1,
-    'Attachments' => 1,
+    'Attachments' => 0,
     'Signatures' => 1,
     'Tags' => 1,
 );
@@ -95,7 +95,7 @@ class MVC extends ExportController {
 
         if(!$ex->tableExists("UserId")){
             $ex->query("create table UserId as (
-                    select Id from :_MembershipUser)
+                    select Id from MembershipUser)
             ");
 
             $ex->query("ALTER TABLE UserId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
@@ -143,7 +143,7 @@ class MVC extends ExportController {
 
         if(!$ex->tableExists("RoleId")){
             $ex->query("create table RoleId as (
-                    select Id from :_MembershipRole)
+                    select Id from MembershipRole)
             ");
 
             $ex->query("ALTER TABLE RoleId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
@@ -172,7 +172,7 @@ class MVC extends ExportController {
 
         if(!$ex->tableExists("BadgeId")){
             $ex->query("create table BadgeId as (
-                    select Id from :_Badge)
+                    select Id from Badge)
             ");
 
             $ex->query("ALTER TABLE BadgeId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
@@ -201,7 +201,6 @@ class MVC extends ExportController {
             where u.Id = m.MembershipUser_Id and b.Id = m.Badge_Id
         ", $user_badge_Map);
 
-        // TODO Assign default parent category
         // Category.
         $category_Map = array();
 
@@ -259,7 +258,7 @@ class MVC extends ExportController {
                 m.CreateDate as DateInserted,
                 m.Name as Name,
                 m.Views as CountViews,
-                'BBCode' as Format
+                'Html' as Format
             from Topic m, DiscussionId d, CategoryId c, UserId u
             where d.Id = m.Id and c.Id = m.Category_Id and u.Id = m.MembershipUser_Id
 
@@ -270,7 +269,7 @@ class MVC extends ExportController {
 
         if(!$ex->tableExists("CommentId")){
             $ex->query("create table CommentId as (
-                    select Id from :_Post)
+                    select Id from Post)
             ");
 
             $ex->query("ALTER TABLE CommentId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
@@ -284,7 +283,7 @@ class MVC extends ExportController {
                 m.PostContent as Body,
                 m.DateCreated as DateInserted,
                 m.DateEdited as DateUpdated,
-                'BBCode' as Format
+                'Html' as Format
             from Post m, CommentId c, DiscussionId d, UserId u
             where c.Id = m.Id and d.Id = m.Topic_Id and u.Id = m.MembershipUser_Id
          ", $comment_Map);
@@ -294,7 +293,7 @@ class MVC extends ExportController {
 
         if(!$ex->tableExists("TagId")){
             $ex->query("create table TagId as (
-                    select Id from :_TopicTag)
+                    select Id from TopicTag)
             ");
 
             $ex->query("ALTER TABLE TagId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
@@ -311,16 +310,18 @@ class MVC extends ExportController {
          ", $tag_Map);
 
         //Attachment WIP
+        /*
         $attachment_Map = array();
 
         if(!$ex->tableExists("MediaId")){
             $ex->query("create table MediaId as (
-                    select Id from :_UploadedFile)
+                    select Id from UploadedFile)
             ");
 
             $ex->query("ALTER TABLE MediaId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
         }
 
+        // Use of placeholder for Type and Size due to lack of data in db. Will require external script to get the info.
         $ex->exportTable('Attachment', "
             select
                 m.VanillaID  as MediaID,
@@ -333,7 +334,7 @@ class MVC extends ExportController {
             from UploadedFile u, MediaId m
             where u.Post_Id <> '' and m.Id = u.Id
         ", $attachment_Map);
-
+        */
         $ex->endExport();
     }
 }
