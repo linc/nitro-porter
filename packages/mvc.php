@@ -327,11 +327,11 @@ class MVC extends ExportController {
                 u.Filename as Name,
                 concat('attachments/', u.Filename) as Path,
                 '' as Type,
-                '' as Size,
+                0 as Size,
                 MembershipUser_Id InsertUserID,
                 u.DateCreated as DateInserted
             from UploadedFile u, MediaId m
-            where m.Id = u.Id
+            where u.Post_Id <> '' and m.Id = u.Id
         ", $attachment_Map);
 
         $ex->endExport();
