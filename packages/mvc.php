@@ -2,13 +2,13 @@
 /**
  * MVC exporter tool.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
+ * @copyright 2009-2020 Vanilla Forums Inc.
  * @license GNU GPL2
  * @package VanillaPorter
  * @see functions.commandline.php for command line usage.
  */
 
-$supported['mvc'] = array('name' => 'mvc', 'prefix' => 'mvc_');
+$supported['mvc'] = array('name' => 'mvc', 'prefix' => '');
 $supported['mvc']['features'] = array(
     'Comments' => 1,
     'Discussions' => 1,
@@ -30,6 +30,9 @@ class MVC extends ExportController {
      */
     protected $sourceTables = array(
         'MembershipUser' => array(),
+        'Catagory' => array(),
+        'Post' => array(),
+        'Topic' => array(),
     );
 
     /**
@@ -38,9 +41,7 @@ class MVC extends ExportController {
      * @param ExportModel $ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
-    {
-
+    public function forumExport($ex) {
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -90,252 +91,318 @@ class MVC extends ExportController {
 
         $ex->structures($structures);
 
+        $this->createPrimaryKeys();
+        $this->createIndexesIfNotExists();
+
         // Users.
-        $user_Map = array();
-
-        if(!$ex->tableExists("UserId")){
-            $ex->query("create table UserId as (
-                    select Id from MembershipUser)
-            ");
-
-            $ex->query("ALTER TABLE UserId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         $ex->exportTable('User', "
             select
-                u.VanillaID as UserId,
-                m.UserName as Name,
+                UserID,
+                UserName as Name,
                 'Reset' as HashMethod,
-                m.Email as Email,
-                m.Avatar as Photo,
-                m.CreateDate as DateInserted,
-                m.LastLoginDate as DateLastVisit,
-                m.LastActivityDate as DateLastActive,
-                m.IsBanned as Banned,
-                m.Location as Location
-            from MembershipUser m, UserId u
-
-            where u.Id = m.Id
-         ", $user_Map);
+                Email as Email,
+                Avatar as Photo,
+                CreateDate as DateInserted,
+                LastLoginDate as DateLastVisit,
+                LastActivityDate as DateLastActive,
+                IsBanned as Banned,
+                Location as Location
+            from
+                :_MembershipUser m
+         ");
 
         // UserMeta.
         $ex->exportTable('UserMeta', "
             select
-                u.VanillaID as UserID,
+                UserID,
                 'Website' as `Name`,
-                m.Website as `Value`
-            from MembershipUser m, UserId u
-            where m.Website <> '' and u.Id = m.Id
+                Website as `Value`
+            from
+                :_MembershipUser m
+            where
+                m.Website <> ''
 
             union
 
             select
-                u.VanillaID as UserID,
+                UserID,
                 'Signatures.Sig',
-                m.Signature
-            from MembershipUser m, UserId u
-            where m.Signature <> '' and u.Id = m.Id
-
+                Signature
+            from
+                :_MembershipUser m
+            where
+                m.Signature <> ''
         ");
 
         // Role.
-        $role_Map = array();
-
-        if(!$ex->tableExists("RoleId")){
-            $ex->query("create table RoleId as (
-                    select Id from MembershipRole)
-            ");
-
-            $ex->query("ALTER TABLE RoleId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         $ex->exportTable('Role', "
             select
-                r.VanillaID as RoleID,
-                m.RoleName as Name
-            from MembershipRole m, RoleId r
-            where r.Id = m.Id
-         ", $role_Map);
+                RoleID,
+                RoleName as Name
+            from
+                :_MembershipRole
+         ");
 
         // User Role.
-        $userRole_Map = array();
         $ex->exportTable('UserRole', "
             select
-                u.VanillaID as UserID,
-                r.VanillaID as RoleID
-            from MembershipUsersInRoles m, RoleId r, UserId u
-            where r.Id = m.RoleIdentifier and u.Id = m.UserIdentifier
-        ", $userRole_Map);
+                u.UserID as UserID,
+                r.RoleID as RoleID
+            from :_MembershipUsersInRoles m,  :_MembershipRole r, :_MembershipUser u
+            where r.RoleID = m.RoleIdentifier and u.UserID = m.UserIdentifier
+        ");
 
         //Badge.
-        $badge_Map = array();
-
-        if(!$ex->tableExists("BadgeId")){
-            $ex->query("create table BadgeId as (
-                    select Id from Badge)
-            ");
-
-            $ex->query("ALTER TABLE BadgeId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         $ex->exportTable('Badge', "
             select
-                b.VanillaID as BadgeID,
-                m.Type as Type,
-                m.DisplayName as Name,
-                m.Description as Body,
-                m.Image as Photo,
-                m.AwardsPoints as Points
-            from Badge m, BadgeId b
-            where b.Id = m.Id
-        ", $badge_Map);
+                BadgeID,
+                Type as Type,
+                DisplayName as Name,
+                Description as Body,
+                Image as Photo,
+                AwardsPoints as Points
+            from
+                :_Badge
+        ");
 
-        $user_badge_Map = array();
         $ex->exportTable('UserBadge', "
             select
-                u.VanillaID as UserID,
-                b.VanillaID as BadgeID,
+                u.UserID,
+                b.BadgeID,
                 '' as Status,
                 now() as DateInserted
-            from MembershipUser_Badge m, UserId u, BadgeId b
-            where u.Id = m.MembershipUser_Id and b.Id = m.Badge_Id
-        ", $user_badge_Map);
+            from :_MembershipUser_Badge m, :_MembershipUser u, :_Badge b
+            where u.UserID = m.MembershipUser_Id and b.BadgeID = m.Badge_Id
+        ");
 
         // Category.
-        $category_Map = array();
-
-        if(!$ex->tableExists("CategoryId")){
-            $ex->query("create table CategoryId as (
-                    select Id from :_Category)
-            ");
-
-            $ex->query("ALTER TABLE CategoryId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         $ex->exportTable('Category', "
-
-                          select
-                c.VanillaID as CategoryID,
-                p.VanillaID as ParentCategoryID,
+            select
+                m.CategoryID,
+                p.CategoryID as ParentCategoryID,
                 m.Name as Name,
                 m.Description as Description,
                 m.DateCreated as DateInserted,
                 null as Sort
-            from Category m, CategoryId c, CategoryId p
-            where m.Category_Id <> '' and c.Id = m.Id and p.Id = m.Category_Id
+            from Category m, Category p
+            where m.Category_Id <> '' and p.CategoryID = m.Category_Id
 
-            UNION
+            union
 
             select
-                c.VanillaID as CategoryID,
+                m.CategoryID,
                 '-1' as ParentCategoryID,
                 m.Name as Name,
                 m.Description as Description,
                 m.DateCreated as DateInserted,
                 null as Sort
-            from Category m, CategoryId c
-            where m.Category_Id = '' and c.Id = m.Id
-
-
-        ", $category_Map);
+            from Category m
+            where m.Category_Id = ''
+        ");
 
         // Discussion.
-        $discussion_Map = array();
-
-        if(!$ex->tableExists("DiscussionId")){
-            $ex->query("create table DiscussionId as (
-                    select Id from :_Topic)
-            ");
-
-            $ex->query("ALTER TABLE DiscussionId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         $ex->exportTable('Discussion', "
             select
-                d.VanillaID as DiscussionID,
-                c.VanillaID as CategoryID,
-                u.VanillaID as InsertUserID,
+                m.TopicID as DiscussionID,
+                c.CategoryID as CategoryID,
+                u.UserID as InsertUserID,
                 m.CreateDate as DateInserted,
                 m.Name as Name,
                 m.Views as CountViews,
                 'Html' as Format
-            from Topic m, DiscussionId d, CategoryId c, UserId u
-            where d.Id = m.Id and c.Id = m.Category_Id and u.Id = m.MembershipUser_Id
-
-            ", $discussion_Map);
-
-        // Comment.
-        $comment_Map = array();
-
-        if(!$ex->tableExists("CommentId")){
-            $ex->query("create table CommentId as (
-                    select Id from Post)
+            from
+                :_Topic m
+            left join
+                :_MembershipUser u on u.Id = m.MembershipUser_Id
+            left join
+                :_Category c on c.Id = m.Category_Id
             ");
 
-            $ex->query("ALTER TABLE CommentId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
+        // Comment.
         $ex->exportTable('Comment', "
             select
-                c.VanillaID as CommentID,
-                d.VanillaID as DiscussionID,
-                u.VanillaID as InsertUserID,
+                m.PostID as CommentID,
+                d.TopicID as DiscussionID,
+                u.UserID as InsertUserID,
                 m.PostContent as Body,
                 m.DateCreated as DateInserted,
                 m.DateEdited as DateUpdated,
                 'Html' as Format
-            from Post m, CommentId c, DiscussionId d, UserId u
-            where c.Id = m.Id and d.Id = m.Topic_Id and u.Id = m.MembershipUser_Id
-         ", $comment_Map);
+            from
+                :_Post m
+            left join
+                :_Topic d on d.Id = m.Topic_Id
+            left join
+                :_MembershipUser u on u.Id = m.MembershipUser_Id
+         ");
 
         // Tag
-        $tag_Map = array();
-
-        if(!$ex->tableExists("TagId")){
-            $ex->query("create table TagId as (
-                    select Id from TopicTag)
-            ");
-
-            $ex->query("ALTER TABLE TagId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         $ex->exportTable('Tag', "
             select
-                t.VanillaID as TagID,
-                m.Tag as Name,
-                m.Tag as FullName,
+                TagID,
+                Tag as Name,
+                Tag as FullName,
                 now() as DateInserted
-            from TopicTag m, TagId t
-            where t.Id = m.Id
-         ", $tag_Map);
+            from TopicTag
+         ");
 
         //Attachment WIP
-        /*
-        $attachment_Map = array();
-
-        if(!$ex->tableExists("MediaId")){
-            $ex->query("create table MediaId as (
-                    select Id from UploadedFile)
-            ");
-
-            $ex->query("ALTER TABLE MediaId ADD VanillaID INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
-        }
-
         // Use of placeholder for Type and Size due to lack of data in db. Will require external script to get the info.
         $ex->exportTable('Attachment', "
             select
-                m.VanillaID  as MediaID,
-                u.Filename as Name,
+                MediaID,
+                Filename as Name,
                 concat('attachments/', u.Filename) as Path,
                 '' as Type,
                 0 as Size,
                 MembershipUser_Id InsertUserID,
                 u.DateCreated as DateInserted
-            from UploadedFile u, MediaId m
+            from :_UploadedFile u
             where u.Post_Id <> '' and m.Id = u.Id
-        ", $attachment_Map);
-        */
+        ");
+
         $ex->endExport();
+    }
+
+    /**
+     * Create indexes on current tables to accelerate the export process. Initial ids are varchar, which can make the
+     * queries hang when joining or using some columns in conditions. Ignore the creation if the index already exist.
+     */
+    private function createIndexesIfNotExists() {
+        if (!$this->ex->indexExists('mvc_users_id', ':_MembershipUser')) {
+            $this->ex->query("create INDEX mvc_users_id on :_MembershipUser(Id);");
+        }
+        if (!$this->ex->indexExists('mvc_role_id', ':_MembershipRole')) {
+            $this->ex->query("create INDEX mvc_role_id on `:_MembershipRole` (Id);");
+        }
+        if (!$this->ex->indexExists('mvc_badge_id', ':_Badge')) {
+            $this->ex->query("create INDEX mvc_badge_id on `:_Badge` (Id);");
+        }
+        if (!$this->ex->indexExists('mvc_category_id', ':_Category')) {
+            $this->ex->query("create INDEX mvc_category_id on `:_Category` (Id);");
+        }
+        if (!$this->ex->indexExists('mvc_tag_id', ':_TopicTag')) {
+            $this->ex->query("create INDEX mvc_tag_id on `:_TopicTag` (Id);");
+        }
+        if (!$this->ex->indexExists('mvc_file_id', ':_UploadedFile')) {
+            $this->ex->query("create INDEX mvc_file_id on `:_UploadedFile` (Id);");
+        }
+
+        // Topic
+        if (!$this->ex->indexExists('mvc_topic_id', ':_Topic')) {
+            $this->ex->query("create INDEX mvc_topic_id on `:_Topic` (Id);");
+        }
+        if (!$this->ex->indexExists('mvc_topic_id', ':_Topic')) {
+            $this->ex->query("create INDEX mvc_topic_membershipuser_id on `:_Topic` (MembershipUser_Id);");
+        }
+        if (!$this->ex->indexExists('mvc_topic_id', ':_Topic')) {
+            $this->ex->query("create INDEX mvc_topic_category_id on `:_Topic` (Category_Id);");
+        }
+
+        // Post
+        if (!$this->ex->indexExists('mvc_post_id', ':_Post')) {
+            $this->ex->query("create INDEX mvc_post_id on `:_Post` (Id);");
+        }
+        if (!$this->ex->indexExists('mvc_post_id', ':_Post')) {
+            $this->ex->query("create INDEX mvc_post_topic_id on `:_Post` (Topic_Id);");
+        }
+        if (!$this->ex->indexExists('mvc_post_id', ':_Post')) {
+            $this->ex->query("create INDEX mvc_post_membershipuser_id on `:_Post` (MembershipUser_Id);");
+        }
+    }
+
+    /**
+     * For each table in the database, check if the primary key exists and create it if it doesn't.
+     */
+    private function createPrimaryKeys() {
+        $this->addMembershipUserPrimaryKeyIfNotExists();
+        $this->addRolePrimaryKeyIfNotExists();
+        $this->addBadgePrimaryKeyIfNotExists();
+        $this->addCategoryPrimaryKeyIfNotExists();
+        $this->addTopicPrimaryKeyIfNotExists();
+        $this->addPostPrimaryKeyIfNotExists();
+        $this->addTopicTagPrimaryKeyIfNotExists();
+        $this->addUploadFilePrimaryKeyIfNotExists();
+    }
+
+    /**
+     * Add the UserID column to the `MembershipUser` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addMembershipUserPrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('MembershipUser', 'UserID')) {
+            $this->ex->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the RoleID column to the `MembershipRole` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addRolePrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('MembershipRole', 'RoleID')) {
+            $this->ex->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the BadgeID column to the `Badge` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addBadgePrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('Badge', 'BadgeID')) {
+            $this->ex->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the CategoryID column to the `Category` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addCategoryPrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('Category', 'CategoryID')) {
+            $this->ex->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the DiscussionID column to the Topic` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addTopicPrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('Topic', 'TopicID')) {
+            $this->ex->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the CommentID column to the 'Post` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addPostPrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('Post', 'PostID')) {
+            $this->ex->query("alter table :_Post add column PostID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the TagID column to the 'TopicTag` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addTopicTagPrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('TopicTag', 'TagID')) {
+            $this->ex->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
+        }
+    }
+
+    /**
+     * Add the MediaID column to the 'UploadedFile` table if it doesn't exist. Setting this column as the primary key
+     * will generate a new unique id for each records.
+     */
+    private function addUploadFilePrimaryKeyIfNotExists() {
+        if (!$this->ex->columnExists('UploadedFile', 'MediaID')) {
+            $this->ex->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
+        }
     }
 }
 

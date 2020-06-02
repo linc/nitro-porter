@@ -1246,6 +1246,23 @@ class ExportModel {
         return !empty($result->nextResultRow());
     }
 
+    /**
+     * Determine if a column exists in a table
+     *
+     * @param $tableName
+     * @param $columnName
+     * @return bool
+     */
+    public function columnExists($tableName, $columnName){
+
+        $result=$this->query("select *
+                                    from INFORMATION_SCHEMA.COLUMNS
+                                    where TABLE_SCHEMA = DATABASE()
+                                    and table_name = '$tableName'
+                                    and column_name = '$columnName'");
+        return $result->nextResultRow() !== false;
+    }
+
 }
 
 ?>
