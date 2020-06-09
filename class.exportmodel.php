@@ -1255,11 +1255,16 @@ class ExportModel {
      */
     public function columnExists($tableName, $columnName){
 
-        $result=$this->query("select *
-                                    from INFORMATION_SCHEMA.COLUMNS
-                                    where TABLE_SCHEMA = DATABASE()
-                                    and table_name = '$tableName'
-                                    and column_name = '$columnName'");
+        $result=$this->query("
+            select 
+                column_name
+            from 
+                information_schema.columns
+            where 
+                table_schema = database()
+                and table_name = '$tableName'
+                and column_name = '$columnName'
+        ");
         return $result->nextResultRow() !== false;
     }
 
