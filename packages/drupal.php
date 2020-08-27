@@ -1,6 +1,6 @@
 <?php
 /**
- * Vanilla 2 exporter tool
+ * Drupal 6 exporter tool
  *
  * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
