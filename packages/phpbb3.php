@@ -27,7 +27,6 @@ $supported['phpbb3']['features'] = array(
     'Ranks' => 1,
     'Groups' => 0,
     'Tags' => 0,
-    'UserTags' => 0,
     'Reactions' => 0,
     'Articles' => 0,
 );

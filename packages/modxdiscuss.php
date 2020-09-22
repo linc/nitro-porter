@@ -31,7 +31,6 @@ $supported['modxdiscuss']['features'] = array(
     'Ranks' => 0,
     'Groups' => 0,
     'Tags' => 0,
-    'UserTags' => 0,
     'Reactions' => 0,
     'Articles' => 0,
 );

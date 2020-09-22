@@ -60,7 +60,6 @@ $supported['vbulletin']['features'] = array(
     'Ranks' => 1,
     'Groups' => 1,
     'Tags' => 0,
-    'UserTags' => 0,
     'Reactions' => 0,
     'Articles' => 0,
 );

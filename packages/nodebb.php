@@ -27,7 +27,6 @@ $supported['nodebb']['features'] = array(
     'Ranks' => 0,
     'Groups' => 0,
     'Tags' => 1,
-    'UserTags' => 0,
     'Reactions' => 1,
     'Articles' => 0,
 );
