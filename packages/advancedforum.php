@@ -17,13 +17,27 @@ $supported['advancedforum']['CommandLine'] = array(
 );
 
 $supported['advancedforum']['features'] = array(
-    'Avatars' => 1,
-    'Categories' => 1,
-    'Comments' => 1,
-    'Discussions' => 1,
+    'Users' => 1,
     'Passwords' => 1,
+    'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
     'Roles' => 1,
-    'Users' => 1
+    'Avatars' => 1,
+    'PrivateMessages' => 0,
+    'Signatures' => 1,
+    'Attachments' => 0,
+    'Bookmarks' => 0,
+    'Permissions' => 0,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 0,
+    'UserTags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class Advancedforum extends ExportController {

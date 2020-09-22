@@ -12,17 +12,28 @@ $supported['punbb']['CommandLine'] = array(
     'avatarpath' => array('Full path of forum avatars.', 'Sx' => '::')
 );
 $supported['punbb']['features'] = array(
-    'Avatars' => 1,
-    'Comments' => 1,
-    'Discussions' => 1,
+
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
     'Roles' => 1,
-    'Attachments' => 1,
-    'Permissions' => 1,
-    'Tags' => 1,
+    'Avatars' => 1,
+    'PrivateMessages' => 0,
     'Signatures' => 1,
-    'Passwords' => 1
+    'Attachments' => 1,
+    'Bookmarks' => 0,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 1,
+    'UserTags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class PunBB extends ExportController {
@@ -131,25 +142,25 @@ class PunBB extends ExportController {
            u.id as UserID,
            'Plugin.Signatures.Format' AS Name,
            'BBCode' as Value
-        from 
+        from
            :_users u
-        where 
-            u.signature is not null 
-        and 
+        where
+            u.signature is not null
+        and
             u.signature != ''
-        
+
         union
-        
+
         select
             u.id as UserID,
             'Plugin.Signatures.Sig' AS Name,
             signature as Value
-        from 
+        from
             :_users u
-        where 
-            u.signature is not null 
-        and 
-            u.signature !='' 
+        where
+            u.signature is not null
+        and
+            u.signature !=''
         ");
 
 

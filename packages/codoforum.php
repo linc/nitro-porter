@@ -12,12 +12,13 @@ $supported['codoforum'] = array(
     'name'=> 'CodoForum',
     'prefix' => 'codo_',
     'features' => array(
-        'Comments' => 1,
-        'Discussions' => 1,
         'Users' => 1,
-        'Categories' => 1,
-        'Roles' => 1,
         'Passwords' => 1,
+        'Categories' => 1,
+        'Discussions' => 1,
+        'Comments' => 1,
+        'Polls' => 0,
+        'Roles' => 1,
         'Avatars' => 0,
         'PrivateMessages' => 0,
         'Signatures' => 1,
@@ -25,6 +26,12 @@ $supported['codoforum'] = array(
         'Bookmarks' => 0,
         'Permissions' => 0,
         'UserNotes' => 0,
+        'Ranks' => 0,
+        'Groups' => 0,
+        'Tags' => 0,
+        'UserTags' => 0,
+        'Reactions' => 0,
+        'Articles' => 0,
     ),
 );
 
@@ -56,12 +63,12 @@ class Codoforum extends ExportController {
 
         // User.
         $ex->exportTable('User', "
-            select 
-                u.id as UserID, 
-                u.username as Name, 
-                u.mail as Email, 
-                u.user_status as Verified, 
-                u.pass as Password, 
+            select
+                u.id as UserID,
+                u.username as Name,
+                u.mail as Email,
+                u.user_status as Verified,
+                u.pass as Password,
                 'Vanilla' as HashMethod,
                 from_unixtime(u.created) as DateFirstVisit
             from :_users u
@@ -69,7 +76,7 @@ class Codoforum extends ExportController {
 
         // Role.
         $ex->exportTable('Role', "
-            select 
+            select
                 r.rid as RolesID,
                 r.rname as Name
             from :_roles r
@@ -77,7 +84,7 @@ class Codoforum extends ExportController {
 
         // User Role.
         $ex->exportTable('UserRole', "
-            select 
+            select
                 ur.uid as UserID,
                 ur.rid as RoleID
             from :_user_roles ur
@@ -96,7 +103,7 @@ class Codoforum extends ExportController {
 
         // Category.
         $ex->exportTable('Category', "
-            select 
+            select
                 c.cat_id as CategoryID,
                 c.cat_name as Name
             from :_categories c
