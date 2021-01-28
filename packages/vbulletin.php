@@ -42,22 +42,26 @@ $supported['vbulletin']['CommandLine'] = array(
     'filesHashSeparator' => array('Separator used to split the hash of attachments. ("" or "/")', 'Sx' => '::'),
 );
 $supported['vbulletin']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 1,
     'Roles' => 1,
     'Avatars' => 1,
-    'Attachments' => 1,
     'PrivateMessages' => 1,
-    'Permissions' => 1,
-    'UserWall' => 1,
-    'UserNotes' => 1,
-    'Bookmarks' => 1,
-    'Passwords' => 1,
     'Signatures' => 1,
+    'Attachments' => 1,
+    'Bookmarks' => 1,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 1,
     'Ranks' => 1,
-    'Polls' => 1,
+    'Groups' => 1,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 /**
@@ -459,22 +463,31 @@ class VBulletin extends ExportController {
             order by ut.minposts
         ", $rank_Map);
 
-
         // Categories
         $category_Map = array(
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
         );
+
+        $ex->query("alter table :_forum ADD new_id int(11)");
+        $ex->query("
+            update forum f, (select forumid,  description_clean from forum
+            group by description_clean) tmp
+            set f.new_id = tmp.forumid
+            where f.description_clean = tmp.description_clean
+        ");
+
         $ex->exportTable('Category', "
-            select
-                f.forumid as CategoryID,
+         select
+                f.new_id as CategoryID,
                 f.description as Description,
-                f.parentid as ParentCategoryID,
+                if(f.parentid = null, -1, p.parentid) as ParentCategoryID,
                 f.title,
                 f.displayorder
-            from :_forum as f
-            where 1 = 1
-                $forumWhere
+            from forum as f
+            left join (select new_id as parentid, title, forumid from forum) p on p.forumid = f.parentid
+            where f.title not REGEXP '(Donor|PRS|Donro) [0-9]+|Donor Updates|Medical Updates|Offspring Photos'
+            group by new_id;
         ", $category_Map);
 
         $minDiscussionID = false;
@@ -502,8 +515,8 @@ class VBulletin extends ExportController {
         $discussion_Map = array(
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
-                    return preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
-                }
+                return preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
+            }
             ),
         );
 
@@ -518,9 +531,9 @@ class VBulletin extends ExportController {
         }
 
         $ex->exportTable('Discussion', "
-            select
+              select
                 t.threadid as DiscussionID,
-                t.forumid as CategoryID,
+                if(f.title not REGEXP 'Donor [0-9]+', f.new_id, -2) as CategoryID,
                 t.postuserid as InsertUserID,
                 t.postuserid as UpdateUserID,
                 t.views as CountViews,
@@ -529,26 +542,26 @@ class VBulletin extends ExportController {
                 p.ipaddress as InsertIPAddress,
                 p.pagetext,
                 'BBCode' as Format,
-                replycount+1 as CountComments,
+                t.replycount+1 as CountComments,
                 convert(ABS(open-1), char(1)) as Closed,
                 if(convert(sticky, char(1)) > 0, 2, 0) as Announce,
                 from_unixtime(t.dateline) as DateInserted,
-                from_unixtime(lastpost) as DateLastComment,
-                if (t.pollid > 0, 'Poll', null) as Type
-            from :_thread as t
-                left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
-                left join :_post as p on p.postid = t.firstpostid
+                from_unixtime(t.lastpost) as DateLastComment,
+                if (t.pollid > 0, 'Poll', null) as Type,
+                if(f.title REGEXP '(Donor|PRS|Donro) [0-9]+|Donor Updates|Medical Updates|Offspring Photos', f.new_id, null) as GroupID
+            from thread as t
+                left join deletionlog as d on d.type='thread' and d.primaryid=t.threadid
+                left join post as p on p.postid = t.firstpostid
+                join forum f on f.forumid = t.forumid
             where d.primaryid is null
                 and t.visible = 1
-            $minDiscussionWhere
-            $forumWhere
         ", $discussion_Map);
 
         // Comments
         $comment_Map = array(
             'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
-                    return preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
-                }
+                return preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
+            }
             ),
         );
         if ($minDiscussionID) {
@@ -644,7 +657,7 @@ class VBulletin extends ExportController {
 
         $this->_exportConversations($minDate);
 
-        $this->_exportPolls();
+        //$this->_exportPolls();
 
         // Media
         if ($ex->exists('attachment') === true) {
@@ -697,6 +710,38 @@ class VBulletin extends ExportController {
 
             }
         }
+
+        $group_Map = array();
+
+        // groups
+        $ex->exportTable('Group', "
+             select
+                f.new_id as GroupdID,
+                f.title as Name,
+                description as Description,
+                p.new_id as CategoryID,
+                'Secret' as Privacy,
+                now() as DateInserted
+                from forum as f
+            left join (select new_id, title, forumid from forum) p on p.forumid = f.parentid
+            where f.forumid not in
+            (select
+                f.forumid
+            from forum as f
+            left join (select new_id as parentid, title, forumid from forum) p on p.forumid = f.parentid
+            where f.title not REGEXP '(Donor|PRS|Donro) [0-9]+|Donor Updates|Medical Updates|Offspring Photos')
+         ", $group_Map);
+
+        $ex->exportTable('UserGroup', "
+            select
+              p.new_id `GroupID`,
+              a.userid as `UserID`,
+              now() as `DateInserted`,
+              1 as `InsertUserID`,
+              'Member' as `Role`
+            from access a
+            join (select new_id, forumid from forum) p on p.forumid = a.forumid
+         ", $group_Map);
 
         // End
         $ex->endExport();

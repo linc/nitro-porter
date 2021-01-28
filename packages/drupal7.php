@@ -9,14 +9,26 @@
 
 $supported['drupal7'] = array('name' => 'Drupal 7', 'prefix' => '');
 $supported['drupal7']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
     'Roles' => 1,
     'Avatars' => 1,
+    'PrivateMessages' => 0,
     'Signatures' => 1,
-    'Passwords' => 1,
+    'Attachments' => 1,
+    'Bookmarks' => 0,
+    'Permissions' => 0,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class Drupal7 extends ExportController {
@@ -52,16 +64,16 @@ class Drupal7 extends ExportController {
 
         // Signatures.
         $ex->exportTable('UserMeta', "
-            select 
+            select
                 uid as UserID,
                 signature as Value,
                 'Plugin.Signatures.Sig' as Name
             from :_users u
             where uid > 0 and status = 1 and signature is not null and signature <> ''
-            
+
             union
-            
-            select 
+
+            select
                 uid as UserID,
                 'Html' as Value,
                 'Plugins.Signatures.Format' as Name
@@ -71,15 +83,15 @@ class Drupal7 extends ExportController {
 
         // Roles.
         $ex->exportTable('Role', "
-            select 
+            select
                 rid as RoleID,
-                name as Name 
+                name as Name
             from :_role
         ");
 
         // User Role.
         $ex->exportTable('UserRole', "
-            select 
+            select
                 uid as UserID,
                 rid as RoleID
             from :_users_roles
@@ -87,7 +99,7 @@ class Drupal7 extends ExportController {
 
         // Categories.
         $ex->exportTable('Category', "
-            select 
+            select
                 t.tid as CategoryID,
                 t.name as Name,
                 t.description as Description,

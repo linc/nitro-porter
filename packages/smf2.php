@@ -11,15 +11,26 @@
 
 $supported['smf2'] = array('name' => 'Simple Machines 2', 'prefix' => 'smf_');
 $supported['smf2']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
     'Roles' => 1,
+    'Avatars' => 0,
+    'PrivateMessages' => 1,
+    'Signatures' => 0,
     'Attachments' => 1,
     'Bookmarks' => 1,
-    'PrivateMessages' => 1,
-    'Passwords' => 1,
+    'Permissions' => 0,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class SMF2 extends ExportController {

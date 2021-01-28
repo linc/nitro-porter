@@ -9,19 +9,26 @@
 
 $supported['phpbb3'] = array('name' => 'phpBB 3', 'prefix' => 'phpbb_');
 $supported['phpbb3']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 1,
     'Roles' => 1,
     'Avatars' => 1,
-    'Attachments' => 1,
     'PrivateMessages' => 1,
-    'Permissions' => 1,
-    'Bookmarks' => 1,
     'Signatures' => 1,
-    'Polls' => 1,
-    'Passwords' => 1,
+    'Attachments' => 1,
+    'Bookmarks' => 1,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 1,
+    'Ranks' => 1,
+    'Groups' => 0,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class PhpBB3 extends ExportController {

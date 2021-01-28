@@ -9,14 +9,26 @@
 
 $supported['simplepress'] = array('name' => 'SimplePress 1', 'prefix' => 'wp_');
 $supported['simplepress']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
-    'Categories' => 1,
-    'Roles' => 1,
-    'PrivateMessages' => 1,
-    'Permissions' => 1,
     'Passwords' => 1,
+    'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
+    'Roles' => 1,
+    'Avatars' => 0,
+    'PrivateMessages' => 1,
+    'Signatures' => 0,
+    'Attachments' => 0,
+    'Bookmarks' => 0,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class SimplePress extends ExportController {
