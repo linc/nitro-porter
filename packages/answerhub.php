@@ -28,6 +28,7 @@ $supported['answerhub']['features'] = array(
     'Avatars' => 0,
     'PrivateMessages' => 0,
     'Signatures' => 0,
+
     'Attachments' => 1,
     'Bookmarks' => 0,
     'Permissions' => 0,

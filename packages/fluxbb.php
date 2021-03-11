@@ -15,16 +15,27 @@ $supported['fluxbb']['CommandLine'] = array(
     )
 );
 $supported['fluxbb']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
+
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
     'Roles' => 1,
-    'Attachments' => 1,
-    'Permissions' => 1,
-    'Tags' => 1,
+    'Avatars' => 1,
+    'PrivateMessages' => 0,
     'Signatures' => 1,
-    'Passwords' => 1
+    'Attachments' => 1,
+    'Bookmarks' => 0,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 1,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class FluxBB extends ExportController {
@@ -70,7 +81,7 @@ class FluxBB extends ExportController {
         );
         $ex->exportTable('User', "
             select
-                u.id as UserID, 
+                u.id as UserID,
                 u.username as UserID,
                 u.email as Email,
                 u.timezone as HourOffset,
@@ -85,7 +96,7 @@ class FluxBB extends ExportController {
 
         // Role
         $ex->exportTable('Role', "
-            select 
+            select
                 g_id as RoleID,
                  g_title as Name
             from :_groups
@@ -105,8 +116,8 @@ class FluxBB extends ExportController {
                 g_post_replies as 'Vanilla.Comments.Add',
                 g_post_replies as 'Garden.SignIn.Allow',
                 g_mod_edit_users as 'Garden.Users.Add',
-                case 
-                    when g_title = 'Administrators' then 'All' else NULL 
+                case
+                    when g_title = 'Administrators' then 'All' else NULL
                 end as _Permissions
             from :_groups
         ");
@@ -138,9 +149,9 @@ class FluxBB extends ExportController {
                 disp_position as Sort,
                 cat_id * 1000 as ParentCategoryID
             from :_forums f
-            
+
             union
-            
+
             select
                 id * 1000 as CategoryID,
                 cat_name as Name,
@@ -152,7 +163,7 @@ class FluxBB extends ExportController {
 
         // Discussion.
         $ex->exportTable('Discussion', "
-            select 
+            select
                 t.id as DiscussionID,
                 from_unixtime(p.posted) as DateInserted,
                 p.poster_id as InsertUserID,
@@ -172,7 +183,7 @@ class FluxBB extends ExportController {
 
         // Comment.
         $ex->exportTable('Comment', "
-            select 
+            select
                 p.*,
                 p.id as CommentID,
                 p.poster_id as InsertUserID,
@@ -191,7 +202,7 @@ class FluxBB extends ExportController {
         if ($ex->exists('tags')) {
             // Tag.
             $ex->exportTable('Tag', "
-                select 
+                select
                     id as TagID,
                      tag as Name
                 from :_tags
