@@ -283,9 +283,7 @@ class Xenforo extends ExportController {
         $ex->exportTable('UserRole', "
          select user_id, user_group_id
          from :_user
-
          union all
-
          select u.user_id, ua.user_group_id
          from :_user u
          join :_user_group ua
@@ -375,22 +373,26 @@ class Xenforo extends ExportController {
                 ad.file_size as Size,
                 ad.user_id as InsertUserID,
                 from_unixtime(ad.upload_date) as DateInserted,
-                if(t.thread_id is null, a.content_id, t.thread_id) as ForeignID,
-                if(t.thread_id is null, 'comment', 'discussion') as ForeignTable,
+                p.ForeignID,
+                p.ForeignTable,
                 ad.width as ImageWidth,
                 ad.height as ImageHeight,
                 concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
             from
-                :_attachment a
-            left join
-                xf_post p on p.post_id = a.content_id
-            left join
-                :_thread t on t.first_post_id = a.content_id
+                xf_attachment a
             join
-                :_attachment_data ad on ad.data_id = a.data_id
+                (select
+                    p.post_id,
+                    if(p.post_id = t.first_post_id,t.thread_id, p.post_id)  as ForeignID,
+                    if(p.post_id = t.first_post_id, 'discussion', 'comment') as ForeignTable
+                from xf_post p
+                join xf_thread t on t.thread_id = p.thread_id
+                where p.message_state <> 'deleted'
+                ) p on p.post_id = a.content_id
+            join
+                xf_attachment_data ad on ad.data_id = a.data_id
             where
                 a.content_type = 'post'
-                and p.message_state <> 'deleted'
         ");
 
         // Conversation.
@@ -433,9 +435,7 @@ class Xenforo extends ExportController {
             user_id,
             case when r.recipient_state = 'deleted' then 1 else 0 end as Deleted
          from :_conversation_recipient r
-
          union all
-
          select
             cu.conversation_id,
             cu.owner_user_id,
@@ -510,9 +510,7 @@ class Xenforo extends ExportController {
            signature as Value
          from :_user_profile
          where nullif(signature, '') is not null
-
          union
-
          select
            user_id,
            'Plugin.Signatures.Format',
