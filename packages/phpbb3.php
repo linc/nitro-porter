@@ -290,16 +290,15 @@ class PhpBB3 extends ExportController {
         ", $comment_Map);
 
         // UserDiscussion
-        $userDiscussion_Map = array(
-            'user_id' => 'UserID',
-            'topic_id' => 'DiscussionID'
-        );
         $ex->exportTable('UserDiscussion', "
             select
-                b.*,
-                1 as Bookmarked
-            from :_bookmarks b
-        ", $userDiscussion_Map);
+                tt.user_id as UserID,
+                tt.topic_id as DiscussionID,
+                 FROM_UNIXTIME(tt.mark_time) as DateLastViewed,
+                if(b.topic_id is null, 0, 1) as Bookmarked
+            from :_topics_track tt
+            left join :_bookmarks b on b.user_id = tt.user_id and b.topic_id = tt.topic_id
+        ");
 
         // Conversations tables.
         $ex->query("drop table if exists z_pmto;");

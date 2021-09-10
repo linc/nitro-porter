@@ -59,8 +59,8 @@ $supported['vbulletin']['features'] = array(
     'Signatures' => 1,
     'Ranks' => 1,
     'Polls' => 1,
-    'Tags' => 1,
-    'Reactions' => 1,
+    'Tags' => 1
+    'Reactions' => 1
 );
 
 /**
