@@ -3,7 +3,7 @@
  * AnswerHub exporter tool.
  * Assume https://github.com/vanilla/addons/tree/master/plugins/QnA will be enabled.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
+ * @copyright 2009-2021 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
@@ -28,7 +28,6 @@ $supported['answerhub']['features'] = array(
     'Avatars' => 0,
     'PrivateMessages' => 0,
     'Signatures' => 0,
-
     'Attachments' => 1,
     'Bookmarks' => 0,
     'Permissions' => 0,
@@ -140,16 +139,21 @@ class AnswerHub extends ExportController {
         );
         // The query works fine but it will probably be slow for big tables
         $ex->exportTable('Discussion', "
-            select
+                        select
                 questions.c_id as DiscussionID,
-                'Question' as Type,
+                if(questions.c_type = 'question', 'Question', NULL) as Type,
                 questions.c_primaryContainer as CategoryID,
                 questions.c_author as InsertUserID,
                 questions.c_creation_date as DateInserted,
                 questions.c_title as Name,
-                coalesce(nullif(questions.c_body, ''), questions.c_title) as Body,
+                case
+                	       			when nr.c_body is not null and nr.c_body <> '' then nr.c_body
+                	       			when questions.c_body is not null and questions.c_body <> '' then questions.c_body
+                	       			else questions.c_title
+                end as Body,
                 'HTML' as Format,
                 if(locate('[closed]', questions.c_normalized_state) > 0, 1, 0) as Closed,
+                if(questions.c_type = 'question',
                 if(count(answers.c_id) > 0,
                     if (locate('[accepted]', group_concat(ifnull(answers.c_normalized_state, ''))) = 0,
                         if (locate('[rejected]', group_concat(ifnull(answers.c_normalized_state, ''))) = 0,
@@ -159,13 +163,19 @@ class AnswerHub extends ExportController {
                         'Accepted'
                     ),
                     'Unanswered'
-                ) as QnA
+                ), null) as QnA
             from :_nodes as questions
+            left join (select
+                        c_node, c_body
+                    from :_node_revisions nr
+                    where c_id in (
+                        select max(c_id) as id from :_node_revisions group by c_node)
+                )  nr on nr.c_node = questions.c_id
 	            left join :_nodes as answers on
 	                answers.c_parent = questions.c_id
 	                and answers.c_type = 'answer'
 	                and answers.c_visibility = 'full'
-            where questions.c_type = 'question'
+            where questions.c_type in ('question', 'topic')
                 and questions.c_visibility = 'full'
             group by questions.c_id
         ", $discussion_Map);
@@ -178,7 +188,7 @@ class AnswerHub extends ExportController {
                 answers.c_id as CommentID,
                 answers.c_parent as DiscussionID,
                 answers.c_author as InsertUserID,
-                answers.c_body as Body,
+                if(nr.c_body is not null and nr.c_body <> '', nr.c_body, answers.c_body) as Body,
                 'Html' as Format,
                 answers.c_creation_date as DateInserted,
                 if(locate('[accepted]', answers.c_normalized_state) = 0,
@@ -189,7 +199,15 @@ class AnswerHub extends ExportController {
                     'Accepted'
                 ) as QnA
             from :_nodes as answers
-            where answers.c_type = 'answer'
+            left join (select
+                c_node, c_body
+            from :_node_revisions nr
+            where c_id in (
+                select max(c_id) as id
+                from :_node_revisions
+                group by c_node)
+                )  nr on nr.c_id = answers.c_id
+            where answers.c_type in ('answer', 'comment')
                   and answers.c_visibility = 'full'
         ", $comment_Map);
 
