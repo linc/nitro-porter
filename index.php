@@ -51,11 +51,7 @@ if(!defined('DB_EXTENSION')) {
     die('There is an error in your config. You need to set your database extension properly.');
 }
 
-// Set Vanilla to appear first in the list.
-$supported = array(
-    'vanilla1' => array('name' => 'Vanilla 1', 'prefix' => 'LUM_'),
-    'vanilla2' => array('name' => 'Vanilla 2', 'prefix' => 'GDN_')
-);
+$supported = array();
 
 // Include individual software porters.
 // MAKESKIPSTART
