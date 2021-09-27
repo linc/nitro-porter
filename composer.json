@@ -1,15 +1,15 @@
 {
-    "name": "vanilla/porter",
-    "description": "Vanilla Porter is a tool for exporting other forums to Vanilla.",
+    "name": "linc/nitro-porter",
+    "description": "Nitro Porter is a tool for exporting other forums to Vanilla.",
     "license": "GPL-2.0",
     "authors": [
         {
-            "name": "Todd Burry",
-            "email": "todd@vanillaforums.com"
+            "name": "Lincoln Russell",
+            "email": "lincoln@icrontic.com"
         },
         {
-            "name": "Lincoln Russell",
-            "email": "lincoln@vanillaforums.com"
+            "name": "Todd Burry",
+            "email": "todd@vanillaforums.com"
         }
     ],
     "require": {
