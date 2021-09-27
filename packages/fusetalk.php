@@ -7,8 +7,8 @@
  *
  * Tested with FuseTalk Enterprise Edition v4.0
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @author Alexandre Chouinard
  */
 
 $supported['fusetalk'] = array(

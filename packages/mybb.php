@@ -2,9 +2,9 @@
 /**
  * MyBB exporter tool.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
- * @license GNU GPL2
- * @package VanillaPorter
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @author Lincoln Russell, lincolnwebs.com
+ *
  * @see functions.commandline.php for command line usage.
  */
 

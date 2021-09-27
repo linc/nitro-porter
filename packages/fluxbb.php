@@ -2,9 +2,8 @@
 /**
  * FluxBB exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Francis Caisse
  */
 
 $supported['fluxbb'] = array('name' => 'FluxBB 1', 'prefix' => ''); //FluxBB do not provide a default prefix

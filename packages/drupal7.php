@@ -2,9 +2,8 @@
 /**
  * Vanilla 2 exporter tool for Drupal 7
  *
- * @copyright 2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Francis Caisse
  */
 
 $supported['drupal7'] = array('name' => 'Drupal 7', 'prefix' => '');

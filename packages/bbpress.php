@@ -2,9 +2,8 @@
 /**
  * bbPress exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Todd Burry
  */
 
 $supported['bbpress'] = array('name' => 'bbPress 1', 'prefix' => 'bb_');

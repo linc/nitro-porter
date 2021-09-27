@@ -4,9 +4,8 @@
  *
  * To export avatars, provide ?avatars=1&avatarpath=/path/to/avatars
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Lincoln Russell, lincolnwebs.com
  */
 
 $supported['ipb'] = array('name' => 'IP.Board 3', 'prefix' => 'ibf_'); // IPB

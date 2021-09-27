@@ -2,9 +2,8 @@
 /**
  * Q2A exporter tool.
  *
- * @copyright 2009-2020 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Eduardo Casarero
  */
 
 $supported['q2a'] = array('name' => 'Questions2Answers', 'prefix' => 'qa_');

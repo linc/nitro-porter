@@ -2,9 +2,8 @@
 /**
  * Joomla Kunena exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Todd Burry
  */
 
 $supported['kunena'] = array('name' => 'Joomla Kunena', 'prefix' => 'jos_');

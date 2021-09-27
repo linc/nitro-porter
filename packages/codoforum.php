@@ -2,10 +2,8 @@
 /**
  * Codoforum exporter tool. Tested with CodoForum v3.7.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author HansAdema
- * @package VanillaPorter
+ * @author Hans Adema
  */
 
 $supported['codoforum'] = array(

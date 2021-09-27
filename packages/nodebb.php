@@ -2,9 +2,8 @@
 /**
  * NodeBB exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Becky Van Bussel
  */
 
 $supported['nodebb'] = array('name' => 'NodeBB 0.*', 'prefix' => 'gdn_');

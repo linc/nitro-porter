@@ -2,9 +2,8 @@
 /**
  * Vanilla 2 exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Lincoln Russell, lincolnwebs.com
  */
 
 $supported['vanilla2'] = array('name' => 'Vanilla 2', 'prefix' => 'GDN_');

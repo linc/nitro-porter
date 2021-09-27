@@ -1,12 +1,9 @@
 <?php
-/* Written by John Crenshaw for Priacta, Inc. */
 /**
  * SMF exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author John Crenshaw
- * @package VanillaPorter
+ * @author John Crenshaw, for Priacta, Inc.
  */
 
 $supported['smf'] = array('name' => 'Simple Machines 1', 'prefix' => 'smf_'); // SMF

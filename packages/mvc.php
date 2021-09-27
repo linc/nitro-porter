@@ -2,10 +2,8 @@
 /**
  * MVC exporter tool.
  *
- * @copyright 2009-2020 Vanilla Forums Inc.
- * @license GNU GPL2
- * @package VanillaPorter
- * @see functions.commandline.php for command line usage.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ * @author Olivier Lamy-Canuel
  */
 
 $supported['mvc'] = array('name' => 'mvc', 'prefix' => '');

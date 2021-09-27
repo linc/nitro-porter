@@ -25,10 +25,8 @@
  * filepath - Command line option to fix / check files are on disk.  Files named .attach are renamed
  * to the proper name and missing files are reported in missing-files.txt.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
- * @author Matt Lincoln Russell lincoln@icrontic.com
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Lincoln Russell, lincolnwebs.com
  */
 
 $supported['vbulletin'] = array('name' => 'vBulletin 3 & 4', 'prefix' => 'vb_');

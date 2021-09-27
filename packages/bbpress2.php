@@ -2,9 +2,8 @@
 /**
  * BBPress 2 exporter tool
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @package VanillaPorter
+ * @author Alexandre Chouinard
  */
 $supported['bbpress2'] = array('name'=>'bbPress 2', 'prefix' => 'wp_');
 $supported['bbpress2']['features'] = array(
