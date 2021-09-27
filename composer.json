@@ -1,6 +1,6 @@
 {
     "name": "linc/nitro-porter",
-    "description": "Nitro Porter is a tool for exporting other forums to Vanilla.",
+    "description": "Nitro Porter is a tool for exporting forum data to a portable format.",
     "license": "GPL-2.0",
     "authors": [
         {
