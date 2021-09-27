@@ -1413,7 +1413,7 @@ class VBulletin extends ExportController {
             $n = strlen($row['userid']);
             $dirParts = array();
             for ($i = 0; $i < $n; $i++) {
-                $dirParts[] = $row['userid']{$i};
+                $dirParts[] = $row['userid'][$i];
             }
 
             // 3.x uses attachmentid, 4.x uses filedataid

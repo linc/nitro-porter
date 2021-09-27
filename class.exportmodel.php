@@ -291,7 +291,7 @@ class ExportModel {
                 $n = strlen($pathParts[1]);
                 $dirParts = array();
                 for ($i = 0; $i < $n; $i++) {
-                    $dirParts[] = $pathParts[1]{$i};
+                    $dirParts[] = $pathParts[1][$i];
                 }
                 $pathParts[1] = implode('/', $dirParts);
 
@@ -1256,11 +1256,11 @@ class ExportModel {
     public function columnExists($tableName, $columnName){
 
         $result=$this->query("
-            select 
+            select
                 column_name
-            from 
+            from
                 information_schema.columns
-            where 
+            where
                 table_schema = database()
                 and table_name = '$tableName'
                 and column_name = '$columnName'
