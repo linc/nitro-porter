@@ -10,6 +10,10 @@
         {
             "name": "Todd Burry",
             "email": "todd@vanillaforums.com"
+        },
+        {
+            "name": "Alexandre Chouinard",
+            "email": "daazku@gmail.com"
         }
     ],
     "require": {
