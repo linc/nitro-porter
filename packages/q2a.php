@@ -16,7 +16,7 @@ class Q2a extends ExportController
         'blobs' => array(),
         'categories' => array(),
         'posts' => array(),
-        'users' => array(), 
+        'users' => array(),
     );
 
     public function forumExport($ex)
@@ -36,19 +36,19 @@ class Q2a extends ExportController
                 u.email as Email,
                 u.created as DateInserted,
                 p.points as Points
-            FROM :_users as u 
+            FROM :_users as u
             LEFT JOIN :_userpoints p USING(userid)
             WHERE u.userid IN (Select DISTINCT userid from :_posts) AND (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
          ", $user_Map);
 
         $ex->exportTable('Role', "
-        select 
+        select
             1 as RolesID,
             'Member' as Name
         ");
 
         $ex->exportTable('UserRole', "
-            select 
+            select
                 ur.userid as UserID,
                 1 as RoleID
             from :_users ur
@@ -74,7 +74,7 @@ class Q2a extends ExportController
             p.created as DateInserted,
             1 as Closed,
             'Accepted' as QnA
-            
+
              from :_posts p
              WHERE     parentid IS NULL
              AND userid IS NOT NULL
@@ -96,3 +96,7 @@ class Q2a extends ExportController
         $ex->endExport();
     }
 }
+
+// Closing PHP tag required. (make.php)
+?>
+
