@@ -9,19 +9,26 @@
 
 $supported['phpbb3'] = array('name' => 'phpBB 3', 'prefix' => 'phpbb_');
 $supported['phpbb3']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 1,
     'Roles' => 1,
     'Avatars' => 1,
-    'Attachments' => 1,
     'PrivateMessages' => 1,
-    'Permissions' => 1,
-    'Bookmarks' => 1,
     'Signatures' => 1,
-    'Polls' => 1,
-    'Passwords' => 1,
+    'Attachments' => 1,
+    'Bookmarks' => 1,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 1,
+    'Ranks' => 1,
+    'Groups' => 0,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class PhpBB3 extends ExportController {
@@ -283,16 +290,15 @@ class PhpBB3 extends ExportController {
         ", $comment_Map);
 
         // UserDiscussion
-        $userDiscussion_Map = array(
-            'user_id' => 'UserID',
-            'topic_id' => 'DiscussionID'
-        );
         $ex->exportTable('UserDiscussion', "
             select
-                b.*,
-                1 as Bookmarked
-            from :_bookmarks b
-        ", $userDiscussion_Map);
+                tt.user_id as UserID,
+                tt.topic_id as DiscussionID,
+                 FROM_UNIXTIME(tt.mark_time) as DateLastViewed,
+                if(b.topic_id is null, 0, 1) as Bookmarked
+            from :_topics_track tt
+            left join :_bookmarks b on b.user_id = tt.user_id and b.topic_id = tt.topic_id
+        ");
 
         // Conversations tables.
         $ex->query("drop table if exists z_pmto;");

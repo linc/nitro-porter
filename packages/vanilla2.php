@@ -9,20 +9,26 @@
 
 $supported['vanilla2'] = array('name' => 'Vanilla 2', 'prefix' => 'GDN_');
 $supported['vanilla2']['features'] = array(
-    'Comments' => 1,
-    'Discussions' => 1,
     'Users' => 1,
+    'Passwords' => 1,
     'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
     'Roles' => 1,
     'Avatars' => 1,
-    'Attachments' => 1,
     'PrivateMessages' => 1,
-    'Permissions' => 1,
-    'UserWall' => 1,
-    'UserNotes' => 1,
-    'Bookmarks' => 1,
     'Signatures' => 1,
-    'Passwords' => 1,
+    'Attachments' => 1,
+    'Bookmarks' => 1,
+    'Permissions' => 1,
+    'Badges' => 0,
+    'UserNotes' => 1,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 0,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class Vanilla2 extends ExportController {

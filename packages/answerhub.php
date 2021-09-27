@@ -3,7 +3,7 @@
  * AnswerHub exporter tool.
  * Assume https://github.com/vanilla/addons/tree/master/plugins/QnA will be enabled.
  *
- * @copyright 2009-2018 Vanilla Forums Inc.
+ * @copyright 2009-2021 Vanilla Forums Inc.
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @package VanillaPorter
  */
@@ -18,11 +18,26 @@ $supported['answerhub']['CommandLine'] = array(
     ),
 );
 $supported['answerhub']['features'] = array(
-    'Categories' => 1,
-    'Comments' => 1,
-    'Discussions' => 1,
-    'Roles' => 1,
     'Users' => 1,
+    'Passwords' => 0,
+    'Categories' => 1,
+    'Discussions' => 1,
+    'Comments' => 1,
+    'Polls' => 0,
+    'Roles' => 1,
+    'Avatars' => 0,
+    'PrivateMessages' => 0,
+    'Signatures' => 0,
+    'Attachments' => 1,
+    'Bookmarks' => 0,
+    'Permissions' => 0,
+    'Badges' => 0,
+    'UserNotes' => 0,
+    'Ranks' => 0,
+    'Groups' => 0,
+    'Tags' => 1,
+    'Reactions' => 0,
+    'Articles' => 0,
 );
 
 class AnswerHub extends ExportController {
@@ -35,7 +50,7 @@ class AnswerHub extends ExportController {
     public function forumExport($ex) {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
-        $characterSet = $ex->getCharacterSet('network6_nodes');
+        $characterSet = $ex->getCharacterSet('nodes');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
@@ -43,7 +58,7 @@ class AnswerHub extends ExportController {
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'AnswerHub');
 
-        $result = $ex->query("select c_reserved as lastID from :_id_generators where c_identifier = 'AUTHORITABLE'", true);
+        $result = $ex->query("select c_reserved as lastID from id_generators where c_identifier = 'AUTHORITABLE'", true);
         if ($row = $result->nextResultRow()) {
             $lastID = $row['lastID'];
         }
@@ -66,26 +81,10 @@ class AnswerHub extends ExportController {
                 user.c_last_seen as DateLastActive,
                 user_email.c_email,
                 0 as Admin
-            from :_network6_authoritables as user
-                 left join :_network6_user_emails as user_email on user_email.c_user = user.c_id
+            from :_authoritables as user
+                 left join :_user_emails as user_email on user_email.c_user = user.c_id
             where user.c_type = 'user'
                 and user.c_name != '\$\$ANON_USER\$\$'
-
-            union all
-
-            select
-                su.c_id + $lastID,
-                su.c_username,
-                sha2(concat(su.c_username, now()), 256),
-                'Reset',
-                su.c_creation_date,
-                null,
-                null,
-                su.c_email,
-                1 as Admin
-            from :_system_users as su
-            where su.c_active = 1
-
         ", $user_Map);
 
         // Role.
@@ -96,7 +95,7 @@ class AnswerHub extends ExportController {
                 groups.c_id as RoleID,
                 groups.c_name as Name,
                 groups.c_description as Description
-            from :_network6_authoritables as groups
+            from :_authoritables as groups
             where groups.c_type = 'group'
 
             union all
@@ -115,15 +114,7 @@ class AnswerHub extends ExportController {
             select
                 user_role.c_groups as RoleID,
                 user_role.c_members as UserID
-            from :_network6_authoritable_groups as user_role
-
-            union all
-
-            select
-                $lastID + 1,
-                su.c_id + $lastID
-            from :_system_users as su
-            where su.c_active = 1
+            from :_authoritable_groups as user_role
         ", $userRole_Map);
 
         // Category.
@@ -137,8 +128,8 @@ class AnswerHub extends ExportController {
                     else null
                 end as ParentCategoryID,
                 containers.c_name as Name
-            from :_containers as containers
-            left join :_containers as parents on parents.c_id = containers.c_parent
+            from containers as containers
+            left join containers as parents on parents.c_id = containers.c_parent
             where containers.c_type = 'space'
                 and containers.c_active = 1
         ", $category_Map);
@@ -148,16 +139,21 @@ class AnswerHub extends ExportController {
         );
         // The query works fine but it will probably be slow for big tables
         $ex->exportTable('Discussion', "
-            select
+                        select
                 questions.c_id as DiscussionID,
-                'Question' as Type,
+                if(questions.c_type = 'question', 'Question', NULL) as Type,
                 questions.c_primaryContainer as CategoryID,
                 questions.c_author as InsertUserID,
                 questions.c_creation_date as DateInserted,
                 questions.c_title as Name,
-                coalesce(nullif(questions.c_body, ''), questions.c_title) as Body,
+                case
+                	       			when nr.c_body is not null and nr.c_body <> '' then nr.c_body
+                	       			when questions.c_body is not null and questions.c_body <> '' then questions.c_body
+                	       			else questions.c_title
+                end as Body,
                 'HTML' as Format,
                 if(locate('[closed]', questions.c_normalized_state) > 0, 1, 0) as Closed,
+                if(questions.c_type = 'question',
                 if(count(answers.c_id) > 0,
                     if (locate('[accepted]', group_concat(ifnull(answers.c_normalized_state, ''))) = 0,
                         if (locate('[rejected]', group_concat(ifnull(answers.c_normalized_state, ''))) = 0,
@@ -167,13 +163,19 @@ class AnswerHub extends ExportController {
                         'Accepted'
                     ),
                     'Unanswered'
-                ) as QnA
-            from :_network6_nodes as questions
-	            left join :_network6_nodes as answers on
+                ), null) as QnA
+            from :_nodes as questions
+            left join (select
+                        c_node, c_body
+                    from :_node_revisions nr
+                    where c_id in (
+                        select max(c_id) as id from :_node_revisions group by c_node)
+                )  nr on nr.c_node = questions.c_id
+	            left join :_nodes as answers on
 	                answers.c_parent = questions.c_id
 	                and answers.c_type = 'answer'
 	                and answers.c_visibility = 'full'
-            where questions.c_type = 'question'
+            where questions.c_type in ('question', 'topic')
                 and questions.c_visibility = 'full'
             group by questions.c_id
         ", $discussion_Map);
@@ -186,7 +188,7 @@ class AnswerHub extends ExportController {
                 answers.c_id as CommentID,
                 answers.c_parent as DiscussionID,
                 answers.c_author as InsertUserID,
-                answers.c_body as Body,
+                if(nr.c_body is not null and nr.c_body <> '', nr.c_body, answers.c_body) as Body,
                 'Html' as Format,
                 answers.c_creation_date as DateInserted,
                 if(locate('[accepted]', answers.c_normalized_state) = 0,
@@ -196,10 +198,75 @@ class AnswerHub extends ExportController {
                     ),
                     'Accepted'
                 ) as QnA
-            from :_network6_nodes as answers
-            where answers.c_type = 'answer'
+            from :_nodes as answers
+            left join (select
+                c_node, c_body
+            from :_node_revisions nr
+            where c_id in (
+                select max(c_id) as id
+                from :_node_revisions
+                group by c_node)
+                )  nr on nr.c_id = answers.c_id
+            where answers.c_type in ('answer', 'comment')
                   and answers.c_visibility = 'full'
         ", $comment_Map);
+
+        // Tags
+        $ex->exportTable('Tags', "
+            select
+                c_id as TagID,
+                c_plug as Name,
+                c_title as FullName,
+                c_creation_date as DateInserted
+            from :_nodes
+            where n.c_type = 'topic'
+        ");
+
+        $ex->exportTable('TagDiscussion', "
+            select
+                c_topics as TagID,
+                c_nodes as DiscussionID,
+                -1 as CategoryID,
+                now() as DateInserted
+            from :_node_topics
+            where c_nodes in (select c_nodes from :_nodes where c_type = 'question')
+        ");
+
+        // Media.
+        $media_Map = array(
+            'Name' => array('Column' => 'Name', 'Filter' => array($this, 'getFileName')),
+            'Type' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
+        );
+        $ex->exportTable('Media', "
+            select
+                  m.c_id as `MediaID`,
+                  m.c_name as `Name`,
+                  concat('attachments', m.c_name) as `Path`,
+                  m.c_mime_type as `Type`,
+                  m.c_size as `Size`,
+                  m.c_user as `InsertUserID`,
+                  m.c_creation_date as `DateInserted`,
+                  na.c_Node as `ForeignID`,
+                  if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
+            from :_managed_files as m
+            join :_node_attachments na on na.c_attachments = m.c_id
+            join :_nodes n on na.c_Node = n.c_id
+
+            union
+
+            select
+                  s.c_id as `MediaID`,
+                  s.c_url as `Name`,
+                  s.c_url as `Path`,
+                  s.c_url as `Type`,
+                  1 as `Size`,
+                  s.c_addedBy as `InsertUserID`,
+                  s.c_creation_date as `DateInserted`,
+                  s.c_node as `ForeignID`,
+                  if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
+            from :_sources s
+            join :_nodes n on s.c_node = n.c_id
+        ", $media_Map);
 
         $ex->endExport();
     }
@@ -227,6 +294,52 @@ class AnswerHub extends ExportController {
         }
 
         return $email;
+    }
+
+    public function getFileName($value, $field, $row) {
+        $arr = explode('/', $value);
+        return end($arr);
+    }
+
+    /**
+     * Set valid MIME type for images.
+     *
+     * @access public
+     * @see ExportModel::_exportTable
+     *
+     * @param string $value Extension.
+     * @param string $field Ignored.
+     * @param array $row Ignored.
+     * @return string Extension or accurate MIME type.
+     */
+    public function buildMimeType($value, $field, $row) {
+
+        if(preg_match('~.*\.(.*)~', $value, $matches) != false){
+            switch (strtolower($matches[1])) {
+                case 'jpg':
+                case 'jpeg':
+                case 'gif':
+                case 'png':
+                    $value = 'image/'.$matches[1];
+                    break;
+                case 'pdf':
+                case 'zip':
+                    $value = 'application/'.$matches[1];
+                    break;
+                case 'doc':
+                    $value = 'application/msword';
+                    break;
+                case 'xls':
+                    $value = 'application/vnd.ms-excel';
+                    break;
+                case 'txt':
+                case 'log':
+                    $value = 'text/plain';
+                    break;
+            }
+        }
+
+        return $value;
     }
 }
 
