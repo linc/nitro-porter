@@ -14,7 +14,7 @@ $vanillaLogoBase64Encoded = 'iVBORw0KGgoAAAANSUhEUgAAAKoAAABFCAYAAADaZH3VAAAACXB
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Vanilla Porter - Forum Export Tool</title>
+    <title>Nitro Porter - Forum Export Tool</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="style.css" media="screen"/>
     <script src="jquery.min.js"></script>
@@ -24,9 +24,7 @@ $vanillaLogoBase64Encoded = 'iVBORw0KGgoAAAANSUhEUgAAAKoAAABFCAYAAADaZH3VAAAACXB
     <div id="Content">
         <div class="Title">
             <h1>
-                <img src="data:image/png;base64,<?=$vanillaLogoBase64Encoded?>" alt="Vanilla">
-
-                <p>Vanilla Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
+                <p>Nitro Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
             </h1>
         </div>
         <?php
