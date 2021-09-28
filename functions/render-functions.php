@@ -79,12 +79,10 @@ function viewForm($data) {
 
     pageHeader(); ?>
     <div class="Info">
-        Howdy, stranger! Glad to see you headed our way.
-        For help,
-        <a href="http://docs.vanillaforums.com/developers/importing/porter" style="text-decoration:underline;"
-           target="_blank">peek at the docs</a>.
-        To see what data we can grab from your platform,
-        <a href="?features=1" style="text-decoration:underline;">see this table</a>.
+        Need help?
+        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide" style="text-decoration:underline;"
+           target="_blank">Try the guide</a> and peep our
+        <a href="?features=1" style="text-decoration:underline;">feature support table</a>.
     </div>
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?' . http_build_query($_GET); ?>" method="post">
         <input type="hidden" name="step" value="info"/>
