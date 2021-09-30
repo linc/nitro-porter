@@ -77,6 +77,28 @@ function vanillaStructure()
             'UpdateUserID' => 'int',
             'UpdateIPAddress' => 'varchar(15)'
         ),
+        'Badge' => array(
+            'BadgeID' => 'int',
+            'Name' => 'varchar(64)',
+            'Slug' => 'varchar(32)',
+            'Type' => 'varchar(20)',
+            'Body' => 'Text',
+            'Photo' => 'varchar(255)',
+            'Points' => 'int',
+            'Active' => 'tinyint',
+            'Visible' => 'tinyint',
+            'Secret' => 'tinyint',
+            'CanDelete' => 'tinyint',
+            'DateInserted' => 'datetime',
+            'DateUpdated' => 'datetime',
+            'InsertUserID' => 'int',
+            'UpdateUser' => 'int',
+            'CountRecipients' => 'int',
+            'Threshold' => 'int',
+            'Class' => 'varchar(20)',
+            'Level' => 'smallint',
+            'Attributes' => 'text'
+        ),
         'Ban' => array(
             'BanID' => 'int',
             //'BanType' => array('IPAddress','Name','Email'),
@@ -492,6 +514,7 @@ function vanillaStructure()
             'CountVisits' => 'int',
             'CountInvitations' => 'int',
             'CountNotifications' => 'int',
+            'CountBadges' => 'int',
             'InviteUserID' => 'int',
             'DiscoveryText' => 'text',
             'Preferences' => 'text',
@@ -559,6 +582,20 @@ function vanillaStructure()
             'Authorized' => 'tinyint',
             'Timestamp' => 'timestamp',
             'Lifetime' => 'int'
+        ),
+        'UserBadge' => array(
+            'UserID' => 'int',
+            'BadgeID' => 'int',
+            'Attributes' => 'text',
+            'Reason' => 'varchar(255)',
+            'ShowReason' => 'tinyint',
+            'DateRequested' => 'datetime',
+            'RequestReason' => 'varchar(255)',
+            'Declined' => 'tinyint',
+            'Count' => 'int',
+            "DateCompleted" => 'datetime',
+            'DateInserted' => 'datetime',
+            'InsertUserID' => 'int'
         ),
         'UserCategory' => array(
             'UserID' => 'int',
