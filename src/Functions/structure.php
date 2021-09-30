@@ -475,6 +475,26 @@ function vanillaStructure()
             'CountSpam' => 'smallint',
             'CountDeletedSpam' => 'smallint'
         ),
+        'Subcommunity' => array(
+            'SubcommunityID' => 'int',
+            'Name' => 'varchar(255)',
+            'Description' => 'varchar(500)',
+            'Folder' => 'varchar(191)',
+            'CategoryID' => 'int' ,
+            'Locale' => 'varchar(20)',
+            'DateInserted' => 'datetime',
+            'InsertUserID' => 'int' ,
+            'DateUpdated' => 'datetime',
+            'UpdateUserID' => 'int',
+            'Attributes' => 'text',
+            'Sort' => 'smallint',
+            'IsDefault' => 'tinyint',
+            'ProductID' => 'smallint',
+            'defaultController' => 'varchar(30)',
+            'knowledgeBase' => 'tinyint',
+            'forum' => 'tinyint',
+            'themeID' => 'varchar(30)'
+        ),
         'Status' => array( // Ideation
             'StatusID' => 'int',
             'Name' => 'varchar(100)',
