@@ -25,43 +25,63 @@ if (PHP_SAPI == 'cli') {
     define('CONSOLE', true);
 }
 
-/** @var array Supported forum packages: classname => array(name, prefix, features) */
-global $supported;
+// Autoloader.
+require_once 'vendor/autoload.php';
 
-// Support Files
-include_once 'config.php';
-include_once 'class.exportmodel.php';
-include_once 'class.exportcontroller.php';
-include_once 'functions/core-functions.php';
-include_once 'functions/render-functions.php';
-include_once 'functions/filter-functions.php';
-include_once 'functions/commandline-functions.php';
-include_once 'functions/structure-functions.php';
-include_once 'functions/feature-functions.php';
-include_once 'database/class.dbfactory.php';
-include_once 'database/interface.dbresource.php';
-include_once 'database/class.resultset.php';
-include_once 'database/class.mysqlidb.php';
-include_once 'database/class.mysqldb.php';
-include_once 'database/class.pdodb.php';
+$packages = [
+    'AdvancedForum',
+    'AnswerHub',
+    'AspPlayground',
+    'BbPress1',
+    'BbPress2',
+    'CodoForum',
+    'Drupal6',
+    'Drupal7',
+    'EsoTalk',
+    'ExpressionEngine',
+    'FluxBb',
+    'FuseTalk',
+    'IpBoard3',
+    'JForum',
+    'Kunena',
+    'Mbox',
+    'ModxDiscuss',
+    'Mvc',
+    'MyBb',
+    'NodeBb',
+    'PhpBb2',
+    'PhpBb3',
+    'PunBb',
+    'Q2a',
+    'SimplePress',
+    'Smf1',
+    'Smf2',
+    'Toast',
+    'UserVoice',
+    'Vanilla1',
+    'Vanilla2',
+    'VBulletin',
+    'VBulletin5',
+    'WebWiz',
+    'Xenforo',
+    'Yaf',
+];
+
+foreach ($packages as $name) {
+    $classname = '\NitroPorter\Package\\'.$name;
+    $classname::registerSupport();
+}
+
+$supported = \NitroPorter\SupportManager::getInstance()->getSupport();
+
+// Select database driver.
+define('DB_EXTENSION', 'pdo');
 
 // Use error handler in functions.php
 set_error_handler("ErrorHandler");
 if(!defined('DB_EXTENSION')) {
     die('There is an error in your config. You need to set your database extension properly.');
 }
-
-$supported = array();
-
-// Include individual software porters.
-// MAKESKIPSTART
-$paths = glob(dirname(__FILE__) . '/packages/*.php');
-foreach ($paths as $path) {
-    if (is_readable($path)) {
-        include_once $path;
-    }
-}
-// MAKESKIPEND
 
 // If running from cli, execute its command.
 if (defined('CONSOLE')) {

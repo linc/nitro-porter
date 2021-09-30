@@ -6,10 +6,39 @@
  * @author
  */
 
-$supported['__NAME__'] = array('name'=> '__NAME__', 'prefix'=>'');
-$supported['__NAME__']['features'] = array('Users' => 1);
+namespace NitroPorter\Package;
+
+use NitroPorter\ExportController;
 
 class __NAME__ extends ExportController {
+
+    const SUPPORTED = [
+        'name' => '__NAME__',
+        'prefix' => '',
+        'features' => [  // Set features you support to 1 or a string (for support notes).
+            'Users' => 1,
+            'Passwords' => 0,
+            'Categories' => 1,
+            'Discussions' => 1,
+            'Comments' => 1,
+            'Polls' => 0,
+            'Roles' => 0,
+            'Avatars' => 0,
+            'PrivateMessages' => 0,
+            'Signatures' => 0,
+            'Attachments' => 0,
+            'Bookmarks' => 0,
+            'Permissions' => 0,
+            'Badges' => 0,
+            'UserNotes' => 0,
+            'Ranks' => 0,
+            'Groups' => 0,
+            'Tags' => 0,
+            'Reactions' => 0,
+            'Articles' => 0,
+        ]
+    ];
+
     /**
      * Main export process.
      *

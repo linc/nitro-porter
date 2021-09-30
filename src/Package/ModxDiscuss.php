@@ -1,33 +1,31 @@
 <?php
 /**
- * SampleName exporter tool.
+ * MODX Discuss exporter tool.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author YOUR NAME
+ * @author Robin Jurinka
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class SampleName extends ExportController {
+class ModxDiscuss extends ExportController {
 
     const SUPPORTED = [
-        'name' => '',
-        'prefix' => '',
-        'CommandLine' => [
-        ],
-        'features' => [  // Set features you support to 1 or a string (for support notes).
+        'name' => 'MODX Discuss Extension',
+        'prefix' => 'modx_discuss_',
+        'features' => [
             'Users' => 1,
-            'Passwords' => 0,
+            'Passwords' => 1,
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
             'Polls' => 0,
-            'Roles' => 0,
+            'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 0,
-            'Signatures' => 0,
+            'Signatures' => 1,
             'Attachments' => 0,
             'Bookmarks' => 0,
             'Permissions' => 0,
@@ -50,10 +48,11 @@ class SampleName extends ExportController {
      * @var array Required tables => columns
      */
     protected $sourceTables = array(
-        'forums' => array(), // This just requires the 'forum' table without caring about columns.
+        'categories' => array(), // This just requires the 'forum' table without caring about columns.
+        'boards' => array(),
         'posts' => array(),
-        'topics' => array(),
-        'users' => array('ID', 'user_login', 'user_pass', 'user_email'), // Require specific cols on 'users'
+        'threads' => array(),
+        'users' => array('user', 'username', 'email', 'createdon', 'gender', 'birthdate', 'location', 'confirmed', 'last_login', 'last_active', 'title', 'avatar', 'show_email'), // Require specific cols on 'users'
     );
 
     /**
@@ -65,39 +64,42 @@ class SampleName extends ExportController {
     public function forumExport($ex) {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
-        $characterSet = $ex->getCharacterSet('CommentsTableNameGoesHere');
+        $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
         // Reiterate the platform name here to be included in the porter file header.
-        $ex->beginExport('', 'Proper Platform Name Goes Here');
-
-        // It's usually a good idea to do the porting in the approximate order laid out here.
+        $ex->beginExport('', 'MODX Discuss Extension', array('HashMethod' => 'Vanilla'));
 
         // User.
-        // Map as much as possible using the $x_Map array for clarity.
-        // Key is always the source column name.
-        // Value is either the destination column or an array of meta data, usually Column & Filter.
-        // If it's a meta array, 'Column' is the destination column name and 'Filter' is a method name to run it thru.
-        // Here, 'HTMLDecoder' is a method in ExportModel. Check there for available filters.
-        // Assume no filter is needed and only use one if you encounter issues.
-        $user_Map = array(
-            'Author_ID' => 'UserID',
-            'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-        );
-        // This is the query that the x_Map array above will be mapped against.
-        // Therefore, our select statement must cover all the "source" columns.
-        // It's frequently necessary to add joins, where clauses, and more to get the data we want.
-        // The :_ before the table name is the placeholder for the prefix designated. It gets swapped on the fly.
         $ex->exportTable('User', "
-         select u.*
-         from :_User u
-         ", $user_Map);
+            select
+                u.user as UserID,
+                u.username as Name,
+                u.password as Password,
+                u.email as Email,
+                u.ip as LastIPAddress,
+                u.createdon as DateInserted,
+                u.gender2 as Gender, // 0 => 'u'
+                u.birthdate as DateOfBirth,
+                u.location as Location,
+                u.confirmed as Confirmed,
+                u.last_active as DateLastActive,
+                u.title as Title,
+                u.avatar as Photo,
+                u.show_email as ShowEmail,
+                case u.gender when 0 then 'u' else gender end as gender2
+            from :_users u"
+        );
 
+        /**
+         *  No Roles in discuss, wiping the role table doesn't make sense!
+         */
         // Role.
         // The Vanilla roles table will be wiped by any import. If your current platform doesn't have roles,
         // you can hard code new ones into the select statement. See Vanilla's defaults for a good example.
+        /*
         $role_Map = array(
             'Group_ID' => 'RoleID',
             'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
@@ -105,18 +107,19 @@ class SampleName extends ExportController {
         $ex->exportTable('Role', "
          select *
          from :_tblGroup", $role_Map);
+        */
 
         // User Role.
         // Really simple matchup.
         // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
         // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
-        $userRole_Map = array(
-            'Author_ID' => 'UserID',
-            'Group_ID' => 'RoleID',
-        );
         $ex->exportTable('UserRole', "
-         select u.*
-         from :_tblAuthor u", $userRole_Map);
+            select
+                u.user as UserID,
+                u.roleID as RoleID,
+                '32' as roleID
+            from :_moderators u"
+        );
 
         // Permission.
         // Feel free to add a permission export if this is a major platform or it will see reuse.
@@ -128,58 +131,112 @@ class SampleName extends ExportController {
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration and profiles will auto-populate with the migrated data.
         $ex->exportTable('UserMeta', "
-         select
-            Author_ID as UserID,
-            'Plugin.Signatures.Sig' as `Name`,
-            Signature as `Value`
-         from :_tblAuthor
-         where Signature <> ''");
+            select
+                user as UserID,
+                'Plugin.Signatures.Sig' as `Name`,
+                Signature as `Value`
+            from :_users
+            where Signature <> ''
+
+            union
+
+            select
+                user as UserID,
+                'Profile.Website' as `Name`,
+                website as `Value`
+            from :_users
+            where website <> ''
+
+            union
+
+            select
+                user as UserID,
+                'Profile.LastName' as `Name`,
+                name_last as `Value`
+            from :_users
+            where name_last <> ''
+
+            union
+
+            select
+                user as UserID,
+                'Profile.FirstName' as `Name`,
+                name_first as `Value`
+            from :_users
+            where name_first <> ''
+        ");
 
         // Category.
         // Be careful to not import hundreds of categories. Try translating huge schemas to Tags instead.
         // Numeric category slugs aren't allowed in Vanilla, so be careful to sidestep those.
         // Don't worry about rebuilding the TreeLeft & TreeRight properties. Vanilla can fix this afterward
         // if you just get the Sort and ParentIDs correct.
-        $category_Map = array(
-            'Forum_ID' => 'CategoryID',
-            'Forum_name' => 'Name',
-        );
         $ex->exportTable('Category', "
-         select *
-         from :_tblCategory c
-         ", $category_Map);
+            select
+                id as CategoryID,
+                case parent when 0 then '-1' else parent end as ParentCategoryID,
+                name as `Name`,
+                description as `Description`,
+                'Heading' as `DisplayAs`,
+            rank as `Sort`
+            from :_boards
+
+            union
+
+            select
+                (select max(id) from :_boards) + id as CategoryID,
+                '-1' as ParentCategoryID,
+                name as `Name`,
+                description as `Description`,
+                'Heading' as `DisplayAs`,
+                rank as `Sort`
+            from :_categories
+        ");
 
         // Discussion.
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
         $discussion_Map = array(
-            'Topic_ID' => 'DiscussionID',
-            'Forum_ID' => 'CategoryID',
-            'Author_ID' => 'InsertUserID',
-            'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'title2' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $ex->exportTable('Discussion', "
-         select *,
-            FROM_UNIXTIME(Message_date) as Message_date
-         from :_tblTopic t
-         join :_tblThread th
-            on t.Start_Thread_ID = th.Thread_ID", $discussion_Map);
+            select
+                t.id as `DiscussionID`,
+                t.board as `CategoryID`,
+                t.title as `title2`,
+                t.replies as `CountComments`,
+                t.views as `CountViews`,
+                t.locked as `Closed`,
+                t.sticky as `Announce`,
+                p.message as `Body`,
+                'BBCode' as `Format`,
+                p.author as `InsertUserID`,
+                p.createdon as `DateInserted`,
+                p.editedon as `DateUpdated`,
+                p.ip as `InsertIPAddress`,
+                case p.editedby when 0 then null else p.editedby end as `UpdateUserID`
+            from :_threads t
+            join :_posts p on t.id = p.thread",
+            $discussion_Map);
 
         // Comment.
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
-        $comment_Map = array(
-            'Thread_ID' => 'CommentID',
-            'Topic_ID' => 'DiscussionID',
-            'Author_ID' => 'InsertUserID',
-            'IP_addr' => 'InsertIPAddress',
-            'Message' => array('Column' => 'Body'),
-            'Format' => 'Format',
-            'Message_date' => array('Column' => 'DateInserted')
+        $ex->exportTable('Comment', '
+            select
+                p.id as CommentID,
+                p.thread as DiscussionID,
+                p.message as Body,
+                p.BBCode as Format,
+                p.author as InsertUserID,
+                p.createdon as DateInserted,
+                p.editedby2 as UpdateUserID,
+                p.editedon as DateUpdated,
+                p.ip as InsertIPAddress,
+                case p.editedby when 0 then null else p.editedby end as editedby2
+            from :_posts p
+            where p.parent <> 0'
         );
-        $ex->exportTable('Comment', "
-         select th.*
-         from :_tblThread th", $comment_Map);
 
         // UserDiscussion.
         // This is the table for assigning bookmarks/subscribed threads.
@@ -196,7 +253,6 @@ class SampleName extends ExportController {
 
         $ex->endExport();
     }
-
 }
 
 // Closing PHP tag required. (make.php)
