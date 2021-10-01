@@ -222,6 +222,8 @@ function vanillaStructure()
             'Name' => 'varchar(255)',
             'Body' => 'text',
             'Format' => 'varchar(10)',
+            'ParentRecordType' => 'varchar(25)',
+            'ParentRecordID' => 'int',
             'DateStarts' => 'datetime',
             'DateEnds' => 'datetime',
             'Timezone' => 'varchar(64)',
