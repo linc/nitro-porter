@@ -1,6 +1,6 @@
 <?php
 /**
- * Views for Vanilla 2 export tools.
+ * HTML views for the export tool.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
@@ -26,19 +26,18 @@ function pageHeader() {
                 <p>Nitro Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
             </h1>
         </div>
-        <?php
-        }
+<?php
+}
 
-        /**
-         * HTML footer.
-         */
-        function pageFooter() {
-        ?>
+/**
+ * HTML footer.
+ */
+function pageFooter() {
+?>
     </div>
 </div>
 </body>
 </html><?php
-
 }
 
 /**
@@ -306,5 +305,3 @@ function viewFeatureTable($features = array()) {
     echo '</tbody></table>';
     pageFooter();
 }
-
-?>
