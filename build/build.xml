@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="nitro-porter" basedir="." default="main">
+    <!-- Name the package folder. -->
+    <property name="package" value="nitro-porter" override="true" />
+
+    <!-- Parent directory of this file should be the root. -->
+    <resolvepath file=".." propertyName="repo_root" />
+
+    <!-- Define what's in the bundles. -->
+    <fileset id="files" dir="${repo_root}" includesfile="file-allowlist.txt" excludesfile="file-denylist.txt" />
+
+    <!-- Run Composer, removing dev requirements. -->
+    <target name="compose">
+        <echo msg="Rebuilding Composer without dev files..." />
+        <composer composer="/usr/local/bin/composer" command="install">
+            <arg value="--working-dir=${repo_root}" />
+            <arg value="--no-dev" />
+            <arg value="--optimize-autoloader" />
+            <arg value="--quiet" />
+        </composer>
+    </target>
+
+    <!-- Bundle up the package. -->
+    <target name="copy">
+        <!-- Copy allowlist files to target directory. -->
+        <echo msg="Copying files to build directory..." />
+        <copy todir="./current/${package}" >
+            <fileset refid="files" />
+        </copy>
+    </target>
+
+    <!-- Restore require-dev for localhost -->
+    <target name="cleanup">
+        <echo msg="Restoring Composer (with developer files)..." />
+        <composer composer="/usr/local/bin/composer" command="install">
+            <arg value="--working-dir=${repo_root}"/>
+            <arg value="--quiet" />
+        </composer>
+    </target>
+
+    <!-- Empty the build directory. (REQUIRED: `package` must be defined.) -->
+    <target name="reset">
+        <!-- Clean up old build files. -->
+        <echo msg="Removing old builds..." />
+        <delete dir="./current/${package}" quiet="true" />
+        <!-- Create target directory. -->
+        <echo msg="Creating empty build folders..." />
+        <mkdir dir="./current/${package}" />
+    </target>
+
+    <!-- Build the package. -->
+    <target name="main" depends="compose">
+        <phingcall target="reset" />
+        <phingcall target="copy" />
+        <echo msg="Package has been built." />
+        <phingcall target="cleanup" />
+    </target>
+</project>

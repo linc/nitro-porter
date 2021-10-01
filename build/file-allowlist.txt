@@ -1,0 +1,7 @@
+assets/
+src/
+vendor/
+index.php
+LICENSE.txt
+phpbb.extensions.php
+README.md
