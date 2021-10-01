@@ -17,6 +17,11 @@
             "email": "daazku@gmail.com"
         }
     ],
+    "scripts": {
+        "lint": "vendor/bin/phpcs --standard=phpcs.xml.dist ./",
+        "test": "vendor/bin/phpunit --no-coverage --no-extensions --colors=always",
+        "build": "cd build; ../vendor/bin/phing; cd .."
+    },
     "require": {
         "php": ">=7.2"
     },

@@ -12,7 +12,6 @@ _notes
 .settings
 .buildpath
 .idea
-vanilla2export.php
 attachments/*
 custom*
 *.sql
@@ -22,3 +21,5 @@ custom*
 composer.lock
 vendor
 
+# Phing
+build/current
