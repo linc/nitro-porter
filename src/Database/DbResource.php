@@ -41,5 +41,3 @@ interface DbResource {
     public function close();
 }
 
-// Closing PHP tag required. (make.php)
-?>

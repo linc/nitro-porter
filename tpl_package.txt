@@ -135,5 +135,3 @@ class __NAME__ extends ExportController {
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

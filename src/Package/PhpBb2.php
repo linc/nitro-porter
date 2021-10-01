@@ -372,5 +372,3 @@ join z_pmgroup g
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

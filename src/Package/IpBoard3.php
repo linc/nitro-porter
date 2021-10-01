@@ -859,5 +859,3 @@ drop table tmp_group;");
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

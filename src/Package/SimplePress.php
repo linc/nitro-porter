@@ -256,5 +256,3 @@ end as _Permissions
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

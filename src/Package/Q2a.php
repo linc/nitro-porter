@@ -127,6 +127,4 @@ class Q2a extends ExportController
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>
 

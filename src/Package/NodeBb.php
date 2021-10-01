@@ -1076,5 +1076,3 @@ class NodeBb extends ExportController {
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

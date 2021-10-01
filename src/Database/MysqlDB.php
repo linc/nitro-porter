@@ -96,6 +96,4 @@ class MysqlDB implements DbResource {
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>
 

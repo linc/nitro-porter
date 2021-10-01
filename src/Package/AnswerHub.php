@@ -349,6 +349,3 @@ class AnswerHub extends ExportController {
         return $value;
     }
 }
-
-// Closing PHP tag required. (make.php)
-?>

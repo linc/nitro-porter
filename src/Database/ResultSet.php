@@ -29,5 +29,3 @@ class ResultSet {
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

@@ -309,5 +309,3 @@ if (!function_exists('hex2bin')) {
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>

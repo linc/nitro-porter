@@ -45,6 +45,4 @@ class DbFactory {
     }
 }
 
-// Closing PHP tag required. (make.php)
-?>
 
