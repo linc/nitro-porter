@@ -165,7 +165,7 @@ class ExportModel {
         $fp = $this->_openFile();
 
         // Build meta info about where this file came from.
-        $comment = 'Vanilla Export: ' . $this->version();
+        $comment = 'Nitro Porter Export: ' . $this->version();
         if ($source) {
             $comment .= self::DELIM . ' Source: ' . $source;
         }
