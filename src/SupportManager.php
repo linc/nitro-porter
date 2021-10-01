@@ -1,16 +1,17 @@
 <?php
+
 namespace NitroPorter;
 
 class SupportManager
 {
-    const SUPPORTED_META = [
+    public const SUPPORTED_META = [
         'name',
         'prefix',
         'features',
         'CommandLine',
     ];
 
-    const SUPPORTED_FEATURES = [
+    public const SUPPORTED_FEATURES = [
         'Users',
         'Passwords',
         'Categories',
@@ -44,8 +45,7 @@ class SupportManager
 
     public static function getInstance()
     {
-        if (self::$instance == null)
-        {
+        if (self::$instance == null) {
             self::$instance = new SupportManager();
         }
 
@@ -57,7 +57,7 @@ class SupportManager
         $this->packages[$name] = $meta;
     }
 
-    public function getSupport() : array
+    public function getSupport(): array
     {
         return $this->packages;
     }

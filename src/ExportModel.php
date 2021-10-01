@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
@@ -8,15 +9,15 @@ namespace NitroPorter;
 /**
  * Object for exporting other database structures into a format that can be imported.
  */
-class ExportModel {
-
+class ExportModel
+{
     /** Character constants. */
-    const COMMENT = '//';
-    const DELIM = ',';
-    const ESCAPE = '\\';
-    const NEWLINE = "\n";
-    const NULL = '\N';
-    const QUOTE = '"';
+    public const COMMENT = '//';
+    public const DELIM = ',';
+    public const ESCAPE = '\\';
+    public const NEWLINE = "\n";
+    public const NULL = '\N';
+    public const QUOTE = '"';
 
     /** @var bool */
     public $captureOnly = false;
@@ -70,7 +71,7 @@ class ExportModel {
     public $path = '';
 
     /**
-     * @var string The database prefix. When you pass a sql string to ExportTable() it will replace occurances of :_ with this property.
+     * @var string DB prefix. SQL strings passed to ExportTable() will replace occurances of :_ with this.
      * @see ExportModel::ExportTable()
      */
     public $prefix = '';
@@ -115,7 +116,8 @@ class ExportModel {
     /**
      * Setup.
      */
-    public function __construct($dbFactory) {
+    public function __construct($dbFactory)
+    {
         $this->_dbFactory = $dbFactory;
         self::$mb = function_exists('mb_detect_encoding');
 
@@ -136,12 +138,12 @@ class ExportModel {
      * Create the export file and begin the export.
      *
      * @param string $path The path to the export file.
-     * @param string $source The source program that created the export. This may be used by the import routine to do additional processing.
+     * @param string $source What created the export. May be used by import routine to do additional processing.
      * @param array $header
      * @return resource Pointer to the file created.
      */
-    public function beginExport($path = '', $source = '', $header = array()) {
-
+    public function beginExport($path = '', $source = '', $header = array())
+    {
         $this->comments = array();
         $this->beginTime = microtime(true);
 
@@ -191,7 +193,8 @@ class ExportModel {
      * @param string $message The message to write.
      * @param bool $echo Whether or not to echo the message in addition to writing it to the file.
      */
-    public function comment($message, $echo = true) {
+    public function comment($message, $echo = true)
+    {
         if ($this->destination == 'file') {
             $char = self::COMMENT;
         } else {
@@ -216,7 +219,8 @@ class ExportModel {
      *
      * This method must be called if BeginExport() has been called or else the export file will not be closed.
      */
-    public function endExport() {
+    public function endExport()
+    {
         $this->endTime = microtime(true);
         $this->totalTime = $this->endTime - $this->beginTime;
 
@@ -254,7 +258,8 @@ class ExportModel {
      *   - If you specify an array you can have the following keys: Column, and Type where Column represents the new column name and Type represents the MySQL type.
      *  For a list of the export tables and columns see $this->Structure().
      */
-    public function exportTable($tableName, $query, $mappings = array()) {
+    public function exportTable($tableName, $query, $mappings = [])
+    {
         if (!empty($this->restrictedTables) && !in_array(strtolower($tableName), $this->restrictedTables)) {
             $this->comment("Skipping table: $tableName");
         } else {
@@ -277,7 +282,8 @@ class ExportModel {
      * @param $pathColumn
      * @param bool $thumbnail
      */
-    public function exportBlobs($sql, $blobColumn, $pathColumn, $thumbnail = false) {
+    public function exportBlobs($sql, $blobColumn, $pathColumn, $thumbnail = false)
+    {
         $this->comment('Exporting blobs...');
 
         $result = $this->query($sql);
@@ -347,7 +353,8 @@ class ExportModel {
      * @param array $options
      * @return int
      */
-    protected function _exportTable($tableName, $query, $mappings = array(), $options = array()) {
+    protected function _exportTable($tableName, $query, $mappings = [], $options = [])
+    {
         $fp = $this->file;
 
         // Make sure the table is valid for export.
@@ -416,7 +423,8 @@ class ExportModel {
      * @param $query
      * @param array $mappings
      */
-    protected function _createExportTable($tableName, $query, $mappings = array()) {
+    protected function _createExportTable($tableName, $query, $mappings = [])
+    {
         if (!$this->scriptCreateTable) {
             return;
         }
@@ -466,7 +474,8 @@ class ExportModel {
      * @param $columns
      * @return array
      */
-    public function fixPermissionColumns($columns) {
+    public function fixPermissionColumns($columns)
+    {
         $result = array();
         foreach ($columns as $index => $value) {
             if (is_string($value) && strpos($value, '.') !== false) {
@@ -484,7 +493,8 @@ class ExportModel {
      * @param $mappings
      * @return array
      */
-    public function flipMappings($mappings) {
+    public function flipMappings($mappings)
+    {
         $result = array();
         foreach ($mappings as $column => $mapping) {
             if (is_string($mapping)) {
@@ -506,7 +516,8 @@ class ExportModel {
      * @param int $end
      * @return string
      */
-    public static function formatElapsed($start, $end = null) {
+    public static function formatElapsed($start, $end = null)
+    {
         if ($end === null) {
             $elapsed = $start;
         } else {
@@ -527,7 +538,8 @@ class ExportModel {
      * @param bool $indexColumn
      * @return type
      */
-    public function get($sql, $indexColumn = false) {
+    public function get($sql, $indexColumn = false)
+    {
         $r = $this->_query($sql);
         $result = [];
 
@@ -548,7 +560,8 @@ class ExportModel {
      * @param string $table
      * @return string|bool Character set name or false.
      */
-    public function getCharacterSet($table) {
+    public function getCharacterSet($table)
+    {
         // First get the collation for the database.
         $data = $this->query("show table status like ':_{$table}';");
         if (!$data) {
@@ -581,7 +594,8 @@ class ExportModel {
      *
      * @return array
      */
-    public function getDatabasePrefixes() {
+    public function getDatabasePrefixes()
+    {
         // Grab all of the tables.
         $data = $this->query('show tables');
         if ($data === false) {
@@ -627,7 +641,8 @@ class ExportModel {
      * @param string $tableName
      * @return array
      */
-    public function getExportStructure($row, $tableOrStructure, &$mappings, $tableName = '_') {
+    public function getExportStructure($row, $tableOrStructure, &$mappings, $tableName = '_')
+    {
         $exportStructure = array();
 
         if (is_string($tableOrStructure)) {
@@ -675,8 +690,10 @@ class ExportModel {
                 foreach ($mappings as $testMapping) {
                     if ($testMapping == $column) {
                         $mappingExists = true;
-                    } elseif (is_array($testMapping) && array_key_exists('Column',
-                            $testMapping) && ($testMapping['Column'] == $column)
+                    } elseif (
+                        is_array($testMapping)
+                        && array_key_exists('Column', $testMapping)
+                        && ($testMapping['Column'] == $column)
                     ) {
                         $mappingExists = true;
                     }
@@ -744,7 +761,8 @@ class ExportModel {
      * @param $default
      * @return mixed
      */
-    public function getValue($sql, $default) {
+    public function getValue($sql, $default)
+    {
         $data = $this->get($sql);
         if (count($data) > 0) {
             $data = array_shift($data); // first row
@@ -757,61 +775,12 @@ class ExportModel {
     }
 
     /**
-     * Are there any filters set on this table?
-     *
-     * @param $mappings
-     * @return bool
-     */
-    // Deprecated. To be deleted.
-    /*public function hasFilter(&$mappings) {
-        foreach ($mappings as $column => $info) {
-            if (is_array($info) && isset($info['Filter'])) {
-                return true;
-            }
-        }
-
-        return false;
-    }*/
-
-    /**
-     * Do standard HTML decoding in SQL to speed things up.
-     *
-     * @param string $tableName
-     * @param string $columnName
-     * @param string $PK
-     */
-    // Deprecated. To be deleted.
-    /*public function HTMLDecoderDb($tableName, $columnName, $PK) {
-        $common = array('&amp;' => '&', '&lt;' => '<', '&gt;' => '>', '&apos;' => "'", '&quot;' => '"', '&#39;' => "'");
-        foreach ($common as $from => $to) {
-            $fromQ = mysql_escape_string($from);
-            $toQ = mysql_escape_string($to);
-            $sql = "update :_{$tableName} set $columnName = replace($columnName, '$fromQ', '$toQ') where $columnName like '%$fromQ%'";
-
-            $this->query($sql);
-        }
-
-        // Now decode the remaining rows.
-        $sql = "select * from :_$tableName where $columnName like '%&%;%'";
-        $result = $this->query($sql, true);
-        while ($row = mysql_fetch_assoc($result)) {
-            $from = $row[$columnName];
-            $to = HTMLDecoder($from);
-
-            if ($from != $to) {
-                $toQ = mysql_escape_string($to);
-                $sql = "update :_{$tableName} set $columnName = '$toQ' where $PK = {$row[$PK]}";
-                $this->query($sql, true);
-            }
-        }
-    }*/
-
-    /**
      *
      *
      * @return resource
      */
-    protected function _openFile() {
+    protected function _openFile()
+    {
         $this->path = str_replace(' ', '_', $this->path);
         if ($this->useCompression()) {
             $fp = gzopen($this->path, 'wb');
@@ -830,9 +799,10 @@ class ExportModel {
      * Wrapper for _Query().
      *
      * @param string $query The sql to execute.
-     * @return resource The query cursor.
+     * @return ResultSet|string The query cursor.
      */
-    public function query($query) {
+    public function query($query)
+    {
         if (!preg_match('`limit 1;$`', $query)) {
             $this->queries[] = $query;
         }
@@ -851,7 +821,8 @@ class ExportModel {
      *
      * @param string|array $sqlList An array of single query strings or a string of queries terminated with semi-colons.
      */
-    public function queryN($sqlList) {
+    public function queryN($sqlList)
+    {
         if (!is_array($sqlList)) {
             $sqlList = explode(';', $sqlList);
         }
@@ -870,32 +841,18 @@ class ExportModel {
      * @param string $tableName Name of the table to check
      * @return bool True if table should be exported, false otherwise
      */
-    public function shouldExport($tableName) {
+    public function shouldExport($tableName)
+    {
         return empty($this->restrictedTables) || in_array(strtolower($tableName), $this->restrictedTables);
     }
-
-    /**
-     * Set database connection details.
-     *
-     * @param null $host
-     * @param null $username
-     * @param null $password
-     * @param null $dbName
-     */
-    // Deprecated. To be deleted.
-    /*public function setConnection($host = null, $username = null, $password = null, $dbName = null) {
-        $this->_host = $host;
-        $this->_username = $username;
-        $this->_password = $password;
-        $this->_dbName = $dbName;
-    }*/
 
     /**
      * Echo a status message to the console.
      *
      * @param $msg
      */
-    public function status($msg) {
+    public function status($msg)
+    {
         if (defined('CONSOLE')) {
             echo $msg;
         }
@@ -910,7 +867,8 @@ class ExportModel {
      * @return array
      * @see vnExport::ExportTable()
      */
-    public function structures($newStructures = false) {
+    public function structures($newStructures = false)
+    {
         if (is_array($newStructures)) {
             $this->_structures = $newStructures;
         }
@@ -924,7 +882,8 @@ class ExportModel {
      * @param bool $value The value to set or NULL to just return the value.
      * @return bool
      */
-    public function useCompression($value = null) {
+    public function useCompression($value = null)
+    {
         if ($value !== null) {
             $this->_useCompression = $value;
         }
@@ -938,7 +897,8 @@ class ExportModel {
      *
      * @return string
      */
-    public function version() {
+    public function version()
+    {
         return APPLICATION_VERSION;
     }
 
@@ -952,7 +912,8 @@ class ExportModel {
      *  - false: If the table does not exist.
      *  - array: The names of the missing columns if one or more columns don't exist.
      */
-    public function exists($table, $columns = array()) {
+    public function exists($table, $columns = [])
+    {
         static $_exists = array();
 
         if (!isset($_exists[$table])) {
@@ -1006,7 +967,8 @@ class ExportModel {
      * @param array $requiredTables
      * @return array|string
      */
-    public function verifySource($requiredTables) {
+    public function verifySource($requiredTables)
+    {
         $missingTables = false;
         $countMissingTables = 0;
         $missingColumns = array();
@@ -1056,11 +1018,9 @@ class ExportModel {
             // Guess the prefixes to notify the user.
             $prefixes = $this->getDatabasePrefixes();
             if (count($prefixes) == 1) {
-                $result .= ' Based on the database you provided, your database prefix is probably ' . implode(', ',
-                        $prefixes);
+                $result .= ' Based on the database you provided, your database prefix is probably ' . implode(', ', $prefixes);
             } elseif (count($prefixes) > 0) {
-                $result .= ' Based on the database you provided, your database prefix is probably one of the following: ' . implode(', ',
-                        $prefixes);
+                $result .= ' Based on the database you provided, your database prefix is probably one of the following: ' . implode(', ', $prefixes);
             }
 
             return $result;
@@ -1076,7 +1036,8 @@ class ExportModel {
      * @param $tableName
      * @param $exportStructure
      */
-    public function writeBeginTable($fp, $tableName, $exportStructure) {
+    public function writeBeginTable($fp, $tableName, $exportStructure)
+    {
         $tableHeader = '';
 
         foreach ($exportStructure as $key => $value) {
@@ -1108,7 +1069,8 @@ class ExportModel {
      *
      * @param $fp
      */
-    public function writeEndTable($fp) {
+    public function writeEndTable($fp)
+    {
         fwrite($fp, self::NEWLINE);
     }
 
@@ -1120,7 +1082,8 @@ class ExportModel {
      * @param $exportStructure
      * @param $revMappings
      */
-    public function writeRow($fp, $row, $exportStructure, $revMappings) {
+    public function writeRow($fp, $row, $exportStructure, $revMappings)
+    {
         $this->currentRow =& $row;
 
         // Loop through the columns in the export structure and grab their values from the row.
@@ -1188,7 +1151,8 @@ class ExportModel {
      * @param string $columnName
      * @return string SQL.
      */
-    public static function fileExtension($columnName) {
+    public static function fileExtension($columnName)
+    {
         return "right($columnName, instr(reverse($columnName), '.') - 1)";
     }
 
@@ -1198,7 +1162,8 @@ class ExportModel {
      * @param $sql
      * @return ResultSet instance of ResultSet of success false on failure
      */
-    private function _query($sql) {
+    private function _query($sql)
+    {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
         if ($this->sourcePrefix) {
             $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
@@ -1216,7 +1181,8 @@ class ExportModel {
      * @param $string
      * @return string escaped string
      */
-    public function escape($string) {
+    public function escape($string)
+    {
         $dbResource = $this->_dbFactory->getInstance();
         return $dbResource->escape($string);
     }
@@ -1228,7 +1194,8 @@ class ExportModel {
      * @param $table
      * @return bool
      */
-    public function indexExists($indexName, $table) {
+    public function indexExists($indexName, $table)
+    {
         $result = $this->query("show index from `$table` WHERE Key_name = '$indexName'");
 
         return $result->nextResultRow() !== false;
@@ -1240,7 +1207,8 @@ class ExportModel {
      * @param $tableName
      * @return bool
      */
-    public function tableExists($tableName) {
+    public function tableExists($tableName)
+    {
         $result = $this->query("show tables like '$tableName'");
 
         return !empty($result->nextResultRow());
@@ -1253,21 +1221,15 @@ class ExportModel {
      * @param $columnName
      * @return bool
      */
-    public function columnExists($tableName, $columnName){
-
-        $result=$this->query("
-            select
-                column_name
-            from
-                information_schema.columns
-            where
-                table_schema = database()
+    public function columnExists($tableName, $columnName)
+    {
+        $result = $this->query("
+            select column_name
+            from information_schema.columns
+            where table_schema = database()
                 and table_name = '$tableName'
                 and column_name = '$columnName'
         ");
         return $result->nextResultRow() !== false;
     }
-
 }
-
-?>

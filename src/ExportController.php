@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
@@ -8,8 +9,8 @@ namespace NitroPorter;
 /**
  * Generic controller implemented by forum-specific ones.
  */
-abstract class ExportController {
-
+abstract class ExportController
+{
     /** @var array Database connection info */
     protected $dbInfo = array();
 
@@ -28,14 +29,15 @@ abstract class ExportController {
     public static function registerSupport()
     {
         $name = get_called_class();
-        $slug = str_replace( 'NitroPorter\Package\\', '', $name );
+        $slug = str_replace('NitroPorter\Package\\', '', $name);
         SupportManager::getInstance()->registerSupport($slug, $name::SUPPORTED);
     }
 
     /**
      * Construct and set the controller's properties from the posted form.
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->registerSupport();
         $supported = SupportManager::getInstance()->getSupport();
 
@@ -88,7 +90,8 @@ abstract class ExportController {
      *
      * @return string
      */
-    public function cdnPrefix() {
+    public function cdnPrefix()
+    {
         $cdn = rtrim($this->param('cdn', ''), '/');
         if ($cdn) {
             $cdn .= '/';
@@ -100,13 +103,13 @@ abstract class ExportController {
     /**
      * Logic for export process.
      */
-    public function doExport() {
+    public function doExport()
+    {
         $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
 
         // Test connection
         $msg = $this->testDatabase();
         if ($msg === true) {
-
             // Test src tables' existence structure
             $msg = $this->ex->verifySource($this->sourceTables);
             if ($msg === true) {
@@ -134,7 +137,8 @@ abstract class ExportController {
     /**
      * User submitted db connection info.
      */
-    public function handleInfoForm() {
+    public function handleInfoForm()
+    {
         $this->dbInfo = array(
             'dbhost' => $_POST['dbhost'],
             'dbuser' => $_POST['dbuser'],
@@ -152,7 +156,8 @@ abstract class ExportController {
      * @param mixed $default Fallback value.
      * @return mixed Value of the parameter.
      */
-    public function param($name, $default = false) {
+    public function param($name, $default = false)
+    {
         if (isset($_POST[$name])) {
             return $_POST[$name];
         } elseif (isset($_GET[$name])) {
@@ -167,7 +172,8 @@ abstract class ExportController {
      *
      * @return string|bool True on success, message on failure.
      */
-    public function testDatabase() {
+    public function testDatabase()
+    {
         $dbFactory = new DbFactory($this->dbInfo, DB_EXTENSION);
         // Will die on error
         $dbFactory->getInstance();
@@ -175,5 +181,3 @@ abstract class ExportController {
         return true;
     }
 }
-
-?>
