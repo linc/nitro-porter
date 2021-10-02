@@ -4,14 +4,15 @@
  * Assume https://github.com/vanilla/addons/tree/master/plugins/QnA will be enabled.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Alexandre Chouinard
+ * @author  Alexandre Chouinard
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class AnswerHub extends ExportController {
+class AnswerHub extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'answerhub',
@@ -52,9 +53,10 @@ class AnswerHub extends ExportController {
      * Main export process.
      *
      * @param ExportModel $ex
-     * @see $_structures in ExportModel for allowed destination tables & columns.
+     * @see   $_structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
         $characterSet = $ex->getCharacterSet('nodes');
@@ -77,7 +79,8 @@ class AnswerHub extends ExportController {
         $user_Map = array(
             'c_email' => array('Column' => 'Email', 'Filter' => array($this, 'generateEmail')),
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             select
                 user.c_id as UserID,
                 user.c_name as Name,
@@ -92,12 +95,14 @@ class AnswerHub extends ExportController {
                  left join :_user_emails as user_email on user_email.c_user = user.c_id
             where user.c_type = 'user'
                 and user.c_name != '\$\$ANON_USER\$\$'
-        ", $user_Map);
+        ", $user_Map
+        );
 
         // Role.
         $role_Map = array(
         );
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
             select
                 groups.c_id as RoleID,
                 groups.c_name as Name,
@@ -112,22 +117,26 @@ class AnswerHub extends ExportController {
                 'System Administrator',
                 'System users from AnswerHub'
             from dual
-        ", $role_Map);
+        ", $role_Map
+        );
 
         // User Role.
         $userRole_Map = array(
         );
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 user_role.c_groups as RoleID,
                 user_role.c_members as UserID
             from :_authoritable_groups as user_role
-        ", $userRole_Map);
+        ", $userRole_Map
+        );
 
         // Category.
         $category_Map = array(
         );
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
             select
                 containers.c_id as CategoryID,
                 case
@@ -139,13 +148,15 @@ class AnswerHub extends ExportController {
             left join containers as parents on parents.c_id = containers.c_parent
             where containers.c_type = 'space'
                 and containers.c_active = 1
-        ", $category_Map);
+        ", $category_Map
+        );
 
         // Discussion.
         $discussion_Map = array(
         );
         // The query works fine but it will probably be slow for big tables
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
                         select
                 questions.c_id as DiscussionID,
                 if(questions.c_type = 'question', 'Question', NULL) as Type,
@@ -185,12 +196,14 @@ class AnswerHub extends ExportController {
             where questions.c_type in ('question', 'topic')
                 and questions.c_visibility = 'full'
             group by questions.c_id
-        ", $discussion_Map);
+        ", $discussion_Map
+        );
 
         // Comment.
         $comment_Map = array(
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
             select
                 answers.c_id as CommentID,
                 answers.c_parent as DiscussionID,
@@ -216,10 +229,12 @@ class AnswerHub extends ExportController {
                 )  nr on nr.c_id = answers.c_id
             where answers.c_type in ('answer', 'comment')
                   and answers.c_visibility = 'full'
-        ", $comment_Map);
+        ", $comment_Map
+        );
 
         // Tags
-        $ex->exportTable('Tags', "
+        $ex->exportTable(
+            'Tags', "
             select
                 c_id as TagID,
                 c_plug as Name,
@@ -227,9 +242,11 @@ class AnswerHub extends ExportController {
                 c_creation_date as DateInserted
             from :_nodes
             where n.c_type = 'topic'
-        ");
+        "
+        );
 
-        $ex->exportTable('TagDiscussion', "
+        $ex->exportTable(
+            'TagDiscussion', "
             select
                 c_topics as TagID,
                 c_nodes as DiscussionID,
@@ -237,14 +254,16 @@ class AnswerHub extends ExportController {
                 now() as DateInserted
             from :_node_topics
             where c_nodes in (select c_nodes from :_nodes where c_type = 'question')
-        ");
+        "
+        );
 
         // Media.
         $media_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'getFileName')),
             'Type' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
         );
-        $ex->exportTable('Media', "
+        $ex->exportTable(
+            'Media', "
             select
                   m.c_id as `MediaID`,
                   m.c_name as `Name`,
@@ -273,7 +292,8 @@ class AnswerHub extends ExportController {
                   if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
             from :_sources s
             join :_nodes n on s.c_node = n.c_id
-        ", $media_Map);
+        ", $media_Map
+        );
 
         $ex->endExport();
     }
@@ -281,12 +301,13 @@ class AnswerHub extends ExportController {
     /**
      * Generate an email for users who do not have one.
      *
-     * @param $value Value of the current row
-     * @param $field Name associated with the current field value
-     * @param $row   Full data row columns
+     * @param  $value Value of the current row
+     * @param  $field Name associated with the current field value
+     * @param  $row   Full data row columns
      * @return string Email
      */
-    public function generateEmail($value, $field, $row) {
+    public function generateEmail($value, $field, $row)
+    {
         $email = $value;
 
         if (empty($email)) {
@@ -303,7 +324,8 @@ class AnswerHub extends ExportController {
         return $email;
     }
 
-    public function getFileName($value, $field, $row) {
+    public function getFileName($value, $field, $row)
+    {
         $arr = explode('/', $value);
         return end($arr);
     }
@@ -312,37 +334,38 @@ class AnswerHub extends ExportController {
      * Set valid MIME type for images.
      *
      * @access public
-     * @see ExportModel::_exportTable
+     * @see    ExportModel::_exportTable
      *
-     * @param string $value Extension.
-     * @param string $field Ignored.
-     * @param array $row Ignored.
+     * @param  string $value Extension.
+     * @param  string $field Ignored.
+     * @param  array  $row   Ignored.
      * @return string Extension or accurate MIME type.
      */
-    public function buildMimeType($value, $field, $row) {
+    public function buildMimeType($value, $field, $row)
+    {
 
-        if(preg_match('~.*\.(.*)~', $value, $matches) != false){
+        if(preg_match('~.*\.(.*)~', $value, $matches) != false) {
             switch (strtolower($matches[1])) {
-                case 'jpg':
-                case 'jpeg':
-                case 'gif':
-                case 'png':
-                    $value = 'image/'.$matches[1];
-                    break;
-                case 'pdf':
-                case 'zip':
-                    $value = 'application/'.$matches[1];
-                    break;
-                case 'doc':
-                    $value = 'application/msword';
-                    break;
-                case 'xls':
-                    $value = 'application/vnd.ms-excel';
-                    break;
-                case 'txt':
-                case 'log':
-                    $value = 'text/plain';
-                    break;
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+            case 'png':
+                $value = 'image/'.$matches[1];
+                break;
+            case 'pdf':
+            case 'zip':
+                $value = 'application/'.$matches[1];
+                break;
+            case 'doc':
+                $value = 'application/msword';
+                break;
+            case 'xls':
+                $value = 'application/vnd.ms-excel';
+                break;
+            case 'txt':
+            case 'log':
+                $value = 'text/plain';
+                break;
             }
         }
 

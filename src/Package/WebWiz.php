@@ -3,14 +3,15 @@
  * WebWiz exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Todd Burry
+ * @author  Todd Burry
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class WebWiz extends ExportController {
+class WebWiz extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Web Wiz Forums',
@@ -43,7 +44,8 @@ class WebWiz extends ExportController {
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('Topic');
         if ($characterSet) {
@@ -53,38 +55,38 @@ class WebWiz extends ExportController {
         $ex->beginExport('', 'Web Wiz Forums');
         $ex->sourcePrefix = 'tbl';
 
-//      // Permissions.
-//      $Permission_Map = array(
-//          'group_id' => 'RoleID',
-//          'can_access_cp' => 'Garden.Settings.View',
-//          'can_access_edit' => 'Vanilla.Discussions.Edit',
-//          'can_edit_all_comments' => 'Vanilla.Comments.Edit',
-//          'can_access_admin' => 'Garden.Settings.Manage',
-//          'can_admin_members' => 'Garden.Users.Edit',
-//          'can_moderate_comments' => 'Garden.Moderation.Manage',
-//          'can_view_profiles' => 'Garden.Profiles.View',
-//          'can_post_comments' => 'Vanilla.Comments.Add',
-//          'can_view_online_system' => 'Vanilla.Discussions.View',
-//          'can_sign_in' => 'Garden.SignIn.Allow',
-//          'can_view_profiles3' => 'Garden.Activity.View',
-//          'can_post_comments2' => 'Vanilla.Discussions.Add'
-//      );
-//      $Permission_Map = $ex->FixPermissionColumns($Permission_Map);
-//      foreach ($Permission_Map as $Column => &$Info) {
-//         if (is_array($Info) && isset($Info['Column']))
-//            $Info['Filter'] = array($this, 'Bool');
-//      }
-//
-//      $ex->ExportTable('Permission', "
-//         select
-//            g.can_view_profiles as can_view_profiles2,
-//            g.can_view_profiles as can_view_profiles3,
-//            g.can_post_comments as can_post_comments2,
-//            g.can_post_comments as can_sign_in,
-//            case when can_access_admin = 'y' then 'all' when can_view_online_system = 'y' then 'view' end as _Permissions,
-//            g.*
-//         from forum_member_groups g
-//      ", $Permission_Map);
+        //      // Permissions.
+        //      $Permission_Map = array(
+        //          'group_id' => 'RoleID',
+        //          'can_access_cp' => 'Garden.Settings.View',
+        //          'can_access_edit' => 'Vanilla.Discussions.Edit',
+        //          'can_edit_all_comments' => 'Vanilla.Comments.Edit',
+        //          'can_access_admin' => 'Garden.Settings.Manage',
+        //          'can_admin_members' => 'Garden.Users.Edit',
+        //          'can_moderate_comments' => 'Garden.Moderation.Manage',
+        //          'can_view_profiles' => 'Garden.Profiles.View',
+        //          'can_post_comments' => 'Vanilla.Comments.Add',
+        //          'can_view_online_system' => 'Vanilla.Discussions.View',
+        //          'can_sign_in' => 'Garden.SignIn.Allow',
+        //          'can_view_profiles3' => 'Garden.Activity.View',
+        //          'can_post_comments2' => 'Vanilla.Discussions.Add'
+        //      );
+        //      $Permission_Map = $ex->FixPermissionColumns($Permission_Map);
+        //      foreach ($Permission_Map as $Column => &$Info) {
+        //         if (is_array($Info) && isset($Info['Column']))
+        //            $Info['Filter'] = array($this, 'Bool');
+        //      }
+        //
+        //      $ex->ExportTable('Permission', "
+        //         select
+        //            g.can_view_profiles as can_view_profiles2,
+        //            g.can_view_profiles as can_view_profiles3,
+        //            g.can_post_comments as can_post_comments2,
+        //            g.can_post_comments as can_sign_in,
+        //            case when can_access_admin = 'y' then 'all' when can_view_online_system = 'y' then 'view' end as _Permissions,
+        //            g.*
+        //         from forum_member_groups g
+        //      ", $Permission_Map);
 
 
         // User.
@@ -104,7 +106,8 @@ class WebWiz extends ExportController {
             'DOB' => 'DateOfBirth',
             'Show_email' => 'ShowEmail'
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          select
             concat(Salt, '$', Password) as Password2,
             case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
@@ -112,7 +115,8 @@ class WebWiz extends ExportController {
             'webwiz' as HashMethod,
             u.*
          from :_Author u
-         ", $user_Map);
+         ", $user_Map
+        );
 
 
         // Role.
@@ -120,27 +124,33 @@ class WebWiz extends ExportController {
             'Group_ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
          select *
-         from :_Group", $role_Map);
+         from :_Group", $role_Map
+        );
 
         // User Role.
         $userRole_Map = array(
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
          select u.*
-         from :_Author u", $userRole_Map);
+         from :_Author u", $userRole_Map
+        );
 
         // UserMeta
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
          select
             Author_ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
             Signature as `Value`
          from :_Author
-         where Signature <> ''");
+         where Signature <> ''"
+        );
 
         // Category.
         $category_Map = array(
@@ -150,7 +160,8 @@ class WebWiz extends ExportController {
             'Parent_ID' => 'ParentCategoryID',
             'Forum_order' => 'Sort'
         );
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
          select
             f.Forum_ID,
             f.Cat_ID * 1000 as Parent_ID,
@@ -168,7 +179,8 @@ class WebWiz extends ExportController {
             c.Cat_name,
             null
          from :_Category c
-         ", $category_Map);
+         ", $category_Map
+        );
 
         // Discussion.
         $discussion_Map = array(
@@ -184,7 +196,8 @@ class WebWiz extends ExportController {
             'Locked' => 'Closed',
 
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
          select
             th.Author_ID,
             th.Message,
@@ -194,7 +207,8 @@ class WebWiz extends ExportController {
             t.*
          from :_Topic t
          join :_Thread th
-            on t.Start_Thread_ID = th.Thread_ID", $discussion_Map);
+            on t.Start_Thread_ID = th.Thread_ID", $discussion_Map
+        );
 
         // Comment.
         $comment_Map = array(
@@ -206,21 +220,24 @@ class WebWiz extends ExportController {
             'Format' => 'Format',
             'Message_date' => array('Column' => 'DateInserted')
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
       select
          th.*,
          'Html' as Format
       from :_Thread th
       join :_Topic t
          on t.Topic_ID = th.Topic_ID
-      where th.Thread_ID <> t.Start_Thread_ID", $comment_Map);
+      where th.Thread_ID <> t.Start_Thread_ID", $comment_Map
+        );
 
         $this->exportConversations();
 
         $ex->endExport();
     }
 
-    public function exportConversations() {
+    public function exportConversations()
+    {
         $ex = $this->ex;
 
         $this->_exportConversationTemps();
@@ -232,26 +249,30 @@ class WebWiz extends ExportController {
             'Author_ID' => 'InsertUserID',
             'PM_Message_Date' => array('Column' => 'DateInserted')
         );
-        $ex->exportTable('Conversation', "
+        $ex->exportTable(
+            'Conversation', "
          select
             pm.*,
             g.Title
          from :_PMMessage pm
          join z_pmgroup g
-            on pm.PM_ID = g.Group_ID;", $conversation_Map);
+            on pm.PM_ID = g.Group_ID;", $conversation_Map
+        );
 
         // User Conversation.
         $userConversation_Map = array(
             'Group_ID' => 'ConversationID',
             'User_ID' => 'UserID'
         );
-        $ex->exportTable('UserConversation', "
+        $ex->exportTable(
+            'UserConversation', "
          select
             g.Group_ID,
             t.User_ID
          from z_pmto t
          join z_pmgroup g
-            on g.Group_ID = t.PM_ID;", $userConversation_Map);
+            on g.Group_ID = t.PM_ID;", $userConversation_Map
+        );
 
         // Conversation Message.
         $message_Map = array(
@@ -262,17 +283,20 @@ class WebWiz extends ExportController {
             'PM_Message_Date' => array('Column' => 'DateInserted'),
             'Author_ID' => 'InsertUserID'
         );
-        $ex->exportTable('ConversationMessage', "
+        $ex->exportTable(
+            'ConversationMessage', "
          select
             pm.*,
             pm2.Group_ID,
             'Html' as Format
           from :_PMMessage pm
           join z_pmtext pm2
-            on pm.PM_ID = pm2.PM_ID;", $message_Map);
+            on pm.PM_ID = pm2.PM_ID;", $message_Map
+        );
     }
 
-    protected function _exportConversationTemps() {
+    protected function _exportConversationTemps()
+    {
         $sql = "
          drop table if exists z_pmto;
 

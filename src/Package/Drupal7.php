@@ -3,14 +3,15 @@
  * Vanilla 2 exporter tool for Drupal 7
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Francis Caisse
+ * @author  Francis Caisse
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Drupal7 extends ExportController {
+class Drupal7 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Drupal 7',
@@ -44,7 +45,8 @@ class Drupal7 extends ExportController {
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('comment');
         if ($characterSet) {
@@ -56,7 +58,8 @@ class Drupal7 extends ExportController {
 
         // Users.
         // TODO validate password hashing didn't change between drupal 6 and drupal 7.
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             select
                 uid as UserID,
                 name as Name,
@@ -69,10 +72,12 @@ class Drupal7 extends ExportController {
                 from_unixtime(login) as DateLastActive
             from :_users
             where uid > 0 and status = 1
-        ");
+        "
+        );
 
         // Signatures.
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
             select
                 uid as UserID,
                 signature as Value,
@@ -88,26 +93,32 @@ class Drupal7 extends ExportController {
                 'Plugins.Signatures.Format' as Name
             from :_users u
             where uid > 0 and status = 1 and signature is not null and signature <> ''
-        ");
+        "
+        );
 
         // Roles.
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
             select
                 rid as RoleID,
                 name as Name
             from :_role
-        ");
+        "
+        );
 
         // User Role.
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 uid as UserID,
                 rid as RoleID
             from :_users_roles
-         ");
+         "
+        );
 
         // Categories.
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
             select
                 t.tid as CategoryID,
                 t.name as Name,
@@ -117,11 +128,13 @@ class Drupal7 extends ExportController {
             join :_taxonomy_term_hierarchy th on th.tid = t.tid
             join :_taxonomy_vocabulary tv on tv.vid = t.vid
             where tv.name = 'Forums'
-        ");
+        "
+        );
 
         // Discussion and comment format differ from each other.
         // Discussions.
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
             select
                 n.nid as DiscussionID,
                 n.uid as InsertUserID,
@@ -136,10 +149,12 @@ class Drupal7 extends ExportController {
             join :_forum f on f.nid = n.nid
             join :_field_revision_body frv on frv.revision_id = n.vid
             where n.type = 'forum' and n.moderate = 0 and frv.deleted = 0
-        ");
+        "
+        );
 
         // Comments.
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
             select
                 c.cid as CommentID,
                 c.nid as DiscussionID,
@@ -151,10 +166,12 @@ class Drupal7 extends ExportController {
             from comment c
             join field_revision_comment_body frcb on frcb.entity_id = c.cid
             where c.status = 1 and frcb.deleted = 0
-         ");
+         "
+        );
 
         // Media.
-        $ex->exportTable('Media', "
+        $ex->exportTable(
+            'Media', "
             select
                 fm.fid as MediaID,
                 fm.filemime as Type,
@@ -167,7 +184,8 @@ class Drupal7 extends ExportController {
             from file_managed fm
             join field_data_field_file fdff on fdff.field_file_fid = fm.fid
             where (fdff.entity_type = 'node' or fdff.entity_type = 'comment') and (fdff.bundle = 'comment_node_forum' or fdff.bundle = 'forum')
-         ");
+         "
+        );
 
         $ex->endExport();
     }

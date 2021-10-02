@@ -3,14 +3,15 @@
  * Drupal 6 exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Drupal6 extends ExportController {
+class Drupal6 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Drupal 6',
@@ -39,13 +40,16 @@ class Drupal6 extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     protected $_sourceTables = array();
 
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('comment');
         if ($characterSet) {
@@ -65,13 +69,15 @@ class Drupal6 extends ExportController {
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'login' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          select u.*,
             nullif(concat('drupal/', u.picture), 'drupal/') as photo,
             concat('md5$$', u.pass) as Password,
             'Django' as HashMethod
          from :_users u
-         where uid > 0", $user_Map);
+         where uid > 0", $user_Map
+        );
 
         // Signatures.
         $userMeta_Map = array(
@@ -79,10 +85,12 @@ class Drupal6 extends ExportController {
             'Name' => 'Name',
             'signature' => 'Value'
         );
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
          select u.*, 'Plugins.Signatures.Sig' as Name
          from :_users u
-         where uid > 0", $userMeta_Map);
+         where uid > 0", $userMeta_Map
+        );
 
         // Roles.
         $role_Map = array(
@@ -96,8 +104,10 @@ class Drupal6 extends ExportController {
             'uid' => 'UserID',
             'rid' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
-         select * from :_users_roles", $userRole_Map);
+        $ex->exportTable(
+            'UserRole', "
+         select * from :_users_roles", $userRole_Map
+        );
 
         // Categories (sigh)
         $category_Map = array(
@@ -106,11 +116,13 @@ class Drupal6 extends ExportController {
             'description' => 'description',
             'parent' => 'ParentCategoryID'
         );
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
          select t.*, nullif(h.parent, 0) as parent
          from :_term_data t
          join :_term_hierarchy h
-            on t.tid = h.tid", $category_Map);
+            on t.tid = h.tid", $category_Map
+        );
 
         // Discussions.
         $discussion_Map = array(
@@ -123,13 +135,15 @@ class Drupal6 extends ExportController {
             'sticky' => 'Announce',
             'tid' => 'CategoryID'
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
          select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
          from nodeforum f
          left join node n
             on f.nid = n.nid
          left join node_revisions r
-            on r.nid = n.nid", $discussion_Map);
+            on r.nid = n.nid", $discussion_Map
+        );
 
         // Comments.
         $comment_Map = array(
@@ -139,7 +153,8 @@ class Drupal6 extends ExportController {
             'hostname' => 'InsertIPAddress',
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
          select
             n.created,
             n.uid,
@@ -153,7 +168,8 @@ class Drupal6 extends ExportController {
             on c.cid = n.nid
          left join node_revisions r
             on r.nid = n.nid
-         where n.type = 'forum_reply'", $comment_Map);
+         where n.type = 'forum_reply'", $comment_Map
+        );
 
         // Conversations.
         $conversation_Map = array(
@@ -161,7 +177,8 @@ class Drupal6 extends ExportController {
             'author' => 'InsertUserID',
             'title' => 'Subject',
         );
-        $ex->exportTable('Conversation', "
+        $ex->exportTable(
+            'Conversation', "
             select
                 pmi.thread_id,
                 pmm.author,
@@ -170,7 +187,8 @@ class Drupal6 extends ExportController {
             from pm_message as pmm
                 inner join pm_index as pmi on pmi.mid = pmm.mid and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
             group by pmi.thread_id
-        ;", $conversation_Map);
+        ;", $conversation_Map
+        );
 
         // Conversation Messages.
         $conversationMessage_Map = array(
@@ -178,7 +196,8 @@ class Drupal6 extends ExportController {
             'thread_id' => 'ConversationID',
             'author' => 'InsertUserID'
         );
-        $ex->exportTable('ConversationMessage', "
+        $ex->exportTable(
+            'ConversationMessage', "
             select
                 pmm.mid,
                 pmi.thread_id,
@@ -188,14 +207,16 @@ class Drupal6 extends ExportController {
                 'Html' as Format
             from pm_message as pmm
                 inner join pm_index as pmi on pmi.mid = pmm.mid AND pmi.deleted = 0 and pmi.uid > 0
-        ;", $conversationMessage_Map);
+        ;", $conversationMessage_Map
+        );
 
         // User Conversation.
         $userConversation_Map = array(
             'uid' => 'UserID',
             'thread_id' => 'ConversationID'
         );
-        $ex->exportTable('UserConversation', "
+        $ex->exportTable(
+            'UserConversation', "
             select
                 pmi.uid,
                 pmi.thread_id,
@@ -207,7 +228,8 @@ class Drupal6 extends ExportController {
             group by
                 pmi.uid,
                 pmi.thread_id
-        ;", $userConversation_Map);
+        ;", $userConversation_Map
+        );
 
         // Comments.
         /*$comment_Map = array(
@@ -255,9 +277,10 @@ class Drupal6 extends ExportController {
     /**
      *
      * @param ExportModel $ex
-     * @param string $tableName
+     * @param string      $tableName
      */
-    protected function exportTable($ex, $tableName) {
+    protected function exportTable($ex, $tableName)
+    {
         // Make sure the table exists.
         if (!$ex->exists($tableName)) {
             return;

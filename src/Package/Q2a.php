@@ -3,7 +3,7 @@
  * Q2A exporter tool.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Eduardo Casarero
+ * @author  Eduardo Casarero
  */
 
 namespace NitroPorter\Package;
@@ -58,7 +58,8 @@ class Q2a extends ExportController
         $ex->beginExport('', 'Questions2Answers');
         $user_Map = array();
 
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             SELECT
                 u.userid as UserID,
                 u.handle as Name,
@@ -69,21 +70,26 @@ class Q2a extends ExportController
             FROM :_users as u
             LEFT JOIN :_userpoints p USING(userid)
             WHERE u.userid IN (Select DISTINCT userid from :_posts) AND (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
-         ", $user_Map);
+         ", $user_Map
+        );
 
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
         select
             1 as RolesID,
             'Member' as Name
-        ");
+        "
+        );
 
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 ur.userid as UserID,
                 1 as RoleID
             from :_users ur
             where (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
-        ");
+        "
+        );
 
         $ex->exportTable('Category', "select 1 as CategoryID, 'Legacy' as Name");
         $discussion_Map = array(
@@ -92,7 +98,8 @@ class Q2a extends ExportController
             'userid' => 'InsertUserID',
             'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
             select
             'Question' as Type,
             p.postid as DiscussionID,
@@ -109,9 +116,11 @@ class Q2a extends ExportController
              WHERE     parentid IS NULL
              AND userid IS NOT NULL
              AND type = 'Q';
-         ");
+         "
+        );
 
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
         select
             p.postid as CommentID,
             p.parentid as DiscussionID,
@@ -122,7 +131,8 @@ class Q2a extends ExportController
             from :_posts p
         WHERE type = 'A'
             AND userid IS NOT NULL ;
-        ");
+        "
+        );
         $ex->endExport();
     }
 }

@@ -3,14 +3,15 @@
  * Vanilla 1 exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Vanilla1 extends ExportController {
+class Vanilla1 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Vanilla 1',
@@ -39,7 +40,9 @@ class Vanilla1 extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     public $sourceTables = array(
         'User' => array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
         'Role' => array('RoleID', 'Name', 'Description'),
@@ -71,11 +74,12 @@ class Vanilla1 extends ExportController {
 
     /**
      * Forum-specific export format
-     * @todo Project file size / export time and possibly break into multiple files
-     * @param ExportModel $ex
      *
+     * @todo  Project file size / export time and possibly break into multiple files
+     * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
         $this->ex = $ex;
 
         $characterSet = $ex->getCharacterSet('Comment');
@@ -120,9 +124,11 @@ class Vanilla1 extends ExportController {
             'Name' => 'Name',
             'Description' => 'Description'
         );
-        $ex->exportTable('Role',
+        $ex->exportTable(
+            'Role',
             "select RoleID, Name, Description from :_Role union all select $zeroRoleID, 'Applicant', 'Created by the Vanilla Porter'",
-            $role_Map);
+            $role_Map
+        );
 
         $permission_Map = array(
             'RoleID' => 'RoleID',
@@ -189,8 +195,10 @@ class Vanilla1 extends ExportController {
             'UserID' => 'UserID',
             'RoleID' => 'RoleID'
         );
-        $ex->exportTable('UserRole',
-            "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User", $userRole_Map);
+        $ex->exportTable(
+            'UserRole',
+            "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User", $userRole_Map
+        );
 
         // Categories
         /*
@@ -240,7 +248,8 @@ class Vanilla1 extends ExportController {
             'Sink' => 'Sink',
             'LastUserID' => 'LastCommentUserID'
         );
-        $ex->exportTable('Discussion',
+        $ex->exportTable(
+            'Discussion',
             "SELECT d.*,
             d.LastUserID as LastCommentUserID,
             d.DateCreated as DateCreated2, d.AuthUserID as AuthUserID2,
@@ -249,7 +258,8 @@ class Vanilla1 extends ExportController {
          FROM :_Discussion d
          LEFT JOIN :_Comment c
             ON d.FirstCommentID = c.CommentID
-         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $discussion_Map);
+         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $discussion_Map
+        );
 
         // Comments
         /*
@@ -273,7 +283,8 @@ class Vanilla1 extends ExportController {
             'Body' => 'Body',
             'FormatType' => 'Format'
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
          SELECT
             c.*
          FROM :_Comment c
@@ -282,9 +293,11 @@ class Vanilla1 extends ExportController {
          WHERE d.FirstCommentID <> c.CommentID
             AND c.Deleted = '0'
             AND coalesce(d.WhisperUserID, 0) = 0
-            AND coalesce(c.WhisperUserID, 0) = 0", $comment_Map);
+            AND coalesce(c.WhisperUserID, 0) = 0", $comment_Map
+        );
 
-        $ex->exportTable('UserDiscussion', "
+        $ex->exportTable(
+            'UserDiscussion', "
          SELECT
             w.UserID,
             w.DiscussionID,
@@ -293,7 +306,8 @@ class Vanilla1 extends ExportController {
             case when b.UserID is not null then 1 else 0 end AS Bookmarked
          FROM :_UserDiscussionWatch w
          LEFT JOIN :_UserBookmark b
-            ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID");
+            ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID"
+        );
 
         // Conversations
 
@@ -302,13 +316,16 @@ class Vanilla1 extends ExportController {
 
         $ex->query("drop table if exists z_pmto");
 
-        $ex->query("create table z_pmto (
+        $ex->query(
+            "create table z_pmto (
   CommentID int,
   UserID int,
   primary key(CommentID, UserID)
- )");
+ )"
+        );
 
-        $ex->query("insert ignore z_pmto (
+        $ex->query(
+            "insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -316,9 +333,11 @@ select distinct
   CommentID,
   AuthUserID
 from :_Comment
-where coalesce(WhisperUserID, 0) <> 0");
+where coalesce(WhisperUserID, 0) <> 0"
+        );
 
-        $ex->query("insert ignore z_pmto (
+        $ex->query(
+            "insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -326,9 +345,11 @@ select distinct
   CommentID,
   WhisperUserID
 from :_Comment
-where coalesce(WhisperUserID, 0) <> 0");
+where coalesce(WhisperUserID, 0) <> 0"
+        );
 
-        $ex->query("insert ignore z_pmto (
+        $ex->query(
+            "insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -338,9 +359,11 @@ select distinct
 from :_Discussion d
 join :_Comment c
   on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0");
+where coalesce(d.WhisperUserID, 0) <> 0"
+        );
 
-        $ex->query("insert ignore z_pmto (
+        $ex->query(
+            "insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -350,9 +373,11 @@ select distinct
 from :_Discussion d
 join :_Comment c
   on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0");
+where coalesce(d.WhisperUserID, 0) <> 0"
+        );
 
-        $ex->query("insert ignore z_pmto (
+        $ex->query(
+            "insert ignore z_pmto (
   CommentID,
   UserID
 )
@@ -362,17 +387,21 @@ select distinct
 from :_Discussion d
 join :_Comment c
   on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0");
+where coalesce(d.WhisperUserID, 0) <> 0"
+        );
 
         $ex->query("drop table if exists z_pmto2");
 
-        $ex->query("create table z_pmto2 (
+        $ex->query(
+            "create table z_pmto2 (
   CommentID int,
   UserIDs varchar(250),
   primary key (CommentID)
-)");
+)"
+        );
 
-        $ex->query("insert z_pmto2 (
+        $ex->query(
+            "insert z_pmto2 (
   CommentID,
   UserIDs
 )
@@ -380,19 +409,23 @@ select
   CommentID,
   group_concat(UserID order by UserID)
 from z_pmto
-group by CommentID");
+group by CommentID"
+        );
 
 
         $ex->query("drop table if exists z_pm");
 
-        $ex->query("create table z_pm (
+        $ex->query(
+            "create table z_pm (
   CommentID int,
   DiscussionID int,
   UserIDs varchar(250),
   GroupID int
-)");
+)"
+        );
 
-        $ex->query("insert ignore z_pm (
+        $ex->query(
+            "insert ignore z_pm (
   CommentID,
   DiscussionID
 )
@@ -400,9 +433,11 @@ select
   CommentID,
   DiscussionID
 from :_Comment
-where coalesce(WhisperUserID, 0) <> 0");
+where coalesce(WhisperUserID, 0) <> 0"
+        );
 
-        $ex->query("insert ignore z_pm (
+        $ex->query(
+            "insert ignore z_pm (
   CommentID,
   DiscussionID
 )
@@ -412,22 +447,28 @@ select
 from :_Discussion d
 join :_Comment c
   on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0");
+where coalesce(d.WhisperUserID, 0) <> 0"
+        );
 
-        $ex->query("update z_pm pm
+        $ex->query(
+            "update z_pm pm
 join z_pmto2 t
   on t.CommentID = pm.CommentID
-set pm.UserIDs = t.UserIDs");
+set pm.UserIDs = t.UserIDs"
+        );
 
         $ex->query("drop table if exists z_pmgroup");
 
-        $ex->query("create table z_pmgroup (
+        $ex->query(
+            "create table z_pmgroup (
   GroupID int,
   DiscussionID int,
   UserIDs varchar(250)
-)");
+)"
+        );
 
-        $ex->query("insert z_pmgroup (
+        $ex->query(
+            "insert z_pmgroup (
   GroupID,
   DiscussionID,
   UserIDs
@@ -439,16 +480,19 @@ select
 from z_pm pm
 join z_pmto2 t2
   on pm.CommentID = t2.CommentID
-group by pm.DiscussionID, t2.UserIDs");
+group by pm.DiscussionID, t2.UserIDs"
+        );
 
         $ex->query("create index z_idx_pmgroup on z_pmgroup (DiscussionID, UserIDs)");
 
         $ex->query("create index z_idx_pmgroup2 on z_pmgroup (GroupID)");
 
-        $ex->query("update z_pm pm
+        $ex->query(
+            "update z_pm pm
 join z_pmgroup g
   on pm.DiscussionID = g.DiscussionID and pm.UserIDs = g.UserIDs
-set pm.GroupID = g.GroupID");
+set pm.GroupID = g.GroupID"
+        );
 
         $conversation_Map = array(
             'AuthUserID' => 'InsertUserID',
@@ -457,13 +501,15 @@ set pm.GroupID = g.GroupID");
             'CommentID' => 'ConversationID',
             'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
         );
-        $ex->exportTable('Conversation',
+        $ex->exportTable(
+            'Conversation',
             "select c.*, d.Name
 from :_Comment c
 join :_Discussion d
   on d.DiscussionID = c.DiscussionID
 join z_pmgroup g
-  on g.GroupID = c.CommentID;", $conversation_Map);
+  on g.GroupID = c.CommentID;", $conversation_Map
+        );
 
         // ConversationMessage.
         $conversationMessage_Map = array(
@@ -474,11 +520,13 @@ join z_pmgroup g
             'AuthUserID' => 'InsertUserID',
             'DateCreated' => 'DateInserted'
         );
-        $ex->exportTable('ConversationMessage',
+        $ex->exportTable(
+            'ConversationMessage',
             "select c.*, pm.GroupID
 from z_pm pm
 join :_Comment c
-  on pm.CommentID = c.CommentID", $conversationMessage_Map);
+  on pm.CommentID = c.CommentID", $conversationMessage_Map
+        );
 
         // UserConversation
         /*
@@ -490,13 +538,15 @@ join :_Comment c
             'UserID' => 'UserID',
             'GroupID' => 'ConversationID'
         );
-        $ex->exportTable('UserConversation',
+        $ex->exportTable(
+            'UserConversation',
             "select distinct
   pm.GroupID,
   t.UserID
 from z_pmto t
 join z_pm pm
-  on pm.CommentID = t.CommentID", $userConversation_Map);
+  on pm.CommentID = t.CommentID", $userConversation_Map
+        );
 
         $ex->query("drop table z_pmto");
         $ex->query("drop table z_pmto2");
@@ -516,16 +566,19 @@ join z_pm pm
                 'CommentID' => 'ForeignID'
                 //'ForeignTable'
             );
-            $ex->exportTable('Media',
+            $ex->exportTable(
+                'Media',
                 "select a.*, 'comment' as ForeignTable from :_Attachment a",
-                $media_Map);
+                $media_Map
+            );
         }
 
         // End
         $ex->endExport();
     }
 
-    public function stripMediaPath($absPath) {
+    public function stripMediaPath($absPath)
+    {
         if (($pos = strpos($absPath, '/uploads/')) !== false) {
             return substr($absPath, $pos + 9);
         }
@@ -533,7 +586,8 @@ join z_pm pm
         return $absPath;
     }
 
-    public function filterPermissions($permissions, $columnName, &$row) {
+    public function filterPermissions($permissions, $columnName, &$row)
+    {
         $permissions2 = unserialize($permissions);
 
         foreach ($permissions2 as $name => $value) {
@@ -552,7 +606,8 @@ join z_pm pm
         return false;
     }
 
-    public function forceBool($value) {
+    public function forceBool($value)
+    {
         if ($value) {
             return true;
         }

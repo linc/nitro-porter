@@ -5,14 +5,15 @@
  * To export avatars, provide ?avatars=1&avatarpath=/path/to/avatars
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class IpBoard3 extends ExportController {
+class IpBoard3 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'IP.Board 3',
@@ -52,7 +53,8 @@ class IpBoard3 extends ExportController {
     /**
      * Export avatars into vanilla-compatibles names
      */
-    public function doAvatars() {
+    public function doAvatars()
+    {
         // Source table
         $sourceTable = $this->param('source', 'profile_portal');
 
@@ -72,31 +74,35 @@ class IpBoard3 extends ExportController {
         }
 
         switch ($sourceTable) {
-            case 'profile_portal':
+        case 'profile_portal':
 
-                $userList = $this->ex->query("select
+            $userList = $this->ex->query(
+                "select
                   pp_member_id as member_id,
                   pp_main_photo as main_photo,
                   pp_thumb_photo as thumb_photo,
                   coalesce(pp_main_photo,pp_thumb_photo,0) as photo
                from :_profile_portal
                where length(coalesce(pp_main_photo,pp_thumb_photo,0)) > 3
-               order by pp_member_id asc");
+               order by pp_member_id asc"
+            );
 
-                break;
+            break;
 
-            case 'member_extra':
+        case 'member_extra':
 
-                $userList = $this->ex->query("select
+            $userList = $this->ex->query(
+                "select
                   id as member_id,
                   avatar_location as photo
                from :_member_extra
                where
                   length(avatar_location) > 3 and
                   avatar_location <> 'noavatar'
-               order by id asc");
+               order by id asc"
+            );
 
-                break;
+            break;
         }
 
         $processed = 0;
@@ -179,14 +185,15 @@ class IpBoard3 extends ExportController {
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
-//      $ex->TestMode = FALSE;
-//      $ex->TestLimit = FALSE;
-//      $ex->Destination = 'database';
-//      $ex->DestDb = 'unknownworlds';
-//      $ex->CaptureOnly = TRUE;
-//      $ex->ScriptCreateTable = FALSE;
-//      $ex->DestPrefix = 'GDN_';
+    protected function forumExport($ex)
+    {
+        //      $ex->TestMode = FALSE;
+        //      $ex->TestLimit = FALSE;
+        //      $ex->Destination = 'database';
+        //      $ex->DestDb = 'unknownworlds';
+        //      $ex->CaptureOnly = TRUE;
+        //      $ex->ScriptCreateTable = FALSE;
+        //      $ex->DestPrefix = 'GDN_';
 
         $ex->sourcePrefix = ':_';
 
@@ -196,12 +203,12 @@ class IpBoard3 extends ExportController {
         }
 
         // Decode all of the necessary fields.
-//      $ex->HTMLDecoderDb('members', 'members_display_name', 'member_id');
-//      $ex->HTMLDecoderDb('members', 'name', 'member_id');
-//      $ex->HTMLDecoderDb('members', 'title', 'member_id');
-//      $ex->HtmlDecoderDb('groups', 'g_title', 'g_id');
-//      $ex->HtmlDecoderDb('topics', 'title', 'tid');
-//      $ex->HtmlDecoderDb('topics', 'description', 'tid');
+        //      $ex->HTMLDecoderDb('members', 'members_display_name', 'member_id');
+        //      $ex->HTMLDecoderDb('members', 'name', 'member_id');
+        //      $ex->HTMLDecoderDb('members', 'title', 'member_id');
+        //      $ex->HtmlDecoderDb('groups', 'g_title', 'g_id');
+        //      $ex->HtmlDecoderDb('topics', 'title', 'tid');
+        //      $ex->HtmlDecoderDb('topics', 'description', 'tid');
 
         // Begin
         $ex->beginExport('', 'IPB 3.*', array('HashMethod' => 'ipb'));
@@ -312,19 +319,21 @@ class IpBoard3 extends ExportController {
             'g_edit_profile' => 'Garden.Profiles.Edit',
             'g_post_new_topics' => 'Vanilla.Discussions.Add',
             'g_reply_other_topics' => 'Vanilla.Comments.Add',
-//          'g_edit_posts' => 'Vanilla.Comments.Edit', // alias
+        //          'g_edit_posts' => 'Vanilla.Comments.Edit', // alias
             'g_open_close_posts' => 'Vanilla.Discussions.Close',
             'g_is_supmod' => 'Garden.Moderation.Manage',
             'g_access_cp' => 'Garden.Settings.View',
-//          'g_edit_topic' => 'Vanilla.Discussions.Edit'
+        //          'g_edit_topic' => 'Vanilla.Discussions.Edit'
         );
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        $ex->exportTable('Permission', "
+        $ex->exportTable(
+            'Permission', "
          select r.*,
             r.g_view_board as g_view_board2,
             r.g_view_board as g_view_board3,
             r.g_view_board as g_view_board4
-         from :_groups r", $permission_Map);
+         from :_groups r", $permission_Map
+        );
 
         // User Role.
 
@@ -437,7 +446,7 @@ class IpBoard3 extends ExportController {
             'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'ip_address' => 'InsertIPAddress',
             'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
-//          'last_post' => array('Column' => 'DateLastPost', 'Filter' => array($ex, 'timestampToDate')),
+        //          'last_post' => array('Column' => 'DateLastPost', 'Filter' => array($ex, 'timestampToDate')),
             'posts' => 'CountComments',
             'views' => 'CountViews',
             'pinned' => 'Announce',
@@ -461,12 +470,14 @@ class IpBoard3 extends ExportController {
 
         // Tags
         $ex->query("DROP TABLE IF EXISTS `z_tag` ");
-        $ex->query("CREATE TABLE `z_tag` (
+        $ex->query(
+            "CREATE TABLE `z_tag` (
          `TagID` int(11) unsigned NOT NULL AUTO_INCREMENT,
          `FullName` varchar(50) DEFAULT NULL,
          PRIMARY KEY (`TagID`),
          UNIQUE KEY `FullName` (`FullName`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+        );
         $ex->query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
 
         $tagDiscussion_Map = array(
@@ -552,7 +563,8 @@ left join :_attachments_type ty
         $ex->endExport();
     }
 
-    protected function _exportConversationsV2() {
+    protected function _exportConversationsV2()
+    {
         $ex = $this->ex;
 
         $sql = <<<EOT
@@ -744,15 +756,18 @@ join tmp_group g
    on g.groupid = t.id";
         $ex->exportTable('UserConversation', $sql, $userConversation_Map);
 
-        $ex->queryN("
+        $ex->queryN(
+            "
       drop table tmp_conversation;
 drop table tmp_to;
 drop table tmp_to2;
-drop table tmp_group;");
+drop table tmp_group;"
+        );
     }
 
 
-    protected function _exportConversationsV3() {
+    protected function _exportConversationsV3()
+    {
         $ex = $this->ex;
 
         // Conversations.
@@ -796,7 +811,8 @@ drop table tmp_group;");
         $ex->exportTable('UserConversation', $sql, $userConversation_Map);
     }
 
-    public function clearFilters($table, &$map, &$sql) {
+    public function clearFilters($table, &$map, &$sql)
+    {
         $PK = false;
         $selects = array();
 
@@ -819,16 +835,16 @@ drop table tmp_group;");
 
             if (!is_array($filter)) {
                 switch ($filter) {
-                    case 'HTMLDecoder':
-                        $this->ex->HTMLDecoderDb($table, $column, $PK);
-                        unset($map[$column]['Filter']);
-                        break;
-                    case 'timestampToDate':
-                        $selects[] = "from_unixtime($source) as {$column}_Date";
+                case 'HTMLDecoder':
+                    $this->ex->HTMLDecoderDb($table, $column, $PK);
+                    unset($map[$column]['Filter']);
+                    break;
+                case 'timestampToDate':
+                    $selects[] = "from_unixtime($source) as {$column}_Date";
 
-                        unset($map[$column]);
-                        $map[$column . '_Date'] = $info['Column'];
-                        break;
+                    unset($map[$column]);
+                    $map[$column . '_Date'] = $info['Column'];
+                    break;
                 }
             }
         }
@@ -843,14 +859,15 @@ drop table tmp_group;");
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_exportTable
+     * @see    ExportModel::_exportTable
      *
-     * @param string $ralue Current value
-     * @param string $field Current field
-     * @param array $row Contents of the current record.
+     * @param  string $ralue Current value
+     * @param  string $field Current field
+     * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function filterThumbnailData($value, $field, $row) {
+    public function filterThumbnailData($value, $field, $row)
+    {
         if (strpos(strtolower($row['atype_mimetype']), 'image/') === 0) {
             return $value;
         } else {

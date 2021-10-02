@@ -3,14 +3,15 @@
  * SMF2 exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author John Crenshaw, for Priacta, Inc.
+ * @author  John Crenshaw, for Priacta, Inc.
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Smf2 extends ExportController {
+class Smf2 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Simple Machines 2',
@@ -39,7 +40,9 @@ class Smf2 extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     protected $sourceTables = array(
         'boards' => array(),
         'messages' => array(),
@@ -52,9 +55,11 @@ class Smf2 extends ExportController {
 
     /**
      * Forum-specific export format.
+     *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('messages');
         if ($characterSet) {
@@ -80,7 +85,8 @@ class Smf2 extends ExportController {
             'DateLastActive' => 'DateLastActive',
             'DateUpdated' => 'DateUpdated'
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          select m.*,
             from_unixtime(date_registered) as DateInserted,
             from_unixtime(date_registered) as DateFirstVisit,
@@ -89,7 +95,8 @@ class Smf2 extends ExportController {
             concat('sha1$', lower(member_name), '$', passwd) as `password`,
             if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
          from :_members m
-         left join :_attachments a on a.id_member = m.id_member ", $user_Map);
+         left join :_attachments a on a.id_member = m.id_member ", $user_Map
+        );
 
         // Roles
         $role_Map = array(
@@ -110,7 +117,8 @@ class Smf2 extends ExportController {
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
 
-        $ex->exportTable('Category',
+        $ex->exportTable(
+            'Category',
             "
             select
               (`id_cat` + 1000000) as `CategoryID`,
@@ -131,7 +139,8 @@ class Smf2 extends ExportController {
               b.`board_order` as `Sort`
             from :_boards b
 
-            ", $category_Map);
+            ", $category_Map
+        );
 
         // Discussions
         $discussion_Map = array(
@@ -154,7 +163,8 @@ class Smf2 extends ExportController {
             'LastCommentUserID' => 'LastCommentUserID',
             'id_last_msg' => 'LastCommentID'
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
       select t.*,
          (t.num_replies + 1) as CountComments,
          m.subject,
@@ -172,7 +182,8 @@ class Smf2 extends ExportController {
 
        -- where t.spam = 0 AND m.spam = 0;
 
-       ", $discussion_Map);
+       ", $discussion_Map
+        );
 
         // Comments
         $comment_Map = array(
@@ -183,14 +194,16 @@ class Smf2 extends ExportController {
             'id_member' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
-        $ex->exportTable('Comment',
+        $ex->exportTable(
+            'Comment',
             "select m.*,
                from_unixtime(m.poster_time) AS DateInserted,
                'BBCode' as Format
              from :_messages m
                join :_topics t on m.id_topic = t.id_topic
                where m.id_msg <> t.id_first_msg;
-             ", $comment_Map);
+             ", $comment_Map
+        );
 
         // Media
         $media_Map = array(
@@ -201,14 +214,15 @@ class Smf2 extends ExportController {
             'width' => 'ImageWidth',
             'extract_mimetype' => array(
                 'Column' => 'Type',
-                'Filter' => function($value, $field, $row) {
+                'Filter' => function ($value, $field, $row) {
                     return $this->getMimeTypeFromFileName($row['Path']);
                 }
             ),
             'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $ex->exportTable('Media', "
+        $ex->exportTable(
+            'Media', "
             select a.*,
                 concat('attachments/', a.filename) as Path,
                 IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
@@ -220,7 +234,8 @@ class Smf2 extends ExportController {
                 left join :_topics t on a.id_msg = t.id_first_msg
             where a.attachment_type = 0
                 and a.id_msg > 0
-        ", $media_Map);
+        ", $media_Map
+        );
 
         // Conversations
         $conversation_Map = array(
@@ -230,12 +245,14 @@ class Smf2 extends ExportController {
             'unixmsgtime' => 'DateInserted',
         );
 
-        $ex->exportTable('Conversation',
+        $ex->exportTable(
+            'Conversation',
             "select
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime
             from :_personal_messages pm
-            ", $conversation_Map);
+            ", $conversation_Map
+        );
 
 
         $convMsg_Map = array(
@@ -247,13 +264,15 @@ class Smf2 extends ExportController {
             'unixmsgtime' => 'DateInserted',
         );
 
-        $ex->exportTable('ConversationMessage',
+        $ex->exportTable(
+            'ConversationMessage',
             "select
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime ,
               'BBCode' as format
             from :_personal_messages pm
-            ", $convMsg_Map);
+            ", $convMsg_Map
+        );
 
 
         $userConv_Map = array(
@@ -262,7 +281,8 @@ class Smf2 extends ExportController {
             'deleted2' => 'Deleted'
         );
 
-        $ex->exportTable('UserConversation',
+        $ex->exportTable(
+            'UserConversation',
             "(select
               pm.id_member_from as id_member2,
               pm.id_pm_head,
@@ -275,7 +295,8 @@ class Smf2 extends ExportController {
             pmr.deleted as deleted2
             from :_personal_messages pm join :_pm_recipients pmr on pmr.id_pm = pm.id_pm
             )
-            ", $userConv_Map);
+            ", $userConv_Map
+        );
 
 
         // End
@@ -284,7 +305,8 @@ class Smf2 extends ExportController {
 
     }
 
-    public function decodeNumericEntity($text) {
+    public function decodeNumericEntity($text)
+    {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
 
@@ -294,7 +316,8 @@ class Smf2 extends ExportController {
         }
     }
 
-    public function _pcreEntityToUtf($matches) {
+    public function _pcreEntityToUtf($matches)
+    {
         $char = intval(is_array($matches) ? $matches[1] : $matches);
 
         if ($char < 0x80) {
@@ -316,10 +339,11 @@ class Smf2 extends ExportController {
     /**
      * Determine mime type from file name
      *
-     * @param string $fileName File name (Can be full path or file name only)
+     * @param  string $fileName File name (Can be full path or file name only)
      * @return null|string Mime type if it could be determined or null.
      */
-    public function getMimeTypeFromFileName($fileName) {
+    public function getMimeTypeFromFileName($fileName)
+    {
         $mimeType = null;
 
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
@@ -334,14 +358,15 @@ class Smf2 extends ExportController {
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_exportTable
+     * @see    ExportModel::_exportTable
      *
-     * @param string $value Current value
-     * @param string $field Current field
-     * @param array $row Contents of the current record.
+     * @param  string $value Current value
+     * @param  string $field Current field
+     * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function filterThumbnailData($value, $field, $row) {
+    public function filterThumbnailData($value, $field, $row)
+    {
         $mimeType = $this->getMimeTypeFromFileName($row['Path']);
         if ($mimeType && strpos($mimeType, 'image/') === 0) {
             return $value;

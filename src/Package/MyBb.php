@@ -3,7 +3,7 @@
  * MyBB exporter tool.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  *
  * @see functions.commandline.php for command line usage.
  */
@@ -12,7 +12,8 @@ namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class MyBb extends ExportController {
+class MyBb extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'MyBB',
@@ -57,9 +58,10 @@ class MyBb extends ExportController {
      * Main export process.
      *
      * @param ExportModel $ex
-     * @see $_Structures in ExportModel for allowed destination tables & columns.
+     * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
@@ -78,7 +80,8 @@ class MyBb extends ExportController {
             'regdate3' => 'DateFirstVisit',
             'email' => 'Email',
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          select u.*,
             FROM_UNIXTIME(regdate) as regdate2,
             FROM_UNIXTIME(regdate) as regdate3,
@@ -86,7 +89,8 @@ class MyBb extends ExportController {
             concat(password, salt) as Password,
             'mybb' as HashMethod
          from :_users u
-         ", $user_Map);
+         ", $user_Map
+        );
 
         // Role.
         $role_Map = array(
@@ -94,18 +98,22 @@ class MyBb extends ExportController {
             'title' => 'Name',
             'description' => 'Description',
         );
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
          select *
-         from :_usergroups", $role_Map);
+         from :_usergroups", $role_Map
+        );
 
         // User Role.
         $userRole_Map = array(
             'uid' => 'UserID',
             'usergroup' => 'RoleID',
         );
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
          select u.uid, u.usergroup
-         from :_users u", $userRole_Map);
+         from :_users u", $userRole_Map
+        );
 
         // Category.
         $category_Map = array(
@@ -115,10 +123,12 @@ class MyBb extends ExportController {
             'name' => 'Name',
             'description' => 'Description',
         );
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
          select *
          from :_forums f
-         ", $category_Map);
+         ", $category_Map
+        );
 
         // Discussion.
         $discussion_Map = array(
@@ -129,11 +139,13 @@ class MyBb extends ExportController {
             'views' => 'CountViews',
             'replies' => 'CountComments',
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
          select *,
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
-         from :_threads t", $discussion_Map);
+         from :_threads t", $discussion_Map
+        );
 
         // Comment.
         $comment_Map = array(
@@ -142,11 +154,13 @@ class MyBb extends ExportController {
             'uid' => 'InsertUserID',
             'message' => array('Column' => 'Body'),
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
          select p.*,
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
-         from :_posts p", $comment_Map);
+         from :_posts p", $comment_Map
+        );
 
         // Media
         $media_Map = array(
@@ -160,7 +174,8 @@ class MyBb extends ExportController {
             'filetype' => 'Type',
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $ex->exportTable('Media', "
+        $ex->exportTable(
+            'Media', "
             select a.*,
                 600 as thumb_width,
                 concat('attachments/', a.thumbnail) as ThumbPath,
@@ -168,17 +183,20 @@ class MyBb extends ExportController {
                 'Comment' as ForeignTable
             from :_attachments a
             where a.pid > 0
-        ", $media_Map);
+        ", $media_Map
+        );
 
         // UserDiscussion.
         $userDiscussion_Map = array(
             'tid' => 'DiscussionID',
             'uid' => 'UserID',
         );
-        $ex->exportTable('UserDiscussion', "
+        $ex->exportTable(
+            'UserDiscussion', "
          select *,
             1 as Bookmarked
-         from :_threadsubscriptions t", $userDiscussion_Map);
+         from :_threadsubscriptions t", $userDiscussion_Map
+        );
 
         $ex->endExport();
     }

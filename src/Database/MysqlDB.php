@@ -4,17 +4,23 @@ namespace NitroPorter;
 /**
  * Class MysqlDB
  */
-class MysqlDB implements DbResource {
-    /** @var mysql resource */
+class MysqlDB implements DbResource
+{
+    /**
+     * @var mysql resource 
+     */
     private $link = null;
 
-    /** @var query result */
+    /**
+     * @var query result 
+     */
     private $result = null;
 
     /**
      * {@inheritdoc}
      */
-    public function __construct(array $args) {
+    public function __construct(array $args)
+    {
         if (!function_exists('mysql_connect')) {
             die('MySQL extension not found. MySQL extension was removed from php 7.0+. See http://php.net/manual/en/mysql.requirements.php for more information.');
         }
@@ -38,7 +44,8 @@ class MysqlDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function query($sql) {
+    public function query($sql)
+    {
         if (isset($this->result)) {
             mysql_free_result($this->result);
         }
@@ -54,7 +61,8 @@ class MysqlDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function error($sql) {
+    public function error($sql)
+    {
         echo '<pre>',
         htmlspecialchars($sql),
         htmlspecialchars(mysql_error($this->link)),
@@ -65,7 +73,8 @@ class MysqlDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function nextRow($assoc) {
+    public function nextRow($assoc)
+    {
         if ($assoc) {
             $row = mysql_fetch_assoc($this->result);
         } else {
@@ -83,14 +92,16 @@ class MysqlDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function escape($sql) {
+    public function escape($sql)
+    {
         return mysql_real_escape_string($sql, $this->link);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function close() {
+    public function close()
+    {
         mysql_free_result($this->result);
         mysql_close($this->link);
     }

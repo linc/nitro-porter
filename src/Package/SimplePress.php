@@ -3,14 +3,15 @@
  * Simple:Press exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Todd Burry
+ * @author  Todd Burry
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class SimplePress extends ExportController {
+class SimplePress extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'SimplePress 1',
@@ -41,7 +42,9 @@ class SimplePress extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     protected $sourceTables = array(
         'sfforums' => array(),
         'sfposts' => array(),
@@ -52,9 +55,11 @@ class SimplePress extends ExportController {
 
     /**
      * Forum-specific export format.
+     *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
         $ex->sourcePrefix = 'wp_';
 
         $characterSet = $ex->getCharacterSet('posts');
@@ -74,11 +79,13 @@ class SimplePress extends ExportController {
             'user_registered' => 'DateInserted',
             'lastvisit' => 'DateLastActive'
         );
-        $ex->exportTable('User',
+        $ex->exportTable(
+            'User',
             "select m.*, u.user_pass, u.user_email, u.user_registered
           from :_users u
           join :_sfmembers m
-            on u.ID = m.user_id;", $user_Map);
+            on u.ID = m.user_id;", $user_Map
+        );
 
         // Roles
         $role_Map = array(
@@ -86,7 +93,8 @@ class SimplePress extends ExportController {
             'usergroup_name' => 'Name',
             'usergroup_desc' => 'Description'
         );
-        $ex->exportTable('Role',
+        $ex->exportTable(
+            'Role',
             "select
             usergroup_id,
             usergroup_name,
@@ -98,10 +106,12 @@ class SimplePress extends ExportController {
          select
             100,
             'Administrators',
-            ''", $role_Map);
+            ''", $role_Map
+        );
 
         // Permissions.
-        $ex->exportTable('Permission', "select
+        $ex->exportTable(
+            'Permission', "select
             usergroup_id as RoleID,
 case
    when usergroup_name like 'Guest%' then 'View'
@@ -112,14 +122,16 @@ end as _Permissions
 
          union
 
-         select 100, 'All'");
+         select 100, 'All'"
+        );
 
         // UserRoles
         $userRole_Map = array(
             'user_id' => 'UserID',
             'usergroup_id' => 'RoleID'
         );
-        $ex->exportTable('UserRole',
+        $ex->exportTable(
+            'UserRole',
             "select
             m.user_id,
             m.usergroup_id
@@ -132,7 +144,8 @@ end as _Permissions
             100
          from :_usermeta um
          where um.meta_key = 'wp_capabilities'
-            and um.meta_value like '%PF Manage Forums%'", $userRole_Map);
+            and um.meta_value like '%PF Manage Forums%'", $userRole_Map
+        );
 
         // Categories
         $category_Map = array(
@@ -143,7 +156,8 @@ end as _Permissions
             'form_slug' => 'UrlCode',
             'parent_id' => 'ParentCategoryID'
         );
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
          select
             f.forum_id,
             f.forum_name,
@@ -162,7 +176,8 @@ end as _Permissions
             g.group_desc,
             null,
             null
-         from :_sfgroups g", $category_Map);
+         from :_sfgroups g", $category_Map
+        );
 
         // Discussions
         $discussion_Map = array(
@@ -175,9 +190,11 @@ end as _Permissions
             'topic_pinned' => 'Announce',
             'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
         );
-        $ex->exportTable('Discussion', "select t.*,
+        $ex->exportTable(
+            'Discussion', "select t.*,
             'Html' as Format
-         from :_sftopics t", $discussion_Map);
+         from :_sftopics t", $discussion_Map
+        );
 
         if ($ex->exists('sftags')) {
             // Tags
@@ -206,9 +223,11 @@ end as _Permissions
             'post_date' => 'DateInserted',
             'poster_ip' => 'InsertIPAddress'
         );
-        $ex->exportTable('Comment', "select p.*,
+        $ex->exportTable(
+            'Comment', "select p.*,
             'Html' as Format
-         from :_sfposts p", $comment_Map);
+         from :_sfposts p", $comment_Map
+        );
 
         // Conversation.
         $conv_Map = array(
@@ -216,10 +235,12 @@ end as _Permissions
             'from_id' => 'InsertUserID',
             'sent_date' => 'DateInserted'
         );
-        $ex->exportTable('Conversation',
+        $ex->exportTable(
+            'Conversation',
             "select *
          from :_sfmessages
-         where is_reply = 0", $conv_Map);
+         where is_reply = 0", $conv_Map
+        );
 
         // ConversationMessage.
         $convMessage_Map = array(
@@ -227,19 +248,22 @@ end as _Permissions
             'from_id' => 'InsertUserID',
             'message' => array('Column' => 'Body')
         );
-        $ex->exportTable('ConversationMessage',
+        $ex->exportTable(
+            'ConversationMessage',
             'select c.message_id as ConversationID, m.*
          from :_sfmessages c
          join :_sfmessages m
            on (m.is_reply = 0 and m.message_id = c.message_id) or (m.is_reply = 1 and c.is_reply = 0 and m.message_slug = c.message_slug and m.from_id in (c.from_id, c.to_id) and m.to_id in (c.from_id, c.to_id));',
-            $convMessage_Map);
+            $convMessage_Map
+        );
 
         // UserConversation
         $userConv_Map = array(
             'message_id' => 'ConversationID',
             'from_id' => 'UserID'
         );
-        $ex->exportTable('UserConversation',
+        $ex->exportTable(
+            'UserConversation',
             'select message_id, from_id
          from :_sfmessages
          where is_reply = 0
@@ -249,7 +273,8 @@ end as _Permissions
          select message_id, to_id
          from :_sfmessages
          where is_reply = 0',
-            $userConv_Map);
+            $userConv_Map
+        );
 
         // End
         $ex->endExport();

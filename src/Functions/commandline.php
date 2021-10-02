@@ -94,7 +94,8 @@ if (isset($supported)) {
     $globalOptions['type']['Values'] = array_keys($supported);
 }
 
-function getAllCommandLineOptions($sections = false) {
+function getAllCommandLineOptions($sections = false)
+{
     global $globalOptions, $supported;
 
     if ($sections) {
@@ -127,7 +128,8 @@ function getAllCommandLineOptions($sections = false) {
     return $result;
 }
 
-function getOptCodes($options) {
+function getOptCodes($options)
+{
     $shortCodes = '';
     $longCodes = array();
 
@@ -144,7 +146,8 @@ function getOptCodes($options) {
     return array($shortCodes, $longCodes);
 }
 
-function parseCommandLine($options = null, $files = null) {
+function parseCommandLine($options = null, $files = null)
+{
     global $globalOptions, $supported, $argv;
 
     if (isset($options)) {
@@ -213,11 +216,12 @@ function parseCommandLine($options = null, $files = null) {
  *
  * @see getopt
  *
- * @param $shortCodes
- * @param $longCodes
+ * @param  $shortCodes
+ * @param  $longCodes
  * @return array
  */
-function getOptFromArgv($shortCodes, $longCodes) {
+function getOptFromArgv($shortCodes, $longCodes)
+{
     global $argv;
 
     $options = array();
@@ -278,7 +282,8 @@ function getOptFromArgv($shortCodes, $longCodes) {
     return $options;
 }
 
-function validateCommandLine($values, $options) {
+function validateCommandLine($values, $options)
+{
     $errors = array();
     $result = array();
 
@@ -344,7 +349,8 @@ function validateCommandLine($values, $options) {
     return $result;
 }
 
-function writeCommandLineHelp($options = null, $section = '') {
+function writeCommandLineHelp($options = null, $section = '')
+{
     if ($options === null) {
         $options = getAllCommandLineOptions(true);
         foreach ($options as $section => $options) {
@@ -383,7 +389,8 @@ function writeCommandLineHelp($options = null, $section = '') {
     echo "\n";
 }
 
-function v($name, $array, $default = null) {
+function v($name, $array, $default = null)
+{
     if (isset($array[$name])) {
         return $array[$name];
     }

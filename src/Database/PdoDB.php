@@ -4,7 +4,8 @@ namespace NitroPorter;
 /**
  * Class MysqlDB
  */
-class PdoDB implements DbResource {
+class PdoDB implements DbResource
+{
     /**
      * @var mysql resource
      */
@@ -18,7 +19,8 @@ class PdoDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function __construct(array $args) {
+    public function __construct(array $args)
+    {
         if (!defined('PDO::ATTR_DRIVER_NAME')) {
             die('PDO extension not found. See config.php and make sure the necessary extensions are installed.');
         }
@@ -39,7 +41,8 @@ class PdoDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function query($sql) {
+    public function query($sql)
+    {
         if (isset($this->result)) {
             $this->result->closeCursor();
         }
@@ -55,7 +58,8 @@ class PdoDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function error($sql) {
+    public function error($sql)
+    {
         echo '<pre>',
         htmlspecialchars($sql);
         print_r($this->link->errorInfo());
@@ -65,7 +69,8 @@ class PdoDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function nextRow($assoc) {
+    public function nextRow($assoc)
+    {
         $row = $this->result->fetch($assoc ? PDO::FETCH_ASSOC : PDO::FETCH_NUM);
 
         if (isset($row)) {
@@ -79,14 +84,16 @@ class PdoDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function escape($sql) {
+    public function escape($sql)
+    {
         return $this->link->quote($sql);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function close() {
+    public function close()
+    {
         $this->result->closeCursor();
         $this->link = null;
     }

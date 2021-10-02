@@ -6,11 +6,12 @@
 /**
  * Get the data support status for a single platform feature.
  *
- * @param $platform
- * @param $feature
+ * @param  $platform
+ * @param  $feature
  * @return string
  */
-function featureStatus($platform, $feature, $notes = true) {
+function featureStatus($platform, $feature, $notes = true)
+{
     $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
 
     if (!isset($supported[$platform]['features'])) {
@@ -41,10 +42,11 @@ function featureStatus($platform, $feature, $notes = true) {
 /**
  * Insert spaces into a CamelCaseName => Camel Case Name.
  *
- * @param $feature
+ * @param  $feature
  * @return string
  */
-function featureName($feature) {
+function featureName($feature)
+{
     return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
 }
 
@@ -59,7 +61,8 @@ function featureName($feature) {
  *
  * @return array
  */
-function vanillaFeatures($set = false) {
+function vanillaFeatures($set = false)
+{
     if (!$set) {
         $set = array('core', 'addon');
     }
@@ -79,46 +82,47 @@ function vanillaFeatures($set = false) {
 /**
  * Get features by availability in Vanilla.
  *
- * @param string $section
+ * @param  string $section
  * @return array
  */
-function vanillaFeatureSet($section) {
+function vanillaFeatureSet($section)
+{
     switch ($section) {
-        case 'addon':
-            $set = array(
-                'Tags' => 0,
+    case 'addon':
+        $set = array(
+            'Tags' => 0,
 
-            );
-            break;
-        case 'cloud':
-            $set = array(
-                'Badges' => 0,
-                'Ranks' => 0,
-                'Polls' => 0,
-                'Groups' => 0,
-            );
-            break;
-        case 'core':
-        default:
-            $set = array(
-                'Comments' => 0,
-                'Discussions' => 0,
-                'Users' => 0,
-                'Categories' => 0,
-                'Roles' => 0,
-                'Passwords' => 0,
-                'Avatars' => 0,
-                'PrivateMessages' => 0,
-                'Signatures' => 0,
-                'Attachments' => 0,
-                'Bookmarks' => 0,
-                'Permissions' => 0,
-                //'UserWall'        => 0,
-                'UserNotes' => 0,
+        );
+        break;
+    case 'cloud':
+        $set = array(
+            'Badges' => 0,
+            'Ranks' => 0,
+            'Polls' => 0,
+            'Groups' => 0,
+        );
+        break;
+    case 'core':
+    default:
+        $set = array(
+            'Comments' => 0,
+            'Discussions' => 0,
+            'Users' => 0,
+            'Categories' => 0,
+            'Roles' => 0,
+            'Passwords' => 0,
+            'Avatars' => 0,
+            'PrivateMessages' => 0,
+            'Signatures' => 0,
+            'Attachments' => 0,
+            'Bookmarks' => 0,
+            'Permissions' => 0,
+            //'UserWall'        => 0,
+            'UserNotes' => 0,
 
-                //'Emoji'           => 0,
-            );
-            break;
+            //'Emoji'           => 0,
+        );
+        break;
     }
 
     return $set;

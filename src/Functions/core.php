@@ -9,7 +9,8 @@
  * @param $errno
  * @param $errstr
  */
-function errorHandler($errno, $errstr, $errFile, $errLine) {
+function errorHandler($errno, $errstr, $errFile, $errLine)
+{
     $reportingLevel = error_reporting();
 
     // If error reporting is turned off, possibly by @.  Bail out.
@@ -32,14 +33,16 @@ function errorHandler($errno, $errstr, $errFile, $errLine) {
  * @param $var
  * @param string $prefix
  */
-function decho($var, $prefix = 'debug') {
+function decho($var, $prefix = 'debug')
+{
     echo '<pre><b>' . $prefix . '</b>: ' . htmlspecialchars(print_r($var, true)) . '</pre>';
 }
 
 /**
  * Write out a value passed as bytes to its most readable format.
  */
-function formatMemorySize($bytes, $precision = 1) {
+function formatMemorySize($bytes, $precision = 1)
+{
     $units = array('B', 'K', 'M', 'G', 'T');
 
     $bytes = max((int)$bytes, 0);
@@ -56,7 +59,8 @@ function formatMemorySize($bytes, $precision = 1) {
 /**
  * Test filesystem permissions.
  */
-function testWrite() {
+function testWrite()
+{
     // Create file
     $file = 'vanilla2test.txt';
     @touch($file);
@@ -72,12 +76,13 @@ function testWrite() {
 /**
  *
  *
- * @param $key
- * @param null $collection
- * @param string $default
+ * @param  $key
+ * @param  null   $collection
+ * @param  string $default
  * @return string
  */
-function getValue($key, $collection = null, $default = '') {
+function getValue($key, $collection = null, $default = '')
+{
     if (!$collection) {
         $collection = $_POST;
     }
@@ -91,13 +96,14 @@ function getValue($key, $collection = null, $default = '') {
 /**
  * Create a thumbnail from an image file.
  *
- * @param $path
- * @param $thumbPath
- * @param int $height
- * @param int $width
+ * @param  $path
+ * @param  $thumbPath
+ * @param  int $height
+ * @param  int $width
  * @return bool
  */
-function generateThumbnail($path, $thumbPath, $height = 50, $width = 50) {
+function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
+{
     list($widthSource, $heightSource, $type) = getimagesize($path);
 
     $XCoord = 0;
@@ -122,36 +128,38 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50) {
 
     try {
         switch ($type) {
-            case 1:
-                $sourceImage = imagecreatefromgif($path);
-                break;
-            case 2:
-                $sourceImage = @imagecreatefromjpeg($path);
-                if (!$sourceImage) {
-                    $sourceImage = imagecreatefromstring(file_get_contents($path));
-                }
-                break;
-            case 3:
-                $sourceImage = imagecreatefrompng($path);
-                imagealphablending($sourceImage, true);
-                break;
+        case 1:
+            $sourceImage = imagecreatefromgif($path);
+            break;
+        case 2:
+            $sourceImage = @imagecreatefromjpeg($path);
+            if (!$sourceImage) {
+                $sourceImage = imagecreatefromstring(file_get_contents($path));
+            }
+            break;
+        case 3:
+            $sourceImage = imagecreatefrompng($path);
+            imagealphablending($sourceImage, true);
+            break;
         }
 
         $targetImage = imagecreatetruecolor($width, $height);
-        imagecopyresampled($targetImage, $sourceImage, 0, 0, $XCoord, $YCoord, $width, $height, $widthSource,
-            $heightSource);
+        imagecopyresampled(
+            $targetImage, $sourceImage, 0, 0, $XCoord, $YCoord, $width, $height, $widthSource,
+            $heightSource
+        );
         imagedestroy($sourceImage);
 
         switch ($type) {
-            case 1:
-                imagegif($targetImage, $thumbPath);
-                break;
-            case 2:
-                imagejpeg($targetImage, $thumbPath);
-                break;
-            case 3:
-                imagepng($targetImage, $thumbPath);
-                break;
+        case 1:
+            imagegif($targetImage, $thumbPath);
+            break;
+        case 2:
+            imagejpeg($targetImage, $thumbPath);
+            break;
+        case 3:
+            imagepng($targetImage, $thumbPath);
+            break;
         }
         imagedestroy($targetImage);
     } catch (Exception $e) {
@@ -162,10 +170,11 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50) {
 /**
  *
  *
- * @param $sql
+ * @param  $sql
  * @return array
  */
-function parseSelect($sql) {
+function parseSelect($sql)
+{
     if (!preg_match('`^\s*select\s+(.+)\s+from\s+(.+)\s*`is', $sql, $matches)) {
         trigger_error("Could not parse '$sql'", E_USER_ERROR);
     }
@@ -175,7 +184,7 @@ function parseSelect($sql) {
 
     // Replace commas within function calls.
     $select = preg_replace_callback('`\(([^)]+?)\)`', '_ReplaceCommas', $select);
-//   echo($select);
+    //   echo($select);
     $parts = explode(',', $select);
 
     $selects = array();
@@ -190,7 +199,7 @@ function parseSelect($sql) {
 
         // Check for an alias.
         if (preg_match('`^(.*)\sas\s(.*)$`is', $expr, $matches)) {
-//         decho($matches, 'as');
+            //         decho($matches, 'as');
             $alias = trim($matches[2], '`');
             $selects[$alias] = $matches[1];
         } elseif (preg_match('`^[a-z_]?[a-z0-9_]*$`i', $expr)) {
@@ -215,20 +224,22 @@ function parseSelect($sql) {
 /**
  * Replace commas with a temporary placeholder.
  *
- * @param $matches
+ * @param  $matches
  * @return mixed
  */
-function _replaceCommas($matches) {
+function _replaceCommas($matches)
+{
     return str_replace(',', '!COMMA!', $matches[0]);
 }
 
 /**
  *
- * @param type $sql
- * @param array $columns An array in the form Alias => Column or just Column
+ * @param  type  $sql
+ * @param  array $columns An array in the form Alias => Column or just Column
  * @return type
  */
-function replaceSelect($sql, $columns) {
+function replaceSelect($sql, $columns)
+{
     if (is_string($sql)) {
         $parsed = parseSelect($sql);
     } else {
@@ -270,10 +281,11 @@ function replaceSelect($sql, $columns) {
 /**
  *
  *
- * @param $parsed
+ * @param  $parsed
  * @return string
  */
-function selectString($parsed) {
+function selectString($parsed)
+{
     // Build the select.
     $parts = $parsed['Select'];
     $selects = array();
@@ -296,15 +308,18 @@ function selectString($parsed) {
 /**
  *
  *
- * @param $paths
- * @param string $delimiter
+ * @param  $paths
+ * @param  string $delimiter
  * @return mixed
  */
-function combinePaths($paths, $delimiter = '/') {
+function combinePaths($paths, $delimiter = '/')
+{
     if (is_array($paths)) {
         $mungedPath = implode($delimiter, $paths);
-        $mungedPath = str_replace(array($delimiter . $delimiter . $delimiter, $delimiter . $delimiter),
-            array($delimiter, $delimiter), $mungedPath);
+        $mungedPath = str_replace(
+            array($delimiter . $delimiter . $delimiter, $delimiter . $delimiter),
+            array($delimiter, $delimiter), $mungedPath
+        );
 
         return str_replace(array('http:/', 'https:/'), array('http://', 'https://'), $mungedPath);
     } else {
@@ -317,7 +332,8 @@ function combinePaths($paths, $delimiter = '/') {
  *
  * @param string $name
  */
-function spawnPackage($name) {
+function spawnPackage($name)
+{
 
     if ($name && strlen($name) > 2) {
         $name = preg_replace('/[^A-Za-z0-9]/', '', $name);
@@ -332,10 +348,11 @@ function spawnPackage($name) {
 /**
  * Used to increase php max_execution_time value.
  *
- * @param int $maxExecutionTime PHP max execution time in seconds.
+ * @param  int $maxExecutionTime PHP max execution time in seconds.
  * @return bool Returns true if max_execution_time was increased (or stayed the same) or false otherwise.
  */
-function increaseMaxExecutionTime($maxExecutionTime) {
+function increaseMaxExecutionTime($maxExecutionTime)
+{
     $iniMaxExecutionTime = ini_get('max_execution_time');
     // max_execution_time == 0 means no limit.
     if ($iniMaxExecutionTime === '0') {

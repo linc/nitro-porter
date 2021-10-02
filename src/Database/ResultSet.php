@@ -4,7 +4,8 @@ namespace NitroPorter;
 /**
  * Class ResultSet
  */
-class ResultSet {
+class ResultSet
+{
     /**
      * @var DbResource
      */
@@ -15,16 +16,19 @@ class ResultSet {
      *
      * @param DbResource $dbResource
      */
-    public function __construct(DbResource $dbResource) {
+    public function __construct(DbResource $dbResource)
+    {
         $this->dbResource = $dbResource;
     }
 
     /**
      * Iterate to new result row via the db resource.
-     * @param bool $assoc will return result row as an enumerated array if false.
+     *
+     * @param  bool $assoc will return result row as an enumerated array if false.
      * @return array|bool
      */
-    public function nextResultRow($assoc = true) {
+    public function nextResultRow($assoc = true)
+    {
         return $this->dbResource->nextRow($assoc);
     }
 }

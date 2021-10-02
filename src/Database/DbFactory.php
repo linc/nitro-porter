@@ -5,21 +5,27 @@ namespace NitroPorter;
  * Creating desired db instances on the go
  * Class DbFactory
  */
-class DbFactory {
+class DbFactory
+{
 
-    /** @var array DB connection info */
+    /**
+     * @var array DB connection info 
+     */
     private $dbInfo;
 
-    /** @var string php database extension */
+    /**
+     * @var string php database extension 
+     */
     private $extension;
 
     /**
      * DbFactory constructor.
      *
-     * @param array $args db connection parameters
+     * @param array  $args      db connection parameters
      * @param string $extension db extension
      */
-    public function __construct(array $args, $extension) {
+    public function __construct(array $args, $extension)
+    {
         $this->dbInfo = $args;
         $this->extension = $extension;
     }
@@ -29,7 +35,8 @@ class DbFactory {
      *
      * @return db instance
      */
-    public function getInstance() {
+    public function getInstance()
+    {
         $className = $this->extension . 'Db';
         if(class_exists($className)) {
             $dbFactory = new $className($this->dbInfo);

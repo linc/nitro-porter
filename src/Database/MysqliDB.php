@@ -4,18 +4,24 @@ namespace NitroPorter;
 /**
  * Class MysqliDB
  */
-class MysqliDB implements DbResource {
+class MysqliDB implements DbResource
+{
 
-    /** @var mysql resource */
+    /**
+     * @var mysql resource 
+     */
     private $link = null;
 
-    /** @var query result */
+    /**
+     * @var query result 
+     */
     private $result = null;
 
     /**
      * {@inheritdoc}
      */
-    public function __construct(array $args) {
+    public function __construct(array $args)
+    {
         if (!function_exists('mysqli_connect')) {
             die('MySQLi extension not found. See config.php and make sure the necessary extensions are installed.');
         }
@@ -38,7 +44,8 @@ class MysqliDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function query($sql) {
+    public function query($sql)
+    {
         if (isset($this->result) && $this->result instanceof mysqli_result) {
             mysqli_free_result($this->result);
         }
@@ -55,7 +62,8 @@ class MysqliDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function error($sql) {
+    public function error($sql)
+    {
         echo '<pre>',
         htmlspecialchars($sql),
         htmlspecialchars(mysqli_error($this->link)),
@@ -66,7 +74,8 @@ class MysqliDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function nextRow($assoc) {
+    public function nextRow($assoc)
+    {
         if ($assoc) {
             $row = mysqli_fetch_assoc($this->result);
         } else {
@@ -84,14 +93,16 @@ class MysqliDB implements DbResource {
     /**
      * {@inheritdoc}
      */
-    public function escape($sql) {
+    public function escape($sql)
+    {
         return mysqli_real_escape_string($this->link, $sql);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function close() {
+    public function close()
+    {
         mysqli_close($this->link);
         $this->link = null;
     }

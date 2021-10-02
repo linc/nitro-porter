@@ -3,14 +3,15 @@
  * MVC exporter tool.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Olivier Lamy-Canuel
+ * @author  Olivier Lamy-Canuel
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Mvc extends ExportController {
+class Mvc extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'MVC',
@@ -57,9 +58,10 @@ class Mvc extends ExportController {
      * Main export process.
      *
      * @param ExportModel $ex
-     * @see $_Structures in ExportModel for allowed destination tables & columns.
+     * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -113,7 +115,8 @@ class Mvc extends ExportController {
         $this->createIndexesIfNotExists();
 
         // Users.
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             select
                 UserID,
                 UserName as Name,
@@ -127,10 +130,12 @@ class Mvc extends ExportController {
                 Location as Location
             from
                 :_MembershipUser m
-         ");
+         "
+        );
 
         // UserMeta.
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
             select
                 UserID,
                 'Website' as `Name`,
@@ -150,28 +155,34 @@ class Mvc extends ExportController {
                 :_MembershipUser m
             where
                 m.Signature <> ''
-        ");
+        "
+        );
 
         // Role.
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
             select
                 RoleID,
                 RoleName as Name
             from
                 :_MembershipRole
-         ");
+         "
+        );
 
         // User Role.
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 u.UserID as UserID,
                 r.RoleID as RoleID
             from :_MembershipUsersInRoles m,  :_MembershipRole r, :_MembershipUser u
             where r.RoleID = m.RoleIdentifier and u.UserID = m.UserIdentifier
-        ");
+        "
+        );
 
         //Badge.
-        $ex->exportTable('Badge', "
+        $ex->exportTable(
+            'Badge', "
             select
                 BadgeID,
                 Type as Type,
@@ -181,9 +192,11 @@ class Mvc extends ExportController {
                 AwardsPoints as Points
             from
                 :_Badge
-        ");
+        "
+        );
 
-        $ex->exportTable('UserBadge', "
+        $ex->exportTable(
+            'UserBadge', "
             select
                 u.UserID,
                 b.BadgeID,
@@ -191,10 +204,12 @@ class Mvc extends ExportController {
                 now() as DateInserted
             from :_MembershipUser_Badge m, :_MembershipUser u, :_Badge b
             where u.UserID = m.MembershipUser_Id and b.BadgeID = m.Badge_Id
-        ");
+        "
+        );
 
         // Category.
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
             select
                 m.CategoryID,
                 p.CategoryID as ParentCategoryID,
@@ -216,10 +231,12 @@ class Mvc extends ExportController {
                 null as Sort
             from Category m
             where m.Category_Id = ''
-        ");
+        "
+        );
 
         // Discussion.
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
             select
                 m.TopicID as DiscussionID,
                 c.CategoryID as CategoryID,
@@ -234,10 +251,12 @@ class Mvc extends ExportController {
                 :_MembershipUser u on u.Id = m.MembershipUser_Id
             left join
                 :_Category c on c.Id = m.Category_Id
-            ");
+            "
+        );
 
         // Comment.
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
             select
                 m.PostID as CommentID,
                 d.TopicID as DiscussionID,
@@ -252,21 +271,25 @@ class Mvc extends ExportController {
                 :_Topic d on d.Id = m.Topic_Id
             left join
                 :_MembershipUser u on u.Id = m.MembershipUser_Id
-         ");
+         "
+        );
 
         // Tag
-        $ex->exportTable('Tag', "
+        $ex->exportTable(
+            'Tag', "
             select
                 TagID,
                 Tag as Name,
                 Tag as FullName,
                 now() as DateInserted
             from TopicTag
-         ");
+         "
+        );
 
         //Attachment WIP
         // Use of placeholder for Type and Size due to lack of data in db. Will require external script to get the info.
-        $ex->exportTable('Attachment', "
+        $ex->exportTable(
+            'Attachment', "
             select
                 MediaID,
                 Filename as Name,
@@ -277,7 +300,8 @@ class Mvc extends ExportController {
                 u.DateCreated as DateInserted
             from :_UploadedFile u
             where u.Post_Id <> '' and m.Id = u.Id
-        ");
+        "
+        );
 
         $ex->endExport();
     }
@@ -286,7 +310,8 @@ class Mvc extends ExportController {
      * Create indexes on current tables to accelerate the export process. Initial ids are varchar, which can make the
      * queries hang when joining or using some columns in conditions. Ignore the creation if the index already exist.
      */
-    private function createIndexesIfNotExists() {
+    private function createIndexesIfNotExists()
+    {
         if (!$this->ex->indexExists('mvc_users_id', ':_MembershipUser')) {
             $this->ex->query("create INDEX mvc_users_id on :_MembershipUser(Id);");
         }
@@ -332,7 +357,8 @@ class Mvc extends ExportController {
     /**
      * For each table in the database, check if the primary key exists and create it if it doesn't.
      */
-    private function createPrimaryKeys() {
+    private function createPrimaryKeys()
+    {
         $this->addMembershipUserPrimaryKeyIfNotExists();
         $this->addRolePrimaryKeyIfNotExists();
         $this->addBadgePrimaryKeyIfNotExists();
@@ -347,7 +373,8 @@ class Mvc extends ExportController {
      * Add the UserID column to the `MembershipUser` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addMembershipUserPrimaryKeyIfNotExists() {
+    private function addMembershipUserPrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('MembershipUser', 'UserID')) {
             $this->ex->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
         }
@@ -357,7 +384,8 @@ class Mvc extends ExportController {
      * Add the RoleID column to the `MembershipRole` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addRolePrimaryKeyIfNotExists() {
+    private function addRolePrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('MembershipRole', 'RoleID')) {
             $this->ex->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
         }
@@ -367,7 +395,8 @@ class Mvc extends ExportController {
      * Add the BadgeID column to the `Badge` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addBadgePrimaryKeyIfNotExists() {
+    private function addBadgePrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('Badge', 'BadgeID')) {
             $this->ex->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
         }
@@ -377,7 +406,8 @@ class Mvc extends ExportController {
      * Add the CategoryID column to the `Category` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addCategoryPrimaryKeyIfNotExists() {
+    private function addCategoryPrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('Category', 'CategoryID')) {
             $this->ex->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
         }
@@ -387,7 +417,8 @@ class Mvc extends ExportController {
      * Add the DiscussionID column to the Topic` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addTopicPrimaryKeyIfNotExists() {
+    private function addTopicPrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('Topic', 'TopicID')) {
             $this->ex->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
         }
@@ -397,7 +428,8 @@ class Mvc extends ExportController {
      * Add the CommentID column to the 'Post` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addPostPrimaryKeyIfNotExists() {
+    private function addPostPrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('Post', 'PostID')) {
             $this->ex->query("alter table :_Post add column PostID int(11) primary key auto_increment");
         }
@@ -407,7 +439,8 @@ class Mvc extends ExportController {
      * Add the TagID column to the 'TopicTag` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addTopicTagPrimaryKeyIfNotExists() {
+    private function addTopicTagPrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('TopicTag', 'TagID')) {
             $this->ex->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
         }
@@ -417,7 +450,8 @@ class Mvc extends ExportController {
      * Add the MediaID column to the 'UploadedFile` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addUploadFilePrimaryKeyIfNotExists() {
+    private function addUploadFilePrimaryKeyIfNotExists()
+    {
         if (!$this->ex->columnExists('UploadedFile', 'MediaID')) {
             $this->ex->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
         }

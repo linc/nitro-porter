@@ -3,14 +3,15 @@
  * ASP Playground exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class AspPlayground extends ExportController {
+class AspPlayground extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'ASP Playground',
@@ -44,7 +45,8 @@ class AspPlayground extends ExportController {
     /**
      * @param ExportModel $ex
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('Threads');
         if ($characterSet) {
@@ -66,10 +68,12 @@ class AspPlayground extends ExportController {
             'dateSignUp' => 'DateInserted',
             'lastLogin' => 'DateLastActive',
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          select m.*,
             'Text' as HashMethod
-         from :_Members m;", $user_Map);
+         from :_Members m;", $user_Map
+        );
 
         // Role.
         /*$role_Map = array(
@@ -88,7 +92,8 @@ class AspPlayground extends ExportController {
         $ex->exportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $userRole_Map);
 
         // Signatures.
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
          select
             Mem,
             'Plugin.Signatures.Sig' as `Name`,
@@ -103,7 +108,8 @@ class AspPlayground extends ExportController {
             'Plugin.Signatures.Format' as `Name`,
             'BBCode' as `Value`
          from :_Members
-         where signature <> '';");
+         where signature <> '';"
+        );
 
         // Category.
         $category_Map = array(
@@ -114,9 +120,11 @@ class AspPlayground extends ExportController {
             'lastModTime' => 'DateUpdated'
         );
 
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
          select f.*
-         from :_Forums f;", $category_Map);
+         from :_Forums f;", $category_Map
+        );
 
         // Discussion.
         $discussion_Map = array(
@@ -128,13 +136,15 @@ class AspPlayground extends ExportController {
             'hits' => 'CountViews',
             'lastupdate' => 'DateLastComment'
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
          select
             t.*,
             m.Body
          from :_Threads t
          left join :_Messages m on m.messageID = t.messageID
-         ;", $discussion_Map);
+         ;", $discussion_Map
+        );
 
         // Comment.
         $comment_Map = array(
@@ -146,10 +156,12 @@ class AspPlayground extends ExportController {
             'Body' => 'Body',
             'ip' => 'InsertIPAddress'
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
          select m.*,
             'BBCode' as Format
-         from :_Messages m;", $comment_Map);
+         from :_Messages m;", $comment_Map
+        );
 
         /*
         // Conversation.
@@ -201,7 +213,8 @@ class AspPlayground extends ExportController {
         $ex->endExport();
     }
 
-    public function cleanDate($value) {
+    public function cleanDate($value)
+    {
         if (!$value) {
             return null;
         }

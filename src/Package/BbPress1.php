@@ -3,14 +3,15 @@
  * bbPress exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Todd Burry
+ * @author  Todd Burry
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class BbPress1 extends ExportController {
+class BbPress1 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'bbPress 1',
@@ -39,7 +40,9 @@ class BbPress1 extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     protected $sourceTables = array(
         'forums' => array(),
         'posts' => array(),
@@ -50,9 +53,11 @@ class BbPress1 extends ExportController {
 
     /**
      * Forum-specific export format.
+     *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
@@ -73,20 +78,23 @@ class BbPress1 extends ExportController {
         $ex->exportTable('User', "select * from :_users", $user_Map);  // ":_" will be replace by database prefix
 
         // Roles
-        $ex->exportTable('Role',
+        $ex->exportTable(
+            'Role',
             "select 1 as RoleID, 'Guest' as Name
          union select 2, 'Key Master'
          union select 3, 'Administrator'
          union select 4, 'Moderator'
          union select 5, 'Member'
          union select 6, 'Inactive'
-         union select 7, 'Blocked'");
+         union select 7, 'Blocked'"
+        );
 
         // UserRoles
         $userRole_Map = array(
             'user_id' => 'UserID'
         );
-        $ex->exportTable('UserRole',
+        $ex->exportTable(
+            'UserRole',
             "select distinct
            user_id,
            case when locate('keymaster', meta_value) <> 0 then 2
@@ -97,7 +105,8 @@ class BbPress1 extends ExportController {
            when locate('blocked', meta_value) <> 0 then 7
            else 1 end as RoleID
          from :_usermeta
-         where meta_key = 'bb_capabilities'", $userRole_Map);
+         where meta_key = 'bb_capabilities'", $userRole_Map
+        );
 
         // Categories
         $category_Map = array(
@@ -107,10 +116,12 @@ class BbPress1 extends ExportController {
             'forum_slug' => 'UrlCode',
             'left_order' => 'Sort'
         );
-        $ex->exportTable('Category', "select *,
+        $ex->exportTable(
+            'Category', "select *,
          lower(forum_slug) as forum_slug,
          nullif(forum_parent,0) as ParentCategoryID
-         from :_forums", $category_Map);
+         from :_forums", $category_Map
+        );
 
         // Discussions
         $discussion_Map = array(
@@ -122,11 +133,13 @@ class BbPress1 extends ExportController {
             'topic_start_time' => 'DateInserted',
             'topic_sticky' => 'Announce'
         );
-        $ex->exportTable('Discussion', "select t.*,
+        $ex->exportTable(
+            'Discussion', "select t.*,
             'Html' as Format,
             case t.topic_open when 0 then 1 else 0 end as Closed
          from :_topics t
-         where topic_status = 0", $discussion_Map);
+         where topic_status = 0", $discussion_Map
+        );
 
         // Comments
         $comment_Map = array(
@@ -137,10 +150,12 @@ class BbPress1 extends ExportController {
             'poster_id' => 'InsertUserID',
             'post_time' => 'DateInserted'
         );
-        $ex->exportTable('Comment', "select p.*,
+        $ex->exportTable(
+            'Comment', "select p.*,
             'Html' as Format
          from :_posts p
-         where post_status = 0", $comment_Map);
+         where post_status = 0", $comment_Map
+        );
 
         // Conversations.
 
@@ -151,8 +166,12 @@ class BbPress1 extends ExportController {
         if ($PM === true) {
             // This is from an old version of the plugin.
             $conversationVersion = 'old';
-        } elseif (is_array($PM) && count(array_intersect(array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'),
-                $PM)) == 0
+        } elseif (is_array($PM) && count(
+            array_intersect(
+                array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'),
+                $PM
+            )
+        ) == 0
         ) {
             // This is from a newer version of the plugin.
             $conversationVersion = 'new';
@@ -164,10 +183,12 @@ class BbPress1 extends ExportController {
                 'pm_thread' => 'ConversationID',
                 'pm_from' => 'InsertUserID'
             );
-            $ex->exportTable('Conversation',
+            $ex->exportTable(
+                'Conversation',
                 "select *, from_unixtime(sent_on) as DateInserted
             from :_bbpm
-            where thread_depth = 0", $conv_Map);
+            where thread_depth = 0", $conv_Map
+            );
 
             // ConversationMessage.
             $convMessage_Map = array(
@@ -176,16 +197,20 @@ class BbPress1 extends ExportController {
                 'pm_from' => 'InsertUserID',
                 'pm_text' => array('Column' => 'Body', 'Filter' => 'bbPressTrim')
             );
-            $ex->exportTable('ConversationMessage',
+            $ex->exportTable(
+                'ConversationMessage',
                 'select *, from_unixtime(sent_on) as DateInserted
-            from :_bbpm', $convMessage_Map);
+            from :_bbpm', $convMessage_Map
+            );
 
             // UserConversation.
             $ex->query("create temporary table bbpmto (UserID int, ConversationID int)");
 
             if ($conversationVersion == 'new') {
-                $to = $ex->query("select object_id, meta_value from :_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
-                    true);
+                $to = $ex->query(
+                    "select object_id, meta_value from :_meta where object_type = 'bbpm_thread' and meta_key = 'to'",
+                    true
+                );
                 if (is_resource($to)) {
                     while ($row = $to->nextResultRow()) {
                         $thread = $row['object_id'];
@@ -206,7 +231,8 @@ class BbPress1 extends ExportController {
                     'pm_thread' => 'ConversationID',
                     'pm_from' => 'UserID'
                 );
-                $ex->exportTable('UserConversation',
+                $ex->exportTable(
+                    'UserConversation',
                     'select distinct
                  pm_thread,
                  pm_from,
@@ -219,7 +245,8 @@ class BbPress1 extends ExportController {
                  pm_thread,
                  pm_to,
                  del_reciever
-               from :_bbpm', $conUser_Map);
+               from :_bbpm', $conUser_Map
+                );
             }
         }
 
@@ -228,11 +255,13 @@ class BbPress1 extends ExportController {
     }
 }
 
-function bbPressTrim($text) {
+function bbPressTrim($text)
+{
     return rtrim(bb_Code_Trick_Reverse($text));
 }
 
-function bb_Code_Trick_Reverse($text) {
+function bb_Code_Trick_Reverse($text)
+{
     $text = preg_replace_callback("!(<pre><code>|<code>)(.*?)(</code></pre>|</code>)!s", 'bb_decodeit', $text);
     $text = str_replace(array('<p>', '<br />'), '', $text);
     $text = str_replace('</p>', "\n", $text);
@@ -243,7 +272,8 @@ function bb_Code_Trick_Reverse($text) {
     return $text;
 }
 
-function bb_Decodeit($matches) {
+function bb_Decodeit($matches)
+{
     $text = $matches[2];
     $trans_table = array_flip(get_html_translation_table(HTML_ENTITIES));
     $text = strtr($text, $trans_table);

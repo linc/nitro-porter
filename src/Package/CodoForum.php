@@ -3,14 +3,15 @@
  * Codoforum exporter tool. Tested with CodoForum v3.7.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Hans Adema
+ * @author  Hans Adema
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class CodoForum extends ExportController {
+class CodoForum extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'CodoForum',
@@ -38,7 +39,9 @@ class CodoForum extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     protected $sourceTables = array(
         'users' => array('id', 'username', 'mail', 'user_status', 'pass', 'signature'),
         'roles' => array('rid', 'rname'),
@@ -52,9 +55,10 @@ class CodoForum extends ExportController {
      * Main export process.
      *
      * @param ExportModel $ex
-     * @see $_structures in ExportModel for allowed destination tables & columns.
+     * @see   $_structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('codo_posts');
         if ($characterSet) {
@@ -64,7 +68,8 @@ class CodoForum extends ExportController {
         $ex->beginExport('', 'CodoForum');
 
         // User.
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             select
                 u.id as UserID,
                 u.username as Name,
@@ -74,27 +79,33 @@ class CodoForum extends ExportController {
                 'Vanilla' as HashMethod,
                 from_unixtime(u.created) as DateFirstVisit
             from :_users u
-         ");
+         "
+        );
 
         // Role.
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
             select
                 r.rid as RolesID,
                 r.rname as Name
             from :_roles r
-        ");
+        "
+        );
 
         // User Role.
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 ur.uid as UserID,
                 ur.rid as RoleID
             from :_user_roles ur
             where ur.is_primary = 1
-        ");
+        "
+        );
 
         // UserMeta.
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
             select
                 u.id as UserID,
                 'Plugin.Signatures.Sig' as Name,
@@ -104,15 +115,18 @@ class CodoForum extends ExportController {
         );
 
         // Category.
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
             select
                 c.cat_id as CategoryID,
                 c.cat_name as Name
             from :_categories c
-        ");
+        "
+        );
 
         // Discussion.
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
             select
                 t.topic_id as DiscussionID,
                 t.cat_id as CategoryID,
@@ -121,10 +135,12 @@ class CodoForum extends ExportController {
                 from_unixtime(t.topic_created) as DateInserted,
                 from_unixtime(t.last_post_time) as DateLastComment
             from :_topics t
-        ");
+        "
+        );
 
         // Comment.
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
             select
                 p.post_id as CommentID,
                 p.topic_id as DiscussionID,
@@ -133,7 +149,8 @@ class CodoForum extends ExportController {
                 'Markdown' as Format,
                 from_unixtime(p.post_created) as DateInserted
             from :_posts p
-        ");
+        "
+        );
 
         // TODO UserDiscussion.
         // This is the table for assigning bookmarks/subscribed threads.

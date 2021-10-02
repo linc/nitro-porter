@@ -8,14 +8,15 @@
  * Tested with FuseTalk Enterprise Edition v4.0
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Alexandre Chouinard
+ * @author  Alexandre Chouinard
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class FuseTalk extends ExportController {
+class FuseTalk extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'FuseTalk',
@@ -59,9 +60,10 @@ class FuseTalk extends ExportController {
      * Main export process.
      *
      * @param ExportModel $ex
-     * @see $_Structures in ExportModel for allowed destination tables & columns.
+     * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
@@ -101,7 +103,8 @@ class FuseTalk extends ExportController {
 
         // Users
         $user_Map = array();
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             select
                 user.iuserid as UserID,
                 user.vchnickname as Name,
@@ -119,7 +122,8 @@ class FuseTalk extends ExportController {
                 left join :_banning as bemail on b.vchbanstring = user.vchemailaddress
                 left join :_banning as bname on b.vchbanstring = user.vchnickname
             group by user.iuserid
-         ;", $user_Map);  // ":_" will be replaced by database prefix
+         ;", $user_Map
+        );  // ":_" will be replaced by database prefix
 
         $memberRoleID = 1;
         $result = $ex->query("select max(igroupid) as maxRoleID from :_groups", true);
@@ -128,7 +132,8 @@ class FuseTalk extends ExportController {
         }
 
         // UserMeta. (Signatures)
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
             select
                 user.iuserid as UserID,
                 'Plugin.Signatures.Sig' as Name,
@@ -144,11 +149,13 @@ class FuseTalk extends ExportController {
                 'Html'
             from :_users as user
             where nullif(nullif(user.txsignature, ''), char(0)) is not null
-        ");
+        "
+        );
 
         // Role.
         $role_Map = array();
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
             select
                 groups.igroupid as RoleID,
                 groups.vchgroupname as Name
@@ -160,20 +167,24 @@ class FuseTalk extends ExportController {
                 $memberRoleID as RoleID,
                 'Members'
             from dual
-        ", $role_Map);
+        ", $role_Map
+        );
 
         // User Role.
         $userRole_Map = array();
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 user.iuserid as UserID,
                 ifnull (user_role.igroupid, $memberRoleID) as RoleID
             from :_users as user
                 left join :_groupusers as user_role using (iuserid)
-        ", $userRole_Map);
+        ", $userRole_Map
+        );
 
         $ex->query("drop table if exists zConversations;");
-        $ex->query("
+        $ex->query(
+            "
             create table zConversations(
                 `ConversationID` int(11) not null AUTO_INCREMENT,
                 `User1` int(11) not null,
@@ -182,8 +193,10 @@ class FuseTalk extends ExportController {
                 primary key (`ConversationID`),
                 key `IX_zConversation_User1_User2` (`User1`,`User2`)
             );
-        ");
-        $ex->query("
+        "
+        );
+        $ex->query(
+            "
             insert into zConversations(`User1`, `User2`, `DateInserted`)
                 select
                     if (pm.iuserid < pm.iownerid, pm.iuserid, pm.iownerid) as User1,
@@ -193,23 +206,27 @@ class FuseTalk extends ExportController {
                 group by
                     User1,
                     User2
-        ");
+        "
+        );
 
         // Conversations.
         $conversation_Map = array();
-        $ex->exportTable('Conversation', "
+        $ex->exportTable(
+            'Conversation', "
             select
                 c.ConversationID as ConversationID,
                 c.User1 as InsertUserID,
                 c.DateInserted as DateInserted
             from zConversations as c
-        ;", $conversation_Map);
+        ;", $conversation_Map
+        );
 
         // Conversation Messages.
         $conversationMessage_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
-        $ex->exportTable('ConversationMessage', "
+        $ex->exportTable(
+            'ConversationMessage', "
             select
                 pm.imessageid as MessageID,
                 c.ConversationID,
@@ -233,11 +250,13 @@ class FuseTalk extends ExportController {
             from zConversations as c
                 inner join :_privatemessages as pm on pm.iuserid = c.User2 and pm.iownerid = c.User1
             where vchusagestatus = 'sent'
-        ;", $conversationMessage_Map);
+        ;", $conversationMessage_Map
+        );
 
         // User Conversation.
         $userConversation_Map = array();
-        $ex->exportTable('UserConversation', "
+        $ex->exportTable(
+            'UserConversation', "
             select
                 c.ConversationID,
                 c.User1 as UserID,
@@ -251,25 +270,29 @@ class FuseTalk extends ExportController {
                 c.User2 as UserID,
                 now() as DateLastViewed
             from zConversations as c
-        ;", $userConversation_Map);
+        ;", $userConversation_Map
+        );
 
         // Category.
         $category_Map = array();
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
             select
                 categories.icategoryid as CategoryID,
                 categories.vchcategoryname as Name,
                 categories.vchdescription as Description,
                 -1 as ParentCategoryID
             from :_categories as categories
-        ", $category_Map);
+        ", $category_Map
+        );
 
         // Discussion.
         /* Skip "Body". It will be fixed at import.
          * The first comment is going to be used to fill the missing data and will then be deleted
          */
         $discussion_Map = array();
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
             select
                 threads.ithreadid as DiscussionID,
                 threads.vchthreadname as Name,
@@ -280,7 +303,8 @@ class FuseTalk extends ExportController {
                 if (threads.vchalertthread = 'Yes' and threads.dtstaydate > now(), 2, 0) as Announce,
                 if (threads.vchthreadlock = 'Locked', 1, 0) as Closed
             from :_threads as threads
-        ", $discussion_Map);
+        ", $discussion_Map
+        );
 
         // Comment.
         /*
@@ -289,7 +313,8 @@ class FuseTalk extends ExportController {
         $comment_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
             select
                 messages.imessageid as CommentID,
                 messages.ithreadid as DiscussionID,
@@ -298,7 +323,8 @@ class FuseTalk extends ExportController {
                 'Html' as Format,
                 messages.dtmessagedate as DateInserted
             from :_messages as messages
-        ", $comment_Map);
+        ", $comment_Map
+        );
 
         $ex->endExport();
     }
@@ -307,12 +333,13 @@ class FuseTalk extends ExportController {
     /**
      * Fix smileys URL
      *
-     * @param $value Value of the current row
-     * @param $field Name associated with the current field value
-     * @param $row   Full data row columns
+     * @param  $value Value of the current row
+     * @param  $field Name associated with the current field value
+     * @param  $row   Full data row columns
      * @return string Body
      */
-    public function fixSmileysURL($value, $field, $row) {
+    public function fixSmileysURL($value, $field, $row)
+    {
         static $smileySearch = '<img src="i/expressions/';
         static $smileyReplace;
 

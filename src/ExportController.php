@@ -11,16 +11,24 @@ namespace NitroPorter;
  */
 abstract class ExportController
 {
-    /** @var array Database connection info */
+    /**
+     * @var array Database connection info 
+     */
     protected $dbInfo = array();
 
-    /** @var array Required tables, columns set per exporter */
+    /**
+     * @var array Required tables, columns set per exporter 
+     */
     protected $sourceTables = array();
 
-    /** @var ExportModel */
+    /**
+     * @var ExportModel 
+     */
     protected $ex = null;
 
-    /** Forum-specific export routine */
+    /**
+     * Forum-specific export routine 
+     */
     abstract protected function forumExport($ex);
 
     /**
@@ -117,9 +125,9 @@ abstract class ExportController
                 $this->ex->useCompression(true);
                 $this->ex->filenamePrefix = $this->dbInfo['dbname'];
                 increaseMaxExecutionTime(3600);
-//            ob_start();
+                //            ob_start();
                 $this->forumExport($this->ex);
-//            $Errors = ob_get_clean();
+                //            $Errors = ob_get_clean();
 
                 $msg = $this->ex->comments;
 
@@ -152,8 +160,8 @@ abstract class ExportController
     /**
      * Retrieve a parameter passed to the export process.
      *
-     * @param string $name
-     * @param mixed $default Fallback value.
+     * @param  string $name
+     * @param  mixed  $default Fallback value.
      * @return mixed Value of the parameter.
      */
     public function param($name, $default = false)

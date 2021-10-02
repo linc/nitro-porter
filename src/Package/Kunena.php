@@ -3,14 +3,15 @@
  * Joomla Kunena exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Todd Burry
+ * @author  Todd Burry
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Kunena extends ExportController {
+class Kunena extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Joomla Kunena',
@@ -42,7 +43,8 @@ class Kunena extends ExportController {
     /**
      * @param ExportModel $ex
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('mbox');
         if ($characterSet) {
@@ -64,11 +66,12 @@ class Kunena extends ExportController {
             'showemail' => 'ShowEmail',
             'birthdate' => 'DateOfBirth',
             'banned' => 'Banned',
-//         'DELETED'=>'Deleted',
+        //         'DELETED'=>'Deleted',
             'admin' => array('Column' => 'Admin', 'Type' => 'tinyint(1)'),
             'Photo' => 'Photo'
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          SELECT
             u.*,
             case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
@@ -78,7 +81,8 @@ class Kunena extends ExportController {
             !ku.hideemail as showemail
          FROM :_users u
          left join :_kunena_users ku
-            on ku.userid = u.id", $user_Map);
+            on ku.userid = u.id", $user_Map
+        );
 
         // Role.
         $role_Map = array(
@@ -92,17 +96,19 @@ class Kunena extends ExportController {
             'id' => 'UserID',
             'rank' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
          select *
-         from :_users u", $userRole_Map);
+         from :_users u", $userRole_Map
+        );
 
         // Permission.
-//      $ex->ExportTable('Permission',
-//      "select 2 as RoleID, 'View' as _Permissions
-//      union
-//      select 3 as RoleID, 'View' as _Permissions
-//      union
-//      select 16 as RoleID, 'All' as _Permissions", array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
+        //      $ex->ExportTable('Permission',
+        //      "select 2 as RoleID, 'View' as _Permissions
+        //      union
+        //      select 3 as RoleID, 'View' as _Permissions
+        //      union
+        //      select 16 as RoleID, 'All' as _Permissions", array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
 
         // Category.
         $category_Map = array(
@@ -113,8 +119,10 @@ class Kunena extends ExportController {
             'description' => 'Description',
 
         );
-        $ex->exportTable('Category', "
-         select * from :_kunena_categories", $category_Map);
+        $ex->exportTable(
+            'Category', "
+         select * from :_kunena_categories", $category_Map
+        );
 
         // Discussion.
         $discussion_Map = array(
@@ -131,7 +139,8 @@ class Kunena extends ExportController {
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
          select
             t.*,
             txt.message,
@@ -139,7 +148,8 @@ class Kunena extends ExportController {
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread = t.id", $discussion_Map);
+         where t.thread = t.id", $discussion_Map
+        );
 
         // Comment.
         $comment_Map = array(
@@ -153,7 +163,8 @@ class Kunena extends ExportController {
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
          select
             t.*,
             txt.message,
@@ -161,16 +172,19 @@ class Kunena extends ExportController {
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread <> t.id", $comment_Map);
+         where t.thread <> t.id", $comment_Map
+        );
 
         // UserDiscussion.
         $userDiscussion_Map = array(
             'thread' => 'DiscussionID',
             'userid' => 'UserID'
         );
-        $ex->exportTable('UserDiscussion', "
+        $ex->exportTable(
+            'UserDiscussion', "
          select t.*, 1 as Bookmarked
-         from :_kunena_subscriptions t", $userDiscussion_Map);
+         from :_kunena_subscriptions t", $userDiscussion_Map
+        );
 
         // Media.
         $media_Map = array(
@@ -185,7 +199,8 @@ class Kunena extends ExportController {
             'filename' => array('Column' => 'Name', 'Filter' => 'urlDecode'),
             'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
-        $ex->exportTable('Media', "
+        $ex->exportTable(
+            'Media', "
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
@@ -195,7 +210,8 @@ class Kunena extends ExportController {
             128 as thumb_width
          from :_kunena_attachments a
          join :_kunena_messages m
-            on m.id = a.mesid", $media_Map);
+            on m.id = a.mesid", $media_Map
+        );
 
         $ex->endExport();
     }
@@ -204,14 +220,15 @@ class Kunena extends ExportController {
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see ExportModel::_exportTable
+     * @see    ExportModel::_exportTable
      *
-     * @param string $ralue Current value
-     * @param string $field Current field
-     * @param array $row Contents of the current record.
+     * @param  string $ralue Current value
+     * @param  string $field Current field
+     * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
      */
-    public function filterThumbnailData($value, $field, $row) {
+    public function filterThumbnailData($value, $field, $row)
+    {
         if (strpos(strtolower($row['filetype']), 'image/') === 0) {
             return $value;
         } else {

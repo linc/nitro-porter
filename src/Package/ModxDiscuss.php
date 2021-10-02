@@ -3,14 +3,15 @@
  * MODX Discuss exporter tool.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Robin Jurinka
+ * @author  Robin Jurinka
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class ModxDiscuss extends ExportController {
+class ModxDiscuss extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'MODX Discuss Extension',
@@ -59,9 +60,10 @@ class ModxDiscuss extends ExportController {
      * Main export process.
      *
      * @param ExportModel $ex
-     * @see $_Structures in ExportModel for allowed destination tables & columns.
+     * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
         $characterSet = $ex->getCharacterSet('posts');
@@ -73,7 +75,8 @@ class ModxDiscuss extends ExportController {
         $ex->beginExport('', 'MODX Discuss Extension', array('HashMethod' => 'Vanilla'));
 
         // User.
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
             select
                 u.user as UserID,
                 u.username as Name,
@@ -113,7 +116,8 @@ class ModxDiscuss extends ExportController {
         // Really simple matchup.
         // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
         // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
             select
                 u.user as UserID,
                 u.roleID as RoleID,
@@ -130,7 +134,8 @@ class ModxDiscuss extends ExportController {
         // This is often a good place for any extraneous data on the User table too.
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration and profiles will auto-populate with the migrated data.
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
             select
                 user as UserID,
                 'Plugin.Signatures.Sig' as `Name`,
@@ -164,14 +169,16 @@ class ModxDiscuss extends ExportController {
                 name_first as `Value`
             from :_users
             where name_first <> ''
-        ");
+        "
+        );
 
         // Category.
         // Be careful to not import hundreds of categories. Try translating huge schemas to Tags instead.
         // Numeric category slugs aren't allowed in Vanilla, so be careful to sidestep those.
         // Don't worry about rebuilding the TreeLeft & TreeRight properties. Vanilla can fix this afterward
         // if you just get the Sort and ParentIDs correct.
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
             select
                 id as CategoryID,
                 case parent when 0 then '-1' else parent end as ParentCategoryID,
@@ -191,7 +198,8 @@ class ModxDiscuss extends ExportController {
                 'Heading' as `DisplayAs`,
                 rank as `Sort`
             from :_categories
-        ");
+        "
+        );
 
         // Discussion.
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
@@ -199,7 +207,8 @@ class ModxDiscuss extends ExportController {
             'title2' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
             select
                 t.id as `DiscussionID`,
                 t.board as `CategoryID`,
@@ -217,12 +226,14 @@ class ModxDiscuss extends ExportController {
                 case p.editedby when 0 then null else p.editedby end as `UpdateUserID`
             from :_threads t
             join :_posts p on t.id = p.thread",
-            $discussion_Map);
+            $discussion_Map
+        );
 
         // Comment.
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
-        $ex->exportTable('Comment', '
+        $ex->exportTable(
+            'Comment', '
             select
                 p.id as CommentID,
                 p.thread as DiscussionID,

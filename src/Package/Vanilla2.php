@@ -3,14 +3,15 @@
  * Vanilla 2 exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Vanilla2 extends ExportController {
+class Vanilla2 extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Vanilla 2',
@@ -39,13 +40,16 @@ class Vanilla2 extends ExportController {
         ]
     ];
 
-    /** @var array Required tables => columns */
+    /**
+     * @var array Required tables => columns 
+     */
     protected $_sourceTables = array();
 
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex) {
+    protected function forumExport($ex)
+    {
         $tables = array(
             'Activity',
             'Category',
@@ -76,9 +80,10 @@ class Vanilla2 extends ExportController {
     /**
      *
      * @param ExportModel $ex
-     * @param string $tableName
+     * @param string      $tableName
      */
-    protected function exportTable($ex, $tableName) {
+    protected function exportTable($ex, $tableName)
+    {
         // Make sure the table exists.
         if (!$ex->exists($tableName)) {
             return;

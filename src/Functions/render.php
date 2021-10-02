@@ -8,8 +8,9 @@
 /**
  * HTML header.
  */
-function pageHeader() {
-?>
+function pageHeader()
+{
+    ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -26,14 +27,15 @@ function pageHeader() {
                 <p>Nitro Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
             </h1>
         </div>
-<?php
+    <?php
 }
 
 /**
  * HTML footer.
  */
-function pageFooter() {
-?>
+function pageFooter()
+{
+    ?>
     </div>
 </div>
 </body>
@@ -43,7 +45,8 @@ function pageFooter() {
 /**
  * Message: Write permission fail.
  */
-function viewNoPermission($msg) {
+function viewNoPermission($msg)
+{
     pageHeader(); ?>
     <div class="Messages Errors">
         <ul>
@@ -57,7 +60,8 @@ function viewNoPermission($msg) {
 /**
  * Form: Database connection info.
  */
-function viewForm($data) {
+function viewForm($data)
+{
     $forums = getValue('Supported', $data, array());
     $msg = getValue('Msg', $data, '');
     $canWrite = getValue('CanWrite', $data, null);
@@ -196,10 +200,10 @@ function viewForm($data) {
                                 $exportOptions .= ".parent().addClass('disabled');";
                             }
                         }
-                    ?>
-                    case '<?= $forumClass; ?>':
-                    <?= $exportOptions; ?>
-                        $('#ForumPrefix').val('<?= $forumInfo['prefix']; ?>');
+                        ?>
+                    case '<?php echo $forumClass; ?>':
+                        <?php echo $exportOptions; ?>
+                        $('#ForumPrefix').val('<?php echo $forumInfo['prefix']; ?>');
                         break;
                     <?php } ?>
                 }
@@ -213,11 +217,12 @@ function viewForm($data) {
 /**
  * Message: Result of export.
  *
- * @param array $msgs Comments / logs from the export.
- * @param string $class CSS class for wrapper.
- * @param string|bool $path Path to file for download, or false.
+ * @param array       $msgs  Comments / logs from the export.
+ * @param string      $class CSS class for wrapper.
+ * @param string|bool $path  Path to file for download, or false.
  */
-function viewExportResult($msgs = array(), $class = 'Info', $path = false) {
+function viewExportResult($msgs = array(), $class = 'Info', $path = false)
+{
     if (defined('CONSOLE')) {
         return;
     }
@@ -247,9 +252,10 @@ function viewExportResult($msgs = array(), $class = 'Info', $path = false) {
  * Output a definition list of features for a single platform.
  *
  * @param string $platform
- * @param array $features
+ * @param array  $features
  */
-function viewFeatureList($platform, $features = array()) {
+function viewFeatureList($platform, $features = array())
+{
     $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
 
     pageHeader();
@@ -273,7 +279,8 @@ function viewFeatureList($platform, $features = array()) {
  *
  * @param array $features
  */
-function viewFeatureTable($features = array()) {
+function viewFeatureTable($features = array())
+{
     $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
     $platforms = array_keys($supported);
 

@@ -3,14 +3,15 @@
  * Toast (.NET) exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author Lincoln Russell, lincolnwebs.com
+ * @author  Lincoln Russell, lincolnwebs.com
  */
 
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
 
-class Toast extends ExportController {
+class Toast extends ExportController
+{
 
     const SUPPORTED = [
         'name' => 'Toast',
@@ -45,7 +46,8 @@ class Toast extends ExportController {
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
 
         $characterSet = $ex->getCharacterSet('Post');
         if ($characterSet) {
@@ -63,11 +65,13 @@ class Toast extends ExportController {
             'LastLoginDate' => array('Column' => 'DateLastActive', 'Type' => 'datetime'),
             'IP' => 'LastIPAddress'
         );
-        $ex->exportTable('User', "
+        $ex->exportTable(
+            'User', "
          select
             *,
             NOW() as DateInserted
-         from :_Member u", $user_Map);
+         from :_Member u", $user_Map
+        );
 
         // Determine safe RoleID to use for non-existant Member role
         $lastRoleID = 1001;
@@ -82,7 +86,8 @@ class Toast extends ExportController {
             'ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable('Role', "
+        $ex->exportTable(
+            'Role', "
          select
             ID,
             Name
@@ -93,7 +98,8 @@ class Toast extends ExportController {
          select
             $lastRoleID as ID,
             'Member' as Name
-         from :_Group;", $role_Map);
+         from :_Group;", $role_Map
+        );
 
         // UserRole.
         // Users without roles get put into new Member role.
@@ -101,7 +107,8 @@ class Toast extends ExportController {
             'MemberID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "
+        $ex->exportTable(
+            'UserRole', "
          select
             GroupID,
             MemberID
@@ -115,10 +122,12 @@ class Toast extends ExportController {
          from :_Member m
          left join :_MemberGroupLink l
             on l.MemberID = m.ID
-         where l.GroupID is null", $userRole_Map);
+         where l.GroupID is null", $userRole_Map
+        );
 
         // Signatures.
-        $ex->exportTable('UserMeta', "
+        $ex->exportTable(
+            'UserMeta', "
          select
             ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -133,7 +142,8 @@ class Toast extends ExportController {
             'Plugin.Signatures.Format' as `Name`,
             'BBCode' as `Value`
          from :_Member
-         where Signature <> '';");
+         where Signature <> '';"
+        );
 
         // Category.
         $category_Map = array(
@@ -143,7 +153,8 @@ class Toast extends ExportController {
             'Description' => 'Description'
         );
 
-        $ex->exportTable('Category', "
+        $ex->exportTable(
+            'Category', "
          select
             f.ID,
             f.CategoryID * 1000 as CategoryID,
@@ -158,7 +169,8 @@ class Toast extends ExportController {
             -1 as CategoryID,
             c.Name as ForumName,
             null as Description
-         from :_Category c;", $category_Map);
+         from :_Category c;", $category_Map
+        );
 
         // Discussion.
         $discussion_Map = array(
@@ -173,12 +185,14 @@ class Toast extends ExportController {
             'Hits' => 'CountViews',
             'ReplyCount' => 'CountComments'
         );
-        $ex->exportTable('Discussion', "
+        $ex->exportTable(
+            'Discussion', "
          select p.*,
             'Html' as Format
          from :_Post p
          where p.Topic = 1
-            and p.Deleted = 0;", $discussion_Map);
+            and p.Deleted = 0;", $discussion_Map
+        );
 
         // Comment.
         $comment_Map = array(
@@ -189,17 +203,20 @@ class Toast extends ExportController {
             'ModifyDate' => 'DateUpdated',
             'Message' => 'Body'
         );
-        $ex->exportTable('Comment', "
+        $ex->exportTable(
+            'Comment', "
          select *,
             'Html' as Format
          from :_Post p
-         where Topic = 0 and Deleted = 0;", $comment_Map);
+         where Topic = 0 and Deleted = 0;", $comment_Map
+        );
 
 
         $ex->endExport();
     }
 
-    public function cleanDate($value) {
+    public function cleanDate($value)
+    {
         if (!$value) {
             return null;
         }

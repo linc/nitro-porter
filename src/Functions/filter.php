@@ -8,10 +8,11 @@
 /**
  * Don't allow zero-equivalent dates.
  *
- * @param $value
+ * @param  $value
  * @return string
  */
-function forceDate($value) {
+function forceDate($value)
+{
     if (!$value || preg_match('`0000-00-00`', $value)) {
         return gmdate('Y-m-d H:i:s');
     }
@@ -22,10 +23,11 @@ function forceDate($value) {
 /**
  * Only allow IPv4 addresses to pass.
  *
- * @param $ip
+ * @param  $ip
  * @return string|null Valid IPv4 address or nuthin'.
  */
-function forceIP4($ip) {
+function forceIP4($ip)
+{
     if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m)) {
         $ip = $m[1];
     } else {
@@ -39,10 +41,11 @@ function forceIP4($ip) {
  * Creates URL codes containing only lowercase Roman letters, digits, and hyphens.
  * Converted from Gdn_Format::Url
  *
- * @param string $str A string to be formatted.
+ * @param  string $str A string to be formatted.
  * @return string
  */
-function formatUrl($str) {
+function formatUrl($str)
+{
     $urlTranslations = array(
         '–' => '-',
         '—' => '-',
@@ -331,20 +334,21 @@ function formatUrl($str) {
 /**
  * Decode the HTML out of a value.
  */
-function HTMLDecoder($value) {
+function HTMLDecoder($value)
+{
     $characterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
 
     switch ($characterSet) {
-        case 'latin1':
-            $characterSet = 'ISO-8859-1';
-            break;
-        case 'latin9':
-            $characterSet = 'ISO-8859-15';
-            break;
-        case 'utf8':
-        case 'utf8mb4':
-            $characterSet = 'UTF-8';
-            break;
+    case 'latin1':
+        $characterSet = 'ISO-8859-1';
+        break;
+    case 'latin9':
+        $characterSet = 'ISO-8859-15';
+        break;
+    case 'utf8':
+    case 'utf8mb4':
+        $characterSet = 'UTF-8';
+        break;
     }
 
     return html_entity_decode($value, ENT_QUOTES, $characterSet);
@@ -353,10 +357,11 @@ function HTMLDecoder($value) {
 /**
  * Inverse int value.
  *
- * @param $value
+ * @param  $value
  * @return int
  */
-function notFilter($value) {
+function notFilter($value)
+{
     return (int)(!$value);
 }
 
@@ -365,10 +370,11 @@ function notFilter($value) {
  *
  * Do this in MySQL with FROM_UNIXTIME() instead whenever possible.
  *
- * @param $value
+ * @param  $value
  * @return null|string
  */
-function timestampToDate($value) {
+function timestampToDate($value)
+{
     if ($value == null) {
         return null;
     } else {
@@ -379,10 +385,11 @@ function timestampToDate($value) {
 /**
  * Wrapper for long2ip that nulls 'non-digit' values.
  *
- * @param $value
+ * @param  $value
  * @return null|string
  */
-function long2ipf($value) {
+function long2ipf($value)
+{
     if (!ctype_digit($value)) {
         return null;
     }
@@ -393,10 +400,11 @@ function long2ipf($value) {
 /**
  * Convert 'y/n' to boolean.
  *
- * @param $value
+ * @param  $value
  * @return int
  */
-function YNBool($value) {
+function YNBool($value)
+{
     if ($value == 'y') {
         return 1;
     } else {
@@ -407,10 +415,11 @@ function YNBool($value) {
 /**
  * Guess the Format of the Body.
  *
- * @param $value
+ * @param  $value
  * @return string
  */
-function guessFormat($value) {
+function guessFormat($value)
+{
     if (strpos($value, '[') !== false) {
         return 'BBCode';
     } elseif (strpos($value, '<') !== false) {
@@ -423,46 +432,48 @@ function guessFormat($value) {
 /**
  * Derive mimetype from file extension.
  *
- * @param $value
+ * @param  $value
  * @return string
  */
-function mimeTypeFromExtension($value) {
+function mimeTypeFromExtension($value)
+{
 
     if (strpos($value, '.') === 0) {
         $value = substr($value, 1);
     }
 
     switch ($value) {
-        case 'png':
-        case 'jpg':
-        case 'jpeg':
-        case 'gif':
-        case 'bmp':
-            return 'image/' . $value;
-        case 'zip':
-        case 'doc':
-        case 'docx':
-        case 'pdf':
-        case 'xls':
-        case 'swf':
-            return 'application/' . $value;
-        case 'txt':
-        case 'htm':
-        case 'html':
-            return 'text/' . $value;
-        case 'mov':
-        case 'avi':
-            return 'video/' . $value;
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif':
+    case 'bmp':
+        return 'image/' . $value;
+    case 'zip':
+    case 'doc':
+    case 'docx':
+    case 'pdf':
+    case 'xls':
+    case 'swf':
+        return 'application/' . $value;
+    case 'txt':
+    case 'htm':
+    case 'html':
+        return 'text/' . $value;
+    case 'mov':
+    case 'avi':
+        return 'video/' . $value;
     }
 }
 
 /**
  * Change square brackets to braces.
  *
- * @param $value
+ * @param  $value
  * @return mixed
  */
-function cleanBodyBrackets($value) {
+function cleanBodyBrackets($value)
+{
     if (strpos($value, '[') !== false) {
         $result = str_replace(array('<', '>'), array('[', ']'), $value);
 
