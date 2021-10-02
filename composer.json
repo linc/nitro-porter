@@ -18,7 +18,7 @@
         }
     ],
     "scripts": {
-        "lint": "vendor/bin/phpcs --standard=phpcs.xml.dist ./",
+        "lint": "vendor/bin/phpcs --standard=PSR12 ./src",
         "test": "vendor/bin/phpunit --no-coverage --no-extensions --colors=always",
         "build": "cd build; ../vendor/bin/phing; cd .."
     },
