@@ -9,7 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
-use NitroPorter\ExportModel;use NitroPorter\ExportModel;
+use NitroPorter\ExportModel;
 
 class PunBb extends ExportController
 {
