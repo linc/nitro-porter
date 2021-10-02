@@ -1,4 +1,4 @@
-export_*
+# OS and IDEs
 .DS_Store
 Thumbs.db
 */.sass-cache/*
@@ -12,14 +12,16 @@ _notes
 .settings
 .buildpath
 .idea
+
+# Porter
+export_*
 attachments/*
 custom*
 *.sql
 *.log
 
-# Composer
+# Tools
 composer.lock
 vendor
-
-# Phing
 build/current
+.phpunit.cache
