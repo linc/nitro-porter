@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class ExpressionEngine extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Expression Engine Discussion Forum',
         'prefix' => 'forum_',
         'features' => [

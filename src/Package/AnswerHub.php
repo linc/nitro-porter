@@ -15,7 +15,7 @@ use NitroPorter\ExportModel;
 class AnswerHub extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'answerhub',
         'prefix' => '',
         'CommandLine' => [

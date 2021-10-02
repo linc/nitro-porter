@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Yaf extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'YAF.NET',
         'prefix' => 'yaf_',
         'features' => [

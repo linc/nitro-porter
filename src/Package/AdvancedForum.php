@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class AdvancedForum extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Advanced Forum 7.x-2.*',
         'prefix' => '',
         'CommandLine' => [

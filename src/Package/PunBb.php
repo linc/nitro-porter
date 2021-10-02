@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;use NitroPorter\ExportModel;
 class PunBb extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'PunBB 1',
         'prefix' => 'punbb_',
         'CommandLine' => [

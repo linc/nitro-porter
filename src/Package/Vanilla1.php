@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Vanilla1 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Vanilla 1',
         'prefix' => 'LUM_',
         'features' => [

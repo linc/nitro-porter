@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Toast extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Toast',
         'prefix' => 'tstdb_',
         'features' => [

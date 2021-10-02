@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class NodeBb extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'NodeBB 0.*',
         'prefix' => 'gdn_',
         'features' => [

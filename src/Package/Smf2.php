@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Smf2 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Simple Machines 2',
         'prefix' => 'smf_',
         'features' => [

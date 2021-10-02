@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class PhpBb3 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'phpBB 3',
         'prefix' => 'phpbb_',
         'CommandLine' => [

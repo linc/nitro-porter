@@ -28,7 +28,7 @@ use NitroPorter\ExportModel;
 class Mbox extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => '.mbox files',
         'prefix' => '',
         'features' => [

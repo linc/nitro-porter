@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class SimplePress extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'SimplePress 1',
         'prefix' => 'wp_',
         'CommandLine' => [

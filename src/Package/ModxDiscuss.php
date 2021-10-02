@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class ModxDiscuss extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'MODX Discuss Extension',
         'prefix' => 'modx_discuss_',
         'features' => [

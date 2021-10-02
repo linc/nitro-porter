@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class AspPlayground extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'ASP Playground',
         'prefix' => 'pgd_',
         'CommandLine' => [

@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Kunena extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Joomla Kunena',
         'prefix' => 'jos_',
         'features' => [

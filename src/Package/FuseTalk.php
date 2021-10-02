@@ -19,7 +19,7 @@ use NitroPorter\ExportModel;
 class FuseTalk extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'FuseTalk',
         'prefix' => 'ftdb_',
         'features' => [

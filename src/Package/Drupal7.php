@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Drupal7 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Drupal 7',
         'prefix' => '',
         'CommandLine' => [

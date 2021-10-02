@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Vanilla2 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Vanilla 2',
         'prefix' => 'GDN_',
         'features' => [
@@ -92,6 +92,4 @@ class Vanilla2 extends ExportController
 
         $ex->exportTable($tableName, "select * from :_{$tableName}");
     }
-
 }
-

@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Q2a extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Questions2Answers',
         'prefix' => 'qa_',
         'CommandLine' => [

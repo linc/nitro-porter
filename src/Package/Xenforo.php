@@ -16,7 +16,7 @@ use NitroPorter\ExportModel;
 class Xenforo extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Xenforo',
         'prefix' => 'xf_',
         'CommandLine' => [

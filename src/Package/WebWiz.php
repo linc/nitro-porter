@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class WebWiz extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Web Wiz Forums',
         'prefix' => 'tbl',
         'features' => [

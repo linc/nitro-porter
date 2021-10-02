@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Mvc extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'MVC',
         'prefix' => '',
         'CommandLine' => [

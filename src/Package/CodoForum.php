@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class CodoForum extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'CodoForum',
         'prefix' => 'codo_',
         'features' => [

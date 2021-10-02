@@ -13,7 +13,7 @@ use NitroPorter\ExportModel;
 
 class SampleName extends ExportController {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => '',
         'prefix' => '',
         'CommandLine' => [

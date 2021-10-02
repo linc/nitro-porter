@@ -17,7 +17,7 @@ use NitroPorter\ExportModel;
 class VBulletin5 extends VBulletin
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'vBulletin 5 Connect',
         'prefix' => 'vb_',
         'features' => [

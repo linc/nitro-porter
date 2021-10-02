@@ -16,7 +16,7 @@ use NitroPorter\ExportModel;
 class IpBoard3 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'IP.Board 3',
         'prefix' => 'ibf_',
         'CommandLine' => [

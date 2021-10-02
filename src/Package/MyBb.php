@@ -16,7 +16,7 @@ use NitroPorter\ExportModel;
 class MyBb extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'MyBB',
         'prefix' => 'mybb_',
         'features' => [

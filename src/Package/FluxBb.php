@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class FluxBb extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'FluxBB 1',
         'prefix' => '',
         'CommandLine' => [

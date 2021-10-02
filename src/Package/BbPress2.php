@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class BbPress2 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'bbPress 2',
         'prefix' => 'wp_',
         'features' => [

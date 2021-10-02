@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class JForum extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'jforum',
         'prefix' => 'jforum_',
         'CommandLine' => [

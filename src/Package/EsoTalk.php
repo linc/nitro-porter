@@ -15,7 +15,7 @@ use NitroPorter\ExportModel;
 class EsoTalk extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'esoTalk',
         'prefix' => 'et_',
         'CommandLine' => [

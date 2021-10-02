@@ -13,7 +13,7 @@ use NitroPorter\ExportModel;
 
 class __NAME__ extends ExportController {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => '__NAME__',
         'prefix' => '',
         'features' => [  // Set features you support to 1 or a string (for support notes).

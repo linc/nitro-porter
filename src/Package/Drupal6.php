@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class Drupal6 extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'Drupal 6',
         'prefix' => '',
         'features' => [

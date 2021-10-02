@@ -14,7 +14,7 @@ use NitroPorter\ExportModel;
 class UserVoice extends ExportController
 {
 
-    const SUPPORTED = [
+    public const SUPPORTED = [
         'name' => 'User Voice',
         'prefix' => 'cs_',
         'features' => [
