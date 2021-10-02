@@ -32,6 +32,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class VBulletin extends ExportController
 {
@@ -128,7 +129,7 @@ class VBulletin extends ExportController
     public static $permissions2 = array();
 
     /**
-     * @var array Required tables => columns. Commented values are optional. 
+     * @var array Required tables => columns. Commented values are optional.
      */
     protected $sourceTables = array(
         //'attachment'

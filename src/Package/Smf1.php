@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class Smf1 extends ExportController
 {
@@ -41,7 +42,7 @@ class Smf1 extends ExportController
     ];
 
     /**
-     * @var array Required tables => columns 
+     * @var array Required tables => columns
      */
     protected $sourceTables = array(
         'boards' => array(),

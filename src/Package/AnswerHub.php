@@ -10,6 +10,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class AnswerHub extends ExportController
 {

@@ -23,6 +23,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class Mbox extends ExportController
 {
@@ -55,7 +56,7 @@ class Mbox extends ExportController
     ];
 
     /**
-     * @var array Required tables => columns 
+     * @var array Required tables => columns
      */
     protected $sourceTables = array(
         'mbox' => array('Subject', 'Sender', 'Date', 'Body', 'Folder')

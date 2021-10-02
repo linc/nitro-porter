@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class Drupal7 extends ExportController
 {

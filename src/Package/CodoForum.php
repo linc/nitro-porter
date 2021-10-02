@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class CodoForum extends ExportController
 {
@@ -40,7 +41,7 @@ class CodoForum extends ExportController
     ];
 
     /**
-     * @var array Required tables => columns 
+     * @var array Required tables => columns
      */
     protected $sourceTables = array(
         'users' => array('id', 'username', 'mail', 'user_status', 'pass', 'signature'),

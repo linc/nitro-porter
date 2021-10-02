@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class AspPlayground extends ExportController
 {

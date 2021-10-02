@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class Vanilla1 extends ExportController
 {
@@ -41,7 +42,7 @@ class Vanilla1 extends ExportController
     ];
 
     /**
-     * @var array Required tables => columns 
+     * @var array Required tables => columns
      */
     public $sourceTables = array(
         'User' => array('UserID', 'Name', 'Password', 'Email', 'CountComments'),

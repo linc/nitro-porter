@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class FluxBb extends ExportController
 {
@@ -47,17 +48,17 @@ class FluxBb extends ExportController
     ];
 
     /**
-     * @var bool Path to avatar images 
+     * @var bool Path to avatar images
      */
     protected $avatarPath = false;
 
     /**
-     * @var string CDN path prefix 
+     * @var string CDN path prefix
      */
     protected $cdn = '';
 
     /**
-     * @var array Required tables => columns 
+     * @var array Required tables => columns
      */
     public $sourceTables = array();
 

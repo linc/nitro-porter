@@ -9,6 +9,7 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
+use NitroPorter\ExportModel;
 
 class PhpBb2 extends ExportController
 {
@@ -43,7 +44,7 @@ class PhpBb2 extends ExportController
     ];
 
     /**
-     * @var array Required tables => columns 
+     * @var array Required tables => columns
      */
     protected $sourceTables = array(
         'users' => array(

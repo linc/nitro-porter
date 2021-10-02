@@ -12,6 +12,8 @@
 
 namespace NitroPorter\Package;
 
+use NitroPorter\ExportModel;
+
 class VBulletin5 extends VBulletin
 {
 
@@ -43,7 +45,7 @@ class VBulletin5 extends VBulletin
     ];
 
     /**
-     * @var array Required tables => columns. 
+     * @var array Required tables => columns.
      */
     protected $sourceTables = array(
         'contenttype' => array('contenttypeid', 'class'),
