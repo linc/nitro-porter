@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Vanilla 1 exporter tool
  *
@@ -127,7 +128,8 @@ class Vanilla1 extends ExportController
         );
         $ex->exportTable(
             'Role',
-            "select RoleID, Name, Description from :_Role union all select $zeroRoleID, 'Applicant', 'Created by the Vanilla Porter'",
+            "select RoleID, Name, Description
+                from :_Role union all select $zeroRoleID, 'Applicant', 'Created by Nitro Porter'",
             $role_Map
         );
 
@@ -198,7 +200,8 @@ class Vanilla1 extends ExportController
         );
         $ex->exportTable(
             'UserRole',
-            "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User", $userRole_Map
+            "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User",
+            $userRole_Map
         );
 
         // Categories
@@ -285,132 +288,113 @@ class Vanilla1 extends ExportController
             'FormatType' => 'Format'
         );
         $ex->exportTable(
-            'Comment', "
-         SELECT
-            c.*
-         FROM :_Comment c
-         JOIN :_Discussion d
-            ON c.DiscussionID = d.DiscussionID
-         WHERE d.FirstCommentID <> c.CommentID
-            AND c.Deleted = '0'
-            AND coalesce(d.WhisperUserID, 0) = 0
-            AND coalesce(c.WhisperUserID, 0) = 0", $comment_Map
+            'Comment',
+            "SELECT c.*
+                 FROM :_Comment c
+                 JOIN :_Discussion d
+                    ON c.DiscussionID = d.DiscussionID
+                 WHERE d.FirstCommentID <> c.CommentID
+                    AND c.Deleted = '0'
+                    AND coalesce(d.WhisperUserID, 0) = 0
+                    AND coalesce(c.WhisperUserID, 0) = 0",
+            $comment_Map
         );
 
         $ex->exportTable(
-            'UserDiscussion', "
-         SELECT
-            w.UserID,
-            w.DiscussionID,
-            w.CountComments,
-            w.LastViewed as DateLastViewed,
-            case when b.UserID is not null then 1 else 0 end AS Bookmarked
-         FROM :_UserDiscussionWatch w
-         LEFT JOIN :_UserBookmark b
-            ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID"
+            'UserDiscussion',
+            "SELECT
+                w.UserID,
+                w.DiscussionID,
+                w.CountComments,
+                w.LastViewed as DateLastViewed,
+                case when b.UserID is not null then 1 else 0 end AS Bookmarked
+             FROM :_UserDiscussionWatch w
+             LEFT JOIN :_UserBookmark b
+                ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID"
         );
 
         // Conversations
 
         // Create a mapping tables for conversations.
-        // These mapping tables are used to group comments that a) are in the same discussion and b) are from and to the same users.
+        // These mapping tables are used to group comments that a) are in the same discussion
+        // and b) are from and to the same users.
 
         $ex->query("drop table if exists z_pmto");
 
         $ex->query(
             "create table z_pmto (
-  CommentID int,
-  UserID int,
-  primary key(CommentID, UserID)
- )"
+              CommentID int,
+              UserID int,
+              primary key(CommentID, UserID)
+             )"
         );
 
         $ex->query(
-            "insert ignore z_pmto (
-  CommentID,
-  UserID
-)
-select distinct
-  CommentID,
-  AuthUserID
-from :_Comment
-where coalesce(WhisperUserID, 0) <> 0"
+            "insert ignore z_pmto (CommentID, UserID)
+            select distinct
+              CommentID,
+              AuthUserID
+            from :_Comment
+            where coalesce(WhisperUserID, 0) <> 0"
         );
 
         $ex->query(
-            "insert ignore z_pmto (
-  CommentID,
-  UserID
-)
-select distinct
-  CommentID,
-  WhisperUserID
-from :_Comment
-where coalesce(WhisperUserID, 0) <> 0"
+            "insert ignore z_pmto (CommentID, UserID)
+            select distinct
+              CommentID,
+              WhisperUserID
+            from :_Comment
+            where coalesce(WhisperUserID, 0) <> 0"
         );
 
         $ex->query(
-            "insert ignore z_pmto (
-  CommentID,
-  UserID
-)
-select distinct
-  c.CommentID,
-  d.AuthUserID
-from :_Discussion d
-join :_Comment c
-  on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0"
+            "insert ignore z_pmto (CommentID, UserID)
+            select distinct
+              c.CommentID,
+              d.AuthUserID
+            from :_Discussion d
+            join :_Comment c
+              on c.DiscussionID = d.DiscussionID
+            where coalesce(d.WhisperUserID, 0) <> 0"
         );
 
         $ex->query(
-            "insert ignore z_pmto (
-  CommentID,
-  UserID
-)
-select distinct
-  c.CommentID,
-  d.WhisperUserID
-from :_Discussion d
-join :_Comment c
-  on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0"
+            "insert ignore z_pmto (CommentID, UserID)
+            select distinct
+              c.CommentID,
+              d.WhisperUserID
+            from :_Discussion d
+            join :_Comment c
+              on c.DiscussionID = d.DiscussionID
+            where coalesce(d.WhisperUserID, 0) <> 0"
         );
 
         $ex->query(
-            "insert ignore z_pmto (
-  CommentID,
-  UserID
-)
-select distinct
-  c.CommentID,
-  c.AuthUserID
-from :_Discussion d
-join :_Comment c
-  on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0"
+            "insert ignore z_pmto (CommentID, UserID)
+            select distinct
+              c.CommentID,
+              c.AuthUserID
+            from :_Discussion d
+            join :_Comment c
+              on c.DiscussionID = d.DiscussionID
+            where coalesce(d.WhisperUserID, 0) <> 0"
         );
 
         $ex->query("drop table if exists z_pmto2");
 
         $ex->query(
             "create table z_pmto2 (
-  CommentID int,
-  UserIDs varchar(250),
-  primary key (CommentID)
-)"
+              CommentID int,
+              UserIDs varchar(250),
+              primary key (CommentID)
+            )"
         );
 
         $ex->query(
-            "insert z_pmto2 (
-  CommentID,
-  UserIDs
-)
-select
-  CommentID,
-  group_concat(UserID order by UserID)
-from z_pmto
-group by CommentID"
+            "insert z_pmto2 (CommentID, UserIDs)
+            select CommentID, group_concat(UserID order by UserID)
+            from z_pmto
+            group by CommentID"
         );
 
 
@@ -418,70 +402,56 @@ group by CommentID"
 
         $ex->query(
             "create table z_pm (
-  CommentID int,
-  DiscussionID int,
-  UserIDs varchar(250),
-  GroupID int
-)"
+              CommentID int,
+              DiscussionID int,
+              UserIDs varchar(250),
+              GroupID int
+            )"
         );
 
         $ex->query(
-            "insert ignore z_pm (
-  CommentID,
-  DiscussionID
-)
-select
-  CommentID,
-  DiscussionID
-from :_Comment
-where coalesce(WhisperUserID, 0) <> 0"
+            "insert ignore z_pm (CommentID, DiscussionID)
+            select CommentID, DiscussionID
+            from :_Comment
+            where coalesce(WhisperUserID, 0) <> 0"
         );
 
         $ex->query(
-            "insert ignore z_pm (
-  CommentID,
-  DiscussionID
-)
-select
-  c.CommentID,
-  c.DiscussionID
-from :_Discussion d
-join :_Comment c
-  on c.DiscussionID = d.DiscussionID
-where coalesce(d.WhisperUserID, 0) <> 0"
+            "insert ignore z_pm (CommentID, DiscussionID)
+            select c.CommentID, c.DiscussionID
+            from :_Discussion d
+            join :_Comment c
+              on c.DiscussionID = d.DiscussionID
+            where coalesce(d.WhisperUserID, 0) <> 0"
         );
 
         $ex->query(
             "update z_pm pm
-join z_pmto2 t
-  on t.CommentID = pm.CommentID
-set pm.UserIDs = t.UserIDs"
+            join z_pmto2 t
+              on t.CommentID = pm.CommentID
+            set pm.UserIDs = t.UserIDs"
         );
 
         $ex->query("drop table if exists z_pmgroup");
 
         $ex->query(
             "create table z_pmgroup (
-  GroupID int,
-  DiscussionID int,
-  UserIDs varchar(250)
-)"
+              GroupID int,
+              DiscussionID int,
+              UserIDs varchar(250)
+            )"
         );
 
         $ex->query(
-            "insert z_pmgroup (
-  GroupID,
-  DiscussionID,
-  UserIDs
-)
-select
-  min(pm.CommentID),
-  pm.DiscussionID,
-  t2.UserIDs
-from z_pm pm
-join z_pmto2 t2
-  on pm.CommentID = t2.CommentID
-group by pm.DiscussionID, t2.UserIDs"
+            "insert z_pmgroup (GroupID, DiscussionID, UserIDs)
+            select
+              min(pm.CommentID),
+              pm.DiscussionID,
+              t2.UserIDs
+            from z_pm pm
+            join z_pmto2 t2
+              on pm.CommentID = t2.CommentID
+            group by pm.DiscussionID, t2.UserIDs"
         );
 
         $ex->query("create index z_idx_pmgroup on z_pmgroup (DiscussionID, UserIDs)");
@@ -490,9 +460,9 @@ group by pm.DiscussionID, t2.UserIDs"
 
         $ex->query(
             "update z_pm pm
-join z_pmgroup g
-  on pm.DiscussionID = g.DiscussionID and pm.UserIDs = g.UserIDs
-set pm.GroupID = g.GroupID"
+            join z_pmgroup g
+              on pm.DiscussionID = g.DiscussionID and pm.UserIDs = g.UserIDs
+            set pm.GroupID = g.GroupID"
         );
 
         $conversation_Map = array(
@@ -505,11 +475,12 @@ set pm.GroupID = g.GroupID"
         $ex->exportTable(
             'Conversation',
             "select c.*, d.Name
-from :_Comment c
-join :_Discussion d
-  on d.DiscussionID = c.DiscussionID
-join z_pmgroup g
-  on g.GroupID = c.CommentID;", $conversation_Map
+                from :_Comment c
+                join :_Discussion d
+                  on d.DiscussionID = c.DiscussionID
+                join z_pmgroup g
+                  on g.GroupID = c.CommentID;",
+            $conversation_Map
         );
 
         // ConversationMessage.
@@ -524,9 +495,10 @@ join z_pmgroup g
         $ex->exportTable(
             'ConversationMessage',
             "select c.*, pm.GroupID
-from z_pm pm
-join :_Comment c
-  on pm.CommentID = c.CommentID", $conversationMessage_Map
+                from z_pm pm
+                join :_Comment c
+                  on pm.CommentID = c.CommentID",
+            $conversationMessage_Map
         );
 
         // UserConversation
@@ -542,11 +514,12 @@ join :_Comment c
         $ex->exportTable(
             'UserConversation',
             "select distinct
-  pm.GroupID,
-  t.UserID
-from z_pmto t
-join z_pm pm
-  on pm.CommentID = t.CommentID", $userConversation_Map
+                  pm.GroupID,
+                  t.UserID
+                from z_pmto t
+                join z_pm pm
+                  on pm.CommentID = t.CommentID",
+            $userConversation_Map
         );
 
         $ex->query("drop table z_pmto");
@@ -616,4 +589,3 @@ join z_pm pm
         return false;
     }
 }
-
