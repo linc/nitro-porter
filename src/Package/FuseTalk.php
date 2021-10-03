@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FuseTalk exporter tool.
  *
@@ -105,7 +106,8 @@ class FuseTalk extends ExportController
         // Users
         $user_Map = array();
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 user.iuserid as UserID,
                 user.vchnickname as Name,
@@ -123,7 +125,8 @@ class FuseTalk extends ExportController
                 left join :_banning as bemail on b.vchbanstring = user.vchemailaddress
                 left join :_banning as bname on b.vchbanstring = user.vchnickname
             group by user.iuserid
-         ;", $user_Map
+         ;",
+            $user_Map
         );  // ":_" will be replaced by database prefix
 
         $memberRoleID = 1;
@@ -134,7 +137,8 @@ class FuseTalk extends ExportController
 
         // UserMeta. (Signatures)
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 user.iuserid as UserID,
                 'Plugin.Signatures.Sig' as Name,
@@ -156,7 +160,8 @@ class FuseTalk extends ExportController
         // Role.
         $role_Map = array();
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
             select
                 groups.igroupid as RoleID,
                 groups.vchgroupname as Name
@@ -168,19 +173,22 @@ class FuseTalk extends ExportController
                 $memberRoleID as RoleID,
                 'Members'
             from dual
-        ", $role_Map
+        ",
+            $role_Map
         );
 
         // User Role.
         $userRole_Map = array();
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 user.iuserid as UserID,
                 ifnull (user_role.igroupid, $memberRoleID) as RoleID
             from :_users as user
                 left join :_groupusers as user_role using (iuserid)
-        ", $userRole_Map
+        ",
+            $userRole_Map
         );
 
         $ex->query("drop table if exists zConversations;");
@@ -213,13 +221,15 @@ class FuseTalk extends ExportController
         // Conversations.
         $conversation_Map = array();
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
             select
                 c.ConversationID as ConversationID,
                 c.User1 as InsertUserID,
                 c.DateInserted as DateInserted
             from zConversations as c
-        ;", $conversation_Map
+        ;",
+            $conversation_Map
         );
 
         // Conversation Messages.
@@ -227,7 +237,8 @@ class FuseTalk extends ExportController
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
             select
                 pm.imessageid as MessageID,
                 c.ConversationID,
@@ -251,13 +262,15 @@ class FuseTalk extends ExportController
             from zConversations as c
                 inner join :_privatemessages as pm on pm.iuserid = c.User2 and pm.iownerid = c.User1
             where vchusagestatus = 'sent'
-        ;", $conversationMessage_Map
+        ;",
+            $conversationMessage_Map
         );
 
         // User Conversation.
         $userConversation_Map = array();
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
             select
                 c.ConversationID,
                 c.User1 as UserID,
@@ -271,20 +284,23 @@ class FuseTalk extends ExportController
                 c.User2 as UserID,
                 now() as DateLastViewed
             from zConversations as c
-        ;", $userConversation_Map
+        ;",
+            $userConversation_Map
         );
 
         // Category.
         $category_Map = array();
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 categories.icategoryid as CategoryID,
                 categories.vchcategoryname as Name,
                 categories.vchdescription as Description,
                 -1 as ParentCategoryID
             from :_categories as categories
-        ", $category_Map
+        ",
+            $category_Map
         );
 
         // Discussion.
@@ -293,7 +309,8 @@ class FuseTalk extends ExportController
          */
         $discussion_Map = array();
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 threads.ithreadid as DiscussionID,
                 threads.vchthreadname as Name,
@@ -304,7 +321,8 @@ class FuseTalk extends ExportController
                 if (threads.vchalertthread = 'Yes' and threads.dtstaydate > now(), 2, 0) as Announce,
                 if (threads.vchthreadlock = 'Locked', 1, 0) as Closed
             from :_threads as threads
-        ", $discussion_Map
+        ",
+            $discussion_Map
         );
 
         // Comment.
@@ -315,7 +333,8 @@ class FuseTalk extends ExportController
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 messages.imessageid as CommentID,
                 messages.ithreadid as DiscussionID,
@@ -324,7 +343,8 @@ class FuseTalk extends ExportController
                 'Html' as Format,
                 messages.dtmessagedate as DateInserted
             from :_messages as messages
-        ", $comment_Map
+        ",
+            $comment_Map
         );
 
         $ex->endExport();
@@ -345,7 +365,7 @@ class FuseTalk extends ExportController
         static $smileyReplace;
 
         if ($smileyReplace === null) {
-            $smileyReplace = '<img src='.rtrim($this->cdnPrefix(), '/').'/expressions/';
+            $smileyReplace = '<img src=' . rtrim($this->cdnPrefix(), '/') . '/expressions/';
         }
 
         if (strpos($value, $smileySearch) !== false) {
@@ -354,6 +374,4 @@ class FuseTalk extends ExportController
 
         return $value;
     }
-
 }
-

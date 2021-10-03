@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PunBB exporter tool
  *
@@ -99,14 +100,16 @@ class PunBb extends ExportController
             'PasswordHash' => 'Password'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          SELECT
              u.*, u.id AS AvatarID,
              concat(u.password, '$', u.salt) AS PasswordHash,
              from_unixtime(registered) AS DateInserted,
              from_unixtime(last_visit) AS DateLastActive
          FROM :_users u
-         WHERE group_id <> 2", $user_Map
+         WHERE group_id <> 2",
+            $user_Map
         );
 
         // Role.
@@ -132,13 +135,15 @@ class PunBb extends ExportController
         );
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
         $ex->exportTable(
-            'Permission', "
+            'Permission',
+            "
       SELECT
          g.*,
          g_post_replies AS `Garden.SignIn.Allow`,
          g_mod_edit_users AS `Garden.Users.Add`,
          CASE WHEN g_title = 'Administrators' THEN 'All' ELSE NULL END AS _Permissions
-      FROM :_groups g", $permission_Map
+      FROM :_groups g",
+            $permission_Map
         );
 
         // UserRole.
@@ -151,12 +156,14 @@ class PunBb extends ExportController
             "SELECT
             CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
             u.group_id
-          FROM :_users u", $userRole_Map
+          FROM :_users u",
+            $userRole_Map
         );
 
         // Signatures.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
         select
            u.id as UserID,
            'Plugin.Signatures.Format' AS Name,
@@ -193,7 +200,8 @@ class PunBb extends ExportController
             'parent_id' => 'ParentCategoryID'
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
       SELECT
         id,
         forum_name,
@@ -209,7 +217,8 @@ class PunBb extends ExportController
         '',
         disp_position,
         NULL
-      FROM :_categories", $category_Map
+      FROM :_categories",
+            $category_Map
         );
 
         // Discussion.
@@ -225,7 +234,8 @@ class PunBb extends ExportController
 
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
       SELECT t.*,
         from_unixtime(p.posted) AS DateInserted,
         p.poster_id,
@@ -238,7 +248,8 @@ class PunBb extends ExportController
       LEFT JOIN :_posts p
         ON t.first_post_id = p.id
       LEFT JOIN :_users eu
-        ON eu.username = p.edited_by", $discussion_Map
+        ON eu.username = p.edited_by",
+            $discussion_Map
         );
 
         // Comment.
@@ -250,7 +261,8 @@ class PunBb extends ExportController
             'message' => 'Body'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             SELECT p.*,
         'BBCode' AS Format,
         from_unixtime(p.posted) AS DateInserted,
@@ -261,7 +273,8 @@ class PunBb extends ExportController
         ON t.id = p.topic_id
       LEFT JOIN :_users eu
         ON eu.username = p.edited_by
-      WHERE p.id <> t.first_post_id;", $comment_Map
+      WHERE p.id <> t.first_post_id;",
+            $comment_Map
         );
 
         if ($ex->exists('tags')) {
@@ -292,7 +305,8 @@ class PunBb extends ExportController
                 'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
             $ex->exportTable(
-                'Media', "
+                'Media',
+                "
                 select f.*,
                     concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
                     concat({$this->cdn}, 'FileUpload/', f.file_path) as thumb_path,
@@ -301,7 +315,8 @@ class PunBb extends ExportController
                     case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
                     coalesce(post_id, topic_id) as ForieignID
                 from :_attach_files f
-            ", $media_Map
+            ",
+                $media_Map
             );
         }
 
@@ -363,17 +378,17 @@ class PunBb extends ExportController
         }
 
         switch ($row['avatar']) {
-        case 1:
-            $extension = 'gif';
-            break;
-        case 2:
-            $extension = 'jpg';
-            break;
-        case 3:
-            $extension = 'png';
-            break;
-        default:
-            return null;
+            case 1:
+                $extension = 'gif';
+                break;
+            case 2:
+                $extension = 'jpg';
+                break;
+            case 3:
+                $extension = 'png';
+                break;
+            default:
+                return null;
         }
 
         $avatarFilename = "{$this->avatarPath}/{$value}.$extension";
@@ -407,4 +422,3 @@ class PunBb extends ExportController
         }
     }
 }
-

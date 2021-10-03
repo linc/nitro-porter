@@ -1,4 +1,5 @@
 <?php
+
 namespace NitroPorter;
 
 /**
@@ -8,12 +9,12 @@ class MysqliDB implements DbResource
 {
 
     /**
-     * @var mysql resource 
+     * @var mysql resource
      */
     private $link = null;
 
     /**
-     * @var query result 
+     * @var query result
      */
     private $result = null;
 
@@ -107,5 +108,3 @@ class MysqliDB implements DbResource
         $this->link = null;
     }
 }
-
-

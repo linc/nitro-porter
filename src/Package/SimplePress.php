@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Simple:Press exporter tool
  *
@@ -85,7 +86,8 @@ class SimplePress extends ExportController
             "select m.*, u.user_pass, u.user_email, u.user_registered
           from :_users u
           join :_sfmembers m
-            on u.ID = m.user_id;", $user_Map
+            on u.ID = m.user_id;",
+            $user_Map
         );
 
         // Roles
@@ -107,12 +109,14 @@ class SimplePress extends ExportController
          select
             100,
             'Administrators',
-            ''", $role_Map
+            ''",
+            $role_Map
         );
 
         // Permissions.
         $ex->exportTable(
-            'Permission', "select
+            'Permission',
+            "select
             usergroup_id as RoleID,
 case
    when usergroup_name like 'Guest%' then 'View'
@@ -145,7 +149,8 @@ end as _Permissions
             100
          from :_usermeta um
          where um.meta_key = 'wp_capabilities'
-            and um.meta_value like '%PF Manage Forums%'", $userRole_Map
+            and um.meta_value like '%PF Manage Forums%'",
+            $userRole_Map
         );
 
         // Categories
@@ -158,7 +163,8 @@ end as _Permissions
             'parent_id' => 'ParentCategoryID'
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select
             f.forum_id,
             f.forum_name,
@@ -177,7 +183,8 @@ end as _Permissions
             g.group_desc,
             null,
             null
-         from :_sfgroups g", $category_Map
+         from :_sfgroups g",
+            $category_Map
         );
 
         // Discussions
@@ -192,9 +199,11 @@ end as _Permissions
             'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
         );
         $ex->exportTable(
-            'Discussion', "select t.*,
+            'Discussion',
+            "select t.*,
             'Html' as Format
-         from :_sftopics t", $discussion_Map
+         from :_sftopics t",
+            $discussion_Map
         );
 
         if ($ex->exists('sftags')) {
@@ -225,9 +234,11 @@ end as _Permissions
             'poster_ip' => 'InsertIPAddress'
         );
         $ex->exportTable(
-            'Comment', "select p.*,
+            'Comment',
+            "select p.*,
             'Html' as Format
-         from :_sfposts p", $comment_Map
+         from :_sfposts p",
+            $comment_Map
         );
 
         // Conversation.
@@ -240,7 +251,8 @@ end as _Permissions
             'Conversation',
             "select *
          from :_sfmessages
-         where is_reply = 0", $conv_Map
+         where is_reply = 0",
+            $conv_Map
         );
 
         // ConversationMessage.
@@ -281,4 +293,3 @@ end as _Permissions
         $ex->endExport();
     }
 }
-

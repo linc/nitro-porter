@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Xenforo exporter tool.
  *
@@ -95,15 +96,15 @@ class Xenforo extends ExportController
             $filename = $row['filename'];
             $filehash = $row['file_hash'];
 
-            $oldname = $dataId.'-'.$filehash.'.data';
+            $oldname = $dataId . '-' . $filehash . '.data';
 
-            if(file_exists($this->sourceFolder.$oldname)) {
+            if (file_exists($this->sourceFolder . $oldname)) {
                 $found++;
-                copy($this->sourceFolder.$oldname, $this->targetFolder.'/'.$dataId.'-'.str_replace(' ', '_', $filename));
+                copy($this->sourceFolder . $oldname, $this->targetFolder . '/' . $dataId . '-' . str_replace(' ', '_', $filename));
             }
         }
 
-        $this->ex->comment("Attachments: ".$found." attachment(s) were found and converted during the process.");
+        $this->ex->comment("Attachments: " . $found . " attachment(s) were found and converted during the process.");
     }
 
     /**
@@ -139,7 +140,6 @@ class Xenforo extends ExportController
         );
 
         foreach ($this->folders as $type => $folder) {
-
             $this->processed = 0;
             $errors = array();
 
@@ -154,7 +154,6 @@ class Xenforo extends ExportController
                     echo "{$error}\n";
                 }
             }
-
         }
     }
 
@@ -251,12 +250,12 @@ class Xenforo extends ExportController
                 'Column' => 'Gender',
                 'Filter' => function ($value) {
                     switch ($value) {
-                    case 'male':
-                        return 'm';
-                    case 'female':
-                        return 'f';
-                    default:
-                        return 'u';
+                        case 'male':
+                            return 'm';
+                        case 'female':
+                            return 'f';
+                        default:
+                            return 'u';
                     }
                 }
             ),
@@ -270,7 +269,8 @@ class Xenforo extends ExportController
             'avatar' => 'Photo'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select
             u.*,
             ua.data as password,
@@ -278,7 +278,8 @@ class Xenforo extends ExportController
             case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg') else null end as avatar
          from :_user u
          left join :_user_authenticate ua
-            on u.user_id = ua.user_id", $user_Map
+            on u.user_id = ua.user_id",
+            $user_Map
         );
 
         // Roles.
@@ -287,9 +288,11 @@ class Xenforo extends ExportController
             'title' => 'Name'
         );
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
          select *
-         from :_user_group", $role_Map
+         from :_user_group",
+            $role_Map
         );
 
         // User Roles.
@@ -299,14 +302,16 @@ class Xenforo extends ExportController
         );
 
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          select user_id, user_group_id
          from :_user
          union all
          select u.user_id, ua.user_group_id
          from :_user u
          join :_user_group ua
-            on find_in_set(ua.user_group_id, u.secondary_group_ids)", $userRole_Map
+            on find_in_set(ua.user_group_id, u.secondary_group_ids)",
+            $userRole_Map
         );
 
         // Permission.
@@ -330,10 +335,12 @@ class Xenforo extends ExportController
             'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select n.*
          from :_node n
-         ", $category_Map
+         ",
+            $category_Map
         );
 
         // Discussions.
@@ -352,7 +359,8 @@ class Xenforo extends ExportController
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select
             t.*,
             p.message,
@@ -362,7 +370,8 @@ class Xenforo extends ExportController
          join :_post p
             on t.first_post_id = p.post_id
          left join :_ip ip
-            on p.ip_id = ip.ip_id", $discussion_Map
+            on p.ip_id = ip.ip_id",
+            $discussion_Map
         );
 
 
@@ -377,7 +386,8 @@ class Xenforo extends ExportController
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select
             p.*,
             'BBCode' as format,
@@ -388,11 +398,13 @@ class Xenforo extends ExportController
          left join :_ip ip
             on p.ip_id = ip.ip_id
          where p.post_id <> t.first_post_id
-            and message_state = 'visible'", $comment_Map
+            and message_state = 'visible'",
+            $comment_Map
         );
 
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
             select
                 a.attachment_id as MediaID,
                 ad.filename as Name,
@@ -431,9 +443,11 @@ class Xenforo extends ExportController
             'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
          select *
-         from :_conversation_master", $conversation_Map
+         from :_conversation_master",
+            $conversation_Map
         );
 
         $conversationMessage_Map = array(
@@ -446,14 +460,16 @@ class Xenforo extends ExportController
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
          select
             m.*,
             'BBCode' as format,
             ip.ip
          from :_conversation_message m
          left join :_ip ip
-            on m.ip_id = ip.ip_id", $conversationMessage_Map
+            on m.ip_id = ip.ip_id",
+            $conversationMessage_Map
         );
 
         $userConversation_Map = array(
@@ -462,7 +478,8 @@ class Xenforo extends ExportController
             'Deleted' => 'Deleted'
         );
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
          select
             r.conversation_id,
             user_id,
@@ -474,7 +491,8 @@ class Xenforo extends ExportController
             cu.owner_user_id,
             0
          from :_conversation_user cu
-         ", $userConversation_Map
+         ",
+            $userConversation_Map
         );
 
         $ex->endExport();
@@ -666,6 +684,4 @@ class Xenforo extends ExportController
             }
         }
     }
-
 }
-

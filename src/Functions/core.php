@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
@@ -19,7 +20,7 @@ function errorHandler($errno, $errstr, $errFile, $errLine)
     }
 
     if (defined('DEBUG') || ($errno != E_DEPRECATED && $errno != E_USER_DEPRECATED)) {
-        $baseDir = realpath(__DIR__.'/../').'/';
+        $baseDir = realpath(__DIR__ . '/../') . '/';
         $errFile = str_replace($baseDir, null, $errFile);
 
         echo "Error in $errFile line $errLine: ($errno) $errstr\n";
@@ -128,38 +129,46 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
 
     try {
         switch ($type) {
-        case 1:
-            $sourceImage = imagecreatefromgif($path);
-            break;
-        case 2:
-            $sourceImage = @imagecreatefromjpeg($path);
-            if (!$sourceImage) {
-                $sourceImage = imagecreatefromstring(file_get_contents($path));
-            }
-            break;
-        case 3:
-            $sourceImage = imagecreatefrompng($path);
-            imagealphablending($sourceImage, true);
-            break;
+            case 1:
+                $sourceImage = imagecreatefromgif($path);
+                break;
+            case 2:
+                $sourceImage = @imagecreatefromjpeg($path);
+                if (!$sourceImage) {
+                    $sourceImage = imagecreatefromstring(file_get_contents($path));
+                }
+                break;
+            case 3:
+                $sourceImage = imagecreatefrompng($path);
+                imagealphablending($sourceImage, true);
+                break;
         }
 
         $targetImage = imagecreatetruecolor($width, $height);
         imagecopyresampled(
-            $targetImage, $sourceImage, 0, 0, $XCoord, $YCoord, $width, $height, $widthSource,
+            $targetImage,
+            $sourceImage,
+            0,
+            0,
+            $XCoord,
+            $YCoord,
+            $width,
+            $height,
+            $widthSource,
             $heightSource
         );
         imagedestroy($sourceImage);
 
         switch ($type) {
-        case 1:
-            imagegif($targetImage, $thumbPath);
-            break;
-        case 2:
-            imagejpeg($targetImage, $thumbPath);
-            break;
-        case 3:
-            imagepng($targetImage, $thumbPath);
-            break;
+            case 1:
+                imagegif($targetImage, $thumbPath);
+                break;
+            case 2:
+                imagejpeg($targetImage, $thumbPath);
+                break;
+            case 3:
+                imagepng($targetImage, $thumbPath);
+                break;
         }
         imagedestroy($targetImage);
     } catch (Exception $e) {
@@ -318,7 +327,8 @@ function combinePaths($paths, $delimiter = '/')
         $mungedPath = implode($delimiter, $paths);
         $mungedPath = str_replace(
             array($delimiter . $delimiter . $delimiter, $delimiter . $delimiter),
-            array($delimiter, $delimiter), $mungedPath
+            array($delimiter, $delimiter),
+            $mungedPath
         );
 
         return str_replace(array('http:/', 'https:/'), array('http://', 'https://'), $mungedPath);
@@ -366,5 +376,3 @@ function increaseMaxExecutionTime($maxExecutionTime)
     }
     return true;
 }
-
-?>

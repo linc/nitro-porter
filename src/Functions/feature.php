@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
@@ -88,23 +89,23 @@ function vanillaFeatures($set = false)
 function vanillaFeatureSet($section)
 {
     switch ($section) {
-    case 'addon':
-        $set = array(
+        case 'addon':
+            $set = array(
             'Tags' => 0,
 
-        );
-        break;
-    case 'cloud':
-        $set = array(
+            );
+            break;
+        case 'cloud':
+            $set = array(
             'Badges' => 0,
             'Ranks' => 0,
             'Polls' => 0,
             'Groups' => 0,
-        );
-        break;
-    case 'core':
-    default:
-        $set = array(
+            );
+            break;
+        case 'core':
+        default:
+            $set = array(
             'Comments' => 0,
             'Discussions' => 0,
             'Users' => 0,
@@ -121,11 +122,9 @@ function vanillaFeatureSet($section)
             'UserNotes' => 0,
 
             //'Emoji'           => 0,
-        );
-        break;
+            );
+            break;
     }
 
     return $set;
 }
-
-?>

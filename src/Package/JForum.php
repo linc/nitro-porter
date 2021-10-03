@@ -1,4 +1,5 @@
 <?php
+
 /**
  * jforum exporter tool.
  *
@@ -79,7 +80,8 @@ class JForum extends ExportController
         // User.
         $user_Map = array();
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 u.user_id as UserID,
                 u.username as Name,
@@ -93,38 +95,44 @@ class JForum extends ExportController
                 u.user_from as Location,
                 u.user_biography as About
             from :_users as u
-         ", $user_Map
+         ",
+            $user_Map
         );
 
 
         // Role.
         $role_Map = array();
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
             select
                 g.group_id as RoleID,
                 g.group_name as Name,
                 g.group_description as Description
             from :_groups as g
-         ", $role_Map
+         ",
+            $role_Map
         );
 
 
         // User Role.
         $userRole_Map = array();
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 u.user_id as UserID,
                 u.group_id as RoleID
             from :_user_groups as u
-        ", $userRole_Map
+        ",
+            $userRole_Map
         );
 
 
         // UserMeta.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 user_id as UserID,
                 'Profile.Website' as `Name`,
@@ -176,7 +184,8 @@ class JForum extends ExportController
         // Overlapping IDs, so fast-forward _categories by 1000.
         $category_Map = array();
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 c.categories_id+1000 as CategoryID,
                 -1 as ParentCategoryID,
@@ -196,7 +205,8 @@ class JForum extends ExportController
                 2 as Depth,
                 null as Sort
             from :_forums as f
-        ", $category_Map
+        ",
+            $category_Map
         );
 
 
@@ -214,7 +224,8 @@ class JForum extends ExportController
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 t.topic_id as DiscussionID,
                 t.forum_id as CategoryID,
@@ -230,7 +241,8 @@ class JForum extends ExportController
             from :_topics as t
                 left join :_posts p on t.topic_first_post_id = p.post_id
                 $postTextSource
-            ", $discussion_Map
+            ",
+            $discussion_Map
         );
 
 
@@ -238,7 +250,8 @@ class JForum extends ExportController
         $comment_Map = array(
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 p.post_id as CommentID,
                 p.topic_id as DiscussionID,
@@ -252,7 +265,8 @@ class JForum extends ExportController
                 $postTextSource
                 left join jforum_topics as t on t.topic_first_post_id = p.post_id
             where t.topic_first_post_id is null
-         ", $comment_Map
+         ",
+            $comment_Map
         );
 
 
@@ -263,14 +277,16 @@ class JForum extends ExportController
             'user_id' => 'UserID',
         );
         $ex->exportTable(
-            'UserDiscussion', "
+            'UserDiscussion',
+            "
             select
                 w.topic_id as DiscussionID,
                 w.user_id as UserID,
                 1 as Bookmarked,
                 if (w.is_read, now(), null) as DateLastViewed
             from :_topics_watch as w
-         ", $userDiscussion_Map
+         ",
+            $userDiscussion_Map
         );
 
 
@@ -311,7 +327,8 @@ class JForum extends ExportController
             'privmsgs_subject' => 'Subject',
         );
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
             select
                 p.privmsgs_from_userid as InsertUserID,
                 p.privmsgs_date as DateInserted,
@@ -323,7 +340,8 @@ class JForum extends ExportController
             group by
                 least(privmsgs_from_userid, privmsgs_to_userid),
                 greatest(privmsgs_from_userid, privmsgs_to_userid)
-        ", $conversation_Map
+        ",
+            $conversation_Map
         );
 
         // Conversation Message.
@@ -336,7 +354,8 @@ class JForum extends ExportController
             'privmsgs_text' => 'Body',
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
             select
                 p.privmsgs_id as MessageID,
                 p.privmsgs_from_userid as InsertUserID,
@@ -349,13 +368,15 @@ class JForum extends ExportController
                 left join z_conversation c on c.LowUserID = least(privmsgs_from_userid, privmsgs_to_userid)
                     and c.HighUserID = greatest(privmsgs_from_userid, privmsgs_to_userid)
             group by privmsgs_date
-        ", $message_Map
+        ",
+            $message_Map
         );
 
 
         // UserConversation
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
             select
                 ConversationID,
                 LowUserID as UserID,
@@ -378,4 +399,3 @@ class JForum extends ExportController
         $ex->endExport();
     }
 }
-

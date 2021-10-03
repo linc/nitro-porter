@@ -1,4 +1,5 @@
 <?php
+
 /**
  * User Voice exporter tool
  *
@@ -64,14 +65,16 @@ class UserVoice extends ExportController
             'CreateDate' => array('Column' => 'DateInserted'),
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select u.*,
          concat('sha1$', m.PasswordSalt, '$', m.Password) as Password,
          'django' as HashMethod,
          if(a.Content is not null, concat('import/userpics/avatar',u.UserID,'.jpg'), NULL) as Photo
          from :_Users u
          left join aspnet_Membership m on m.UserId = u.MembershipID
-         left join :_UserAvatar a on a.UserID = u.UserID", $user_Map
+         left join :_UserAvatar a on a.UserID = u.UserID",
+            $user_Map
         );
 
 
@@ -81,9 +84,11 @@ class UserVoice extends ExportController
             'RoleName' => 'Name'
         );
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
          select *
-         from aspnet_Roles", $role_Map
+         from aspnet_Roles",
+            $role_Map
         );
 
         // User Role.
@@ -91,11 +96,13 @@ class UserVoice extends ExportController
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'roleIDConverter')),
         );
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          select u.UserID, ur.RoleId
          from aspnet_UsersInRoles ur
          left join :_Users u on ur.UserId = u.MembershipID
-         ", $userRole_Map
+         ",
+            $userRole_Map
         );
 
 
@@ -107,9 +114,11 @@ class UserVoice extends ExportController
             'DateCreated' => 'DateInserted'
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select s.*
-         from :_Sections s", $category_Map
+         from :_Sections s",
+            $category_Map
         );
 
 
@@ -130,7 +139,8 @@ class UserVoice extends ExportController
             'IPAddress' => 'InsertIPAddress'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select t.*,
             p.Subject,
             p.Body,
@@ -139,7 +149,8 @@ class UserVoice extends ExportController
             if(t.IsSticky  > 0, 2, 0) as Announce
          from :_Threads t
          left join :_Posts p on p.ThreadID = t.ThreadID
-         where p.SortOrder = 1", $discussion_Map
+         where p.SortOrder = 1",
+            $discussion_Map
         );
 
 
@@ -153,10 +164,12 @@ class UserVoice extends ExportController
             'PostDate' => 'DateInserted'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select p.*
          from :_Posts p
-         where SortOrder > 1", $comment_Map
+         where SortOrder > 1",
+            $comment_Map
         );
 
 
@@ -165,11 +178,13 @@ class UserVoice extends ExportController
             'ThreadID' => 'DiscussionID'
         );
         $ex->exportTable(
-            'UserDiscussion', "
+            'UserDiscussion',
+            "
          select t.*,
             '1' as Bookmarked,
             NOW() as DateLastViewed
-         from :_TrackedThreads t", $userDiscussion_Map
+         from :_TrackedThreads t",
+            $userDiscussion_Map
         );
 
         // Media.
@@ -333,4 +348,3 @@ if (!function_exists('hex2bin')) {
         return $sbin;
     }
 }
-

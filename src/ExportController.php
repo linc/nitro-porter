@@ -12,22 +12,22 @@ namespace NitroPorter;
 abstract class ExportController
 {
     /**
-     * @var array Database connection info 
+     * @var array Database connection info
      */
     protected $dbInfo = array();
 
     /**
-     * @var array Required tables, columns set per exporter 
+     * @var array Required tables, columns set per exporter
      */
     protected $sourceTables = array();
 
     /**
-     * @var ExportModel 
+     * @var ExportModel
      */
     protected $ex = null;
 
     /**
-     * Forum-specific export routine 
+     * Forum-specific export routine
      */
     abstract protected function forumExport($ex);
 

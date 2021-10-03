@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FluxBB exporter tool
  *
@@ -93,7 +94,8 @@ class FluxBb extends ExportController
             'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'getAvatarByID')),
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 u.id as UserID,
                 u.username as UserID,
@@ -106,12 +108,14 @@ class FluxBb extends ExportController
                 from_unixtime(u.last_visit) as DateLastActive
             from :_users u
             where group_id <> 2
-        ", $user_Map
+        ",
+            $user_Map
         );
 
         // Role
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
             select
                 g_id as RoleID,
                  g_title as Name
@@ -122,7 +126,8 @@ class FluxBb extends ExportController
         // Permission
 
         $ex->exportTable(
-            'Permission', "
+            'Permission',
+            "
             select
                 g_id,
                 g_moderator as 'Garden.Moderation.Manage',
@@ -143,7 +148,8 @@ class FluxBb extends ExportController
 
         // UserRole
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 u.id as UserID,
                 u.group_id as RoleID
@@ -153,7 +159,8 @@ class FluxBb extends ExportController
 
         // Signatures.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 u.id as UserID,
                 'Plugin.Signatures.Sig' as Name,
@@ -165,7 +172,8 @@ class FluxBb extends ExportController
 
         // Category
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 id as CategoryID,
                 forum_name as Name,
@@ -188,7 +196,8 @@ class FluxBb extends ExportController
 
         // Discussion.
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 t.id as DiscussionID,
                 from_unixtime(p.posted) as DateInserted,
@@ -210,7 +219,8 @@ class FluxBb extends ExportController
 
         // Comment.
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 p.*,
                 p.id as CommentID,
@@ -231,7 +241,8 @@ class FluxBb extends ExportController
         if ($ex->exists('tags')) {
             // Tag.
             $ex->exportTable(
-                'Tag', "
+                'Tag',
+                "
                 select
                     id as TagID,
                      tag as Name
@@ -241,7 +252,8 @@ class FluxBb extends ExportController
 
             // TagDisucssion.
             $ex->exportTable(
-                'TagDiscussion', "
+                'TagDiscussion',
+                "
                 select
                     topic_id as DiscussionID,
                      tag_id as TagID
@@ -258,7 +270,8 @@ class FluxBb extends ExportController
                 'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
             $ex->exportTable(
-                'Media', "
+                'Media',
+                "
                 select f.*,
                     f.id as MediaID,
                     f.filename as Name,
@@ -272,7 +285,8 @@ class FluxBb extends ExportController
                     case when f.post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
                     coalesce(f.post_id, f.topic_id) as ForeignID
                 from :_attach_files f
-            ", $media_Map
+            ",
+                $media_Map
             );
         }
 
@@ -296,17 +310,17 @@ class FluxBb extends ExportController
         }
 
         switch ($row['avatar']) {
-        case 1:
-            $extension = 'gif';
-            break;
-        case 2:
-            $extension = 'jpg';
-            break;
-        case 3:
-            $extension = 'png';
-            break;
-        default:
-            return null;
+            case 1:
+                $extension = 'gif';
+                break;
+            case 2:
+                $extension = 'jpg';
+                break;
+            case 3:
+                $extension = 'png';
+                break;
+            default:
+                return null;
         }
 
         $avatarFilename = "{$this->avatarPath}/{$value}.$extension";
@@ -340,4 +354,3 @@ class FluxBb extends ExportController
         }
     }
 }
-

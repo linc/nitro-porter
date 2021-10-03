@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SMF2 exporter tool
  *
@@ -87,7 +88,8 @@ class Smf2 extends ExportController
             'DateUpdated' => 'DateUpdated'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select m.*,
             from_unixtime(date_registered) as DateInserted,
             from_unixtime(date_registered) as DateFirstVisit,
@@ -96,7 +98,8 @@ class Smf2 extends ExportController
             concat('sha1$', lower(member_name), '$', passwd) as `password`,
             if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
          from :_members m
-         left join :_attachments a on a.id_member = m.id_member ", $user_Map
+         left join :_attachments a on a.id_member = m.id_member ",
+            $user_Map
         );
 
         // Roles
@@ -140,7 +143,8 @@ class Smf2 extends ExportController
               b.`board_order` as `Sort`
             from :_boards b
 
-            ", $category_Map
+            ",
+            $category_Map
         );
 
         // Discussions
@@ -165,7 +169,8 @@ class Smf2 extends ExportController
             'id_last_msg' => 'LastCommentID'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
       select t.*,
          (t.num_replies + 1) as CountComments,
          m.subject,
@@ -183,7 +188,8 @@ class Smf2 extends ExportController
 
        -- where t.spam = 0 AND m.spam = 0;
 
-       ", $discussion_Map
+       ",
+            $discussion_Map
         );
 
         // Comments
@@ -203,7 +209,8 @@ class Smf2 extends ExportController
              from :_messages m
                join :_topics t on m.id_topic = t.id_topic
                where m.id_msg <> t.id_first_msg;
-             ", $comment_Map
+             ",
+            $comment_Map
         );
 
         // Media
@@ -223,7 +230,8 @@ class Smf2 extends ExportController
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
             select a.*,
                 concat('attachments/', a.filename) as Path,
                 IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
@@ -235,7 +243,8 @@ class Smf2 extends ExportController
                 left join :_topics t on a.id_msg = t.id_first_msg
             where a.attachment_type = 0
                 and a.id_msg > 0
-        ", $media_Map
+        ",
+            $media_Map
         );
 
         // Conversations
@@ -252,7 +261,8 @@ class Smf2 extends ExportController
               pm.*,
               from_unixtime(pm.msgtime) as unixmsgtime
             from :_personal_messages pm
-            ", $conversation_Map
+            ",
+            $conversation_Map
         );
 
 
@@ -272,7 +282,8 @@ class Smf2 extends ExportController
               from_unixtime(pm.msgtime) as unixmsgtime ,
               'BBCode' as format
             from :_personal_messages pm
-            ", $convMsg_Map
+            ",
+            $convMsg_Map
         );
 
 
@@ -296,14 +307,14 @@ class Smf2 extends ExportController
             pmr.deleted as deleted2
             from :_personal_messages pm join :_pm_recipients pmr on pmr.id_pm = pm.id_pm
             )
-            ", $userConv_Map
+            ",
+            $userConv_Map
         );
 
 
         // End
 
         $ex->endExport();
-
     }
 
     public function decodeNumericEntity($text)
@@ -349,7 +360,7 @@ class Smf2 extends ExportController
 
         $extension = pathinfo($fileName, PATHINFO_EXTENSION);
         if ($extension) {
-            $mimeType = MimeTypeFromExtension('.'.strtolower($extension));
+            $mimeType = MimeTypeFromExtension('.' . strtolower($extension));
         }
 
         return $mimeType;
@@ -376,4 +387,3 @@ class Smf2 extends ExportController
         }
     }
 }
-

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * phpBB exporter tool
  *
@@ -123,7 +124,8 @@ class PhpBb3 extends ExportController
             'user_ip' => 'LastIPAddress'
         );
         $ex->exportTable(
-            'User', "select *,
+            'User',
+            "select *,
             case user_avatar_type
                when 1 then concat('$cdn', 'phpbb/', '$px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
                when 'avatar.driver.upload' then concat('$cdn', 'phpbb/', '$px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
@@ -135,7 +137,8 @@ class PhpBb3 extends ExportController
             ban_userid is not null as Banned
          from :_users
             left join :_banlist bl ON (ban_userid = user_id)
-         ", $user_Map
+         ",
+            $user_Map
         );  // ":_" will be replace by database prefix
 
         // Roles
@@ -180,7 +183,8 @@ class PhpBb3 extends ExportController
             )
         );
         $ex->exportTable(
-            'Rank', "
+            'Rank',
+            "
              select
                 r.*,
                 r.rank_title as title2,
@@ -189,12 +193,14 @@ class PhpBb3 extends ExportController
              order by
                 rank_special,
                 rank_min
-        ;", $rank_Map
+        ;",
+            $rank_Map
         );
 
         // Permissions.
         $ex->exportTable(
-            'Permission', "
+            'Permission',
+            "
             select
                 group_id as RoleID,
                 case
@@ -213,7 +219,8 @@ class PhpBb3 extends ExportController
             'group_id' => 'RoleID'
         );
         $ex->exportTable(
-            'UserRole', '
+            'UserRole',
+            '
             select
                 user_id,
                 group_id
@@ -225,7 +232,8 @@ class PhpBb3 extends ExportController
                 user_id,
                 group_id
             from :_user_group
-         ', $userRole_Map
+         ',
+            $userRole_Map
         );
 
 
@@ -236,7 +244,8 @@ class PhpBb3 extends ExportController
             'user_sig' => array('Column' => 'Value', 'Filter' => array($this, 'removeBBCodeUIDs'))
         );
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 user_id,
                 'Plugin.Signatures.Sig' as name,
@@ -254,7 +263,8 @@ class PhpBb3 extends ExportController
                 null
             from :_users
             where length(user_sig) > 1
-         ", $userMeta_Map
+         ",
+            $userMeta_Map
         );
 
         // Categories
@@ -265,12 +275,14 @@ class PhpBb3 extends ExportController
             'left_id' => 'Sort'
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 *,
                 nullif(parent_id,0) as ParentCategoryID
             from :_forums
-        ", $category_Map
+        ",
+            $category_Map
         );
 
         // Discussions
@@ -285,7 +297,8 @@ class PhpBb3 extends ExportController
             'type' => 'Type'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select t.*,
                 'BBCode' as Format,
                 case t.topic_status when 1 then 1 else 0 end as Closed,
@@ -295,7 +308,8 @@ class PhpBb3 extends ExportController
                 FROM_UNIXTIME(t.topic_last_post_time) as DateUpdated,
                 FROM_UNIXTIME(t.topic_last_post_time) as DateLastComment
             from :_topics t
-         ", $discussion_Map
+         ",
+            $discussion_Map
         );
 
         // Comments
@@ -309,19 +323,22 @@ class PhpBb3 extends ExportController
             'post_edit_user' => 'UpdateUserID'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 p.*,
                 'BBCode' as Format,
                 FROM_UNIXTIME(p.post_time) as DateInserted,
                 FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
             from :_posts p
-        ", $comment_Map
+        ",
+            $comment_Map
         );
 
         // UserDiscussion
         $ex->exportTable(
-            'UserDiscussion', "
+            'UserDiscussion',
+            "
             select
                 tt.user_id as UserID,
                 tt.topic_id as DiscussionID,
@@ -477,14 +494,16 @@ class PhpBb3 extends ExportController
             'anonymous' => 'Anonymous'
         );
         $ex->exportTable(
-            'Poll', "
+            'Poll',
+            "
             select distinct
                 t.*,
                 t.topic_id as poll_id,
                 1 as anonymous
             from :_poll_options po
                 join :_topics t on po.topic_id = t.topic_id
-        ", $poll_Map
+        ",
+            $poll_Map
         );
 
         $pollOption_Map = array(
@@ -498,7 +517,8 @@ class PhpBb3 extends ExportController
             'topic_poster' => 'InsertUserID'
         );
         $ex->exportTable(
-            'PollOption', "
+            'PollOption',
+            "
             select
                 po.*,
                 po.poll_option_id * 1000000 + po.topic_id as id,
@@ -507,7 +527,8 @@ class PhpBb3 extends ExportController
                 t.topic_poster
             from :_poll_options po
                 join :_topics t on po.topic_id = t.topic_id
-        ", $pollOption_Map
+        ",
+            $pollOption_Map
         );
 
         $pollVote_Map = array(
@@ -515,12 +536,14 @@ class PhpBb3 extends ExportController
             'id' => 'PollOptionID'
         );
         $ex->exportTable(
-            'PollVote', "
+            'PollVote',
+            "
             select
                 v.*,
                 v.poll_option_id * 1000000 + v.topic_id as id
             from :_poll_votes v
-        ", $pollVote_Map
+        ",
+            $pollVote_Map
         );
 
         // Conversations.
@@ -535,14 +558,16 @@ class PhpBb3 extends ExportController
         );
 
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
             select
                 g.subject as RealSubject,
                 pm.*,
                 from_unixtime(pm.message_time) as DateInserted
             from :_privmsgs pm
                 join z_pmgroup g on g.groupid = pm.msg_id
-        ", $conversation_Map
+        ",
+            $conversation_Map
         );
 
         // Coversation Messages.
@@ -553,7 +578,8 @@ class PhpBb3 extends ExportController
             'author_id' => 'InsertUserID'
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
             select
                 pm.*,
                 pm2.groupid,
@@ -561,7 +587,8 @@ class PhpBb3 extends ExportController
                 FROM_UNIXTIME(pm.message_time) as DateInserted
             from :_privmsgs pm
                 join z_pm pm2 on pm.msg_id = pm2.id
-        ", $conversationMessage_Map
+        ",
+            $conversationMessage_Map
         );
 
         // User Conversation.
@@ -570,13 +597,15 @@ class PhpBb3 extends ExportController
             'groupid' => 'ConversationID'
         );
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
             select
                 g.groupid,
                 t.userid
             from z_pmto t
                 join z_pmgroup g on g.groupid = t.id;
-        ", $userConversation_Map
+        ",
+            $userConversation_Map
         );
 
         $ex->query('drop table if exists z_pmto');
@@ -596,7 +625,8 @@ class PhpBb3 extends ExportController
             'filesize' => 'Size',
         );
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
             select
                 case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
                 case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
@@ -607,7 +637,8 @@ class PhpBb3 extends ExportController
                 a.*
             from :_attachments a
                 join :_topics t on a.topic_id = t.topic_id
-        ", $media_Map
+        ",
+            $media_Map
         );
 
         $this->exportBanList();
@@ -634,10 +665,10 @@ class PhpBb3 extends ExportController
                 'Type' => 'varchar(10)',
                 'Filter' => function ($value) {
                     switch (strtoupper($value)) {
-                    case 'LOG_USER_WARNING_BODY':
-                        return 'warning';
-                    default:
-                        return 'note';
+                        case 'LOG_USER_WARNING_BODY':
+                            return 'warning';
+                        default:
+                            return 'note';
                     }
                 }
             ),
@@ -657,7 +688,8 @@ class PhpBb3 extends ExportController
             )
         );
         $ex->exportTable(
-            'UserNote', "
+            'UserNote',
+            "
             select
                 l.*,
                 'Text' as format
@@ -665,12 +697,13 @@ class PhpBb3 extends ExportController
             where
                 reportee_id > 0
                 and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')
-        ", $userNote_Map
+        ",
+            $userNote_Map
         );
 
 
         if (count($corruptedRecords) > 0) {
-            $ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n".print_r($corruptedRecords, true));
+            $ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n" . print_r($corruptedRecords, true));
         }
     }
 
@@ -681,7 +714,8 @@ class PhpBb3 extends ExportController
     {
         $ex = $this->ex;
         $ex->exportTable(
-            'Ban', "
+            'Ban',
+            "
             select
                 bl.*,
                 ban_id as BanID,
@@ -747,4 +781,3 @@ class PhpBb3 extends ExportController
         }
     }
 }
-

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WebWiz exporter tool
  *
@@ -108,7 +109,8 @@ class WebWiz extends ExportController
             'Show_email' => 'ShowEmail'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select
             concat(Salt, '$', Password) as Password2,
             case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
@@ -116,7 +118,8 @@ class WebWiz extends ExportController
             'webwiz' as HashMethod,
             u.*
          from :_Author u
-         ", $user_Map
+         ",
+            $user_Map
         );
 
 
@@ -126,9 +129,11 @@ class WebWiz extends ExportController
             'Name' => 'Name'
         );
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
          select *
-         from :_Group", $role_Map
+         from :_Group",
+            $role_Map
         );
 
         // User Role.
@@ -137,14 +142,17 @@ class WebWiz extends ExportController
             'Group_ID' => 'RoleID'
         );
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          select u.*
-         from :_Author u", $userRole_Map
+         from :_Author u",
+            $userRole_Map
         );
 
         // UserMeta
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
          select
             Author_ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -162,7 +170,8 @@ class WebWiz extends ExportController
             'Forum_order' => 'Sort'
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select
             f.Forum_ID,
             f.Cat_ID * 1000 as Parent_ID,
@@ -180,7 +189,8 @@ class WebWiz extends ExportController
             c.Cat_name,
             null
          from :_Category c
-         ", $category_Map
+         ",
+            $category_Map
         );
 
         // Discussion.
@@ -198,7 +208,8 @@ class WebWiz extends ExportController
 
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select
             th.Author_ID,
             th.Message,
@@ -208,7 +219,8 @@ class WebWiz extends ExportController
             t.*
          from :_Topic t
          join :_Thread th
-            on t.Start_Thread_ID = th.Thread_ID", $discussion_Map
+            on t.Start_Thread_ID = th.Thread_ID",
+            $discussion_Map
         );
 
         // Comment.
@@ -222,14 +234,16 @@ class WebWiz extends ExportController
             'Message_date' => array('Column' => 'DateInserted')
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
       select
          th.*,
          'Html' as Format
       from :_Thread th
       join :_Topic t
          on t.Topic_ID = th.Topic_ID
-      where th.Thread_ID <> t.Start_Thread_ID", $comment_Map
+      where th.Thread_ID <> t.Start_Thread_ID",
+            $comment_Map
         );
 
         $this->exportConversations();
@@ -251,13 +265,15 @@ class WebWiz extends ExportController
             'PM_Message_Date' => array('Column' => 'DateInserted')
         );
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
          select
             pm.*,
             g.Title
          from :_PMMessage pm
          join z_pmgroup g
-            on pm.PM_ID = g.Group_ID;", $conversation_Map
+            on pm.PM_ID = g.Group_ID;",
+            $conversation_Map
         );
 
         // User Conversation.
@@ -266,13 +282,15 @@ class WebWiz extends ExportController
             'User_ID' => 'UserID'
         );
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
          select
             g.Group_ID,
             t.User_ID
          from z_pmto t
          join z_pmgroup g
-            on g.Group_ID = t.PM_ID;", $userConversation_Map
+            on g.Group_ID = t.PM_ID;",
+            $userConversation_Map
         );
 
         // Conversation Message.
@@ -285,14 +303,16 @@ class WebWiz extends ExportController
             'Author_ID' => 'InsertUserID'
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
          select
             pm.*,
             pm2.Group_ID,
             'Html' as Format
           from :_PMMessage pm
           join z_pmtext pm2
-            on pm.PM_ID = pm2.PM_ID;", $message_Map
+            on pm.PM_ID = pm2.PM_ID;",
+            $message_Map
         );
     }
 
@@ -402,4 +422,3 @@ class WebWiz extends ExportController
         $this->ex->queryN($sql);
     }
 }
-

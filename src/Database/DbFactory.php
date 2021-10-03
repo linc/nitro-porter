@@ -1,4 +1,5 @@
 <?php
+
 namespace NitroPorter;
 
 /**
@@ -9,12 +10,12 @@ class DbFactory
 {
 
     /**
-     * @var array DB connection info 
+     * @var array DB connection info
      */
     private $dbInfo;
 
     /**
-     * @var string php database extension 
+     * @var string php database extension
      */
     private $extension;
 
@@ -38,18 +39,15 @@ class DbFactory
     public function getInstance()
     {
         $className = $this->extension . 'Db';
-        if(class_exists($className)) {
+        if (class_exists($className)) {
             $dbFactory = new $className($this->dbInfo);
-            if($dbFactory instanceof DbResource) {
+            if ($dbFactory instanceof DbResource) {
                 return $dbFactory;
             } else {
-                die($className .'does not implement DbRerousce.');
+                die($className . 'does not implement DbRerousce.');
             }
         } else {
-            die(DBTYPE.' extension not found. See config.php and make sure the necessary extensions are installed.');
+            die(DBTYPE . ' extension not found. See config.php and make sure the necessary extensions are installed.');
         }
-
     }
 }
-
-

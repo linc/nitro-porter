@@ -1,4 +1,5 @@
 <?php
+
 /**
  * MVC exporter tool.
  *
@@ -117,7 +118,8 @@ class Mvc extends ExportController
 
         // Users.
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 UserID,
                 UserName as Name,
@@ -136,7 +138,8 @@ class Mvc extends ExportController
 
         // UserMeta.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 UserID,
                 'Website' as `Name`,
@@ -161,7 +164,8 @@ class Mvc extends ExportController
 
         // Role.
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
             select
                 RoleID,
                 RoleName as Name
@@ -172,7 +176,8 @@ class Mvc extends ExportController
 
         // User Role.
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 u.UserID as UserID,
                 r.RoleID as RoleID
@@ -183,7 +188,8 @@ class Mvc extends ExportController
 
         //Badge.
         $ex->exportTable(
-            'Badge', "
+            'Badge',
+            "
             select
                 BadgeID,
                 Type as Type,
@@ -197,7 +203,8 @@ class Mvc extends ExportController
         );
 
         $ex->exportTable(
-            'UserBadge', "
+            'UserBadge',
+            "
             select
                 u.UserID,
                 b.BadgeID,
@@ -210,7 +217,8 @@ class Mvc extends ExportController
 
         // Category.
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 m.CategoryID,
                 p.CategoryID as ParentCategoryID,
@@ -237,7 +245,8 @@ class Mvc extends ExportController
 
         // Discussion.
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 m.TopicID as DiscussionID,
                 c.CategoryID as CategoryID,
@@ -257,7 +266,8 @@ class Mvc extends ExportController
 
         // Comment.
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 m.PostID as CommentID,
                 d.TopicID as DiscussionID,
@@ -277,7 +287,8 @@ class Mvc extends ExportController
 
         // Tag
         $ex->exportTable(
-            'Tag', "
+            'Tag',
+            "
             select
                 TagID,
                 Tag as Name,
@@ -290,7 +301,8 @@ class Mvc extends ExportController
         //Attachment WIP
         // Use of placeholder for Type and Size due to lack of data in db. Will require external script to get the info.
         $ex->exportTable(
-            'Attachment', "
+            'Attachment',
+            "
             select
                 MediaID,
                 Filename as Name,
@@ -458,4 +470,3 @@ class Mvc extends ExportController
         }
     }
 }
-

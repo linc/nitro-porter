@@ -1,4 +1,5 @@
 <?php
+
 /**
  * MODX Discuss exporter tool.
  *
@@ -77,7 +78,8 @@ class ModxDiscuss extends ExportController
 
         // User.
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 u.user as UserID,
                 u.username as Name,
@@ -118,7 +120,8 @@ class ModxDiscuss extends ExportController
         // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
         // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 u.user as UserID,
                 u.roleID as RoleID,
@@ -136,7 +139,8 @@ class ModxDiscuss extends ExportController
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration and profiles will auto-populate with the migrated data.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 user as UserID,
                 'Plugin.Signatures.Sig' as `Name`,
@@ -179,7 +183,8 @@ class ModxDiscuss extends ExportController
         // Don't worry about rebuilding the TreeLeft & TreeRight properties. Vanilla can fix this afterward
         // if you just get the Sort and ParentIDs correct.
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 id as CategoryID,
                 case parent when 0 then '-1' else parent end as ParentCategoryID,
@@ -209,7 +214,8 @@ class ModxDiscuss extends ExportController
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 t.id as `DiscussionID`,
                 t.board as `CategoryID`,
@@ -234,7 +240,8 @@ class ModxDiscuss extends ExportController
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
         $ex->exportTable(
-            'Comment', '
+            'Comment',
+            '
             select
                 p.id as CommentID,
                 p.thread as DiscussionID,
@@ -266,4 +273,3 @@ class ModxDiscuss extends ExportController
         $ex->endExport();
     }
 }
-

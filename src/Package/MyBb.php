@@ -1,4 +1,5 @@
 <?php
+
 /**
  * MyBB exporter tool.
  *
@@ -82,7 +83,8 @@ class MyBb extends ExportController
             'email' => 'Email',
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select u.*,
             FROM_UNIXTIME(regdate) as regdate2,
             FROM_UNIXTIME(regdate) as regdate3,
@@ -90,7 +92,8 @@ class MyBb extends ExportController
             concat(password, salt) as Password,
             'mybb' as HashMethod
          from :_users u
-         ", $user_Map
+         ",
+            $user_Map
         );
 
         // Role.
@@ -100,9 +103,11 @@ class MyBb extends ExportController
             'description' => 'Description',
         );
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
          select *
-         from :_usergroups", $role_Map
+         from :_usergroups",
+            $role_Map
         );
 
         // User Role.
@@ -111,9 +116,11 @@ class MyBb extends ExportController
             'usergroup' => 'RoleID',
         );
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          select u.uid, u.usergroup
-         from :_users u", $userRole_Map
+         from :_users u",
+            $userRole_Map
         );
 
         // Category.
@@ -125,10 +132,12 @@ class MyBb extends ExportController
             'description' => 'Description',
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select *
          from :_forums f
-         ", $category_Map
+         ",
+            $category_Map
         );
 
         // Discussion.
@@ -141,11 +150,13 @@ class MyBb extends ExportController
             'replies' => 'CountComments',
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select *,
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
-         from :_threads t", $discussion_Map
+         from :_threads t",
+            $discussion_Map
         );
 
         // Comment.
@@ -156,11 +167,13 @@ class MyBb extends ExportController
             'message' => array('Column' => 'Body'),
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select p.*,
             FROM_UNIXTIME(dateline) as DateInserted,
             'BBCode' as Format
-         from :_posts p", $comment_Map
+         from :_posts p",
+            $comment_Map
         );
 
         // Media
@@ -176,7 +189,8 @@ class MyBb extends ExportController
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
             select a.*,
                 600 as thumb_width,
                 concat('attachments/', a.thumbnail) as ThumbPath,
@@ -184,7 +198,8 @@ class MyBb extends ExportController
                 'Comment' as ForeignTable
             from :_attachments a
             where a.pid > 0
-        ", $media_Map
+        ",
+            $media_Map
         );
 
         // UserDiscussion.
@@ -193,13 +208,14 @@ class MyBb extends ExportController
             'uid' => 'UserID',
         );
         $ex->exportTable(
-            'UserDiscussion', "
+            'UserDiscussion',
+            "
          select *,
             1 as Bookmarked
-         from :_threadsubscriptions t", $userDiscussion_Map
+         from :_threadsubscriptions t",
+            $userDiscussion_Map
         );
 
         $ex->endExport();
     }
 }
-

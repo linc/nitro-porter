@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Filter functions for passing thru values during export.
  *
@@ -339,16 +340,16 @@ function HTMLDecoder($value)
     $characterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
 
     switch ($characterSet) {
-    case 'latin1':
-        $characterSet = 'ISO-8859-1';
-        break;
-    case 'latin9':
-        $characterSet = 'ISO-8859-15';
-        break;
-    case 'utf8':
-    case 'utf8mb4':
-        $characterSet = 'UTF-8';
-        break;
+        case 'latin1':
+            $characterSet = 'ISO-8859-1';
+            break;
+        case 'latin9':
+            $characterSet = 'ISO-8859-15';
+            break;
+        case 'utf8':
+        case 'utf8mb4':
+            $characterSet = 'UTF-8';
+            break;
     }
 
     return html_entity_decode($value, ENT_QUOTES, $characterSet);
@@ -443,26 +444,26 @@ function mimeTypeFromExtension($value)
     }
 
     switch ($value) {
-    case 'png':
-    case 'jpg':
-    case 'jpeg':
-    case 'gif':
-    case 'bmp':
-        return 'image/' . $value;
-    case 'zip':
-    case 'doc':
-    case 'docx':
-    case 'pdf':
-    case 'xls':
-    case 'swf':
-        return 'application/' . $value;
-    case 'txt':
-    case 'htm':
-    case 'html':
-        return 'text/' . $value;
-    case 'mov':
-    case 'avi':
-        return 'video/' . $value;
+        case 'png':
+        case 'jpg':
+        case 'jpeg':
+        case 'gif':
+        case 'bmp':
+            return 'image/' . $value;
+        case 'zip':
+        case 'doc':
+        case 'docx':
+        case 'pdf':
+        case 'xls':
+        case 'swf':
+            return 'application/' . $value;
+        case 'txt':
+        case 'htm':
+        case 'html':
+            return 'text/' . $value;
+        case 'mov':
+        case 'avi':
+            return 'video/' . $value;
     }
 }
 
@@ -482,5 +483,3 @@ function cleanBodyBrackets($value)
 
     return $value;
 }
-
-?>

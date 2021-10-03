@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Q2A exporter tool.
  *
@@ -60,7 +61,8 @@ class Q2a extends ExportController
         $user_Map = array();
 
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             SELECT
                 u.userid as UserID,
                 u.handle as Name,
@@ -71,11 +73,13 @@ class Q2a extends ExportController
             FROM :_users as u
             LEFT JOIN :_userpoints p USING(userid)
             WHERE u.userid IN (Select DISTINCT userid from :_posts) AND (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
-         ", $user_Map
+         ",
+            $user_Map
         );
 
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
         select
             1 as RolesID,
             'Member' as Name
@@ -83,7 +87,8 @@ class Q2a extends ExportController
         );
 
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 ur.userid as UserID,
                 1 as RoleID
@@ -100,7 +105,8 @@ class Q2a extends ExportController
             'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
             'Question' as Type,
             p.postid as DiscussionID,
@@ -121,7 +127,8 @@ class Q2a extends ExportController
         );
 
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
         select
             p.postid as CommentID,
             p.parentid as DiscussionID,
@@ -137,5 +144,3 @@ class Q2a extends ExportController
         $ex->endExport();
     }
 }
-
-

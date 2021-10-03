@@ -179,7 +179,7 @@ function viewForm($data)
                 var type = $(this).val();
                 switch (type) {
                     <?php
-                    foreach($forums as $forumClass => $forumInfo) {
+                    foreach ($forums as $forumClass => $forumInfo) {
                         $exportOptions = "\$('#FileExports > fieldset, #FileExports input').prop('disabled', true);";
 
                         $hasAvatars = !empty($forumInfo['features']['Avatars']);
@@ -187,13 +187,13 @@ function viewForm($data)
 
                         if ($hasAvatars || $hasAttachments) {
                             $exportOptions = "\$('#FileExports > fieldset').prop('disabled', false);";
-                            $exportOptions .= "\$('#FileExports input[name=avatars]').prop('disabled', ".($hasAvatars ? 'false' : 'true').")";
+                            $exportOptions .= "\$('#FileExports input[name=avatars]').prop('disabled', " . ($hasAvatars ? 'false' : 'true') . ")";
                             if ($hasAvatars) {
                                 $exportOptions .= ".parent().removeClass('disabled');";
                             } else {
                                 $exportOptions .= ".parent().addClass('disabled');";
                             }
-                            $exportOptions .= "\$('#FileExports input[name=files]').prop('disabled', ".($hasAttachments ? 'false' : 'true').")";
+                            $exportOptions .= "\$('#FileExports input[name=files]').prop('disabled', " . ($hasAttachments ? 'false' : 'true') . ")";
                             if ($hasAttachments) {
                                 $exportOptions .= ".parent().removeClass('disabled');";
                             } else {

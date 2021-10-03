@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Expression Engine exporter tool
  *
@@ -83,7 +84,8 @@ class ExpressionEngine extends ExportController
         }
 
         $ex->exportTable(
-            'Permission', "
+            'Permission',
+            "
          SELECT
             g.can_view_profiles AS can_view_profiles2,
             g.can_view_profiles AS can_view_profiles3,
@@ -92,7 +94,8 @@ class ExpressionEngine extends ExportController
             CASE WHEN can_access_admin = 'y' THEN 'all' WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
             g.*
          FROM forum_member_groups g
-      ", $permission_Map
+      ",
+            $permission_Map
         );
 
 
@@ -110,7 +113,8 @@ class ExpressionEngine extends ExportController
             'location' => 'Location'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          SELECT
             'django' AS HashMethod,
             concat('sha1$$', password) AS Password2,
@@ -119,7 +123,8 @@ class ExpressionEngine extends ExportController
             ip_address AS LastIPAddress,
             CASE WHEN avatar_filename = '' THEN NULL ELSE concat('imported/', avatar_filename) END AS Photo,
             u.*
-         FROM forum_members u", $user_Map
+         FROM forum_members u",
+            $user_Map
         );
 
 
@@ -130,9 +135,11 @@ class ExpressionEngine extends ExportController
             'group_description' => 'Description'
         );
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
          SELECT *
-         FROM forum_member_groups", $role_Map
+         FROM forum_member_groups",
+            $role_Map
         );
 
 
@@ -142,15 +149,18 @@ class ExpressionEngine extends ExportController
             'group_id' => 'RoleID'
         );
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          SELECT *
-         FROM forum_members u", $userRole_Map
+         FROM forum_members u",
+            $userRole_Map
         );
 
 
         // UserMeta
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
          SELECT
             member_id AS UserID,
             'Plugin.Signatures.Sig' AS Name,
@@ -169,8 +179,10 @@ class ExpressionEngine extends ExportController
             'forum_order' => 'Sort'
         );
         $ex->exportTable(
-            'Category', "
-         SELECT * FROM forum_forums", $category_Map
+            'Category',
+            "
+         SELECT * FROM forum_forums",
+            $category_Map
         );
 
 
@@ -188,13 +200,15 @@ class ExpressionEngine extends ExportController
             'topic_edit_author' => 'UpdateUserID'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
           SELECT
              CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
              CASE WHEN status = 'c' THEN 1 ELSE 0 END AS Closed,
              t.body AS body2,
              t.*
-          FROM forum_forum_topics t", $discussion_Map
+          FROM forum_forum_topics t",
+            $discussion_Map
         );
 
 
@@ -211,12 +225,14 @@ class ExpressionEngine extends ExportController
             'post_edit_author' => 'UpdateUserID'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
       SELECT
          'Html' AS Format,
          p.body AS body2,
          p.*
-      FROM forum_forum_posts p", $comment_Map
+      FROM forum_forum_posts p",
+            $comment_Map
         );
 
 
@@ -232,7 +248,8 @@ class ExpressionEngine extends ExportController
             'filehash' => array('Column' => 'FileHash', 'Type' => 'varchar(100)')
         );
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
          SELECT
             concat('imported/', filename) AS Path,
             concat('imported/', filename) as thumb_path,
@@ -240,7 +257,8 @@ class ExpressionEngine extends ExportController
             CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
             CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
             a.*
-         FROM forum_forum_attachments a", $media_Map
+         FROM forum_forum_attachments a",
+            $media_Map
         );
 
         $ex->endExport();
@@ -263,13 +281,15 @@ class ExpressionEngine extends ExportController
             'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
         );
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
          SELECT
          pm.*,
          g.title AS title2
        FROM forum_message_data pm
        JOIN z_pmgroup g
-         ON g.group_id = pm.message_id;", $conversation_Map
+         ON g.group_id = pm.message_id;",
+            $conversation_Map
         );
 
         // User Conversation.
@@ -278,13 +298,15 @@ class ExpressionEngine extends ExportController
             'userid' => 'UserID'
         );
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
          SELECT
          g.group_id,
          t.userid
        FROM z_pmto t
        JOIN z_pmgroup g
-         ON g.group_id = t.message_id;", $userConversation_Map
+         ON g.group_id = t.message_id;",
+            $userConversation_Map
         );
 
         // Conversation Message.
@@ -296,14 +318,16 @@ class ExpressionEngine extends ExportController
             'sender_id' => 'InsertUserID'
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
          SELECT
             pm.*,
             pm2.group_id,
             'BBCode' AS Format
           FROM forum_message_data pm
           JOIN z_pmtext pm2
-            ON pm.message_id = pm2.message_id", $message_Map
+            ON pm.message_id = pm2.message_id",
+            $message_Map
         );
     }
 
@@ -496,6 +520,4 @@ class ExpressionEngine extends ExportController
             return null;
         }
     }
-
 }
-

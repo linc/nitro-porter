@@ -1,4 +1,5 @@
 <?php
+
 /**
  * vBulletin exporter tool.
  *
@@ -323,8 +324,10 @@ class VBulletin extends ExportController
             'usergroupid' => 'RoleID'
         );
         $this->ex->query("drop table if exists VbulletinRoles");
-        $this->ex->query("create table VbulletinRoles (
-            userid int unsigned not null, usergroupid int unsigned not null)");
+        $this->ex->query(
+            "create table VbulletinRoles (
+            userid int unsigned not null, usergroupid int unsigned not null)"
+        );
         // Put primary groups into tmp table
         $this->ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         // Put stupid CSV column into tmp table
@@ -755,7 +758,6 @@ class VBulletin extends ExportController
                 );
 
                 //$this->ex->query('drop table if exists z_ipbanlist');
-
             }
         }
 
@@ -1213,7 +1215,6 @@ class VBulletin extends ExportController
                 where a.contentid > 0
                     $discussionWhere";
             $this->ex->exportTable('Media', $mediaSql, $media_Map);
-
         } else {
             // Exporting 3.x without 'filedata' table.
             // Do NOT grab every field to avoid 'filedata' blob in 3.x.
@@ -1300,7 +1301,6 @@ class VBulletin extends ExportController
                     }
 
                     $missingFiles[] = $filePath;
-
                 }
             } else {
                 $this->ex->comment('Attachment Path not found');
@@ -1311,7 +1311,6 @@ class VBulletin extends ExportController
                 $this->ex->comment(sprintf('Total missing files %d', $totalMissingFiles));
                 file_put_contents('missing-files.txt', implode("\n", $missingFiles));
             }
-
         }
     }
 
@@ -1704,8 +1703,10 @@ class VBulletin extends ExportController
         $value = preg_replace_callback(
             '$\[IMG\]https?:\/\/.*?\/vbulletin\/attachment.php\?attachmentid=(\d+).*?\[\/IMG\]$i',
             function ($matches) {
-                $results = $this->ex->query("select userid, extension
-                    from attachment where attachmentid = $matches[1]");
+                $results = $this->ex->query(
+                    "select userid, extension
+                    from attachment where attachmentid = $matches[1]"
+                );
 
                 if ($results) {
                     $row = mysqli_fetch_assoc($results);

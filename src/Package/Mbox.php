@@ -1,4 +1,5 @@
 <?php
+
 /**
  * MBOX exporter tool.
  *
@@ -114,7 +115,7 @@ class Mbox extends ExportController
             );
             $userID = 0;
             $maxRes = $ex->query("select max(UserID) as id from :_mbox_user");
-            while($max = $maxRes->nextResultRow()) {
+            while ($max = $maxRes->nextResultRow()) {
                 $userID = $max['id'];
             }
             // Overwrite user list with new UserID instead of name
@@ -137,7 +138,7 @@ class Mbox extends ExportController
             );
             $categoryID = 0;
             $maxRes = $ex->query("select max(CategoryID) as id from :_mbox_category");
-            while($max = $maxRes->nextResultRow()) {
+            while ($max = $maxRes->nextResultRow()) {
                 $categoryID = $max['id'];
             }
             $categories[$row["Folder"]] = $categoryID;
@@ -184,7 +185,8 @@ class Mbox extends ExportController
         $result = $ex->query(
             'select c.PostID, d.PostID as DiscussionID from :_mbox_post c
          left join :_mbox_post d on c.Name like d.Name and d.IsDiscussion = 1
-         where c.IsDiscussion = 0', true
+         where c.IsDiscussion = 0',
+            true
         );
         while ($row = $result->nextResultRow()) {
             $ex->query('update :_mbox_post set DiscussionID = ' . $row['DiscussionID'] . '  where PostID = ' . $row['PostID']);
@@ -194,20 +196,24 @@ class Mbox extends ExportController
         // Users
         $user_Map = array();
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select u.*,
             NOW() as DateInserted,
             'Reset' as HashMethod
-         from :_mbox_user u", $user_Map
+         from :_mbox_user u",
+            $user_Map
         );
 
 
         // Categories
         $category_Map = array();
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
       select *
-      from :_mbox_category", $category_Map
+      from :_mbox_category",
+            $category_Map
         );
 
 
@@ -216,10 +222,12 @@ class Mbox extends ExportController
             'PostID' => 'DiscussionID'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
       select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID,
          'Html' as Format
-       from :_mbox_post p where IsDiscussion = 1", $discussion_Map
+       from :_mbox_post p where IsDiscussion = 1",
+            $discussion_Map
         );
 
 
@@ -232,7 +240,8 @@ class Mbox extends ExportController
             "select p.*,
          'Html' as Format
        from :_mbox_post p
-       where IsDiscussion = 0", $comment_Map
+       where IsDiscussion = 0",
+            $comment_Map
         );
 
 
@@ -267,7 +276,8 @@ class Mbox extends ExportController
     public function parseBody($body)
     {
         $body = preg_replace(
-            '#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#', '',
+            '#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#',
+            '',
             $body
         );
         $body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $body);
@@ -277,4 +287,3 @@ class Mbox extends ExportController
         return trim($body[0]);
     }
 }
-

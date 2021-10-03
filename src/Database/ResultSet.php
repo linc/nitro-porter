@@ -1,4 +1,5 @@
 <?php
+
 namespace NitroPorter;
 
 /**
@@ -32,4 +33,3 @@ class ResultSet
         return $this->dbResource->nextRow($assoc);
     }
 }
-

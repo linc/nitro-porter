@@ -1,4 +1,5 @@
 <?php
+
 /**
  * bbPress exporter tool
  *
@@ -106,7 +107,8 @@ class BbPress1 extends ExportController
            when locate('blocked', meta_value) <> 0 then 7
            else 1 end as RoleID
          from :_usermeta
-         where meta_key = 'bb_capabilities'", $userRole_Map
+         where meta_key = 'bb_capabilities'",
+            $userRole_Map
         );
 
         // Categories
@@ -118,10 +120,12 @@ class BbPress1 extends ExportController
             'left_order' => 'Sort'
         );
         $ex->exportTable(
-            'Category', "select *,
+            'Category',
+            "select *,
          lower(forum_slug) as forum_slug,
          nullif(forum_parent,0) as ParentCategoryID
-         from :_forums", $category_Map
+         from :_forums",
+            $category_Map
         );
 
         // Discussions
@@ -135,11 +139,13 @@ class BbPress1 extends ExportController
             'topic_sticky' => 'Announce'
         );
         $ex->exportTable(
-            'Discussion', "select t.*,
+            'Discussion',
+            "select t.*,
             'Html' as Format,
             case t.topic_open when 0 then 1 else 0 end as Closed
          from :_topics t
-         where topic_status = 0", $discussion_Map
+         where topic_status = 0",
+            $discussion_Map
         );
 
         // Comments
@@ -152,10 +158,12 @@ class BbPress1 extends ExportController
             'post_time' => 'DateInserted'
         );
         $ex->exportTable(
-            'Comment', "select p.*,
+            'Comment',
+            "select p.*,
             'Html' as Format
          from :_posts p
-         where post_status = 0", $comment_Map
+         where post_status = 0",
+            $comment_Map
         );
 
         // Conversations.
@@ -167,12 +175,13 @@ class BbPress1 extends ExportController
         if ($PM === true) {
             // This is from an old version of the plugin.
             $conversationVersion = 'old';
-        } elseif (is_array($PM) && count(
-            array_intersect(
-                array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'),
-                $PM
-            )
-        ) == 0
+        } elseif (
+            is_array($PM) && count(
+                array_intersect(
+                    array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'),
+                    $PM
+                )
+            ) == 0
         ) {
             // This is from a newer version of the plugin.
             $conversationVersion = 'new';
@@ -188,7 +197,8 @@ class BbPress1 extends ExportController
                 'Conversation',
                 "select *, from_unixtime(sent_on) as DateInserted
             from :_bbpm
-            where thread_depth = 0", $conv_Map
+            where thread_depth = 0",
+                $conv_Map
             );
 
             // ConversationMessage.
@@ -201,7 +211,8 @@ class BbPress1 extends ExportController
             $ex->exportTable(
                 'ConversationMessage',
                 'select *, from_unixtime(sent_on) as DateInserted
-            from :_bbpm', $convMessage_Map
+            from :_bbpm',
+                $convMessage_Map
             );
 
             // UserConversation.
@@ -246,7 +257,8 @@ class BbPress1 extends ExportController
                  pm_thread,
                  pm_to,
                  del_reciever
-               from :_bbpm', $conUser_Map
+               from :_bbpm',
+                    $conUser_Map
                 );
             }
         }
@@ -289,4 +301,3 @@ function bb_Decodeit($matches)
 
     return "`$text`";
 }
-

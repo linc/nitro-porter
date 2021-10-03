@@ -1,4 +1,5 @@
 <?php
+
 namespace NitroPorter;
 
 interface DbResource
@@ -46,4 +47,3 @@ interface DbResource
      */
     public function close();
 }
-

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
@@ -231,12 +232,12 @@ function getOptFromArgv($shortCodes, $longCodes)
 
     $matches = array();
     if (strlen($shortCodes) > 1 && preg_match_all('#([a-z\d])(:{0,2})#i', $shortCodes, $matches, PREG_SET_ORDER) != false) {
-        foreach($matches as $match) {
+        foreach ($matches as $match) {
             $shortCodesArray[$match[1]] = strlen($match[2]);
         }
     }
 
-    foreach($longCodes as $longCode) {
+    foreach ($longCodes as $longCode) {
         $explodedLongCode = explode(':', $longCode);
         $longCodesArray[$explodedLongCode[0]] = count($explodedLongCode) - 1;
     }
@@ -247,7 +248,6 @@ function getOptFromArgv($shortCodes, $longCodes)
 
         $matches = array();
         if (preg_match('#^(-{1,2})([a-z\d]+)(?:=(.*))?$#i', $currentArg, $matches) === 1) {
-
             $optionType = $matches[1];
             $optionName = $matches[2];
 
@@ -259,11 +259,11 @@ function getOptFromArgv($shortCodes, $longCodes)
                 $argType = 'long';
             }
 
-            if (!isset(${$argType.'CodesArray'}[$optionName])) {
+            if (!isset(${$argType . 'CodesArray'}[$optionName])) {
                 continue;
             }
 
-            $optionValueRequirement = ${$argType.'CodesArray'}[$optionName];
+            $optionValueRequirement = ${$argType . 'CodesArray'}[$optionName];
 
             if ($optionValueRequirement === 0) { // 0 = No value permitted
                 if ($optionValue !== null) {
@@ -397,5 +397,3 @@ function v($name, $array, $default = null)
 
     return $default;
 }
-
-?>

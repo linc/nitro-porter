@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Toast (.NET) exporter tool
  *
@@ -67,11 +68,13 @@ class Toast extends ExportController
             'IP' => 'LastIPAddress'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select
             *,
             NOW() as DateInserted
-         from :_Member u", $user_Map
+         from :_Member u",
+            $user_Map
         );
 
         // Determine safe RoleID to use for non-existant Member role
@@ -88,7 +91,8 @@ class Toast extends ExportController
             'Name' => 'Name'
         );
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
          select
             ID,
             Name
@@ -99,7 +103,8 @@ class Toast extends ExportController
          select
             $lastRoleID as ID,
             'Member' as Name
-         from :_Group;", $role_Map
+         from :_Group;",
+            $role_Map
         );
 
         // UserRole.
@@ -109,7 +114,8 @@ class Toast extends ExportController
             'GroupID' => 'RoleID'
         );
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          select
             GroupID,
             MemberID
@@ -123,12 +129,14 @@ class Toast extends ExportController
          from :_Member m
          left join :_MemberGroupLink l
             on l.MemberID = m.ID
-         where l.GroupID is null", $userRole_Map
+         where l.GroupID is null",
+            $userRole_Map
         );
 
         // Signatures.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
          select
             ID as UserID,
             'Plugin.Signatures.Sig' as `Name`,
@@ -155,7 +163,8 @@ class Toast extends ExportController
         );
 
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select
             f.ID,
             f.CategoryID * 1000 as CategoryID,
@@ -170,7 +179,8 @@ class Toast extends ExportController
             -1 as CategoryID,
             c.Name as ForumName,
             null as Description
-         from :_Category c;", $category_Map
+         from :_Category c;",
+            $category_Map
         );
 
         // Discussion.
@@ -187,12 +197,14 @@ class Toast extends ExportController
             'ReplyCount' => 'CountComments'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select p.*,
             'Html' as Format
          from :_Post p
          where p.Topic = 1
-            and p.Deleted = 0;", $discussion_Map
+            and p.Deleted = 0;",
+            $discussion_Map
         );
 
         // Comment.
@@ -205,11 +217,13 @@ class Toast extends ExportController
             'Message' => 'Body'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select *,
             'Html' as Format
          from :_Post p
-         where Topic = 0 and Deleted = 0;", $comment_Map
+         where Topic = 0 and Deleted = 0;",
+            $comment_Map
         );
 
 
@@ -227,6 +241,4 @@ class Toast extends ExportController
 
         return $value;
     }
-
 }
-

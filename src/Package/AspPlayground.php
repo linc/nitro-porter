@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ASP Playground exporter tool
  *
@@ -70,10 +71,12 @@ class AspPlayground extends ExportController
             'lastLogin' => 'DateLastActive',
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select m.*,
             'Text' as HashMethod
-         from :_Members m;", $user_Map
+         from :_Members m;",
+            $user_Map
         );
 
         // Role.
@@ -94,7 +97,8 @@ class AspPlayground extends ExportController
 
         // Signatures.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
          select
             Mem,
             'Plugin.Signatures.Sig' as `Name`,
@@ -122,9 +126,11 @@ class AspPlayground extends ExportController
         );
 
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select f.*
-         from :_Forums f;", $category_Map
+         from :_Forums f;",
+            $category_Map
         );
 
         // Discussion.
@@ -138,13 +144,15 @@ class AspPlayground extends ExportController
             'lastupdate' => 'DateLastComment'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select
             t.*,
             m.Body
          from :_Threads t
          left join :_Messages m on m.messageID = t.messageID
-         ;", $discussion_Map
+         ;",
+            $discussion_Map
         );
 
         // Comment.
@@ -158,10 +166,12 @@ class AspPlayground extends ExportController
             'ip' => 'InsertIPAddress'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select m.*,
             'BBCode' as Format
-         from :_Messages m;", $comment_Map
+         from :_Messages m;",
+            $comment_Map
         );
 
         /*
@@ -225,5 +235,4 @@ class AspPlayground extends ExportController
 
         return $value;
     }
-
 }

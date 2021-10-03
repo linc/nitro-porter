@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Drupal 6 exporter tool
  *
@@ -71,13 +72,15 @@ class Drupal6 extends ExportController
             'login' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          select u.*,
             nullif(concat('drupal/', u.picture), 'drupal/') as photo,
             concat('md5$$', u.pass) as Password,
             'Django' as HashMethod
          from :_users u
-         where uid > 0", $user_Map
+         where uid > 0",
+            $user_Map
         );
 
         // Signatures.
@@ -87,10 +90,12 @@ class Drupal6 extends ExportController
             'signature' => 'Value'
         );
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
          select u.*, 'Plugins.Signatures.Sig' as Name
          from :_users u
-         where uid > 0", $userMeta_Map
+         where uid > 0",
+            $userMeta_Map
         );
 
         // Roles.
@@ -106,8 +111,10 @@ class Drupal6 extends ExportController
             'rid' => 'RoleID'
         );
         $ex->exportTable(
-            'UserRole', "
-         select * from :_users_roles", $userRole_Map
+            'UserRole',
+            "
+         select * from :_users_roles",
+            $userRole_Map
         );
 
         // Categories (sigh)
@@ -118,11 +125,13 @@ class Drupal6 extends ExportController
             'parent' => 'ParentCategoryID'
         );
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
          select t.*, nullif(h.parent, 0) as parent
          from :_term_data t
          join :_term_hierarchy h
-            on t.tid = h.tid", $category_Map
+            on t.tid = h.tid",
+            $category_Map
         );
 
         // Discussions.
@@ -137,13 +146,15 @@ class Drupal6 extends ExportController
             'tid' => 'CategoryID'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
          from nodeforum f
          left join node n
             on f.nid = n.nid
          left join node_revisions r
-            on r.nid = n.nid", $discussion_Map
+            on r.nid = n.nid",
+            $discussion_Map
         );
 
         // Comments.
@@ -155,7 +166,8 @@ class Drupal6 extends ExportController
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select
             n.created,
             n.uid,
@@ -169,7 +181,8 @@ class Drupal6 extends ExportController
             on c.cid = n.nid
          left join node_revisions r
             on r.nid = n.nid
-         where n.type = 'forum_reply'", $comment_Map
+         where n.type = 'forum_reply'",
+            $comment_Map
         );
 
         // Conversations.
@@ -179,7 +192,8 @@ class Drupal6 extends ExportController
             'title' => 'Subject',
         );
         $ex->exportTable(
-            'Conversation', "
+            'Conversation',
+            "
             select
                 pmi.thread_id,
                 pmm.author,
@@ -188,7 +202,8 @@ class Drupal6 extends ExportController
             from pm_message as pmm
                 inner join pm_index as pmi on pmi.mid = pmm.mid and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
             group by pmi.thread_id
-        ;", $conversation_Map
+        ;",
+            $conversation_Map
         );
 
         // Conversation Messages.
@@ -198,7 +213,8 @@ class Drupal6 extends ExportController
             'author' => 'InsertUserID'
         );
         $ex->exportTable(
-            'ConversationMessage', "
+            'ConversationMessage',
+            "
             select
                 pmm.mid,
                 pmi.thread_id,
@@ -208,7 +224,8 @@ class Drupal6 extends ExportController
                 'Html' as Format
             from pm_message as pmm
                 inner join pm_index as pmi on pmi.mid = pmm.mid AND pmi.deleted = 0 and pmi.uid > 0
-        ;", $conversationMessage_Map
+        ;",
+            $conversationMessage_Map
         );
 
         // User Conversation.
@@ -217,7 +234,8 @@ class Drupal6 extends ExportController
             'thread_id' => 'ConversationID'
         );
         $ex->exportTable(
-            'UserConversation', "
+            'UserConversation',
+            "
             select
                 pmi.uid,
                 pmi.thread_id,
@@ -229,7 +247,8 @@ class Drupal6 extends ExportController
             group by
                 pmi.uid,
                 pmi.thread_id
-        ;", $userConversation_Map
+        ;",
+            $userConversation_Map
         );
 
         // Comments.
@@ -289,6 +308,4 @@ class Drupal6 extends ExportController
 
         $ex->exportTable($tableName, "select * from :_{$tableName}");
     }
-
 }
-

@@ -12,7 +12,7 @@ namespace NitroPorter;
 class ExportModel
 {
     /**
-     * Character constants. 
+     * Character constants.
      */
     public const COMMENT = '//';
     public const DELIM = ',';
@@ -22,87 +22,87 @@ class ExportModel
     public const QUOTE = '"';
 
     /**
-     * @var bool 
+     * @var bool
      */
     public $captureOnly = false;
 
     /**
-     * @var array Any comments that have been written during the export. 
+     * @var array Any comments that have been written during the export.
      */
     public $comments = array();
 
     /**
-     * @var ExportController * 
+     * @var ExportController *
      */
     public $controller = null;
 
     /**
-     * @var string The charcter set to set as the connection anytime the database connects. 
+     * @var string The charcter set to set as the connection anytime the database connects.
      */
     public $characterSet = 'utf8';
 
     /**
-     * @var int The chunk size when exporting large tables. 
+     * @var int The chunk size when exporting large tables.
      */
     public $chunkSize = 100000;
 
     /**
-     * @var array * 
+     * @var array *
      */
     public $currentRow = null;
 
     /**
-     * @var string Where we are sending this export: 'file' or 'database'. * 
+     * @var string Where we are sending this export: 'file' or 'database'. *
      */
     public $destination = 'file';
 
     /**
-     * @var string * 
+     * @var string *
      */
     public $destPrefix = 'GDN_z';
 
     /**
-     * @var array * 
+     * @var array *
      */
     public static $escapeSearch = array();
 
     /**
-     * @var array * 
+     * @var array *
      */
     public static $escapeReplace = array();
 
     /**
-     * @var object File pointer 
+     * @var object File pointer
      */
     public $file = null;
 
     /**
-     * @var string A prefix to put into an automatically generated filename. 
+     * @var string A prefix to put into an automatically generated filename.
      */
     public $filenamePrefix = '';
 
     /**
-     * @var string Database host. * 
+     * @var string Database host. *
      */
     public $_host = 'localhost';
 
     /**
-     * @var bool Whether mb_detect_encoding() is available. * 
+     * @var bool Whether mb_detect_encoding() is available. *
      */
     public static $mb = false;
 
     /**
-     * @var object PDO instance 
+     * @var object PDO instance
      */
     protected $_PDO = null;
 
     /**
-     * @var string Database password. * 
+     * @var string Database password. *
      */
     protected $_password;
 
     /**
-     * @var string The path to the export file. 
+     * @var string The path to the export file.
      */
     public $path = '';
 
@@ -113,62 +113,62 @@ class ExportModel
     public $prefix = '';
 
     /**
-     * @var array * 
+     * @var array *
      */
     public $queries = array();
 
     /**
-     * @var array * 
+     * @var array *
      */
     protected $_queryStructures = array();
 
     /**
-     * @var array Tables to limit the export to.  A full export is an empty array. 
+     * @var array Tables to limit the export to.  A full export is an empty array.
      */
     public $restrictedTables = array();
 
     /**
-     * @var string The path to the source of the export in the case where a file is being converted. 
+     * @var string The path to the source of the export in the case where a file is being converted.
      */
     public $sourcePath = '';
 
     /**
-     * @var string 
+     * @var string
      */
     public $sourcePrefix = '';
 
     /**
-     * @var bool * 
+     * @var bool *
      */
     public $scriptCreateTable = true;
 
     /**
-     * @var array Structures that define the format of the export tables. 
+     * @var array Structures that define the format of the export tables.
      */
     protected $_structures = array();
 
     /**
-     * @var bool Whether to limit results to the $testLimit. 
+     * @var bool Whether to limit results to the $testLimit.
      */
     public $testMode = false;
 
     /**
-     * @var int How many records to limit when $testMode is enabled. 
+     * @var int How many records to limit when $testMode is enabled.
      */
     public $testLimit = 10;
 
     /**
-     * @var bool Whether or not to use compression when creating the file. 
+     * @var bool Whether or not to use compression when creating the file.
      */
     protected $_useCompression = true;
 
     /**
-     * @var string Database username. 
+     * @var string Database username.
      */
     protected $_username;
 
     /**
-     * @var object Instance DbFactory 
+     * @var object Instance DbFactory
      */
     protected $_dbFactory;
 
@@ -262,7 +262,8 @@ class ExportModel
         }
 
         $comment = $char . ' ' . str_replace(
-            self::NEWLINE, self::NEWLINE . self::COMMENT . ' ',
+            self::NEWLINE,
+            self::NEWLINE . self::COMMENT . ' ',
             $message
         ) . self::NEWLINE;
 
@@ -755,7 +756,8 @@ class ExportModel
                 foreach ($mappings as $testMapping) {
                     if ($testMapping == $column) {
                         $mappingExists = true;
-                    } elseif (is_array($testMapping)
+                    } elseif (
+                        is_array($testMapping)
                         && array_key_exists('Column', $testMapping)
                         && ($testMapping['Column'] == $column)
                     ) {

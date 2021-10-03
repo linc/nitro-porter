@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Codoforum exporter tool. Tested with CodoForum v3.7.
  *
@@ -70,7 +71,8 @@ class CodoForum extends ExportController
 
         // User.
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 u.id as UserID,
                 u.username as Name,
@@ -85,7 +87,8 @@ class CodoForum extends ExportController
 
         // Role.
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
             select
                 r.rid as RolesID,
                 r.rname as Name
@@ -95,7 +98,8 @@ class CodoForum extends ExportController
 
         // User Role.
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 ur.uid as UserID,
                 ur.rid as RoleID
@@ -106,7 +110,8 @@ class CodoForum extends ExportController
 
         // UserMeta.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 u.id as UserID,
                 'Plugin.Signatures.Sig' as Name,
@@ -117,7 +122,8 @@ class CodoForum extends ExportController
 
         // Category.
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 c.cat_id as CategoryID,
                 c.cat_name as Name
@@ -127,7 +133,8 @@ class CodoForum extends ExportController
 
         // Discussion.
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 t.topic_id as DiscussionID,
                 t.cat_id as CategoryID,
@@ -141,7 +148,8 @@ class CodoForum extends ExportController
 
         // Comment.
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 p.post_id as CommentID,
                 p.topic_id as DiscussionID,
@@ -169,4 +177,3 @@ class CodoForum extends ExportController
         $ex->endExport();
     }
 }
-

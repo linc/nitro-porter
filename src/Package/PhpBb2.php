@@ -1,4 +1,5 @@
 <?php
+
 /**
  * phpBB exporter tool
  *
@@ -111,11 +112,13 @@ class PhpBb2 extends ExportController
             'user_posts' => array('Column' => 'CountComments', 'Type' => 'int')
         );
         $ex->exportTable(
-            'User', "select *,
+            'User',
+            "select *,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
             FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted
-         from :_users", $user_Map
+         from :_users",
+            $user_Map
         );  // ":_" will be replace by database prefix
 
 
@@ -136,13 +139,15 @@ class PhpBb2 extends ExportController
         );
         // Skip pending memberships
         $ex->exportTable(
-            'UserRole', '
+            'UserRole',
+            '
             select
                 user_id,
                 group_id
             from :_user_group
             where user_pending = 0
-        ;', $userRole_Map
+        ;',
+            $userRole_Map
         );
 
         // Categories
@@ -172,7 +177,8 @@ select
   f.forum_desc
 from :_forums f
 left join :_categories c
-  on f.cat_id = c.cat_id", $category_Map
+  on f.cat_id = c.cat_id",
+            $category_Map
         );
 
         // Discussions
@@ -185,7 +191,8 @@ left join :_categories c
             'topic_views' => 'CountViews'
         );
         $ex->exportTable(
-            'Discussion', "select t.*,
+            'Discussion',
+            "select t.*,
         'BBCode' as Format,
          case t.topic_status when 1 then 1 else 0 end as Closed,
          case t.topic_type when 1 then 2 else 0 end as Announce,
@@ -203,7 +210,8 @@ left join :_categories c
             'poster_id' => 'InsertUserID'
         );
         $ex->exportTable(
-            'Comment', "select p.*, pt.post_text, pt.bbcode_uid,
+            'Comment',
+            "select p.*, pt.post_text, pt.bbcode_uid,
         'BBCode' as Format,
          FROM_UNIXTIME(p.post_time) as DateInserted,
          FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
@@ -329,13 +337,15 @@ set pm.groupid = g.groupid;"
         );
 
         $ex->exportTable(
-            'Conversation', "select
+            'Conversation',
+            "select
   g.subject as RealSubject,
   pm.*,
   from_unixtime(pm.privmsgs_date) as DateInserted
 from :_privmsgs pm
 join z_pmgroup g
-  on g.groupid = pm.privmsgs_id", $conversation_Map
+  on g.groupid = pm.privmsgs_id",
+            $conversation_Map
         );
 
         // Coversation Messages.
@@ -358,7 +368,8 @@ join z_pmgroup g
        join :_privmsgs_text txt
          on pm.privmsgs_id = txt.privmsgs_text_id
        join z_pm pm2
-         on pm.privmsgs_id = pm2.id", $conversationMessage_Map
+         on pm.privmsgs_id = pm2.id",
+            $conversationMessage_Map
         );
 
         // User Conversation.
@@ -373,7 +384,8 @@ join z_pmgroup g
          t.userid
        from z_pmto t
        join z_pmgroup g
-         on g.groupid = t.id;", $userConversation_Map
+         on g.groupid = t.id;",
+            $userConversation_Map
         );
 
         $ex->query('drop table if exists z_pmto');
@@ -383,7 +395,8 @@ join z_pmgroup g
 
         // Media
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
             select
                 ad.attach_id as MediaID,
                 ad.real_filename as Name,
@@ -417,4 +430,3 @@ join z_pmgroup g
         return str_replace(':' . $UID, '', $value);
     }
 }
-

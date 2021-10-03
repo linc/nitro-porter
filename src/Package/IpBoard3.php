@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Invision Powerboard exporter tool.
  *
@@ -75,10 +76,9 @@ class IpBoard3 extends ExportController
         }
 
         switch ($sourceTable) {
-        case 'profile_portal':
-
-            $userList = $this->ex->query(
-                "select
+            case 'profile_portal':
+                $userList = $this->ex->query(
+                    "select
                   pp_member_id as member_id,
                   pp_main_photo as main_photo,
                   pp_thumb_photo as thumb_photo,
@@ -86,14 +86,13 @@ class IpBoard3 extends ExportController
                from :_profile_portal
                where length(coalesce(pp_main_photo,pp_thumb_photo,0)) > 3
                order by pp_member_id asc"
-            );
+                );
 
-            break;
+                break;
 
-        case 'member_extra':
-
-            $userList = $this->ex->query(
-                "select
+            case 'member_extra':
+                $userList = $this->ex->query(
+                    "select
                   id as member_id,
                   avatar_location as photo
                from :_member_extra
@@ -101,9 +100,9 @@ class IpBoard3 extends ExportController
                   length(avatar_location) > 3 and
                   avatar_location <> 'noavatar'
                order by id asc"
-            );
+                );
 
-            break;
+                break;
         }
 
         $processed = 0;
@@ -328,12 +327,14 @@ class IpBoard3 extends ExportController
         );
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
         $ex->exportTable(
-            'Permission', "
+            'Permission',
+            "
          select r.*,
             r.g_view_board as g_view_board2,
             r.g_view_board as g_view_board3,
             r.g_view_board as g_view_board4
-         from :_groups r", $permission_Map
+         from :_groups r",
+            $permission_Map
         );
 
         // User Role.
@@ -362,7 +363,6 @@ class IpBoard3 extends ExportController
             from :_members m
             join :_groups g
                on find_in_set(g.g_id, m.mgroup_others)";
-
         }
 
         $ex->exportTable('UserRole', $sql, $userRole_Map);
@@ -836,16 +836,16 @@ drop table tmp_group;"
 
             if (!is_array($filter)) {
                 switch ($filter) {
-                case 'HTMLDecoder':
-                    $this->ex->HTMLDecoderDb($table, $column, $PK);
-                    unset($map[$column]['Filter']);
-                    break;
-                case 'timestampToDate':
-                    $selects[] = "from_unixtime($source) as {$column}_Date";
+                    case 'HTMLDecoder':
+                        $this->ex->HTMLDecoderDb($table, $column, $PK);
+                        unset($map[$column]['Filter']);
+                        break;
+                    case 'timestampToDate':
+                        $selects[] = "from_unixtime($source) as {$column}_Date";
 
-                    unset($map[$column]);
-                    $map[$column . '_Date'] = $info['Column'];
-                    break;
+                        unset($map[$column]);
+                        $map[$column . '_Date'] = $info['Column'];
+                        break;
                 }
             }
         }
@@ -876,4 +876,3 @@ drop table tmp_group;"
         }
     }
 }
-

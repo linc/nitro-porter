@@ -262,7 +262,8 @@ class Vanilla1 extends ExportController
          FROM :_Discussion d
          LEFT JOIN :_Comment c
             ON d.FirstCommentID = c.CommentID
-         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1", $discussion_Map
+         WHERE coalesce(d.WhisperUserID, 0) = 0 and d.Active = 1",
+            $discussion_Map
         );
 
         // Comments

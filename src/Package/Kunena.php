@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Joomla Kunena exporter tool
  *
@@ -72,7 +73,8 @@ class Kunena extends ExportController
             'Photo' => 'Photo'
         );
         $ex->exportTable(
-            'User', "
+            'User',
+            "
          SELECT
             u.*,
             case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
@@ -82,7 +84,8 @@ class Kunena extends ExportController
             !ku.hideemail as showemail
          FROM :_users u
          left join :_kunena_users ku
-            on ku.userid = u.id", $user_Map
+            on ku.userid = u.id",
+            $user_Map
         );
 
         // Role.
@@ -98,9 +101,11 @@ class Kunena extends ExportController
             'rank' => 'RoleID'
         );
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
          select *
-         from :_users u", $userRole_Map
+         from :_users u",
+            $userRole_Map
         );
 
         // Permission.
@@ -121,8 +126,10 @@ class Kunena extends ExportController
 
         );
         $ex->exportTable(
-            'Category', "
-         select * from :_kunena_categories", $category_Map
+            'Category',
+            "
+         select * from :_kunena_categories",
+            $category_Map
         );
 
         // Discussion.
@@ -141,7 +148,8 @@ class Kunena extends ExportController
             'Format' => 'Format'
         );
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
          select
             t.*,
             txt.message,
@@ -149,7 +157,8 @@ class Kunena extends ExportController
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread = t.id", $discussion_Map
+         where t.thread = t.id",
+            $discussion_Map
         );
 
         // Comment.
@@ -165,7 +174,8 @@ class Kunena extends ExportController
             'Format' => 'Format'
         );
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
          select
             t.*,
             txt.message,
@@ -173,7 +183,8 @@ class Kunena extends ExportController
          from :_kunena_messages t
          left join :_kunena_messages_text txt
             on t.id = txt.mesid
-         where t.thread <> t.id", $comment_Map
+         where t.thread <> t.id",
+            $comment_Map
         );
 
         // UserDiscussion.
@@ -182,9 +193,11 @@ class Kunena extends ExportController
             'userid' => 'UserID'
         );
         $ex->exportTable(
-            'UserDiscussion', "
+            'UserDiscussion',
+            "
          select t.*, 1 as Bookmarked
-         from :_kunena_subscriptions t", $userDiscussion_Map
+         from :_kunena_subscriptions t",
+            $userDiscussion_Map
         );
 
         // Media.
@@ -201,7 +214,8 @@ class Kunena extends ExportController
             'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
          select
             a.*,
             concat(a.folder, '/', a.filename) as path2,
@@ -211,7 +225,8 @@ class Kunena extends ExportController
             128 as thumb_width
          from :_kunena_attachments a
          join :_kunena_messages m
-            on m.id = a.mesid", $media_Map
+            on m.id = a.mesid",
+            $media_Map
         );
 
         $ex->endExport();
@@ -237,4 +252,3 @@ class Kunena extends ExportController
         }
     }
 }
-

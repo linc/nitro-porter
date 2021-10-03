@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Vanilla 2 exporter tool for Drupal 7
  *
@@ -60,7 +61,8 @@ class Drupal7 extends ExportController
         // Users.
         // TODO validate password hashing didn't change between drupal 6 and drupal 7.
         $ex->exportTable(
-            'User', "
+            'User',
+            "
             select
                 uid as UserID,
                 name as Name,
@@ -78,7 +80,8 @@ class Drupal7 extends ExportController
 
         // Signatures.
         $ex->exportTable(
-            'UserMeta', "
+            'UserMeta',
+            "
             select
                 uid as UserID,
                 signature as Value,
@@ -99,7 +102,8 @@ class Drupal7 extends ExportController
 
         // Roles.
         $ex->exportTable(
-            'Role', "
+            'Role',
+            "
             select
                 rid as RoleID,
                 name as Name
@@ -109,7 +113,8 @@ class Drupal7 extends ExportController
 
         // User Role.
         $ex->exportTable(
-            'UserRole', "
+            'UserRole',
+            "
             select
                 uid as UserID,
                 rid as RoleID
@@ -119,7 +124,8 @@ class Drupal7 extends ExportController
 
         // Categories.
         $ex->exportTable(
-            'Category', "
+            'Category',
+            "
             select
                 t.tid as CategoryID,
                 t.name as Name,
@@ -135,7 +141,8 @@ class Drupal7 extends ExportController
         // Discussion and comment format differ from each other.
         // Discussions.
         $ex->exportTable(
-            'Discussion', "
+            'Discussion',
+            "
             select
                 n.nid as DiscussionID,
                 n.uid as InsertUserID,
@@ -155,7 +162,8 @@ class Drupal7 extends ExportController
 
         // Comments.
         $ex->exportTable(
-            'Comment', "
+            'Comment',
+            "
             select
                 c.cid as CommentID,
                 c.nid as DiscussionID,
@@ -172,7 +180,8 @@ class Drupal7 extends ExportController
 
         // Media.
         $ex->exportTable(
-            'Media', "
+            'Media',
+            "
             select
                 fm.fid as MediaID,
                 fm.filemime as Type,
@@ -191,4 +200,3 @@ class Drupal7 extends ExportController
         $ex->endExport();
     }
 }
-

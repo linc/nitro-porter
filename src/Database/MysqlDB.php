@@ -1,4 +1,5 @@
 <?php
+
 namespace NitroPorter;
 
 /**
@@ -7,12 +8,12 @@ namespace NitroPorter;
 class MysqlDB implements DbResource
 {
     /**
-     * @var mysql resource 
+     * @var mysql resource
      */
     private $link = null;
 
     /**
-     * @var query result 
+     * @var query result
      */
     private $result = null;
 
@@ -83,7 +84,7 @@ class MysqlDB implements DbResource
 
         if (isset($row)) {
             return $row;
-        } else  {
+        } else {
             mysql_free_result($this->result);
             return false;
         }
@@ -106,5 +107,3 @@ class MysqlDB implements DbResource
         mysql_close($this->link);
     }
 }
-
-
