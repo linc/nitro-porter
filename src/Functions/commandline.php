@@ -4,100 +4,12 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-$globalOptions = array(
-    // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s, b
-    'type' => array(
-        'Type of forum we\'re freeing you from.',
-        'Req' => true,
-        'Sx' => ':',
-        'Field' => 'type',
-        'Short' => 't',
-    ),
-    'dbname' => array(
-        'Database name.',
-        'Req' => true,
-        'Sx' => ':',
-        'Field' => 'dbname',
-        'Short' => 'n',
-    ),
-    'user' => array(
-        'Database connection username.',
-        'Req' => true,
-        'Sx' => ':',
-        'Field' => 'dbuser',
-        'Short' => 'u',
-    ),
-    'password' => array(
-        'Database connection password.',
-        'Sx' => '::',
-        'Field' => 'dbpass',
-        'Short' => 'p',
-        'Default' => '',
-    ),
-    'host' => array(
-        'IP address or hostname to connect to. Default is 127.0.0.1.',
-        'Sx' => ':',
-        'Field' => 'dbhost',
-        'Short' => 'o',
-        'Default' => '127.0.0.1',
-    ),
-    'prefix' => array(
-        'The table prefix in the database.',
-        'Field' => 'prefix',
-        'Sx' => ':',
-        'Short' => 'x',
-        'Default' => 'PACKAGE_DEFAULT',
-    ),
-    'avatars' => array(
-        'Enables exporting avatars from the database if supported.',
-        'Sx' => '::',
-        'Field' => 'avatars',
-        'Short' => 'a',
-        'Default' => false,
-    ),
-    'cdn' => array(
-        'Prefix to be applied to file paths.',
-        'Field' => 'cdn',
-        'Sx' => ':',
-        'Short' => 'c',
-        'Default' => '',
-    ),
-    'files' => array(
-        'Enables exporting attachments from database if supported.',
-        'Sx' => '::',
-        'Short' => 'f',
-        'Default' => false,
-    ),
-    'destpath' => array(
-        'Define destination path for the export file.',
-        'Sx' => '::',
-        'Short' => 'd',
-        'Default' => './',
-    ),
-    'spawn' => array(
-        'Create a new package with this name.',
-        'Sx' => '::',
-        'Short' => 's',
-        'Default' => '',
-    ),
-    'help' => array(
-        'Show this help, duh.',
-        'Short' => 'h',
-    ),
-    'tables' => array(
-        'Selective export, limited to specified tables, if provided',
-        'Sx' => ':',
-    )
-);
-
-// Go through all of the supported types and add them to the type description.
-if (isset($supported)) {
-    $globalOptions['type']['Values'] = array_keys($supported);
-}
+use NitroPorter\SupportManager;
 
 function getAllCommandLineOptions($sections = false)
 {
-    global $globalOptions, $supported;
+    $globalOptions = SupportManager::getInstance()->getOptions();
+    $supported = SupportManager::getInstance()->getSupport();
 
     if ($sections) {
         $result['Global Options'] = $globalOptions;
@@ -149,7 +61,10 @@ function getOptCodes($options)
 
 function parseCommandLine($options = null, $files = null)
 {
-    global $globalOptions, $supported, $argv;
+    global $argv; // @see https://www.php.net/manual/en/reserved.variables.argv.php
+    $globalOptions = SupportManager::getInstance()->getOptions();
+    $supported = SupportManager::getInstance()->getSupport();
+
 
     if (isset($options)) {
         $globalOptions = $options;
@@ -223,7 +138,7 @@ function parseCommandLine($options = null, $files = null)
  */
 function getOptFromArgv($shortCodes, $longCodes)
 {
-    global $argv;
+    global $argv; // @see https://www.php.net/manual/en/reserved.variables.argv.php
 
     $options = array();
 
