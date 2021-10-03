@@ -2,7 +2,7 @@
     "name": "linc/nitro-porter",
     "type": "project",
     "description": "Nitro Porter is a tool for exporting forum data to a portable format.",
-    "license": "GPL-2.0",
+    "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "Lincoln Russell",
