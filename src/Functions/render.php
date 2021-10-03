@@ -17,7 +17,6 @@ function pageHeader()
     <title>Nitro Porter - Forum Export Tool</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="assets/style.css" media="screen"/>
-    <script src="assets/jquery.min.js"></script>
 </head>
 <body>
 <div id="Frame">
@@ -102,8 +101,9 @@ function viewForm($data)
             <ul>
                 <li>
                     <label>
-                        Source Forum Type
-                        <select name="type" id="ForumType">
+                        Source Package
+                        <select name="type" id="ForumType" onchange="setPrefix()">
+                            <option disabled selected value> — selection required — </option>
                             <?php foreach ($forums as $forumClass => $forumInfo) : ?>
                                 <option value="<?php echo $forumClass; ?>"<?php
                                 if (getValue('type') == $forumClass) {
@@ -179,43 +179,43 @@ function viewForm($data)
         </div>
     </form>
     <script type="text/javascript">
-        $('#ForumType')
-            .change(function() {
-                var type = $(this).val();
-                switch (type) {
-                    <?php
-                    foreach ($forums as $forumClass => $forumInfo) {
-                        $exportOptions = "\$('#FileExports > fieldset, #FileExports input').prop('disabled', true);";
+    function setPrefix() {
+        let type = document.getElementById('ForumType').value;
+        switch (type) {
+        <?php
+        foreach ($forums as $forumClass => $forumInfo) {
+            $hasAvatars = !empty($forumInfo['features']['Avatars']);
+            $hasAttachments = !empty($forumInfo['features']['Attachments']);
+            $spacer = "\n                "; // Makes the JS legible in Inpsector.
 
-                        $hasAvatars = !empty($forumInfo['features']['Avatars']);
-                        $hasAttachments = !empty($forumInfo['features']['Attachments']);
+            $exportOptions = $spacer
+                 . "document.getElementsByName('avatars')[0].disabled = "
+                 . ($hasAvatars ? 'false' : 'true') . "; ";
+            if ($hasAvatars) {
+                $exportOptions .= $spacer
+                 . "document.getElementsByName('avatars')[0].parentNode.classList.remove('disabled'); ";
+            } else {
+                $exportOptions .= $spacer
+                 . "document.getElementsByName('avatars')[0].parentNode.classList.add('disabled'); ";
+            }
+            $exportOptions .= $spacer . "document.getElementsByName('files')[0].disabled = "
+                 . ($hasAttachments ? 'false' : 'true') . "; ";
+            if ($hasAttachments) {
+                $exportOptions .= $spacer
+                 . "document.getElementsByName('files')[0].parentNode.classList.remove('disabled'); ";
+            } else {
+                $exportOptions .= $spacer
+                 . "document.getElementsByName('files')[0].parentNode.classList.add('disabled'); ";
+            }
+            ?>
 
-                        if ($hasAvatars || $hasAttachments) {
-                            $exportOptions = "\$('#FileExports > fieldset').prop('disabled', false);";
-                            $exportOptions .= "\$('#FileExports input[name=avatars]').prop('disabled', "
-                                 . ($hasAvatars ? 'false' : 'true') . ")";
-                            if ($hasAvatars) {
-                                $exportOptions .= ".parent().removeClass('disabled');";
-                            } else {
-                                $exportOptions .= ".parent().addClass('disabled');";
-                            }
-                            $exportOptions .= "\$('#FileExports input[name=files]').prop('disabled', "
-                                 . ($hasAttachments ? 'false' : 'true') . ")";
-                            if ($hasAttachments) {
-                                $exportOptions .= ".parent().removeClass('disabled');";
-                            } else {
-                                $exportOptions .= ".parent().addClass('disabled');";
-                            }
-                        }
-                        ?>
-                    case '<?php echo $forumClass; ?>':
-                        <?php echo $exportOptions; ?>
-                        $('#ForumPrefix').val('<?php echo $forumInfo['prefix']; ?>');
-                        break;
-                    <?php } ?>
-                }
-            })
-            .trigger('change');
+            case '<?php echo $forumClass; ?>':<?php echo $exportOptions . "\n"; ?>
+                document.getElementById("ForumPrefix").value = '<?php echo $forumInfo['prefix']; ?>';
+                break;
+        <?php } ?>
+
+        }
+    }
     </script>
 
     <?php pageFooter();
