@@ -94,8 +94,7 @@ class JForum extends ExportController
                 u.deleted as Deleted,
                 u.user_from as Location,
                 u.user_biography as About
-            from :_users as u
-         ",
+            from :_users as u",
             $user_Map
         );
 
@@ -109,8 +108,7 @@ class JForum extends ExportController
                 g.group_id as RoleID,
                 g.group_name as Name,
                 g.group_description as Description
-            from :_groups as g
-         ",
+            from :_groups as g",
             $role_Map
         );
 
@@ -123,8 +121,7 @@ class JForum extends ExportController
             select
                 u.user_id as UserID,
                 u.group_id as RoleID
-            from :_user_groups as u
-        ",
+            from :_user_groups as u",
             $userRole_Map
         );
 
@@ -141,7 +138,6 @@ class JForum extends ExportController
             where user_website is not null
 
             union
-
             select
                 user_id,
                 'Plugins.Signatures.Sig',
@@ -150,7 +146,6 @@ class JForum extends ExportController
             where user_sig is not null
 
             union
-
             select
                 user_id,
                 'Plugins.Signatures.Format',
@@ -159,7 +154,6 @@ class JForum extends ExportController
             where user_sig is not null
 
             union
-
             select
                 user_id,
                 'Profile.Occupation',
@@ -168,14 +162,12 @@ class JForum extends ExportController
             where user_occ is not null
 
             union
-
             select
                 user_id,
                 'Profile.Interests',
                 user_interests
             from :_users
-            where user_interests is not null
-        "
+            where user_interests is not null"
         );
 
 
@@ -196,7 +188,6 @@ class JForum extends ExportController
             from :_categories as c
 
             union
-
             select
                 f.forum_id as CategoryID,
                 f.categories_id+1000 as ParentCategoryID,
@@ -204,11 +195,9 @@ class JForum extends ExportController
                 f.forum_desc as Description,
                 2 as Depth,
                 null as Sort
-            from :_forums as f
-        ",
+            from :_forums as f",
             $category_Map
         );
-
 
         if ($ex->exists(':_posts_text')) {
             $postTextColumm = 't.post_text as Body';
@@ -225,8 +214,7 @@ class JForum extends ExportController
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $ex->exportTable(
             'Discussion',
-            "
-            select
+            "select
                 t.topic_id as DiscussionID,
                 t.forum_id as CategoryID,
                 t.user_id as InsertUserID,
@@ -240,8 +228,7 @@ class JForum extends ExportController
                 'BBCode' as Format
             from :_topics as t
                 left join :_posts p on t.topic_first_post_id = p.post_id
-                $postTextSource
-            ",
+                $postTextSource",
             $discussion_Map
         );
 
@@ -264,8 +251,7 @@ class JForum extends ExportController
             from :_posts as p
                 $postTextSource
                 left join jforum_topics as t on t.topic_first_post_id = p.post_id
-            where t.topic_first_post_id is null
-         ",
+            where t.topic_first_post_id is null",
             $comment_Map
         );
 
@@ -284,8 +270,7 @@ class JForum extends ExportController
                 w.user_id as UserID,
                 1 as Bookmarked,
                 if (w.is_read, now(), null) as DateLastViewed
-            from :_topics_watch as w
-         ",
+            from :_topics_watch as w",
             $userDiscussion_Map
         );
 
@@ -293,31 +278,28 @@ class JForum extends ExportController
         // Conversation.
         // Thread using tmp table based on the pair of users talking.
         if (!$ex->indexExists('ix_zconversation_from_to', ':_privmsgs')) {
-            $ex->query('create index ix_zconversation_from_to on :_privmsgs (privmsgs_from_userid, privmsgs_to_userid)');
+            $ex->query('create index ix_zconversation_from_to
+                on :_privmsgs (privmsgs_from_userid, privmsgs_to_userid)');
         }
         $ex->query("drop table if exists z_conversation;");
         $ex->query(
-            "
-            create table z_conversation (
+            "create table z_conversation (
                 ConversationID int unsigned not null auto_increment,
                 LowUserID int unsigned,
                 HighUserID int unsigned,
                 primary key (ConversationID),
                 index idx_lowuser_highuser (LowUserID, HighUserID)
-            ) engine=InnoDB default charset=utf8 collate=utf8_unicode_ci;
-        "
+            ) engine=InnoDB default charset=utf8 collate=utf8_unicode_ci;"
         );
         $ex->query(
-            "
-            insert into z_conversation (LowUserID, HighUserID)
+            "insert into z_conversation (LowUserID, HighUserID)
                 select
                     least(privmsgs_from_userid, privmsgs_to_userid),
                     greatest(privmsgs_from_userid, privmsgs_to_userid)
                 from :_privmsgs
                 group by
                     least(privmsgs_from_userid, privmsgs_to_userid),
-                    greatest(privmsgs_from_userid, privmsgs_to_userid)
-        "
+                    greatest(privmsgs_from_userid, privmsgs_to_userid)"
         );
 
         // Replying on /dba/counts to rebuild most of this data later.
@@ -328,8 +310,7 @@ class JForum extends ExportController
         );
         $ex->exportTable(
             'Conversation',
-            "
-            select
+            "select
                 p.privmsgs_from_userid as InsertUserID,
                 p.privmsgs_date as DateInserted,
                 p.privmsgs_subject as Subject,
@@ -339,8 +320,7 @@ class JForum extends ExportController
                     and c.LowUserID = least(p.privmsgs_from_userid, p.privmsgs_to_userid)
             group by
                 least(privmsgs_from_userid, privmsgs_to_userid),
-                greatest(privmsgs_from_userid, privmsgs_to_userid)
-        ",
+                greatest(privmsgs_from_userid, privmsgs_to_userid)",
             $conversation_Map
         );
 
@@ -355,8 +335,7 @@ class JForum extends ExportController
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-            select
+            "select
                 p.privmsgs_id as MessageID,
                 p.privmsgs_from_userid as InsertUserID,
                 p.privmsgs_date as DateInserted,
@@ -367,8 +346,7 @@ class JForum extends ExportController
                 left join :_privmsgs_text t on t.privmsgs_id = p.privmsgs_id
                 left join z_conversation c on c.LowUserID = least(privmsgs_from_userid, privmsgs_to_userid)
                     and c.HighUserID = greatest(privmsgs_from_userid, privmsgs_to_userid)
-            group by privmsgs_date
-        ",
+            group by privmsgs_date",
             $message_Map
         );
 
@@ -376,25 +354,24 @@ class JForum extends ExportController
         // UserConversation
         $ex->exportTable(
             'UserConversation',
-            "
-            select
+            "select
                 ConversationID,
                 LowUserID as UserID,
                 now() as DateLastViewed
             from z_conversation
 
             union
-
             select
                 ConversationID,
                 HighUserID as UserID,
                 now() as DateLastViewed
-            from z_conversation
-         "
+            from z_conversation"
         );
 
         $ex->comment('Run the following query after the import: ');
-        $ex->comment('update GDN_UserConversation set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)');
+        $ex->comment('update GDN_UserConversation
+            set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage
+                where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)');
 
         $ex->endExport();
     }

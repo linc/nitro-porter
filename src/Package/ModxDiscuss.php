@@ -55,7 +55,9 @@ class ModxDiscuss extends ExportController
         'boards' => array(),
         'posts' => array(),
         'threads' => array(),
-        'users' => array('user', 'username', 'email', 'createdon', 'gender', 'birthdate', 'location', 'confirmed', 'last_login', 'last_active', 'title', 'avatar', 'show_email'), // Require specific cols on 'users'
+        'users' => array('user', 'username', 'email', 'createdon', 'gender',
+            'birthdate', 'location', 'confirmed', 'last_login', 'last_active',
+            'title', 'avatar', 'show_email'), // Require specific cols on 'users'
     );
 
     /**
@@ -137,7 +139,8 @@ class ModxDiscuss extends ExportController
         // This is an example of pulling Signatures into Vanilla's UserMeta table.
         // This is often a good place for any extraneous data on the User table too.
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
-        // You can add the appropriately-named fields after the migration and profiles will auto-populate with the migrated data.
+        // You can add the appropriately-named fields after the migration
+        // and profiles will auto-populate with the migrated data.
         $ex->exportTable(
             'UserMeta',
             "

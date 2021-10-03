@@ -280,7 +280,8 @@ function vanillaStructure()
         'Log' => array(
             'LogID' => 'int',
             //'Operation' => array('Delete','Edit','Spam','Moderate','Pending','Ban','Error'),
-            //'RecordType' => array('Discussion','Comment','User','Registration','Activity','ActivityComment','Configuration','Group'),
+            //'RecordType' => array('Discussion','Comment','User','Registration','Activity','ActivityComment',
+            //  'Configuration','Group'),
             'TransactionLogID' => 'int',
             'RecordID' => 'int',
             'RecordUserID' => 'int',
@@ -638,7 +639,8 @@ function vanillaStructure()
             'RoleID' => 'int'
         ),
         'UserTag' => array(
-            'RecordType' => 'varchar(200)', //'Discussion', 'Discussion-Total', 'Comment', 'Comment-Total', 'User', 'User-Total', 'Activity', 'Activity-Total', 'ActivityComment', 'ActivityComment-Total'
+            'RecordType' => 'varchar(200)', //'Discussion', 'Discussion-Total', 'Comment', 'Comment-Total',
+            //  'User', 'User-Total', 'Activity', 'Activity-Total', 'ActivityComment', 'ActivityComment-Total'
             'RecordID' => 'int',
             'TagID' => 'int',
             'UserID' => 'int',

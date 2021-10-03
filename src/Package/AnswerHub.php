@@ -69,7 +69,8 @@ class AnswerHub extends ExportController
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'AnswerHub');
 
-        $result = $ex->query("select c_reserved as lastID from id_generators where c_identifier = 'AUTHORITABLE'", true);
+        $result = $ex->query("select c_reserved as lastID
+            from id_generators where c_identifier = 'AUTHORITABLE'", true);
         if ($row = $result->nextResultRow()) {
             $lastID = $row['lastID'];
         }
@@ -352,7 +353,7 @@ class AnswerHub extends ExportController
      * Set valid MIME type for images.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $value Extension.
      * @param  string $field Ignored.

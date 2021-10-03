@@ -70,7 +70,8 @@ function viewForm($data)
         $canWrite = testWrite();
     }
     if (!$canWrite) {
-        $msg = 'The porter does not have write permission to write to this folder. You need to give the porter permission to create files so that it can generate the export file.' . $msg;
+        $msg = 'The porter does not have write permission to write to this folder. '
+        . 'You need to give the porter permission to create files so that it can generate the export file.' . $msg;
     }
 
     if (defined('CONSOLE')) {
@@ -82,7 +83,8 @@ function viewForm($data)
     pageHeader(); ?>
     <div class="Info">
         Need help?
-        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide" style="text-decoration:underline;"
+        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide"
+            style="text-decoration:underline;"
            target="_blank">Try the guide</a> and peep our
         <a href="?features=1" style="text-decoration:underline;">feature support table</a>.
     </div>
@@ -112,9 +114,11 @@ function viewForm($data)
                     </label>
                 </li>
                 <li>
-                    <label>Table Prefix <span>Most installations have a database prefix. If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span>
+                    <label>Table Prefix <span>Most installations have a database prefix.
+                        If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span>
                         <input class="InputBox" type="text" name="prefix"
-                            value="<?php echo htmlspecialchars(getValue('prefix')) != '' ? htmlspecialchars(getValue('prefix')) : ''; ?>"
+                            value="<?php echo htmlspecialchars(getValue('prefix')) != ''
+                                ? htmlspecialchars(getValue('prefix')) : ''; ?>"
                             id="ForumPrefix"/>
                     </label>
                 </li>
@@ -141,7 +145,8 @@ function viewForm($data)
                 </li>
                 <li>
                     <label>Database Password
-                        <input class="InputBox" type="password" name="dbpass" value="<?php echo htmlspecialchars(getValue('dbpass')) ?>"/>
+                        <input class="InputBox" type="password" name="dbpass"
+                            value="<?php echo htmlspecialchars(getValue('dbpass')) ?>"/>
                     </label>
                 </li>
                 <li>
@@ -187,13 +192,15 @@ function viewForm($data)
 
                         if ($hasAvatars || $hasAttachments) {
                             $exportOptions = "\$('#FileExports > fieldset').prop('disabled', false);";
-                            $exportOptions .= "\$('#FileExports input[name=avatars]').prop('disabled', " . ($hasAvatars ? 'false' : 'true') . ")";
+                            $exportOptions .= "\$('#FileExports input[name=avatars]').prop('disabled', "
+                                 . ($hasAvatars ? 'false' : 'true') . ")";
                             if ($hasAvatars) {
                                 $exportOptions .= ".parent().removeClass('disabled');";
                             } else {
                                 $exportOptions .= ".parent().addClass('disabled');";
                             }
-                            $exportOptions .= "\$('#FileExports input[name=files]').prop('disabled', " . ($hasAttachments ? 'false' : 'true') . ")";
+                            $exportOptions .= "\$('#FileExports input[name=files]').prop('disabled', "
+                                 . ($hasAttachments ? 'false' : 'true') . ")";
                             if ($hasAttachments) {
                                 $exportOptions .= ".parent().removeClass('disabled');";
                             } else {
@@ -292,7 +299,8 @@ function viewFeatureTable($features = array())
     // Header row of labels for each platform
     echo '<th><i>Feature</i></th>';
     foreach ($platforms as $slug) {
-        echo '<th class="Platform"><div><span><a href="?features=1&type=' . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
+        echo '<th class="Platform"><div><span><a href="?features=1&type='
+             . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
     }
 
     echo '</tr></thead><tbody>';

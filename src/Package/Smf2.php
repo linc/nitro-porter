@@ -328,7 +328,7 @@ class Smf2 extends ExportController
         }
     }
 
-    public function _pcreEntityToUtf($matches)
+    public function pcreEntityToUtf($matches)
     {
         $char = intval(is_array($matches) ? $matches[1] : $matches);
 
@@ -343,7 +343,8 @@ class Smf2 extends ExportController
             if ($char < 0x80000) {
                 return chr(0xc0 | (0x1f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
             } else {
-                return chr(0xe0 | (0x0f & ($char >> 12))) . chr(0x80 | (0x3f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
+                return chr(0xe0 | (0x0f & ($char >> 12)))
+                     . chr(0x80 | (0x3f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
             }
         }
     }
@@ -370,7 +371,7 @@ class Smf2 extends ExportController
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $value Current value
      * @param  string $field Current field

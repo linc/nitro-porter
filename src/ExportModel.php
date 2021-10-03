@@ -84,7 +84,7 @@ class ExportModel
     /**
      * @var string Database host. *
      */
-    public $_host = 'localhost';
+    public $host = 'localhost';
 
     /**
      * @var bool Whether mb_detect_encoding() is available. *
@@ -94,12 +94,12 @@ class ExportModel
     /**
      * @var object PDO instance
      */
-    protected $_PDO = null;
+    protected $pdo = null;
 
     /**
      * @var string Database password. *
      */
-    protected $_password;
+    protected $password;
 
     /**
      * @var string The path to the export file.
@@ -120,7 +120,7 @@ class ExportModel
     /**
      * @var array *
      */
-    protected $_queryStructures = array();
+    protected $queryStructures = array();
 
     /**
      * @var array Tables to limit the export to.  A full export is an empty array.
@@ -145,7 +145,7 @@ class ExportModel
     /**
      * @var array Structures that define the format of the export tables.
      */
-    protected $_structures = array();
+    protected $structures = array();
 
     /**
      * @var bool Whether to limit results to the $testLimit.
@@ -160,17 +160,17 @@ class ExportModel
     /**
      * @var bool Whether or not to use compression when creating the file.
      */
-    protected $_useCompression = true;
+    protected $useCompression = true;
 
     /**
      * @var string Database username.
      */
-    protected $_username;
+    protected $username;
 
     /**
      * @var object Instance DbFactory
      */
-    protected $_dbFactory;
+    protected $dbFactory;
 
 
     /**
@@ -178,7 +178,7 @@ class ExportModel
      */
     public function __construct($dbFactory)
     {
-        $this->_dbFactory = $dbFactory;
+        $this->dbFactory = $dbFactory;
         self::$mb = function_exists('mb_detect_encoding');
 
         // Set the search and replace to escape strings.
@@ -191,7 +191,7 @@ class ExportModel
         );
 
         // Load structure.
-        $this->_structures = vanillaStructure();
+        $this->structures = vanillaStructure();
     }
 
     /**
@@ -220,11 +220,12 @@ class ExportModel
 
         // Allow the $path parameter to override this default naming.
         if (!$path) {
-            $this->path .= 'export_' . ($this->filenamePrefix ? $this->filenamePrefix . '_' : '') . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
+            $this->path .= 'export_' . ($this->filenamePrefix ? $this->filenamePrefix . '_' : '')
+                 . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
         }
 
         // Start the file pointer.
-        $fp = $this->_openFile();
+        $fp = $this->openFile();
 
         // Build meta info about where this file came from.
         $comment = 'Nitro Porter Export: ' . $this->version();
@@ -310,15 +311,18 @@ class ExportModel
     /**
      * Export a table to the export file.
      *
-     * @param string $tableName the name of the table to export. This must correspond to one of the accepted Vanilla tables.
+     * @param string $tableName Name of table to export. This must correspond to one of the accepted Vanilla tables.
      * @param mixed  $query     The query that will fetch the data for the export this can be one of the following:
-     *                          - <b>String</b>: Represents a string of SQL to execute. - <b>PDOStatement</b>:
-     *                          Represents an already executed query result set. - <b>Array</b>: Represents an
-     *                          array of associative arrays or objects containing the data in the export.
-     * @param array  $mappings  Specifies mappings, if any, between the source and the export where the keys represent the source columns and the values represent Vanilla columns.
-     *                          - If you specify a Vanilla column then it must be in the export structure contained in this class. - If you specify a MySQL type then the column
-     *                          will be added. - If you specify an array you can have the following keys: Column, and Type where Column represents the new column name and Type
-     *                          represents the MySQL type. For a list of the export tables and columns see $this->Structure().
+     *      <b>String</b>: Represents a string of SQL to execute.
+     *      <b>PDOStatement</b>: Represents an already executed query result set.
+     *      <b>Array</b>: Represents an array of associative arrays or objects containing the data in the export.
+     * @param array  $mappings Specifies mappings, if any, between source and export where keys represent source columns
+     *   and values represent Vanilla columns.
+     *   If you specify a Vanilla column then it must be in the export structure contained in this class.
+     *   If you specify a MySQL type then the column will be added.
+     *   If you specify an array you can have the following keys: Column,
+     *   and Type where Column represents the new column name and Type
+     *   represents the MySQL type. For a list of the export tables and columns see $this->Structure().
      */
     public function exportTable($tableName, $query, $mappings = [])
     {
@@ -327,7 +331,7 @@ class ExportModel
         } else {
             $beginTime = microtime(true);
 
-            $rowCount = $this->_exportTable($tableName, $query, $mappings);
+            $rowCount = $this->exportTableWrite($tableName, $query, $mappings);
 
             $endTime = microtime(true);
             $elapsed = self::formatElapsed($beginTime, $endTime);
@@ -415,15 +419,15 @@ class ExportModel
      * @param  array $options
      * @return int
      */
-    protected function _exportTable($tableName, $query, $mappings = [], $options = [])
+    protected function exportTableWrite($tableName, $query, $mappings = [], $options = [])
     {
         $fp = $this->file;
 
         // Make sure the table is valid for export.
-        if (!array_key_exists($tableName, $this->_structures)) {
+        if (!array_key_exists($tableName, $this->structures)) {
             $this->comment(
                 "Error: $tableName is not a valid export."
-                . " The valid tables for export are " . implode(", ", array_keys($this->_structures))
+                . " The valid tables for export are " . implode(", ", array_keys($this->structures))
             );
             fwrite($fp, self::NEWLINE);
 
@@ -447,11 +451,11 @@ class ExportModel
             }
         }
 
-        $structure = $this->_structures[$tableName];
+        $structure = $this->structures[$tableName];
 
         $firstQuery = true;
 
-        $data = $this->_query($query);
+        $data = $this->execute_query($query);
 
         // Loop through the data and write it to the file.
         $rowCount = 0;
@@ -487,7 +491,7 @@ class ExportModel
      * @param $query
      * @param array $mappings
      */
-    protected function _createExportTable($tableName, $query, $mappings = [])
+    protected function createExportTable($tableName, $query, $mappings = [])
     {
         if (!$this->scriptCreateTable) {
             return;
@@ -495,7 +499,7 @@ class ExportModel
 
         // Limit the query to grab any additional columns.
         $queryStruct = rtrim($query, ';') . ' limit 1';
-        $structure = $this->_structures[$tableName];
+        $structure = $this->structures[$tableName];
 
         $data = $this->query($queryStruct, true);
         //      $mb = function_exists('mb_detect_encoding');
@@ -606,7 +610,7 @@ class ExportModel
      */
     public function get($sql, $indexColumn = false)
     {
-        $r = $this->_query($sql);
+        $r = $this->execute_query($sql);
         $result = [];
 
         while ($row = ($r->nextResultRow())) {
@@ -712,7 +716,7 @@ class ExportModel
         $exportStructure = array();
 
         if (is_string($tableOrStructure)) {
-            $structure = $this->_structures[$tableOrStructure];
+            $structure = $this->structures[$tableOrStructure];
         } else {
             $structure = $tableOrStructure;
         }
@@ -845,7 +849,7 @@ class ExportModel
      *
      * @return resource
      */
-    protected function _openFile()
+    protected function openFile()
     {
         $this->path = str_replace(' ', '_', $this->path);
         if ($this->useCompression()) {
@@ -879,7 +883,7 @@ class ExportModel
             }
         }
 
-        return $this->_query($query);
+        return $this->execute_query($query);
     }
 
     /**
@@ -936,10 +940,10 @@ class ExportModel
     public function structures($newStructures = false)
     {
         if (is_array($newStructures)) {
-            $this->_structures = $newStructures;
+            $this->structures = $newStructures;
         }
 
-        return $this->_structures;
+        return $this->structures;
     }
 
     /**
@@ -951,10 +955,10 @@ class ExportModel
     public function useCompression($value = null)
     {
         if ($value !== null) {
-            $this->_useCompression = $value;
+            $this->useCompression = $value;
         }
 
-        return $this->_useCompression && $this->destination == 'file' && function_exists('gzopen');
+        return $this->useCompression && $this->destination == 'file' && function_exists('gzopen');
     }
 
     /**
@@ -1040,7 +1044,7 @@ class ExportModel
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->_query('describe :_' . $reqTable);
+            $tableDescriptions = $this->execute_query('describe :_' . $reqTable);
 
             //echo 'describe '.$prefix.$reqTable;
             if ($tableDescriptions === false) { // Table doesn't exist
@@ -1079,14 +1083,17 @@ class ExportModel
                 return true;
             } // Nothing missing!
         } elseif ($countMissingTables == count($requiredTables)) {
-            $result = 'The required tables are not present in the database. Make sure you entered the correct database name and prefix and try again.';
+            $result = 'The required tables are not present in the database.
+                Make sure you entered the correct database name and prefix and try again.';
 
             // Guess the prefixes to notify the user.
             $prefixes = $this->getDatabasePrefixes();
             if (count($prefixes) == 1) {
-                $result .= ' Based on the database you provided, your database prefix is probably ' . implode(', ', $prefixes);
+                $result .= ' Based on the database you provided,
+                    your database prefix is probably ' . implode(', ', $prefixes);
             } elseif (count($prefixes) > 0) {
-                $result .= ' Based on the database you provided, your database prefix is probably one of the following: ' . implode(', ', $prefixes);
+                $result .= ' Based on the database you provided,
+                    your database prefix is probably one of the following: ' . implode(', ', $prefixes);
             }
 
             return $result;
@@ -1228,7 +1235,7 @@ class ExportModel
      * @param  $sql
      * @return ResultSet instance of ResultSet of success false on failure
      */
-    private function _query($sql)
+    private function executeQuery($sql)
     {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
         if ($this->sourcePrefix) {
@@ -1237,7 +1244,7 @@ class ExportModel
 
         $sql = rtrim($sql, ';') . ';';
 
-        $dbResource = $this->_dbFactory->getInstance();
+        $dbResource = $this->dbFactory->getInstance();
         return $dbResource->query($sql);
     }
 
@@ -1249,7 +1256,7 @@ class ExportModel
      */
     public function escape($string)
     {
-        $dbResource = $this->_dbFactory->getInstance();
+        $dbResource = $this->dbFactory->getInstance();
         return $dbResource->escape($string);
     }
 

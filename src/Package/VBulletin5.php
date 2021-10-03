@@ -146,7 +146,8 @@ class VBulletin5 extends VBulletin
             $passwordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
         } else {
             // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
-            $passwordSQL = "replace(token, ' ', '') as password2, case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
+            $passwordSQL = "replace(token, ' ', '') as password2,
+                case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
         }
 
         $ex->exportTable(
@@ -161,7 +162,8 @@ class VBulletin5 extends VBulletin
                 FROM_UNIXTIME(lastvisit) as DateLastActive,
                 FROM_UNIXTIME(joindate) as DateInserted,
                 FROM_UNIXTIME(lastactivity) as DateUpdated,
-                case when avatarrevision > 0 then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
+                case when avatarrevision > 0 then
+                    concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
                     when av.avatarpath is not null then av.avatarpath
                     else null
                 end as filephoto,
@@ -229,13 +231,17 @@ class VBulletin5 extends VBulletin
 
 
         // UserMeta
-        /*$ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta (`UserID` INT not null ,`Name` VARCHAR( 255 ) not null ,`Value` text not null)");
+        /*$ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta
+            (`UserID` INT not null ,`Name` VARCHAR( 255 ) not null ,`Value` text not null)");
         # Standard vB user data
-        $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website', 'skype' => 'Skype', 'styleid' => 'StyleID');
+        $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website',
+            'skype' => 'Skype', 'styleid' => 'StyleID');
         foreach($UserFields as $Field => $InsertAs)
-           $ex->Query("insert into VbulletinUserMeta (UserID, Name, Value) select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
+           $ex->Query("insert into VbulletinUserMeta (UserID, Name, Value)
+            select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
         # Dynamic vB user data (userfield)
-        $ProfileFields = $ex->Query("select varname, text from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
+        $ProfileFields = $ex->Query("select varname, text
+            from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
         if (is_resource($ProfileFields)) {
            $ProfileQueries = array();
            while ($Field = $ProfileFields->nextResultRow()) {
@@ -425,7 +431,7 @@ class VBulletin5 extends VBulletin
         ;";
 
         // Polls need to be wrapped in a discussion so we are gonna need to postpone discussion creations
-        if ($this->_getPollsCount()) {
+        if ($this->getPollsCount()) {
             // NOTE: Only polls that are directly under a channel (discussion) will be exported.
             // Vanilla poll plugin does not support polls as comments.
 
@@ -455,7 +461,7 @@ class VBulletin5 extends VBulletin
             );
             $ex->query("insert into vBulletinDiscussionTable $discussionQuery");
 
-            $this->_generatePollsDiscussion();
+            $this->generatePollsDiscussion();
 
             // Export discussions
             $sql = "
@@ -478,7 +484,7 @@ class VBulletin5 extends VBulletin
             $ex->exportTable('Discussion', $sql, $discussion_Map);
 
             // Export polls
-            $this->_exportPolls();
+            $this->exportPolls();
 
             // Cleanup tmp table
             $ex->query("drop table vBulletinDiscussionTable;");
@@ -517,13 +523,17 @@ class VBulletin5 extends VBulletin
                 'BBCode' as Format,
                 FROM_UNIXTIME(node.publishdate) as DateInserted
             from :_node as node
-                inner join :_contenttype as ct on ct.contenttypeid = node.contenttypeid and ct.class = 'Text' /*Inner Comment*/
+                inner join :_contenttype as ct on ct.contenttypeid = node.contenttypeid
+                    and ct.class = 'Text' /*Inner Comment*/
                 inner join :_node as nodeP on nodeP.nodeid = node.parentid
-                inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid and ctP.class = 'Text'/*Comment*/
+                inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid
+                    and ctP.class = 'Text'/*Comment*/
                 inner join :_node as nodePP on nodePP.nodeid = nodeP.parentid
-                inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid and ctPP.class = 'Text'/*Discussion*/
+                inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid
+                    and ctPP.class = 'Text'/*Discussion*/
                 inner join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
-                inner join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid and ctPPP.class = 'Channel'/*Category*/
+                inner join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid
+                    and ctPPP.class = 'Channel'/*Category*/
                 left join :_text t on t.nodeid = node.nodeid
             where node.showpublished = 1
         ";
@@ -720,7 +730,7 @@ class VBulletin5 extends VBulletin
     /**
      * @return int Number of poll that can be exported by the porter.
      */
-    protected function _getPollsCount()
+    protected function getPollsCount()
     {
         $count = 0;
 
@@ -749,7 +759,7 @@ class VBulletin5 extends VBulletin
     /**
      * Generate discussions for polls.
      */
-    protected function _generatePollsDiscussion()
+    protected function generatePollsDiscussion()
     {
         $ex = $this->ex;
 
@@ -800,7 +810,7 @@ class VBulletin5 extends VBulletin
         $ex->query($sql);
     }
 
-    protected function _exportPolls()
+    protected function exportPolls()
     {
         $ex = $this->ex;
         $fp = $ex->file;

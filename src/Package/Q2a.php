@@ -72,7 +72,8 @@ class Q2a extends ExportController
                 p.points as Points
             FROM :_users as u
             LEFT JOIN :_userpoints p USING(userid)
-            WHERE u.userid IN (Select DISTINCT userid from :_posts) AND (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
+            WHERE u.userid IN (Select DISTINCT userid from :_posts)
+                AND (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
          ",
             $user_Map
         );

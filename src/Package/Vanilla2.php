@@ -45,7 +45,7 @@ class Vanilla2 extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $_sourceTables = array();
+    protected $sourceTables = array();
 
     /**
      * @param ExportModel $ex

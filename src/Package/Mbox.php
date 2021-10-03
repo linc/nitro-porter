@@ -81,7 +81,8 @@ class Mbox extends ExportController
 
 
         // Temporary user table
-        $ex->query('create table :_mbox_user (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
+        $ex->query('create table :_mbox_user
+            (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
         $result = $ex->query('select Sender from :_mbox group by Sender', true);
 
         // Users, pt 1: Build ref array; Parse name & email out - strip quotes, <, >
@@ -111,7 +112,7 @@ class Mbox extends ExportController
         foreach ($users as $email => $name) {
             $ex->query(
                 'insert into :_mbox_user (Name, Email)
-            values ("' . $ex->escape($name) . '", "' . $ex->escape($email) . '")'
+                values ("' . $ex->escape($name) . '", "' . $ex->escape($email) . '")'
             );
             $userID = 0;
             $maxRes = $ex->query("select max(UserID) as id from :_mbox_user");
@@ -126,7 +127,7 @@ class Mbox extends ExportController
         // Temporary category table
         $ex->query(
             'create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
-         PRIMARY KEY (CategoryID))'
+            PRIMARY KEY (CategoryID))'
         );
         $result = $ex->query('select Folder from :_mbox group by Folder', true);
         // Parse name out & build ref array
@@ -134,7 +135,7 @@ class Mbox extends ExportController
         while ($row = $result->nextResultRow()) {
             $ex->query(
                 'insert into :_mbox_category (Name)
-            values ("' . $ex->escape($row["Folder"]) . '")'
+                values ("' . $ex->escape($row["Folder"]) . '")'
             );
             $categoryID = 0;
             $maxRes = $ex->query("select max(CategoryID) as id from :_mbox_category");
@@ -148,8 +149,8 @@ class Mbox extends ExportController
         // Temporary post table
         $ex->query(
             'create table :_mbox_post (PostID int AUTO_INCREMENT, DiscussionID int,
-         IsDiscussion tinyint default 0, InsertUserID int, Name varchar(255), Body text, DateInserted datetime,
-         CategoryID int, PRIMARY KEY (PostID))'
+            IsDiscussion tinyint default 0, InsertUserID int, Name varchar(255), Body text, DateInserted datetime,
+            CategoryID int, PRIMARY KEY (PostID))'
         );
         $result = $ex->query('select * from :_mbox', true);
         // Parse name, body, date, userid, categoryid
@@ -162,7 +163,7 @@ class Mbox extends ExportController
             $userID = (isset($users[$email])) ? $users[$email] : 0;
             $ex->query(
                 'insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
-            values ("' . $ex->escape($name) . '",
+                values ("' . $ex->escape($name) . '",
                ' . $userID . ',
                ' . $categories[$row['Folder']] . ',
                from_unixtime(' . strtotime($row['Date']) . '),
@@ -172,8 +173,7 @@ class Mbox extends ExportController
 
         // Decide which posts are OPs
         $result = $ex->query(
-            'select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name',
-            true
+            'select PostID from (select * from :_mbox_post order by DateInserted asc) x group by Name'
         );
         $discussions = array();
         while ($row = $result->nextResultRow()) {
@@ -184,12 +184,12 @@ class Mbox extends ExportController
         // Thread the comments
         $result = $ex->query(
             'select c.PostID, d.PostID as DiscussionID from :_mbox_post c
-         left join :_mbox_post d on c.Name like d.Name and d.IsDiscussion = 1
-         where c.IsDiscussion = 0',
-            true
+            left join :_mbox_post d on c.Name like d.Name and d.IsDiscussion = 1
+            where c.IsDiscussion = 0'
         );
         while ($row = $result->nextResultRow()) {
-            $ex->query('update :_mbox_post set DiscussionID = ' . $row['DiscussionID'] . '  where PostID = ' . $row['PostID']);
+            $ex->query('update :_mbox_post set DiscussionID = ' . $row['DiscussionID'] . '
+                where PostID = ' . $row['PostID']);
         }
 
 
@@ -198,10 +198,10 @@ class Mbox extends ExportController
         $ex->exportTable(
             'User',
             "
-         select u.*,
-            NOW() as DateInserted,
-            'Reset' as HashMethod
-         from :_mbox_user u",
+                select u.*,
+                    NOW() as DateInserted,
+                    'Reset' as HashMethod
+                from :_mbox_user u",
             $user_Map
         );
 
@@ -211,8 +211,8 @@ class Mbox extends ExportController
         $ex->exportTable(
             'Category',
             "
-      select *
-      from :_mbox_category",
+                select *
+                from :_mbox_category",
             $category_Map
         );
 
@@ -224,9 +224,8 @@ class Mbox extends ExportController
         $ex->exportTable(
             'Discussion',
             "
-      select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID,
-         'Html' as Format
-       from :_mbox_post p where IsDiscussion = 1",
+            select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID, 'Html' as Format
+            from :_mbox_post p where IsDiscussion = 1",
             $discussion_Map
         );
 
@@ -237,10 +236,9 @@ class Mbox extends ExportController
         );
         $ex->exportTable(
             'Comment',
-            "select p.*,
-         'Html' as Format
-       from :_mbox_post p
-       where IsDiscussion = 0",
+            "select p.*, 'Html' as Format
+                from :_mbox_post p
+                where IsDiscussion = 0",
             $comment_Map
         );
 

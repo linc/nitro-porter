@@ -228,7 +228,7 @@ class Yaf extends ExportController
         );
 
         // Conversation.
-        $this->_exportConversationTemps();
+        $this->exportConversationTemps();
 
         $conversation_Map = array(
             'PMessageID' => 'ConversationID',
@@ -316,7 +316,7 @@ class Yaf extends ExportController
         return $result;
     }
 
-    protected function _exportConversationTemps()
+    protected function exportConversationTemps()
     {
         $sql = "
          drop table if exists z_pmto;

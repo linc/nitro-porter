@@ -45,7 +45,7 @@ class Drupal6 extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $_sourceTables = array();
+    protected $sourceTables = array();
 
     /**
      * @param ExportModel $ex
@@ -200,7 +200,8 @@ class Drupal6 extends ExportController
                 pmm.subject as title,
                 FROM_UNIXTIME(pmm.timestamp) as DateInserted
             from pm_message as pmm
-                inner join pm_index as pmi on pmi.mid = pmm.mid and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
+                inner join pm_index as pmi on pmi.mid = pmm.mid
+                    and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
             group by pmi.thread_id
         ;",
             $conversation_Map

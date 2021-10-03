@@ -114,7 +114,8 @@ class FuseTalk extends ExportController
                 user.vchemailaddress as Email,
                 user.vchpassword as Password,
                 'md5' as HashMethod,
-                if (forumusers.vchauthoricon is not null, concat('authoricons/', forumusers.vchauthoricon), null) as Photo,
+                if (forumusers.vchauthoricon is not null,
+                    concat('authoricons/', forumusers.vchauthoricon), null) as Photo,
                 user.dtinsertdate as DateInserted,
                 user.dtlastvisiteddate as DateLastActive,
                 user.bapproved as Confirmed,
@@ -327,7 +328,8 @@ class FuseTalk extends ExportController
 
         // Comment.
         /*
-         * The iparentid column doesn't make any sense since the display is ordered by date only (there are no "sub" comment)
+         * The iparentid column doesn't make any sense since the display is
+         * ordered by date only (there are no "sub" comment)
          */
         $comment_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),

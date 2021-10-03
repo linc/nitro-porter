@@ -22,7 +22,11 @@ class Xenforo extends ExportController
         'prefix' => 'xf_',
         'CommandLine' => [
             'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
-            'attachmentpath' => array('Full path of source attachments to process.', 'Sx' => ':', 'Field' => 'attachmentpath'),
+            'attachmentpath' => array(
+                'Full path of source attachments to process.',
+                'Sx' => ':',
+                'Field' => 'attachmentpath'
+            ),
             'attachment' => array('Set to 1 to export attachments.', 'Sx' => ':', 'Field' => 'attachment'),
         ],
         'features' => [
@@ -100,7 +104,8 @@ class Xenforo extends ExportController
 
             if (file_exists($this->sourceFolder . $oldname)) {
                 $found++;
-                copy($this->sourceFolder . $oldname, $this->targetFolder . '/' . $dataId . '-' . str_replace(' ', '_', $filename));
+                copy($this->sourceFolder . $oldname, $this->targetFolder
+                     . '/' . $dataId . '-' . str_replace(' ', '_', $filename));
             }
         }
 
@@ -275,7 +280,8 @@ class Xenforo extends ExportController
             u.*,
             ua.data as password,
             'xenforo' as hash_method,
-            case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg') else null end as avatar
+            case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
+                else null end as avatar
          from :_user u
          left join :_user_authenticate ua
             on u.user_id = ua.user_id",
@@ -514,7 +520,7 @@ class Xenforo extends ExportController
          join :_user_group g
             on pe.user_group_id = g.user_group_id"
         );
-        $this->_exportPermissions($r, $permissions);
+        $this->exportPermissionsMap($r, $permissions);
 
         $r = $ex->query(
             "
@@ -525,7 +531,7 @@ class Xenforo extends ExportController
          join :_user_group g
             on pe.user_group_id = g.user_group_id"
         );
-        $this->_exportPermissions($r, $permissions);
+        $this->exportPermissionsMap($r, $permissions);
 
 
         if (count($permissions) == 0) {
@@ -535,7 +541,7 @@ class Xenforo extends ExportController
         $permissions = array_values($permissions);
 
         // Now that we have all of the permission in an array let's export them.
-        $columns = $this->_exportPermissions(false);
+        $columns = $this->exportPermissionsMap(false);
 
         foreach ($columns as $index => $column) {
             if (strpos($column, '.') !== false) {
@@ -579,7 +585,7 @@ class Xenforo extends ExportController
         $ex->exportTable('UserMeta', $sql);
     }
 
-    protected function _exportPermissions($r, &$perms = null)
+    protected function exportPermissionsMap($r, &$perms = null)
     {
         $map = array(
             'general.viewNode' => 'Vanilla.Discussions.View',

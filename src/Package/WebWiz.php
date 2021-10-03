@@ -85,7 +85,8 @@ class WebWiz extends ExportController
         //            g.can_view_profiles as can_view_profiles3,
         //            g.can_post_comments as can_post_comments2,
         //            g.can_post_comments as can_sign_in,
-        //            case when can_access_admin = 'y' then 'all' when can_view_online_system = 'y' then 'view' end as _Permissions,
+        //            case when can_access_admin = 'y' then 'all'
+        //              when can_view_online_system = 'y' then 'view' end as _Permissions,
         //            g.*
         //         from forum_member_groups g
         //      ", $Permission_Map);
@@ -114,7 +115,8 @@ class WebWiz extends ExportController
          select
             concat(Salt, '$', Password) as Password2,
             case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
-         case when Avatar like 'http%' then Avatar when Avatar > '' then concat('webwiz/', Avatar) else null end as Photo2,
+         case when Avatar like 'http%' then Avatar when Avatar > ''
+            then concat('webwiz/', Avatar) else null end as Photo2,
             'webwiz' as HashMethod,
             u.*
          from :_Author u
@@ -255,7 +257,7 @@ class WebWiz extends ExportController
     {
         $ex = $this->ex;
 
-        $this->_exportConversationTemps();
+        $this->exportConversationTemps();
 
         // Conversation.
         $conversation_Map = array(
@@ -316,7 +318,7 @@ class WebWiz extends ExportController
         );
     }
 
-    protected function _exportConversationTemps()
+    protected function exportConversationTemps()
     {
         $sql = "
          drop table if exists z_pmto;

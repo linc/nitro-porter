@@ -91,7 +91,8 @@ class ExpressionEngine extends ExportController
             g.can_view_profiles AS can_view_profiles3,
             g.can_post_comments AS can_post_comments2,
             g.can_post_comments AS can_sign_in,
-            CASE WHEN can_access_admin = 'y' THEN 'all' WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
+            CASE WHEN can_access_admin = 'y' THEN 'all'
+                WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
             g.*
          FROM forum_member_groups g
       ",
@@ -271,7 +272,7 @@ class ExpressionEngine extends ExportController
     {
         $ex = $this->ex;
 
-        $this->_exportConversationTemps();
+        $this->exportConversationTemps();
 
         // Conversation.
         $conversation_Map = array(
@@ -334,7 +335,7 @@ class ExpressionEngine extends ExportController
     /**
      * Create temporary tables for private message conversion.
      */
-    public function _exportConversationTemps()
+    public function exportConversationTemps()
     {
         $ex = $this->ex;
 
@@ -452,7 +453,8 @@ class ExpressionEngine extends ExportController
             select
                 message_id,
                 message_subject,
-                case when message_subject like 'Re: %' then trim(substring(message_subject, 4)) else message_subject end as title2
+                case when message_subject like 'Re: %' then trim(substring(message_subject, 4))
+                    else message_subject end as title2
             from forum_message_data;"
         );
 
@@ -505,7 +507,7 @@ class ExpressionEngine extends ExportController
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $value Current value
      * @param  string $field Current field

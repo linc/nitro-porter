@@ -127,8 +127,10 @@ class PhpBb3 extends ExportController
             'User',
             "select *,
             case user_avatar_type
-               when 1 then concat('$cdn', 'phpbb/', '$px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
-               when 'avatar.driver.upload' then concat('$cdn', 'phpbb/', '$px', '_', user_id, substr(user_avatar from locate('.', user_avatar)))
+               when 1 then concat('$cdn', 'phpbb/', '$px', '_', user_id,
+                    substr(user_avatar from locate('.', user_avatar)))
+               when 'avatar.driver.upload' then concat('$cdn', 'phpbb/', '$px', '_', user_id,
+                    substr(user_avatar from locate('.', user_avatar)))
                when 2 then user_avatar
                else null end as photo,
             FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
@@ -205,7 +207,9 @@ class PhpBb3 extends ExportController
                 group_id as RoleID,
                 case
                     when group_name like '%Guest%' or group_name like 'BOTS' then 'View'
-                    when group_name like '%Mod%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage'
+                    when group_name like '%Mod%'
+                        then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
+                            'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
                     when group_name like '%Admin%' then 'All'
                     else 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
                 end as _Permissions
@@ -689,21 +693,17 @@ class PhpBb3 extends ExportController
         );
         $ex->exportTable(
             'UserNote',
-            "
-            select
-                l.*,
-                'Text' as format
+            "select l.*, 'Text' as format
             from :_log l
-            where
-                reportee_id > 0
-                and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')
-        ",
+            where reportee_id > 0
+                and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')",
             $userNote_Map
         );
 
 
         if (count($corruptedRecords) > 0) {
-            $ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n" . print_r($corruptedRecords, true));
+            $ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n"
+                 . print_r($corruptedRecords, true));
         }
     }
 
@@ -715,9 +715,7 @@ class PhpBb3 extends ExportController
         $ex = $this->ex;
         $ex->exportTable(
             'Ban',
-            "
-            select
-                bl.*,
+            "select bl.*,
                 ban_id as BanID,
                 if (ban_ip='', 'Email', 'IpAddress') as BanType,
                 if(ban_ip='', ban_email, ban_ip) as BanValue,
@@ -725,8 +723,7 @@ class PhpBb3 extends ExportController
                 NOW() as DateInserted
             from :_banlist bl
             where bl.ban_userid = 0
-                and (ban_ip!='' or ban_email!='')
-        "
+                and (ban_ip!='' or ban_email!='')"
         );
     }
 
@@ -765,7 +762,7 @@ class PhpBb3 extends ExportController
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $value Current value
      * @param  string $field Current field

@@ -114,7 +114,8 @@ class Kunena extends ExportController
         //      union
         //      select 3 as RoleID, 'View' as _Permissions
         //      union
-        //      select 16 as RoleID, 'All' as _Permissions", array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
+        //      select 16 as RoleID, 'All' as _Permissions",
+        //          array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
 
         // Category.
         $category_Map = array(
@@ -236,7 +237,7 @@ class Kunena extends ExportController
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $ralue Current value
      * @param  string $field Current field

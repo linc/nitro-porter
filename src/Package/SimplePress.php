@@ -116,18 +116,19 @@ class SimplePress extends ExportController
         // Permissions.
         $ex->exportTable(
             'Permission',
-            "select
-            usergroup_id as RoleID,
-case
-   when usergroup_name like 'Guest%' then 'View'
-   when usergroup_name like 'Member%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
-   when usergroup_name like 'Mod%' then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage'
-end as _Permissions
-         from :_sfusergroups
+            "select usergroup_id as RoleID,
+            case
+               when usergroup_name like 'Guest%' then 'View'
+               when usergroup_name like 'Member%'
+                    then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
+               when usergroup_name like 'Mod%'
+                    then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
+                        'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
+            end as _Permissions
+                     from :_sfusergroups
 
-         union
-
-         select 100, 'All'"
+                     union
+                     select 100, 'All'"
         );
 
         // UserRoles
@@ -138,18 +139,17 @@ end as _Permissions
         $ex->exportTable(
             'UserRole',
             "select
-            m.user_id,
-            m.usergroup_id
-         from :_sfmemberships m
+                    m.user_id,
+                    m.usergroup_id
+                 from :_sfmemberships m
 
-         union
-
-         select
-            um.user_id,
-            100
-         from :_usermeta um
-         where um.meta_key = 'wp_capabilities'
-            and um.meta_value like '%PF Manage Forums%'",
+                 union
+                 select
+                    um.user_id,
+                    100
+                 from :_usermeta um
+                 where um.meta_key = 'wp_capabilities'
+                    and um.meta_value like '%PF Manage Forums%'",
             $userRole_Map
         );
 
@@ -266,7 +266,9 @@ end as _Permissions
             'select c.message_id as ConversationID, m.*
          from :_sfmessages c
          join :_sfmessages m
-           on (m.is_reply = 0 and m.message_id = c.message_id) or (m.is_reply = 1 and c.is_reply = 0 and m.message_slug = c.message_slug and m.from_id in (c.from_id, c.to_id) and m.to_id in (c.from_id, c.to_id));',
+           on (m.is_reply = 0 and m.message_id = c.message_id)
+            or (m.is_reply = 1 and c.is_reply = 0 and m.message_slug = c.message_slug
+            and m.from_id in (c.from_id, c.to_id) and m.to_id in (c.from_id, c.to_id));',
             $convMessage_Map
         );
 
@@ -282,7 +284,6 @@ end as _Permissions
          where is_reply = 0
 
          union
-
          select message_id, to_id
          from :_sfmessages
          where is_reply = 0',

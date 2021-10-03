@@ -75,7 +75,8 @@ class NodeBb extends ExportController
             'User',
             "
 
-             select uid, username, password, email, `email:confirmed` as confirmed, showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
+             select uid, username, password, email, `email:confirmed` as confirmed,
+                showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
              from :_user
 
              ",
@@ -321,7 +322,9 @@ class NodeBb extends ExportController
             'Discussion',
             "
 
-            select p.tid, cid, title, content, p.uid, locked, pinned, p.timestamp, p.edited, p.editor, viewcount, votes, poll._id as poll, 'Markdown' as format, concat(ifnull(u.total, 0), ':', ifnull(d.total, 0)) as attributes
+            select p.tid, cid, title, content, p.uid, locked, pinned, p.timestamp,
+                p.edited, p.editor, viewcount, votes, poll._id as poll, 'Markdown' as format,
+                concat(ifnull(u.total, 0), ':', ifnull(d.total, 0)) as attributes
             from :_topic t
             left join :_post p
             on t.mainPid = p.pid
@@ -408,7 +411,8 @@ class NodeBb extends ExportController
             'Comment',
             "
 
-            select content, uid, tid, timestamp, edited, editor, votes, 'Markdown' as format, concat(ifnull(upvote, 0), ':', ifnull(downvote, 0)) as attributes
+            select content, uid, tid, timestamp, edited, editor, votes, 'Markdown' as format,
+                concat(ifnull(upvote, 0), ':', ifnull(downvote, 0)) as attributes
             from z_comments
 
         ",
@@ -503,7 +507,8 @@ class NodeBb extends ExportController
             'Tag',
             "
 
-            select @rownr:=@rownr+1 as tagid, members as fullname, members as slug, '' as type, count, timestamp, uid, cid
+            select @rownr:=@rownr+1 as tagid, members as fullname, members as slug,
+                '' as type, count, timestamp, uid, cid
             from (
                 select members, count(*) as count, _parentid
                 from :_topic_tags__members
@@ -836,7 +841,7 @@ class NodeBb extends ExportController
         return $this->url($name);
     }
 
-    protected $_urlTranslations = array(
+    protected $urlTranslations = array(
         '–' => '-',
         '—' => '-',
         'À' => 'A',
@@ -1103,7 +1108,7 @@ class NodeBb extends ExportController
 
         // Preliminary decoding
         $mixed = strip_tags(html_entity_decode($mixed, ENT_COMPAT, 'UTF-8'));
-        $mixed = strtr($mixed, $this->_urlTranslations);
+        $mixed = strtr($mixed, $this->urlTranslations);
         $mixed = preg_replace('`[\']`', '', $mixed);
 
         // Test for Unicode PCRE support

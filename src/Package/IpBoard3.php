@@ -271,7 +271,8 @@ class IpBoard3 extends ExportController
                   'ipb' as HashMethod,
                   $showEmail as ShowEmail,
                   case when x.avatar_location in ('noavatar', '') then null
-                     when x.avatar_location like 'upload:%' then concat('{$cdn}ipb/', right(x.avatar_location, length(x.avatar_location) - 7))
+                     when x.avatar_location like 'upload:%'
+                        then concat('{$cdn}ipb/', right(x.avatar_location, length(x.avatar_location) - 7))
                      when x.avatar_type = 'upload' then concat('{$cdn}ipb/', x.avatar_location)
                      when x.avatar_type = 'url' then x.avatar_location
                      when x.avatar_type = 'local' then concat('{$cdn}style_avatars/', x.avatar_location)
@@ -433,7 +434,8 @@ class IpBoard3 extends ExportController
         if ($hasTopicDescription || $ex->exists('posts', array('description')) === true) {
             $description = ($hasTopicDescription) ? 't.description' : 'p.description';
             $descriptionSQL = "case
-            when $description <> '' and p.post is not null then concat('<div class=\"IPBDescription\">', $description, '</div>', p.post)
+            when $description <> '' and p.post is not null
+                then concat('<div class=\"IPBDescription\">', $description, '</div>', p.post)
             when $description <> '' then $description
             else p.post
          end";
@@ -536,170 +538,170 @@ class IpBoard3 extends ExportController
             'img_height' => 'ImageHeight'
         );
         $sql = "select
-   a.*,
-   concat('~cf/ipb/', a.attach_location) as attach_path,
-   concat('~cf/ipb/', a.attach_location) as thumb_path,
-   128 as thumb_width,
-   ty.atype_mimetype,
-   case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
-   case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
-   case a.attach_img_width when 0 then a.attach_thumb_width else a.attach_img_width end as img_width,
-   case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height
-from :_attachments a
-join :_posts p
-   on a.attach_rel_id = p.pid and a.attach_rel_module = 'post'
-join :_topics t
-   on t.tid = p.topic_id
-left join :_attachments_type ty
-   on a.attach_ext = ty.atype_extension";
+               a.*,
+               concat('~cf/ipb/', a.attach_location) as attach_path,
+               concat('~cf/ipb/', a.attach_location) as thumb_path,
+               128 as thumb_width,
+               ty.atype_mimetype,
+               case when p.pid = t.topic_firstpost then 'discussion' else 'comment' end as ForeignTable,
+               case when p.pid = t.topic_firstpost then t.tid else p.pid end as ForeignID,
+               case a.attach_img_width when 0 then a.attach_thumb_width else a.attach_img_width end as img_width,
+               case a.attach_img_height when 0 then a.attach_thumb_height else a.attach_img_height end as img_height
+            from :_attachments a
+            join :_posts p
+               on a.attach_rel_id = p.pid and a.attach_rel_module = 'post'
+            join :_topics t
+               on t.tid = p.topic_id
+            left join :_attachments_type ty
+               on a.attach_ext = ty.atype_extension";
         $this->clearFilters('Media', $media_Map, $sql);
         $ex->exportTable('Media', $sql, $media_Map);
 
         if ($ex->exists('message_topic_user_map')) {
-            $this->_exportConversationsV3();
+            $this->exportConversationsV3();
         } else {
-            $this->_exportConversationsV2();
+            $this->exportConversationsV2();
         }
 
         $ex->endExport();
     }
 
-    protected function _exportConversationsV2()
+    protected function exportConversationsV2()
     {
         $ex = $this->ex;
 
         $sql = <<<EOT
-create table tmp_to (
-   id int,
-   userid int,
-   primary key (id, userid)
-);
+            create table tmp_to (
+               id int,
+               userid int,
+               primary key (id, userid)
+            );
 
-truncate table tmp_to;
+            truncate table tmp_to;
 
-insert ignore tmp_to (
-   id,
-   userid
-)
-select
-   mt_id,
-   mt_from_id
-from :_message_topics;
+            insert ignore tmp_to (
+               id,
+               userid
+            )
+            select
+               mt_id,
+               mt_from_id
+            from :_message_topics;
 
-insert ignore tmp_to (
-   id,
-   userid
-)
-select
-   mt_id,
-   mt_to_id
-from :_message_topics;
+            insert ignore tmp_to (
+               id,
+               userid
+            )
+            select
+               mt_id,
+               mt_to_id
+            from :_message_topics;
 
-create table tmp_to2 (
-   id int primary key,
-   userids varchar(255)
-);
-truncate table tmp_to2;
+            create table tmp_to2 (
+               id int primary key,
+               userids varchar(255)
+            );
+            truncate table tmp_to2;
 
-insert tmp_to2 (
-   id,
-   userids
-)
-select
-   id,
-   group_concat(userid order by userid)
-from tmp_to
-group by id;
+            insert tmp_to2 (
+               id,
+               userids
+            )
+            select
+               id,
+               group_concat(userid order by userid)
+            from tmp_to
+            group by id;
 
-create table tmp_conversation (
-   id int primary key,
-   title varchar(255),
-   title2 varchar(255),
-   userids varchar(255),
-   groupid int
-);
+            create table tmp_conversation (
+               id int primary key,
+               title varchar(255),
+               title2 varchar(255),
+               userids varchar(255),
+               groupid int
+            );
 
-replace tmp_conversation (
-   id,
-   title,
-   title2,
-   userids
-)
-select
-   mt_id,
-   mt_title,
-   mt_title,
-   t2.userids
-from :_message_topics t
-join tmp_to2 t2
-   on t.mt_id = t2.id;
+            replace tmp_conversation (
+               id,
+               title,
+               title2,
+               userids
+            )
+            select
+               mt_id,
+               mt_title,
+               mt_title,
+               t2.userids
+            from :_message_topics t
+            join tmp_to2 t2
+               on t.mt_id = t2.id;
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 3))
-where title2 like 'Re:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 3))
+            where title2 like 'Re:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 5))
-where title2 like 'Sent:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 5))
+            where title2 like 'Sent:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 3))
-where title2 like 'Re:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 3))
+            where title2 like 'Re:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 5))
-where title2 like 'Sent:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 5))
+            where title2 like 'Sent:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 3))
-where title2 like 'Re:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 3))
+            where title2 like 'Re:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 5))
-where title2 like 'Sent:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 5))
+            where title2 like 'Sent:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 3))
-where title2 like 'Re:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 3))
+            where title2 like 'Re:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 5))
-where title2 like 'Sent:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 5))
+            where title2 like 'Sent:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 3))
-where title2 like 'Re:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 3))
+            where title2 like 'Re:%';
 
-update tmp_conversation
-set title2 = trim(right(title2, length(title2) - 5))
-where title2 like 'Sent:%';
+            update tmp_conversation
+            set title2 = trim(right(title2, length(title2) - 5))
+            where title2 like 'Sent:%';
 
-create table tmp_group (
-   title2 varchar(255),
-   userids varchar(255),
-   groupid int,
-   primary key (title2, userids)
-);
+            create table tmp_group (
+               title2 varchar(255),
+               userids varchar(255),
+               groupid int,
+               primary key (title2, userids)
+            );
 
-replace tmp_group (
-   title2,
-   userids,
-   groupid
-)
-select
-   title2,
-   userids,
-   min(id)
-from tmp_conversation
-group by title2, userids;
+            replace tmp_group (
+               title2,
+               userids,
+               groupid
+            )
+            select
+               title2,
+               userids,
+               min(id)
+            from tmp_conversation
+            group by title2, userids;
 
-create index tidx_group on tmp_group(title2, userids);
-create index tidx_conversation on tmp_conversation(title2, userids);
+            create index tidx_group on tmp_group(title2, userids);
+            create index tidx_conversation on tmp_conversation(title2, userids);
 
-update tmp_conversation c
-join tmp_group g
-   on c.title2 = g.title2 and c.userids = g.userids
-set c.groupid = g.groupid;
+            update tmp_conversation c
+            join tmp_group g
+               on c.title2 = g.title2 and c.userids = g.userids
+            set c.groupid = g.groupid;
 EOT;
 
         $ex->queryN($sql);
@@ -712,12 +714,12 @@ EOT;
             'mt_from_id' => 'InsertUserID'
         );
         $sql = "select
-   mt.*,
-   tc.title2,
-   tc.groupid
-from :_message_topics mt
-join tmp_conversation tc
-   on mt.mt_id = tc.id";
+               mt.*,
+               tc.title2,
+               tc.groupid
+            from :_message_topics mt
+            join tmp_conversation tc
+               on mt.mt_id = tc.id";
         $this->clearFilters('Conversation', $conversation_Map, $sql);
         $ex->exportTable('Conversation', $sql, $conversation_Map);
 
@@ -732,15 +734,15 @@ join tmp_conversation tc
             'msg_ip_address' => 'InsertIPAddress'
         );
         $sql = "select
-   tx.*,
-   tc.title2,
-   tc.groupid,
-   'IPB' as Format
-from :_message_text tx
-join :_message_topics mt
-   on mt.mt_msg_id = tx.msg_id
-join tmp_conversation tc
-   on mt.mt_id = tc.id";
+               tx.*,
+               tc.title2,
+               tc.groupid,
+               'IPB' as Format
+            from :_message_text tx
+            join :_message_topics mt
+               on mt.mt_msg_id = tx.msg_id
+            join tmp_conversation tc
+               on mt.mt_id = tc.id";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
         $ex->exportTable('ConversationMessage', $sql, $conversationMessage_Map);
 
@@ -750,24 +752,24 @@ join tmp_conversation tc
             'groupid' => 'ConversationID'
         );
         $sql = "select distinct
-   g.groupid,
-   t.userid
-from tmp_to t
-join tmp_group g
-   on g.groupid = t.id";
+               g.groupid,
+               t.userid
+            from tmp_to t
+            join tmp_group g
+               on g.groupid = t.id";
         $ex->exportTable('UserConversation', $sql, $userConversation_Map);
 
         $ex->queryN(
             "
-      drop table tmp_conversation;
-drop table tmp_to;
-drop table tmp_to2;
-drop table tmp_group;"
+            drop table tmp_conversation;
+            drop table tmp_to;
+            drop table tmp_to2;
+            drop table tmp_group;"
         );
     }
 
 
-    protected function _exportConversationsV3()
+    protected function exportConversationsV3()
     {
         $ex = $this->ex;
 
@@ -806,9 +808,9 @@ drop table tmp_group;"
             'Deleted' => 'Deleted'
         );
         $sql = "select
-         t.*,
-         !map_user_active as Deleted
-      from :_message_topic_user_map t";
+             t.*,
+             !map_user_active as Deleted
+          from :_message_topic_user_map t";
         $ex->exportTable('UserConversation', $sql, $userConversation_Map);
     }
 
@@ -860,7 +862,7 @@ drop table tmp_group;"
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $ralue Current value
      * @param  string $field Current field

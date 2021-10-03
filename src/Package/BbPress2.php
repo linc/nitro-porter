@@ -51,6 +51,7 @@ class BbPress2 extends ExportController
         'usermeta' => array(),
         'users' => array('ID', 'user_login', 'user_pass', 'user_email', 'user_registered'),
     );
+
     /**
      * Forum-specific export format.
      *
@@ -74,8 +75,7 @@ class BbPress2 extends ExportController
                 `user_registered` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
                 primary key (`ID`),
                 KEY `user_email` (`user_email`)
-            )
-        ;"
+            );"
         );
 
         $userQuery = "
@@ -86,8 +86,7 @@ class BbPress2 extends ExportController
                 'Vanilla' AS hash_method,
                 user_email,
                 user_registered
-            from :_users
-        ";
+            from :_users";
 
         $ex->query("insert into z_user $userQuery");
 
@@ -111,8 +110,7 @@ class BbPress2 extends ExportController
                     pm.post_id
             ) as u
             where user_email not in (select user_email from z_user group by user_email)
-            group by user_email
-        ";
+            group by user_email";
 
         $ex->query(
             "
@@ -146,8 +144,7 @@ class BbPress2 extends ExportController
             union select 2, 'Administrator'
             union select 3, 'Moderator'
             union select 4, 'Member'
-            union select 5, 'Blocked'
-        ;"
+            union select 5, 'Blocked';"
         );
 
         // UserRoles
@@ -170,13 +167,11 @@ class BbPress2 extends ExportController
             where meta_key = 'wp_capabilities'
 
             union all
-
             select
                 ID as user_id,
                 1 as RoleID
             from z_user
-            where hash_method = 'Random'
-        ;",
+            where hash_method = 'Random';",
             $userRole_Map
         );
 
@@ -196,8 +191,7 @@ class BbPress2 extends ExportController
                 lower(post_name) as forum_slug,
                 nullif(post_parent, 0) as ParentCategoryID
             from :_posts
-            where post_type = 'forum'
-        ;",
+            where post_type = 'forum';",
             $category_Map
         );
 
@@ -216,14 +210,14 @@ class BbPress2 extends ExportController
             "
             select
                 p.*,
-                if (p.post_author > 0, p.post_author, z_user.ID) as post_author, /* override post_author value from p.* */
+                /* override post_author value from p.* */
+                if (p.post_author > 0, p.post_author, z_user.ID) as post_author,
                 'Html' as Format,
                 0 as Closed
             from :_posts as p
                 left join :_postmeta as pm on pm.post_id = p.ID AND pm.meta_key = '_bbp_anonymous_email'
                 left join z_user on z_user.user_email = pm.meta_value
-            where post_type = 'topic'
-        ;",
+            where post_type = 'topic';",
             $discussion_Map
         );
 
@@ -241,7 +235,8 @@ class BbPress2 extends ExportController
             "
             select
                 p.*,
-                if (p.post_author > 0, p.post_author, z_user.ID) as post_author, /* override post_author value from p.* */
+                /* override post_author value from p.* */
+                if (p.post_author > 0, p.post_author, z_user.ID) as post_author,
                 case
                     when p.post_type = 'topic' then p.ID
                     else p.post_parent
@@ -251,8 +246,7 @@ class BbPress2 extends ExportController
                 left join :_postmeta as pm on pm.post_id = p.ID AND pm.meta_key = '_bbp_anonymous_email'
                 left join z_user on z_user.user_email = pm.meta_value
             where post_type = 'topic'
-                or post_type = 'reply'
-            ;",
+                or post_type = 'reply';",
             $comment_Map
         );
 

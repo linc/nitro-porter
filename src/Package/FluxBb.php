@@ -78,7 +78,8 @@ class FluxBb extends ExportController
             $ex->characterSet = $characterSet;
         }
 
-        $ex->beginExport('', 'FluxBB 1.*', array('HashMethod' => 'punbb')); //FluxBB is a fork of punbb and the password works
+        //FluxBB is a fork of punbb and the password works
+        $ex->beginExport('', 'FluxBB 1.*', array('HashMethod' => 'punbb'));
 
         $this->cdn = $this->param('cdn', '');
 
@@ -107,8 +108,7 @@ class FluxBb extends ExportController
                 from_unixtime(u.registered) as DateInserted,
                 from_unixtime(u.last_visit) as DateLastActive
             from :_users u
-            where group_id <> 2
-        ",
+            where group_id <> 2",
             $user_Map
         );
 
@@ -119,8 +119,7 @@ class FluxBb extends ExportController
             select
                 g_id as RoleID,
                  g_title as Name
-            from :_groups
-        "
+            from :_groups"
         );
 
         // Permission
@@ -142,8 +141,7 @@ class FluxBb extends ExportController
                 case
                     when g_title = 'Administrators' then 'All' else NULL
                 end as _Permissions
-            from :_groups
-        "
+            from :_groups"
         );
 
         // UserRole
@@ -153,8 +151,7 @@ class FluxBb extends ExportController
             select
                 u.id as UserID,
                 u.group_id as RoleID
-            from :_users u
-          "
+            from :_users u"
         );
 
         // Signatures.
@@ -166,8 +163,7 @@ class FluxBb extends ExportController
                 'Plugin.Signatures.Sig' as Name,
                 signature as Value
             from :_users u
-            where u.signature is not null
-        "
+            where u.signature is not null"
         );
 
         // Category
@@ -183,15 +179,13 @@ class FluxBb extends ExportController
             from :_forums f
 
             union
-
             select
                 id * 1000 as CategoryID,
                 cat_name as Name,
                 '' as Description,
                 disp_position as Sort,
                 NULL as ParentCategoryID
-            from :_categories
-        "
+            from :_categories"
         );
 
         // Discussion.
@@ -213,8 +207,7 @@ class FluxBb extends ExportController
                 'BBCode' as Format
             from :_topics t
             left join :_posts p on t.first_post_id = p.id
-            left join :_users u on u.username = p.edited_by
-        "
+            left join :_users u on u.username = p.edited_by"
         );
 
         // Comment.
@@ -234,8 +227,7 @@ class FluxBb extends ExportController
             from :_topics t
             join :_posts p on t.id = p.topic_id
             left join :_users u on u.username = p.edited_by
-            where p.id <> t.first_post_id;
-        "
+            where p.id <> t.first_post_id;"
         );
 
         if ($ex->exists('tags')) {
@@ -246,8 +238,7 @@ class FluxBb extends ExportController
                 select
                     id as TagID,
                      tag as Name
-                from :_tags
-            "
+                from :_tags"
             );
 
             // TagDisucssion.
@@ -257,8 +248,7 @@ class FluxBb extends ExportController
                 select
                     topic_id as DiscussionID,
                      tag_id as TagID
-                from :_topic_tags
-            "
+                from :_topic_tags"
             );
         }
 
@@ -284,8 +274,7 @@ class FluxBb extends ExportController
                     from_unixtime(f.uploaded_at) as DateInserted,
                     case when f.post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
                     coalesce(f.post_id, f.topic_id) as ForeignID
-                from :_attach_files f
-            ",
+                from :_attach_files f",
                 $media_Map
             );
         }
@@ -338,7 +327,7 @@ class FluxBb extends ExportController
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
+     * @see    ExportModel::exportTableWrite
      *
      * @param  string $value Current value
      * @param  string $field Current field

@@ -23,7 +23,8 @@ class MysqlDB implements DbResource
     public function __construct(array $args)
     {
         if (!function_exists('mysql_connect')) {
-            die('MySQL extension not found. MySQL extension was removed from php 7.0+. See http://php.net/manual/en/mysql.requirements.php for more information.');
+            die('MySQL extension not found. MySQL extension was removed from php 7.0+.
+                See http://php.net/manual/en/mysql.requirements.php for more information.');
         }
         try {
             $this->link = mysql_connect($args['dbhost'], $args['dbuser'], $args['dbpass'], true);

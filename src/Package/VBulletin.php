@@ -704,7 +704,7 @@ class VBulletin extends ExportController
             ",
             $userConversation_Map
         );
-        $this->_exportPolls();
+        $this->exportPolls();
 
         // Media
         if ($this->ex->exists('attachment') === true) {
@@ -824,7 +824,7 @@ class VBulletin extends ExportController
      *
      * @param $minDate
      */
-    protected function _exportConversations($minDate)
+    protected function exportConversations($minDate)
     {
         $ex = $this->ex;
 
@@ -1314,7 +1314,7 @@ class VBulletin extends ExportController
         }
     }
 
-    protected function _exportPolls()
+    protected function exportPolls()
     {
         $ex = $this->ex;
 
@@ -1495,12 +1495,12 @@ class VBulletin extends ExportController
      * moved when upgrading to 3.x so older forums will need those too.
      *
      * @access public
-     * @see    ExportModel::_exportTable
-     *
      * @param  string $value Ignored.
      * @param  string $field Ignored.
      * @param  array  $row   Contents of the current attachment record.
      * @return string Future path to file.
+     *@see    ExportModel::exportTableWrite
+     *
      */
     public function buildMediaPath($value, $field, $row)
     {
@@ -1557,12 +1557,12 @@ class VBulletin extends ExportController
      * Set valid MIME type for images.
      *
      * @access public
-     * @see    ExportModel::_exportTable
-     *
      * @param  string $value Extension from vBulletin.
      * @param  string $field Ignored.
      * @param  array  $row   Ignored.
      * @return string Extension or accurate MIME type.
+     *@see    ExportModel::exportTableWrite
+     *
      */
     public function buildMimeType($value, $field, $row)
     {
@@ -1594,12 +1594,12 @@ class VBulletin extends ExportController
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::_exportTable
-     *
      * @param  string $value Current value
      * @param  string $field Current field
      * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     *@see    ExportModel::exportTableWrite
+     *
      */
     public function filterThumbnailData($value, $field, $row)
     {

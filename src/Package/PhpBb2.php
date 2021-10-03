@@ -282,7 +282,8 @@ group by id;"
 select
   pm.privmsgs_id,
   pm.privmsgs_subject,
-  case when pm.privmsgs_subject like 'Re: %' then trim(substring(pm.privmsgs_subject, 4)) else pm.privmsgs_subject end as subject2,
+  case when pm.privmsgs_subject like 'Re: %' then trim(substring(pm.privmsgs_subject, 4))
+    else pm.privmsgs_subject end as subject2,
   t.userids
 from :_privmsgs pm
 join z_pmto2 t
