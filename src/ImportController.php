@@ -1,36 +1,21 @@
 <?php
-/**
- * Manages imports and exports of data.
- *
- * This controller could use a code audit. Don't use it as sample code.
- *
- * @copyright 2009-2019 Vanilla Forums Inc.
- * @license GPL-2.0-only
- * @package Dashboard
- * @since 2.0
- */
 
 /**
- * Handles /import endpoint.
+ * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
-class ImportController extends DashboardController {
 
-    /**
-     * Runs before every call to this controller.
-     */
-    public function initialize() {
-        parent::initialize();
-        Gdn_Theme::section('Dashboard');
-    }
+namespace NitroPorter;
 
+class ImportController
+{
     /**
      * Manage importing process.
      *
      * @since 2.0.0
      * @access public
      */
-    public function go($transientKey = '') {
-        $this->checkAccess();
+    public function go($transientKey = '')
+    {
         if (!Gdn::session()->validateTransientKey($transientKey) && !Gdn::request()->isAuthenticatedPostBack()) {
             throw new Gdn_UserException('The CSRF token is invalid.', 403);
         }
@@ -44,7 +29,7 @@ class ImportController extends DashboardController {
             if ($imp->ImportPath) {
                 $imp->CurrentStep = 1;
             } else {
-                redirectTo(strtolower($this->Application).'/import');
+                redirectTo(strtolower($this->Application) . '/import');
             }
         }
 
@@ -67,11 +52,11 @@ class ImportController extends DashboardController {
             }
 
             /*elseif(is_array($Result)) {
-				saveToConfig(array(
-					'Garden.Import.CurrentStep' => $CurrentStep,
-					'Garden.Import.CurrentStepData' => val('Data', $Result)));
-				$this->setData('CurrentStepMessage', val('Message', $Result));
-			}*/
+                saveToConfig(array(
+                    'Garden.Import.CurrentStep' => $CurrentStep,
+                    'Garden.Import.CurrentStepData' => val('Data', $Result)));
+                $this->setData('CurrentStepMessage', val('Message', $Result));
+            }*/
         }
         $imp->saveState();
         $this->Form->setValidationResults($imp->Validation->results());
@@ -92,24 +77,13 @@ class ImportController extends DashboardController {
     }
 
     /**
-     * Ensure that imports are enabled and that the user has permission.
-     */
-    private function checkAccess() {
-        $this->permission('Garden.Import'); // This permission doesn't exist, so only users with Admin == '1' will succeed.
-        \Vanilla\FeatureFlagHelper::ensureFeature(
-            'Import',
-            t('Imports are not enabled.', 'Imports are not enabled. Set the config Feature.Import.Enabled = true to enable imports.')
-        );
-    }
-
-    /**
      * Main import page.
      *
      * @since 2.0.0
      * @access public
      */
-    public function index() {
-        $this->checkAccess();
+    public function index()
+    {
         $timer = new Gdn_Timer();
 
         // Determine the current step.
@@ -119,8 +93,8 @@ class ImportController extends DashboardController {
 
         // Search for the list of acceptable imports.
         $importPaths = [];
-        $existingPaths = safeGlob(PATH_UPLOADS.'/export*', ['gz', 'txt']);
-        $existingPaths2 = safeGlob(PATH_UPLOADS.'/porter/export*', ['gz']);
+        $existingPaths = safeGlob(PATH_UPLOADS . '/export*', ['gz', 'txt']);
+        $existingPaths2 = safeGlob(PATH_UPLOADS . '/porter/export*', ['gz']);
         $existingPaths = array_merge($existingPaths, $existingPaths2);
         foreach ($existingPaths as $path) {
             $importPaths[substr($path, strlen(PATH_UPLOADS))] = basename($path);
@@ -150,11 +124,11 @@ class ImportController extends DashboardController {
                 if ($tmpFile) {
                     $filename = $_FILES['ImportFile']['name'];
                     $extension = pathinfo($filename, PATHINFO_EXTENSION);
-                    $targetFolder = PATH_ROOT.DS.'uploads'.DS.'import';
+                    $targetFolder = PATH_ROOT . DS . 'uploads' . DS . 'import';
                     if (!file_exists($targetFolder)) {
                         mkdir($targetFolder, 0777, true);
                     }
-                    $importPath = $upload->generateTargetName(PATH_ROOT.DS.'uploads'.DS.'import', $extension);
+                    $importPath = $upload->generateTargetName(PATH_ROOT . DS . 'uploads' . DS . 'import', $extension);
                     $upload->saveAs($tmpFile, $importPath);
                     $imp->ImportPath = $importPath;
                     $this->Form->setFormValue('PathSelect', $importPath);
@@ -167,7 +141,7 @@ class ImportController extends DashboardController {
                         $validation->addValidationResult('ImportFile', 'ValidateRequired');
                     } else {
                         if ($pathSelect !== 'db:') {
-                            $pathSelect = PATH_UPLOADS.$pathSelect;
+                            $pathSelect = PATH_UPLOADS . $pathSelect;
                         }
                         $imp->ImportPath = $pathSelect;
                     }
@@ -229,8 +203,8 @@ class ImportController extends DashboardController {
      * @since 2.0.0
      * @access public
      */
-    public function restart($transientKey = '') {
-        $this->checkAccess();
+    public function restart($transientKey = '')
+    {
         if (!Gdn::session()->validateTransientKey($transientKey) && !Gdn::request()->isAuthenticatedPostBack()) {
             throw new Gdn_UserException('The CSRF token is invalid.', 403);
         }
@@ -245,6 +219,6 @@ class ImportController extends DashboardController {
         }
         $imp->deleteState();
 
-        redirectTo(strtolower($this->Application).'/import');
+        redirectTo(strtolower($this->Application) . '/import');
     }
 }
