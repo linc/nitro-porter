@@ -25,3 +25,4 @@ composer.lock
 vendor
 build/current
 .phpunit.cache
+seed_database.php
