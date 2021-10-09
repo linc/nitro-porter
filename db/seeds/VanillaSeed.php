@@ -1,6 +1,5 @@
 <?php
 
-
 use Phinx\Seed\AbstractSeed;
 
 class VanillaSeed extends AbstractSeed
@@ -20,6 +19,10 @@ class VanillaSeed extends AbstractSeed
      */
     public function run()
     {
+        // Clear users.
+        $this->table('GDN_User')->truncate();
+
+        // Users, fixed.
         $data = [
             [
                 'Name' => 'Linc',
@@ -27,9 +30,18 @@ class VanillaSeed extends AbstractSeed
                 'Password' => 'admin',
             ]
         ];
+        $this->table('GDN_User')->insert($data)->saveData();
 
-        $posts = $this->table('GDN_User');
-        $posts->insert($data)
-              ->saveData();
+        // Users, random.
+        $faker = Faker\Factory::create();
+        $data = [];
+        for ($i = 0; $i < 20; $i++) {
+            $data[] = [
+                'Name'      => $faker->userName,
+                'Password'      => sha1($faker->password),
+                'Email'         => $faker->email,
+            ];
+        }
+        $this->table('GDN_User')->insert($data)->saveData();
     }
 }
