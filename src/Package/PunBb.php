@@ -324,44 +324,6 @@ class PunBb extends ExportController
         $ex->endExport();
     }
 
-    public function stripMediaPath($absPath)
-    {
-        if (($pos = strpos($absPath, '/uploads/')) !== false) {
-            return substr($absPath, $pos + 9);
-        }
-
-        return $absPath;
-    }
-
-    public function filterPermissions($permissions, $columnName, &$row)
-    {
-        $permissions2 = unserialize($permissions);
-
-        foreach ($permissions2 as $name => $value) {
-            if (is_null($value)) {
-                $permissions2[$name] = false;
-            }
-        }
-
-        if (is_array($permissions2)) {
-            $row = array_merge($row, $permissions2);
-            $this->ex->currentRow = $row;
-
-            return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
-        }
-
-        return false;
-    }
-
-    public function forceBool($value)
-    {
-        if ($value) {
-            return true;
-        }
-
-        return false;
-    }
-
     /**
      * Take the user ID, avatar type value and generate a path to the avatar file.
      *

@@ -238,7 +238,6 @@ class VBulletin extends ExportController
             $minDate = strtotime($minDate);
             $this->ex->comment("Min topic date ($minDate): " . date('c', $minDate));
         }
-        $now = time();
 
         $cdn = $this->param('cdn', '');
 
@@ -820,244 +819,6 @@ class VBulletin extends ExportController
     }
 
     /**
-     * Deperciated
-     *
-     * @param $minDate
-     */
-    protected function exportConversations($minDate)
-    {
-        $ex = $this->ex;
-
-        if ($minDate) {
-            $minID = $this->ex->getValue(
-                "
-                select max(pmtextid)
-                from :_pmtext
-                where dateline < $minDate
-            ",
-                false
-            );
-        } else {
-            $minID = false;
-        }
-        $minWhere = '';
-
-        $this->ex->query("drop table if exists z_pmto");
-        $this->ex->query(
-            "
-            create table z_pmto (
-                pmtextid int unsigned,
-                userid int unsigned,
-                primary key(pmtextid, userid))
-        "
-        );
-
-        if ($minID) {
-            $minWhere = "where pmtextid > $minID";
-        }
-
-        $this->ex->query(
-            "
-            insert ignore into z_pmto(pmtextid, userid)
-                select
-                    pmtextid,
-                    userid
-                from :_pm
-                $minWhere
-        "
-        );
-
-        $this->ex->query(
-            "
-            insert ignore into z_pmto(pmtextid, userid)
-                select
-                    pmtextid,
-                    fromuserid
-                from :_pmtext
-                $minWhere
-        "
-        );
-
-        $this->ex->query(
-            "
-            insert ignore into z_pmto(pmtextid, userid)
-                select
-                    pm.pmtextid,
-                    r.userid
-                from :_pm pm
-                    join :_pmreceipt r on pm.pmid = r.pmid
-                $minWhere
-        "
-        );
-
-        $this->ex->query(
-            "
-            insert ignore into z_pmto(pmtextid, userid)
-                select
-                    pm.pmtextid,
-                    r.touserid
-                from :_pm pm
-                    join :_pmreceipt r on pm.pmid = r.pmid
-                $minWhere
-        "
-        );
-
-        $this->ex->query('drop table if exists z_pmto2;');
-        $this->ex->query(
-            "
-            create table z_pmto2 (
-                pmtextid int unsigned,
-                userids TEXT,
-                primary key (pmtextid)
-            );
-        "
-        );
-
-        $this->ex->query(
-            "
-            insert into z_pmto2(pmtextid, userids)
-                select
-                    pmtextid,
-                    group_concat(userid order by userid)
-                from z_pmto t
-                group by t.pmtextid
-        "
-        );
-
-        $this->ex->query("drop table if exists z_pmtext;");
-        $this->ex->query(
-            "
-            create table z_pmtext (
-                pmtextid int unsigned,
-                title varchar(250),
-                title2 varchar(250),
-                userids TEXT,
-                group_id int unsigned
-            );
-        "
-        );
-
-        $this->ex->query(
-            "
-            insert into z_pmtext(pmtextid, title, title2)
-                select
-                    pmtextid,
-                    title,
-                    case
-                        when title like 'Re: %' then trim(substring(title, 4))
-                        else title
-                    end as title2
-                from :_pmtext pm
-                $minWhere
-        "
-        );
-        $this->ex->query("create index z_idx_pmtext on z_pmtext(pmtextid)");
-
-        $this->ex->query(
-            "
-            update z_pmtext pm
-                join z_pmto2 t on pm.pmtextid = t.pmtextid
-            set pm.userids = t.userids;
-        "
-        );
-
-        // A conversation is a group of pmtexts with the same title and same users.
-
-        $this->ex->query("drop table if exists z_pmgroup;");
-        $this->ex->query(
-            "
-            create table z_pmgroup(
-                group_id int unsigned,
-                title varchar(250),
-                userids varchar(250)
-            );
-        "
-        );
-
-        $this->ex->query(
-            "
-            insert into z_pmgroup(group_id, title, userids)
-                select
-                    min(pm.pmtextid),
-                    pm.title2,
-                    t2.userids
-                from z_pmtext pm
-                    join z_pmto2 t2 on pm.pmtextid = t2.pmtextid
-                group by pm.title2, t2.userids;
-        "
-        );
-
-        $this->ex->query("create index z_idx_pmgroup on z_pmgroup (title, userids);");
-        $this->ex->query("create index z_idx_pmgroup2 on z_pmgroup (group_id);");
-
-        $this->ex->query(
-            "
-            update z_pmtext pm
-                join z_pmgroup g on pm.title2 = g.title and pm.userids = g.userids
-            set pm.group_id = g.group_id
-        "
-        );
-
-        // Conversations
-        $conversation_Map = array(
-            'pmtextid' => 'ConversationID',
-            'fromuserid' => 'InsertUserID',
-            'title2' => array('Column' => 'Subject', 'Type' => 'varchar(250)')
-        );
-        $ex->exportTable(
-            'Conversation',
-            "
-            select
-                pm.*,
-                g.title as title2,
-                from_unixtime(pm.dateline) as DateInserted
-            from :_pmtext pm
-                join z_pmgroup g on g.group_id = pm.pmtextid
-            ",
-            $conversation_Map
-        );
-
-        // Coversation Messages.
-        $conversationMessage_Map = array(
-            'pmtextid' => 'MessageID',
-            'group_id' => 'ConversationID',
-            'message' => 'Body',
-            'fromuserid' => 'InsertUserID'
-        );
-        $this->ex->exportTable(
-            'ConversationMessage',
-            "select
-                pm.*,
-                pm2.group_id,
-                'BBCode' as Format,
-                from_unixtime(pm.dateline) as DateInserted
-            from :_pmtext pm
-            join z_pmtext pm2 on pm.pmtextid = pm2.pmtextid",
-            $conversationMessage_Map
-        );
-
-        // User Conversation.
-        $userConversation_Map = array(
-            'userid' => 'UserID',
-            'group_id' => 'ConversationID'
-        );
-        $this->ex->exportTable(
-            'UserConversation',
-            "select
-                g.group_id,
-                t.userid
-            from z_pmto t
-            join z_pmgroup g on g.group_id = t.pmtextid;",
-            $userConversation_Map
-        );
-
-        $this->ex->query("drop table if exists z_pmto");
-        $this->ex->query("drop table if exists z_pmto2");
-        $this->ex->query("drop table if exists z_pmtext");
-        $this->ex->query("drop table if exists z_pmgroup");
-    }
-
-    /**
      * Converts database blobs into files.
      *
      * Creates /attachments and /customavatars folders in the same directory as the export file.
@@ -1067,8 +828,6 @@ class VBulletin extends ExportController
      */
     public function exportBlobs($attachments = true, $customAvatars = true)
     {
-        $ex = $this->ex;
-
         if ($attachments) {
             $identity = 'f.attachmentid';
 
@@ -1138,7 +897,6 @@ class VBulletin extends ExportController
      */
     public function exportMedia($minDiscussionID = false)
     {
-        $ex = $this->ex;
         $instance = $this;
 
         if ($minDiscussionID) {
@@ -1316,8 +1074,6 @@ class VBulletin extends ExportController
 
     protected function exportPolls()
     {
-        $ex = $this->ex;
-
         $poll_Map = array(
             'pollid' => 'PollID',
             'question' => 'Name',
@@ -1540,7 +1296,6 @@ class VBulletin extends ExportController
     public function buildMediaDimension($value, $field, $row)
     {
         // Non-images get no height/width
-        $ex = $this->ex;
         if ($this->ex->exists('attachment', array('extension')) === true) {
             $extension = $row['extension'];
         } else {
@@ -1695,26 +1450,5 @@ class VBulletin extends ExportController
     public function htmlDecode($value)
     {
         return ($value);
-    }
-
-    public function processBody($value)
-    {
-        preg_replace('~\[ATTACH=CONFIG\]\d+\[\/ATTACH\]~i', '', $value);
-        $value = preg_replace_callback(
-            '$\[IMG\]https?:\/\/.*?\/vbulletin\/attachment.php\?attachmentid=(\d+).*?\[\/IMG\]$i',
-            function ($matches) {
-                $results = $this->ex->query(
-                    "select userid, extension
-                    from attachment where attachmentid = $matches[1]"
-                );
-
-                if ($results) {
-                    $row = mysqli_fetch_assoc($results);
-                    return "[IMG]$this->sitePath/{$row['userid']}/$matches[1].{$row['extension']}[/IMG]";
-                }
-                return $matches[0];
-            },
-            $value
-        );
     }
 }

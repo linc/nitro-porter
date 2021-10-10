@@ -499,8 +499,6 @@ class NodeBb extends ExportController
             'uid' => 'InsertUserID'
         );
 
-        $now = time();
-
         $ex->query("set @rownr=1000;");
 
         $ex->exportTable(
@@ -1141,7 +1139,7 @@ class NodeBb extends ExportController
     public function removeNumId($slug)
     {
         $regex = '/(\d*)\//';
-        $newslug = preg_replace($regex, '', $slug);
+        return preg_replace($regex, '', $slug);
     }
 
     public function roleNameFromKey($key)

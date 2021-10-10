@@ -61,7 +61,7 @@ class AdvancedForum extends ExportController
 
         $ex->beginExport('', 'Advanced Forum 7.x-2.*');
 
-        $filePath = $cdn = $this->param('filepath', '');
+        $filePath = $this->param('filepath', '');
 
         // User.
         $user_Map = array();

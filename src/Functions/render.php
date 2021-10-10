@@ -42,21 +42,6 @@ function pageFooter()
 }
 
 /**
- * Message: Write permission fail.
- */
-function viewNoPermission($msg)
-{
-    pageHeader(); ?>
-    <div class="Messages Errors">
-        <ul>
-            <li><?php echo $msg; ?></li>
-        </ul>
-    </div>
-
-    <?php pageFooter();
-}
-
-/**
  * Form: Database connection info.
  */
 function viewForm($data)

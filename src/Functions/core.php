@@ -29,35 +29,6 @@ function errorHandler($errno, $errstr, $errFile, $errLine)
 }
 
 /**
- * Debug echo tool.
- *
- * @param $var
- * @param string $prefix
- */
-function decho($var, $prefix = 'debug')
-{
-    echo '<pre><b>' . $prefix . '</b>: ' . htmlspecialchars(print_r($var, true)) . '</pre>';
-}
-
-/**
- * Write out a value passed as bytes to its most readable format.
- */
-function formatMemorySize($bytes, $precision = 1)
-{
-    $units = array('B', 'K', 'M', 'G', 'T');
-
-    $bytes = max((int)$bytes, 0);
-    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-    $pow = min($pow, count($units) - 1);
-
-    $bytes /= pow(1024, $pow);
-
-    $result = round($bytes, $precision) . $units[$pow];
-
-    return $result;
-}
-
-/**
  * Test filesystem permissions.
  */
 function testWrite()
@@ -239,52 +210,6 @@ function parseSelect($sql)
 function _replaceCommas($matches)
 {
     return str_replace(',', '!COMMA!', $matches[0]);
-}
-
-/**
- *
- * @param  type  $sql
- * @param  array $columns An array in the form Alias => Column or just Column
- * @return type
- */
-function replaceSelect($sql, $columns)
-{
-    if (is_string($sql)) {
-        $parsed = parseSelect($sql);
-    } else {
-        $parsed = $sql;
-    }
-
-    // Set a prefix for new selects.
-    if (isset($parsed['Star'])) {
-        $px = $parsed['Star'] . '.';
-    } else {
-        $px = '';
-    }
-
-    $select = $parsed['Select'];
-
-    $newSelect = array();
-    foreach ($columns as $index => $value) {
-        if (is_numeric($index)) {
-            $alias = $value;
-        } else {
-            $alias = $index;
-        }
-
-        if (isset($select[$value])) {
-            $newSelect[$alias] = $select[$value];
-        } else {
-            $newSelect[$alias] = $px . $value;
-        }
-    }
-    $parsed['Select'] = $newSelect;
-
-    if (is_string($sql)) {
-        return selectString($parsed);
-    } else {
-        return $parsed;
-    }
 }
 
 /**

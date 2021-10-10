@@ -77,7 +77,7 @@ class ExpressionEngine extends ExportController
             'can_post_comments2' => 'Vanilla.Discussions.Add'
         );
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        foreach ($permission_Map as $column => &$info) {
+        foreach ($permission_Map as &$info) {
             if (is_array($info) && isset($info['Column'])) {
                 $info['Filter'] = array($this, 'YNBool');
             }

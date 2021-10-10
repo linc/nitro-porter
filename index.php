@@ -8,7 +8,6 @@
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
-define('APPLICATION', 'Porter');
 define('APPLICATION_VERSION', '2.5');
 
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);

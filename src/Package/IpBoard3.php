@@ -149,10 +149,6 @@ class IpBoard3 extends ExportController
                 $errors[] = "! failed to copy main photo '{$mainSrc}' for user {$userID} (-> {$mainDest}).";
             }
 
-            // Thumb Photo
-            if (!$thumbPhoto) {
-                $thumbPhoto = $photo;
-            }
             $thumbSrc = combinePaths(array($sourceFolder, $mainPhoto));
             $thumbDest = combinePaths(array($photoFolder, "n" . $photoFileName));
             $copied = @copy($thumbSrc, $thumbDest);
@@ -246,8 +242,6 @@ class IpBoard3 extends ExportController
         );
 
         $from = '';
-        $select = '';
-
         if ($ex->exists('members', 'members_pass_hash') === true) {
             $select = ",concat(m.members_pass_hash, '$', m.members_pass_salt) as Password";
         } else {

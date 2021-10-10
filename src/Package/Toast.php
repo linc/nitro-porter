@@ -42,8 +42,6 @@ class Toast extends ExportController
         ]
     ];
 
-    public static $passwordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
-
     /**
      *
      * @param ExportModel $ex
@@ -228,17 +226,5 @@ class Toast extends ExportController
 
 
         $ex->endExport();
-    }
-
-    public function cleanDate($value)
-    {
-        if (!$value) {
-            return null;
-        }
-        if (substr($value, 0, 4) == '0000') {
-            return null;
-        }
-
-        return $value;
     }
 }

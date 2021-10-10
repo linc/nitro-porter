@@ -65,15 +65,8 @@ function parseCommandLine($options = null, $files = null)
     $globalOptions = SupportManager::getInstance()->getOptions();
     $supported = SupportManager::getInstance()->getSupport();
 
-
     if (isset($options)) {
         $globalOptions = $options;
-    }
-    if (!isset($globalOptions)) {
-        $globalOptions = array();
-    }
-    if (!isset($supported)) {
-        $supported = array();
     }
 
     $commandOptions = getAllCommandLineOptions();

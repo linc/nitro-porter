@@ -223,16 +223,4 @@ class AspPlayground extends ExportController
 
         $ex->endExport();
     }
-
-    public function cleanDate($value)
-    {
-        if (!$value) {
-            return null;
-        }
-        if (substr($value, 0, 4) == '0000') {
-            return null;
-        }
-
-        return $value;
-    }
 }

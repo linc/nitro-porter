@@ -328,27 +328,6 @@ class Smf2 extends ExportController
         }
     }
 
-    public function pcreEntityToUtf($matches)
-    {
-        $char = intval(is_array($matches) ? $matches[1] : $matches);
-
-        if ($char < 0x80) {
-            // to prevent insertion of control characters
-            if ($char >= 0x20) {
-                return htmlspecialchars(chr($char));
-            } else {
-                return "&#$char;";
-            }
-        } else {
-            if ($char < 0x80000) {
-                return chr(0xc0 | (0x1f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
-            } else {
-                return chr(0xe0 | (0x0f & ($char >> 12)))
-                     . chr(0x80 | (0x3f & ($char >> 6))) . chr(0x80 | (0x3f & $char));
-            }
-        }
-    }
-
     /**
      * Determine mime type from file name
      *

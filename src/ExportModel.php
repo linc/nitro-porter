@@ -1173,14 +1173,12 @@ class ExportModel
             }
 
             // Check to see if there is a callback filter.
-            $filtered = false;
             if (isset($revMappings[$field]['Filter'])) {
                 $callback = $revMappings[$field]['Filter'];
 
                 $row2 =& $row;
                 $value = call_user_func($callback, $value, $field, $row2, $field);
                 $row = $this->currentRow;
-                $filtered = true;
             }
 
             // Format the value for writing.

@@ -10,7 +10,6 @@
 namespace NitroPorter\Package;
 
 use NitroPorter\ExportController;
-use NitroPorter\ExportModel;
 
 class Q2a extends ExportController
 {
