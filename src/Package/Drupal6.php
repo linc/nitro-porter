@@ -294,19 +294,4 @@ class Drupal6 extends ExportController
 
         $ex->endExport();
     }
-
-    /**
-     *
-     * @param ExportModel $ex
-     * @param string      $tableName
-     */
-    protected function exportTable($ex, $tableName)
-    {
-        // Make sure the table exists.
-        if (!$ex->exists($tableName)) {
-            return;
-        }
-
-        $ex->exportTable($tableName, "select * from :_{$tableName}");
-    }
 }

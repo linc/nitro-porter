@@ -73,7 +73,7 @@ class Vanilla2 extends ExportController
         $ex->beginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
 
         foreach ($tables as $tableName) {
-            $this->exportTable($ex, $tableName);
+            $this->exportEntireTable($ex, $tableName);
         }
 
         $ex->endExport();
@@ -84,7 +84,7 @@ class Vanilla2 extends ExportController
      * @param ExportModel $ex
      * @param string      $tableName
      */
-    protected function exportTable($ex, $tableName)
+    protected function exportEntireTable($ex, $tableName)
     {
         // Make sure the table exists.
         if (!$ex->exists($tableName)) {
