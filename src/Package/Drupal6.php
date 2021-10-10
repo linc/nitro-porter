@@ -252,46 +252,6 @@ class Drupal6 extends ExportController
             $userConversation_Map
         );
 
-        // Comments.
-        /*$comment_Map = array(
-            'cid' => 'CommentID',
-            'nid' => 'DiscussionID',
-            'uid' => 'InsertUserID',
-            'comment' => array('Column' => 'Body'),
-            'hostname' => 'InsertIPAddress',
-            'timeatamp' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
-        );
-        $ex->ExportTable('Comment', "
-           select c.*,
-              n.title,
-              'Html' as Format
-           from comments c
-           join node n
-              on c.nid = n.nid", $comment_Map);
-        */
-        // Media.
-        /*$Media_Map = array(
-            'fid' => 'MediaID',
-            'nid' => 'ForeignID',
-            'filename' => 'Name',
-            'path' => 'Path',
-            'filemime' => 'Type',
-            'filesize' => 'Size',
-            'uid' => 'InsertUserID',
-            'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
-        );
-        $ex->ExportTable('Media', "
-           select f.*,
-              nullif(concat('drupal/', f.filepath), 'drupal/') as path,
-              n.uid,
-              n.created,
-              'discussion' as ForeignTable
-           from files f
-           join node n
-              on f.nid = n.nid
-           where n.type = 'forum'", $Media_Map);
-        */
-
         $ex->endExport();
     }
 }
