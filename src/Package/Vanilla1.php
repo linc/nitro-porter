@@ -89,10 +89,66 @@ class Vanilla1 extends ExportController
             $ex->characterSet = $characterSet;
         }
 
-        // Begin
         $ex->beginExport('', 'Vanilla 1.*');
 
-        // Users
+        $this->users($ex);
+
+        $this->roles($ex);
+        $this->categories($ex);
+        $this->discussions($ex);
+        $this->conversations($ex);
+
+        $this->comments($ex);
+        $this->permissions($ex);
+
+        $this->attachments($ex);
+
+        $ex->endExport();
+    }
+
+    public function stripMediaPath($absPath)
+    {
+        if (($pos = strpos($absPath, '/uploads/')) !== false) {
+            return substr($absPath, $pos + 9);
+        }
+
+        return $absPath;
+    }
+
+    public function filterPermissions($permissions, $columnName, &$row)
+    {
+        $permissions2 = unserialize($permissions);
+
+        foreach ($permissions2 as $name => $value) {
+            if (is_null($value)) {
+                $permissions2[$name] = false;
+            }
+        }
+
+        if (is_array($permissions2)) {
+            $row = array_merge($row, $permissions2);
+            $this->ex->currentRow = $row;
+
+            return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
+        }
+
+        return false;
+    }
+
+    public function forceBool($value)
+    {
+        if ($value) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'UserID' => 'UserID',
             'Name' => 'Name',
@@ -103,9 +159,13 @@ class Vanilla1 extends ExportController
             'Discovery' => 'DiscoveryText'
         );
         $ex->exportTable('User', "SELECT * FROM :_User", $user_Map);  // ":_" will be replaced by database prefix
+    }
 
-        // Roles
-
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         // Since the zero role is a valid role in Vanilla 1 then we'll have to reassign it.
         $r = $ex->query('select max(RoleID) as RoleID from :_Role');
         $zeroRoleID = 0;
@@ -133,62 +193,6 @@ class Vanilla1 extends ExportController
             $role_Map
         );
 
-        $permission_Map = array(
-            'RoleID' => 'RoleID',
-            'PERMISSION_SIGN_IN' => 'Garden.SignIn.Allow',
-            'Permissions' => array(
-                'Column' => 'Vanilla.Comments.Add',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'filterPermissions')
-            ),
-            'PERMISSION_START_DISCUSSION' => array(
-                'Column' => 'Vanilla.Discussions.Add',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_SINK_DISCUSSION' => array(
-                'Column' => 'Vanilla.Discussions.Sink',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_STICK_DISCUSSIONS' => array(
-                'Column' => 'Vanilla.Discussions.Announce',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_CLOSE_DISCUSSIONS' => array(
-                'Column' => 'Vanilla.Discussions.Close',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_EDIT_DISCUSSIONS' => array(
-                'Column' => 'Vanilla.Discussions.Edit',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_EDIT_COMMENTS' => array(
-                'Column' => 'Vanilla.Comments.Edit',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_APPROVE_APPLICANTS' => array(
-                'Column' => 'Garden.Moderation.Manage',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_EDIT_USERS' => array(
-                'Column' => 'Garden.Users.Edit',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array(
-                'Column' => 'Garden.Settings.Manage',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            )
-        );
-        $ex->exportTable('Permission', "select * from :_Role", $permission_Map);
-
         // UserRoles
         /*
             'UserID' => 'int',
@@ -203,8 +207,13 @@ class Vanilla1 extends ExportController
             "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User",
             $userRole_Map
         );
+    }
 
-        // Categories
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         /*
             'CategoryID' => 'int',
             'Name' => 'varchar(30)',
@@ -221,8 +230,13 @@ class Vanilla1 extends ExportController
             'Description' => 'Description'
         );
         $ex->exportTable('Category', "select CategoryID, Name, Description from :_Category", $category_Map);
+    }
 
-        // Discussions
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         /*
             'DiscussionID' => 'int',
             'Name' => 'varchar(100)',
@@ -266,7 +280,25 @@ class Vanilla1 extends ExportController
             $discussion_Map
         );
 
-        // Comments
+        $ex->exportTable(
+            'UserDiscussion',
+            "SELECT
+                w.UserID,
+                w.DiscussionID,
+                w.CountComments,
+                w.LastViewed as DateLastViewed,
+                case when b.UserID is not null then 1 else 0 end AS Bookmarked
+             FROM :_UserDiscussionWatch w
+             LEFT JOIN :_UserBookmark b
+                ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID"
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         /*
             'CommentID' => 'int',
             'DiscussionID' => 'int',
@@ -300,21 +332,14 @@ class Vanilla1 extends ExportController
                     AND coalesce(c.WhisperUserID, 0) = 0",
             $comment_Map
         );
+    }
 
-        $ex->exportTable(
-            'UserDiscussion',
-            "SELECT
-                w.UserID,
-                w.DiscussionID,
-                w.CountComments,
-                w.LastViewed as DateLastViewed,
-                case when b.UserID is not null then 1 else 0 end AS Bookmarked
-             FROM :_UserDiscussionWatch w
-             LEFT JOIN :_UserBookmark b
-                ON w.DiscussionID = b.DiscussionID AND w.UserID = b.UserID"
-        );
-
-        // Conversations
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
+// Conversations
 
         // Create a mapping tables for conversations.
         // These mapping tables are used to group comments that a) are in the same discussion
@@ -527,8 +552,14 @@ class Vanilla1 extends ExportController
         $ex->query("drop table z_pmto2");
         $ex->query("drop table z_pm");
         $ex->query("drop table z_pmgroup");
+    }
 
-        // Media
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
+// Media
         if ($ex->exists('Attachment')) {
             $media_Map = array(
                 'AttachmentID' => 'MediaID',
@@ -547,46 +578,67 @@ class Vanilla1 extends ExportController
                 $media_Map
             );
         }
-
-        // End
-        $ex->endExport();
     }
 
-    public function stripMediaPath($absPath)
+    /**
+     * @param ExportModel $ex
+     */
+    protected function permissions(ExportModel $ex): void
     {
-        if (($pos = strpos($absPath, '/uploads/')) !== false) {
-            return substr($absPath, $pos + 9);
-        }
-
-        return $absPath;
-    }
-
-    public function filterPermissions($permissions, $columnName, &$row)
-    {
-        $permissions2 = unserialize($permissions);
-
-        foreach ($permissions2 as $name => $value) {
-            if (is_null($value)) {
-                $permissions2[$name] = false;
-            }
-        }
-
-        if (is_array($permissions2)) {
-            $row = array_merge($row, $permissions2);
-            $this->ex->currentRow = $row;
-
-            return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
-        }
-
-        return false;
-    }
-
-    public function forceBool($value)
-    {
-        if ($value) {
-            return true;
-        }
-
-        return false;
+        $permission_Map = array(
+            'RoleID' => 'RoleID',
+            'PERMISSION_SIGN_IN' => 'Garden.SignIn.Allow',
+            'Permissions' => array(
+                'Column' => 'Vanilla.Comments.Add',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'filterPermissions')
+            ),
+            'PERMISSION_START_DISCUSSION' => array(
+                'Column' => 'Vanilla.Discussions.Add',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_SINK_DISCUSSION' => array(
+                'Column' => 'Vanilla.Discussions.Sink',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_STICK_DISCUSSIONS' => array(
+                'Column' => 'Vanilla.Discussions.Announce',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_CLOSE_DISCUSSIONS' => array(
+                'Column' => 'Vanilla.Discussions.Close',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_EDIT_DISCUSSIONS' => array(
+                'Column' => 'Vanilla.Discussions.Edit',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_EDIT_COMMENTS' => array(
+                'Column' => 'Vanilla.Comments.Edit',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_APPROVE_APPLICANTS' => array(
+                'Column' => 'Garden.Moderation.Manage',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_EDIT_USERS' => array(
+                'Column' => 'Garden.Users.Edit',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            ),
+            'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array(
+                'Column' => 'Garden.Settings.Manage',
+                'Type' => 'tinyint',
+                'Filter' => array($this, 'forceBool')
+            )
+        );
+        $ex->exportTable('Permission', "select * from :_Role", $permission_Map);
     }
 }
