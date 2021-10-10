@@ -25,14 +25,14 @@
         "seed": "vendor/bin/phinx seed:run"
     },
     "require": {
-        "php": ">=7.2"
+        "php": ">=7.3"
     },
     "require-dev": {
         "phing/phing": "^2.0",
         "robmorgan/phinx": "^0.12",
         "fakerphp/faker": "^1.16",
         "squizlabs/php_codesniffer": "^3",
-        "phpunit/phpunit": "^8"
+        "phpunit/phpunit": "^9"
    },
    "autoload": {
        "psr-4": {
