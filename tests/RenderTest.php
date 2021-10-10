@@ -6,6 +6,9 @@ use PHPUnit\Framework\TestCase;
 
 final class RenderTest extends TestCase
 {
+    /**
+     * @covers ::pageFooter
+     */
     public function testCanBeUsedAsString(): void
     {
         ob_start();
