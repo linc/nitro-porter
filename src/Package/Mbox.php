@@ -28,7 +28,6 @@ use NitroPorter\ExportModel;
 
 class Mbox extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => '.mbox files',
         'prefix' => '',
@@ -70,17 +69,135 @@ class Mbox extends ExportController
      */
     protected function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('mbox');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Begin
         $ex->beginExport('', 'Mbox', array());
 
+        $this->setup($ex); // Here be dragons.
 
-        // Temporary user table
+        $this->users($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        // Remove Temporary tables
+        //$ex->Query('drop table :_mbox_post');
+        //$ex->Query('drop table :_mbox_category');
+        //$ex->Query('drop table :_mbox_user');
+
+        $ex->endExport();
+    }
+
+    /**
+     * Grab the email from the User field.
+     */
+    public function parseEmail($email)
+    {
+        $emailBits = explode('<', $email);
+        if (!isset($emailBits[1])) {
+            return $email;
+        }
+
+        $emailBits = explode('>', $emailBits[1]);
+
+        return trim($emailBits[0]);
+    }
+
+    /**
+     * Body: strip headers, signatures, fwds.
+     */
+    public function parseBody($body)
+    {
+        $body = preg_replace(
+            '#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#',
+            '',
+            $body
+        );
+        $body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $body);
+        $body = explode("____________", $body);
+        $body = explode("----- Original Message -----", $body[0]);
+
+        return trim($body[0]);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
+        $user_Map = array();
+        $ex->exportTable(
+            'User',
+            "
+                select u.*,
+                    NOW() as DateInserted,
+                    'Reset' as HashMethod
+                from :_mbox_user u",
+            $user_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
+        $category_Map = array();
+        $ex->exportTable(
+            'Category',
+            "
+                select *
+                from :_mbox_category",
+            $category_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
+        $discussion_Map = array(
+            'PostID' => 'DiscussionID'
+        );
+        $ex->exportTable(
+            'Discussion',
+            "
+            select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID, 'Html' as Format
+            from :_mbox_post p where IsDiscussion = 1",
+            $discussion_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
+        $comment_Map = array(
+            'PostID' => 'CommentID'
+        );
+        $ex->exportTable(
+            'Comment',
+            "select p.*, 'Html' as Format
+                from :_mbox_post p
+                where IsDiscussion = 0",
+            $comment_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function setup(ExportModel $ex): void
+    {
+// Temporary user table
         $ex->query('create table :_mbox_user
             (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
         $result = $ex->query('select Sender from :_mbox group by Sender', true);
@@ -191,97 +308,5 @@ class Mbox extends ExportController
             $ex->query('update :_mbox_post set DiscussionID = ' . $row['DiscussionID'] . '
                 where PostID = ' . $row['PostID']);
         }
-
-
-        // Users
-        $user_Map = array();
-        $ex->exportTable(
-            'User',
-            "
-                select u.*,
-                    NOW() as DateInserted,
-                    'Reset' as HashMethod
-                from :_mbox_user u",
-            $user_Map
-        );
-
-
-        // Categories
-        $category_Map = array();
-        $ex->exportTable(
-            'Category',
-            "
-                select *
-                from :_mbox_category",
-            $category_Map
-        );
-
-
-        // Discussions
-        $discussion_Map = array(
-            'PostID' => 'DiscussionID'
-        );
-        $ex->exportTable(
-            'Discussion',
-            "
-            select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID, 'Html' as Format
-            from :_mbox_post p where IsDiscussion = 1",
-            $discussion_Map
-        );
-
-
-        // Comments
-        $comment_Map = array(
-            'PostID' => 'CommentID'
-        );
-        $ex->exportTable(
-            'Comment',
-            "select p.*, 'Html' as Format
-                from :_mbox_post p
-                where IsDiscussion = 0",
-            $comment_Map
-        );
-
-
-        // Remove Temporary tables
-        //$ex->Query('drop table :_mbox_post');
-        //$ex->Query('drop table :_mbox_category');
-        //$ex->Query('drop table :_mbox_user');
-
-        // End
-        $ex->endExport();
-        //      echo implode("\n\n", $ex->Queries);
-    }
-
-    /**
-     * Grab the email from the User field.
-     */
-    public function parseEmail($email)
-    {
-        $emailBits = explode('<', $email);
-        if (!isset($emailBits[1])) {
-            return $email;
-        }
-
-        $emailBits = explode('>', $emailBits[1]);
-
-        return trim($emailBits[0]);
-    }
-
-    /**
-     * Body: strip headers, signatures, fwds.
-     */
-    public function parseBody($body)
-    {
-        $body = preg_replace(
-            '#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#',
-            '',
-            $body
-        );
-        $body = preg_replace('#\s*From: ([a-zA-Z0-9_-]*)@(.*)#', '', $body);
-        $body = explode("____________", $body);
-        $body = explode("----- Original Message -----", $body[0]);
-
-        return trim($body[0]);
     }
 }
