@@ -50,7 +50,6 @@ class Yaf extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('Topic');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -59,232 +58,18 @@ class Yaf extends ExportController
         $ex->beginExport('', 'YAF.NET (Yet Another Forum)');
         $ex->sourcePrefix = 'yaf_';
 
-        // User.
-        $user_Map = array(
-            'UserID' => 'UserID',
-            'Name' => 'Name',
-            'Email' => 'Email',
-            'Joined' => 'DateInserted',
-            'LastVisit' => array('Column' => 'DateLastVisit', 'Type' => 'datetime'),
-            'IP' => 'InsertIPAddress',
-            'Avatar' => 'Photo',
-            'RankID' => array('Column' => 'RankID', 'Type' => 'int'),
-            'Points' => array('Column' => 'Points', 'Type' => 'int'),
-            'LastActivity' => 'DateLastActive',
-            'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'convertPassword')),
-            'HashMethod' => 'HashMethod'
-        );
-        $ex->exportTable(
-            'User',
-            "
-         select
-            u.*,
-            m.Password as Password2,
-            m.PasswordSalt,
-            m.PasswordFormat,
-            m.LastActivity,
-            'yaf' as HashMethod
-         from :_User u
-         left join :_prov_Membership m
-            on u.ProviderUserKey = m.UserID;",
-            $user_Map
-        );
+        $this->users($ex);
 
-        // Role.
-        $role_Map = array(
-            'GroupID' => 'RoleID',
-            'Name' => 'Name'
-        );
-        $ex->exportTable(
-            'Role',
-            "
-         select *
-         from :_Group;",
-            $role_Map
-        );
+        $this->roles($ex);
+        $this->ranks($ex);
+        $this->signatures($ex);
 
-        // UserRole.
-        $userRole_Map = array(
-            'UserID' => 'UserID',
-            'GroupID' => 'RoleID'
-        );
-        $ex->exportTable('UserRole', 'select * from :_UserGroup', $userRole_Map);
+        $this->categories($ex);
 
-        // Rank.
-        $rank_Map = array(
-            'RankID' => 'RankID',
-            'Level' => 'Level',
-            'Name' => 'Name',
-            'Label' => 'Label'
-        );
-        $ex->exportTable(
-            'Rank',
-            "
-         select
-            r.*,
-            RankID as Level,
-            Name as Label
-         from :_Rank r;",
-            $rank_Map
-        );
+        $this->discussions($ex);
 
-        // Signatures.
-        $ex->exportTable(
-            'UserMeta',
-            "
-         select
-            UserID,
-            'Plugin.Signatures.Sig' as `Name`,
-            Signature as `Value`
-         from :_User
-         where Signature <> ''
-
-         union all
-
-         select
-            UserID,
-            'Plugin.Signatures.Format' as `Name`,
-            'BBCode' as `Value`
-         from :_User
-         where Signature <> '';"
-        );
-
-        // Category.
-        $category_Map = array(
-            'ForumID' => 'CategoryID',
-            'ParentID' => 'ParentCategoryID',
-            'Name' => 'Name',
-            'Description' => 'Description',
-            'SortOrder' => 'Sort'
-        );
-
-        $ex->exportTable(
-            'Category',
-            "
-         select
-            f.ForumID,
-            case when f.ParentID = 0 then f.CategoryID * 1000 else f.ParentID end as ParentID,
-            f.Name,
-            f.Description,
-            f.SortOrder
-         from :_Forum f
-
-         union all
-
-         select
-            c.CategoryID * 1000,
-            null,
-            c.Name,
-            null,
-            c.SortOrder
-         from :_Category c;",
-            $category_Map
-        );
-
-        // Discussion.
-        $discussion_Map = array(
-            'TopicID' => 'DiscussionID',
-            'ForumID' => 'CategoryID',
-            'UserID' => 'InsertUserID',
-            'Posted' => 'DateInserted',
-            'Topic' => 'Name',
-            'Views' => 'CountViews',
-            'Announce' => 'Announce'
-        );
-        $ex->exportTable(
-            'Discussion',
-            "
-         select
-            case when t.Priority > 0 then 1 else 0 end as Announce,
-            t.Flags & 1 as Closed,
-            t.*
-         from :_Topic t
-         where t.IsDeleted = 0;",
-            $discussion_Map
-        );
-
-        // Comment.
-        $comment_Map = array(
-            'MessageID' => 'CommentID',
-            'TopicID' => 'DiscussionID',
-            'ReplyTo' => array('Column' => 'ReplyToCommentID', 'Type' => 'int'),
-            'UserID' => 'InsertUserID',
-            'Posted' => 'DateInserted',
-            'Message' => 'Body',
-            'Format' => 'Format',
-            'IP' => 'InsertIPAddress',
-            'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'cleanDate')),
-            'EditedBy' => 'UpdateUserID'
-        );
-        $ex->exportTable(
-            'Comment',
-            "
-         select
-            case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
-            m.*
-         from :_Message m
-         where IsDeleted = 0;",
-            $comment_Map
-        );
-
-        // Conversation.
-        $this->exportConversationTemps();
-
-        $conversation_Map = array(
-            'PMessageID' => 'ConversationID',
-            'FromUserID' => 'InsertUserID',
-            'Created' => 'DateInserted',
-            'Title' => array('Column' => 'Subject', 'Type' => 'varchar(512)')
-        );
-        $ex->exportTable(
-            'Conversation',
-            "
-         select
-            pm.*,
-            g.Title
-         from z_pmgroup g
-         join :_PMessage pm
-            on g.Group_ID = pm.PMessageID;",
-            $conversation_Map
-        );
-
-        // UserConversation.
-        $userConversation_Map = array(
-            'PM_ID' => 'ConversationID',
-            'User_ID' => 'UserID',
-            'Deleted' => 'Deleted'
-        );
-        $ex->exportTable(
-            'UserConversation',
-            "
-         select pto.*
-         from z_pmto pto
-         join z_pmgroup g
-            on pto.PM_ID = g.Group_ID;",
-            $userConversation_Map
-        );
-
-        // ConversationMessage.
-        $conversationMessage_Map = array(
-            'PMessageID' => 'MessageID',
-            'Group_ID' => 'ConversationID',
-            'FromUserID' => 'InsertUserID',
-            'Created' => 'DateInserted',
-            'Body' => 'Body',
-            'Format' => 'Format'
-        );
-        $ex->exportTable(
-            'ConversationMessage',
-            "
-         select
-            pm.*,
-            case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
-            t.Group_ID
-         from :_PMessage pm
-         join z_pmtext t
-            on t.PM_ID = pm.PMessageID;",
-            $conversationMessage_Map
-        );
+        $this->comments($ex);
+        $this->conversations($ex);
 
         $ex->endExport();
     }
@@ -425,5 +210,272 @@ class Yaf extends ExportController
                set pm.Group_ID = g.Group_ID;";
 
         $this->ex->queryN($sql);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
+        $user_Map = array(
+            'UserID' => 'UserID',
+            'Name' => 'Name',
+            'Email' => 'Email',
+            'Joined' => 'DateInserted',
+            'LastVisit' => array('Column' => 'DateLastVisit', 'Type' => 'datetime'),
+            'IP' => 'InsertIPAddress',
+            'Avatar' => 'Photo',
+            'RankID' => array('Column' => 'RankID', 'Type' => 'int'),
+            'Points' => array('Column' => 'Points', 'Type' => 'int'),
+            'LastActivity' => 'DateLastActive',
+            'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'convertPassword')),
+            'HashMethod' => 'HashMethod'
+        );
+        $ex->exportTable(
+            'User',
+            "
+         select
+            u.*,
+            m.Password as Password2,
+            m.PasswordSalt,
+            m.PasswordFormat,
+            m.LastActivity,
+            'yaf' as HashMethod
+         from :_User u
+         left join :_prov_Membership m
+            on u.ProviderUserKey = m.UserID;",
+            $user_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+        $role_Map = array(
+            'GroupID' => 'RoleID',
+            'Name' => 'Name'
+        );
+        $ex->exportTable(
+            'Role',
+            "
+         select *
+         from :_Group;",
+            $role_Map
+        );
+
+        // UserRole.
+        $userRole_Map = array(
+            'UserID' => 'UserID',
+            'GroupID' => 'RoleID'
+        );
+        $ex->exportTable('UserRole', 'select * from :_UserGroup', $userRole_Map);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function ranks(ExportModel $ex): void
+    {
+        $rank_Map = array(
+            'RankID' => 'RankID',
+            'Level' => 'Level',
+            'Name' => 'Name',
+            'Label' => 'Label'
+        );
+        $ex->exportTable(
+            'Rank',
+            "
+         select
+            r.*,
+            RankID as Level,
+            Name as Label
+         from :_Rank r;",
+            $rank_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
+        $ex->exportTable(
+            'UserMeta',
+            "
+         select
+            UserID,
+            'Plugin.Signatures.Sig' as `Name`,
+            Signature as `Value`
+         from :_User
+         where Signature <> ''
+
+         union all
+
+         select
+            UserID,
+            'Plugin.Signatures.Format' as `Name`,
+            'BBCode' as `Value`
+         from :_User
+         where Signature <> '';"
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
+        $category_Map = array(
+            'ForumID' => 'CategoryID',
+            'ParentID' => 'ParentCategoryID',
+            'Name' => 'Name',
+            'Description' => 'Description',
+            'SortOrder' => 'Sort'
+        );
+
+        $ex->exportTable(
+            'Category',
+            "
+         select
+            f.ForumID,
+            case when f.ParentID = 0 then f.CategoryID * 1000 else f.ParentID end as ParentID,
+            f.Name,
+            f.Description,
+            f.SortOrder
+         from :_Forum f
+
+         union all
+
+         select
+            c.CategoryID * 1000,
+            null,
+            c.Name,
+            null,
+            c.SortOrder
+         from :_Category c;",
+            $category_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
+        $discussion_Map = array(
+            'TopicID' => 'DiscussionID',
+            'ForumID' => 'CategoryID',
+            'UserID' => 'InsertUserID',
+            'Posted' => 'DateInserted',
+            'Topic' => 'Name',
+            'Views' => 'CountViews',
+            'Announce' => 'Announce'
+        );
+        $ex->exportTable(
+            'Discussion',
+            "
+         select
+            case when t.Priority > 0 then 1 else 0 end as Announce,
+            t.Flags & 1 as Closed,
+            t.*
+         from :_Topic t
+         where t.IsDeleted = 0;",
+            $discussion_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
+        $comment_Map = array(
+            'MessageID' => 'CommentID',
+            'TopicID' => 'DiscussionID',
+            'ReplyTo' => array('Column' => 'ReplyToCommentID', 'Type' => 'int'),
+            'UserID' => 'InsertUserID',
+            'Posted' => 'DateInserted',
+            'Message' => 'Body',
+            'Format' => 'Format',
+            'IP' => 'InsertIPAddress',
+            'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'cleanDate')),
+            'EditedBy' => 'UpdateUserID'
+        );
+        $ex->exportTable(
+            'Comment',
+            "
+         select
+            case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
+            m.*
+         from :_Message m
+         where IsDeleted = 0;",
+            $comment_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
+        $this->exportConversationTemps();
+
+        $conversation_Map = array(
+            'PMessageID' => 'ConversationID',
+            'FromUserID' => 'InsertUserID',
+            'Created' => 'DateInserted',
+            'Title' => array('Column' => 'Subject', 'Type' => 'varchar(512)')
+        );
+        $ex->exportTable(
+            'Conversation',
+            "
+         select
+            pm.*,
+            g.Title
+         from z_pmgroup g
+         join :_PMessage pm
+            on g.Group_ID = pm.PMessageID;",
+            $conversation_Map
+        );
+
+        // UserConversation.
+        $userConversation_Map = array(
+            'PM_ID' => 'ConversationID',
+            'User_ID' => 'UserID',
+            'Deleted' => 'Deleted'
+        );
+        $ex->exportTable(
+            'UserConversation',
+            "
+         select pto.*
+         from z_pmto pto
+         join z_pmgroup g
+            on pto.PM_ID = g.Group_ID;",
+            $userConversation_Map
+        );
+
+        // ConversationMessage.
+        $conversationMessage_Map = array(
+            'PMessageID' => 'MessageID',
+            'Group_ID' => 'ConversationID',
+            'FromUserID' => 'InsertUserID',
+            'Created' => 'DateInserted',
+            'Body' => 'Body',
+            'Format' => 'Format'
+        );
+        $ex->exportTable(
+            'ConversationMessage',
+            "
+         select
+            pm.*,
+            case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
+            t.Group_ID
+         from :_PMessage pm
+         join z_pmtext t
+            on t.PM_ID = pm.PMessageID;",
+            $conversationMessage_Map
+        );
     }
 }
