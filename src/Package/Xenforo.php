@@ -61,7 +61,7 @@ class Xenforo extends ExportController
     /**
      * Export attachments into vanilla-compatibles names
      */
-    public function doAttachments()
+    public function attachmentFiles()
     {
         // Check source folder
         $this->sourceFolder = $this->param('attachmentpath');
@@ -114,7 +114,7 @@ class Xenforo extends ExportController
     /**
      * Export avatars into vanilla-compatibles names
      */
-    public function doAvatars()
+    public function avatars()
     {
 
         // Check source folder
@@ -237,273 +237,32 @@ class Xenforo extends ExportController
 
         // Export avatars
         if ($this->param('avatars')) {
-            $this->doAvatars();
+            $this->avatars();
         }
 
         // Export attachments
         if ($this->param('attachment')) {
-            $this->doAttachments();
+            $this->attachmentFiles();
         }
 
-        // Users.
-        $user_Map = array(
-            'user_id' => 'UserID',
-            'username' => 'Name',
-            'email' => 'Email',
-            'gender' => array(
-                'Column' => 'Gender',
-                'Filter' => function ($value) {
-                    switch ($value) {
-                        case 'male':
-                            return 'm';
-                        case 'female':
-                            return 'f';
-                        default:
-                            return 'u';
-                    }
-                }
-            ),
-            'custom_title' => 'Title',
-            'register_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate'),
-            'is_admin' => 'Admin',
-            'is_banned' => 'Banned',
-            'password' => 'Password',
-            'hash_method' => 'HashMethod',
-            'avatar' => 'Photo'
-        );
-        $ex->exportTable(
-            'User',
-            "
-         select
-            u.*,
-            ua.data as password,
-            'xenforo' as hash_method,
-            case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
-                else null end as avatar
-         from :_user u
-         left join :_user_authenticate ua
-            on u.user_id = ua.user_id",
-            $user_Map
-        );
+        $this->users($ex, $cdn);
 
-        // Roles.
-        $role_Map = array(
-            'user_group_id' => 'RoleID',
-            'title' => 'Name'
-        );
-        $ex->exportTable(
-            'Role',
-            "
-         select *
-         from :_user_group",
-            $role_Map
-        );
+        $this->roles($ex);
+        $this->permissions();
+        $this->userMeta();
+        $this->categories($ex);
 
-        // User Roles.
-        $userRole_Map = array(
-            'user_id' => 'UserID',
-            'user_group_id' => 'RoleID'
-        );
+        $this->discussions($ex);
 
-        $ex->exportTable(
-            'UserRole',
-            "
-         select user_id, user_group_id
-         from :_user
-         union all
-         select u.user_id, ua.user_group_id
-         from :_user u
-         join :_user_group ua
-            on find_in_set(ua.user_group_id, u.secondary_group_ids)",
-            $userRole_Map
-        );
+        $this->comments($ex);
 
-        // Permission.
-        $this->exportPermissions();
-
-        // User Meta.
-        $this->exportUserMeta();
-
-        // Categories.
-        $category_Map = array(
-            'node_id' => 'CategoryID',
-            'title' => 'Name',
-            'description' => 'Description',
-            'parent_node_id' => array(
-                'Column' => 'ParentCategoryID',
-                'Filter' => function ($value) {
-                    return $value ? $value : null;
-                }
-            ),
-            'display_order' => 'Sort',
-            'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
-        );
-        $ex->exportTable(
-            'Category',
-            "
-         select n.*
-         from :_node n
-         ",
-            $category_Map
-        );
-
-        // Discussions.
-        $discussion_Map = array(
-            'thread_id' => 'DiscussionID',
-            'node_id' => 'CategoryID',
-            'title' => 'Name',
-            'view_count' => 'CountViews',
-            'user_id' => 'InsertUserID',
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'sticky' => 'Announce',
-            'discussion_open' => array('Column' => 'Closed', 'Filter' => 'NotFilter'),
-            'last_post_date' => array('Column' => 'DateLastComment', 'Filter' => 'timestampToDate'),
-            'message' => 'Body',
-            'format' => 'Format',
-            'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
-        );
-        $ex->exportTable(
-            'Discussion',
-            "
-         select
-            t.*,
-            p.message,
-            'BBCode' as format,
-            ip.ip
-         from :_thread t
-         join :_post p
-            on t.first_post_id = p.post_id
-         left join :_ip ip
-            on p.ip_id = ip.ip_id",
-            $discussion_Map
-        );
-
-
-        // Comments.
-        $comment_Map = array(
-            'post_id' => 'CommentID',
-            'thread_id' => 'DiscussionID',
-            'user_id' => 'InsertUserID',
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'message' => 'Body',
-            'format' => 'Format',
-            'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
-        );
-        $ex->exportTable(
-            'Comment',
-            "
-         select
-            p.*,
-            'BBCode' as format,
-            ip.ip
-         from :_post p
-         join :_thread t
-            on p.thread_id = t.thread_id
-         left join :_ip ip
-            on p.ip_id = ip.ip_id
-         where p.post_id <> t.first_post_id
-            and message_state = 'visible'",
-            $comment_Map
-        );
-
-        $ex->exportTable(
-            'Media',
-            "
-            select
-                a.attachment_id as MediaID,
-                ad.filename as Name,
-                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as Path,
-                ad.file_size as Size,
-                ad.user_id as InsertUserID,
-                from_unixtime(ad.upload_date) as DateInserted,
-                p.ForeignID,
-                p.ForeignTable,
-                ad.width as ImageWidth,
-                ad.height as ImageHeight,
-                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
-            from
-                xf_attachment a
-            join
-                (select
-                    p.post_id,
-                    if(p.post_id = t.first_post_id,t.thread_id, p.post_id)  as ForeignID,
-                    if(p.post_id = t.first_post_id, 'discussion', 'comment') as ForeignTable
-                from xf_post p
-                join xf_thread t on t.thread_id = p.thread_id
-                where p.message_state <> 'deleted'
-                ) p on p.post_id = a.content_id
-            join
-                xf_attachment_data ad on ad.data_id = a.data_id
-            where
-                a.content_type = 'post'
-        "
-        );
-
-        // Conversation.
-        $conversation_Map = array(
-            'conversation_id' => 'ConversationID',
-            'title' => 'Subject',
-            'user_id' => 'InsertUserID',
-            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
-        );
-        $ex->exportTable(
-            'Conversation',
-            "
-         select *
-         from :_conversation_master",
-            $conversation_Map
-        );
-
-        $conversationMessage_Map = array(
-            'message_id' => 'MessageID',
-            'conversation_id' => 'ConversationID',
-            'message_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'user_id' => 'InsertUserID',
-            'message' => 'Body',
-            'format' => 'Format',
-            'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
-        );
-        $ex->exportTable(
-            'ConversationMessage',
-            "
-         select
-            m.*,
-            'BBCode' as format,
-            ip.ip
-         from :_conversation_message m
-         left join :_ip ip
-            on m.ip_id = ip.ip_id",
-            $conversationMessage_Map
-        );
-
-        $userConversation_Map = array(
-            'conversation_id' => 'ConversationID',
-            'user_id' => 'UserID',
-            'Deleted' => 'Deleted'
-        );
-        $ex->exportTable(
-            'UserConversation',
-            "
-         select
-            r.conversation_id,
-            user_id,
-            case when r.recipient_state = 'deleted' then 1 else 0 end as Deleted
-         from :_conversation_recipient r
-         union all
-         select
-            cu.conversation_id,
-            cu.owner_user_id,
-            0
-         from :_conversation_user cu
-         ",
-            $userConversation_Map
-        );
+        $this->attachments($ex);
+        $this->conversations($ex);
 
         $ex->endExport();
     }
 
-    public function exportPermissions()
+    public function permissions()
     {
         $ex = $this->ex;
 
@@ -562,7 +321,7 @@ class Xenforo extends ExportController
         //       var_export($permissions);
     }
 
-    public function exportUserMeta()
+    public function userMeta()
     {
         $ex = $this->ex;
 
@@ -688,5 +447,290 @@ class Xenforo extends ExportController
                 }
             }
         }
+    }
+
+    /**
+     * @param $ex
+     * @param string $cdn
+     */
+    protected function users($ex, string $cdn): void
+    {
+        $user_Map = array(
+            'user_id' => 'UserID',
+            'username' => 'Name',
+            'email' => 'Email',
+            'gender' => array(
+                'Column' => 'Gender',
+                'Filter' => function ($value) {
+                    switch ($value) {
+                        case 'male':
+                            return 'm';
+                        case 'female':
+                            return 'f';
+                        default:
+                            return 'u';
+                    }
+                }
+            ),
+            'custom_title' => 'Title',
+            'register_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate'),
+            'is_admin' => 'Admin',
+            'is_banned' => 'Banned',
+            'password' => 'Password',
+            'hash_method' => 'HashMethod',
+            'avatar' => 'Photo'
+        );
+        $ex->exportTable(
+            'User',
+            "
+         select
+            u.*,
+            ua.data as password,
+            'xenforo' as hash_method,
+            case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
+                else null end as avatar
+         from :_user u
+         left join :_user_authenticate ua
+            on u.user_id = ua.user_id",
+            $user_Map
+        );
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function roles($ex): void
+    {
+        $role_Map = array(
+            'user_group_id' => 'RoleID',
+            'title' => 'Name'
+        );
+        $ex->exportTable(
+            'Role',
+            "
+         select *
+         from :_user_group",
+            $role_Map
+        );
+
+        // User Roles.
+        $userRole_Map = array(
+            'user_id' => 'UserID',
+            'user_group_id' => 'RoleID'
+        );
+
+        $ex->exportTable(
+            'UserRole',
+            "
+         select user_id, user_group_id
+         from :_user
+         union all
+         select u.user_id, ua.user_group_id
+         from :_user u
+         join :_user_group ua
+            on find_in_set(ua.user_group_id, u.secondary_group_ids)",
+            $userRole_Map
+        );
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function categories($ex): void
+    {
+        $category_Map = array(
+            'node_id' => 'CategoryID',
+            'title' => 'Name',
+            'description' => 'Description',
+            'parent_node_id' => array(
+                'Column' => 'ParentCategoryID',
+                'Filter' => function ($value) {
+                    return $value ? $value : null;
+                }
+            ),
+            'display_order' => 'Sort',
+            'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
+        );
+        $ex->exportTable(
+            'Category',
+            "
+         select n.*
+         from :_node n
+         ",
+            $category_Map
+        );
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function discussions($ex): void
+    {
+        $discussion_Map = array(
+            'thread_id' => 'DiscussionID',
+            'node_id' => 'CategoryID',
+            'title' => 'Name',
+            'view_count' => 'CountViews',
+            'user_id' => 'InsertUserID',
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'sticky' => 'Announce',
+            'discussion_open' => array('Column' => 'Closed', 'Filter' => 'NotFilter'),
+            'last_post_date' => array('Column' => 'DateLastComment', 'Filter' => 'timestampToDate'),
+            'message' => 'Body',
+            'format' => 'Format',
+            'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
+        );
+        $ex->exportTable(
+            'Discussion',
+            "
+         select
+            t.*,
+            p.message,
+            'BBCode' as format,
+            ip.ip
+         from :_thread t
+         join :_post p
+            on t.first_post_id = p.post_id
+         left join :_ip ip
+            on p.ip_id = ip.ip_id",
+            $discussion_Map
+        );
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function comments($ex): void
+    {
+        $comment_Map = array(
+            'post_id' => 'CommentID',
+            'thread_id' => 'DiscussionID',
+            'user_id' => 'InsertUserID',
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'message' => 'Body',
+            'format' => 'Format',
+            'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
+        );
+        $ex->exportTable(
+            'Comment',
+            "
+         select
+            p.*,
+            'BBCode' as format,
+            ip.ip
+         from :_post p
+         join :_thread t
+            on p.thread_id = t.thread_id
+         left join :_ip ip
+            on p.ip_id = ip.ip_id
+         where p.post_id <> t.first_post_id
+            and message_state = 'visible'",
+            $comment_Map
+        );
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function attachments($ex): void
+    {
+        $ex->exportTable(
+            'Media',
+            "
+            select
+                a.attachment_id as MediaID,
+                ad.filename as Name,
+                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as Path,
+                ad.file_size as Size,
+                ad.user_id as InsertUserID,
+                from_unixtime(ad.upload_date) as DateInserted,
+                p.ForeignID,
+                p.ForeignTable,
+                ad.width as ImageWidth,
+                ad.height as ImageHeight,
+                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
+            from
+                xf_attachment a
+            join
+                (select
+                    p.post_id,
+                    if(p.post_id = t.first_post_id,t.thread_id, p.post_id)  as ForeignID,
+                    if(p.post_id = t.first_post_id, 'discussion', 'comment') as ForeignTable
+                from xf_post p
+                join xf_thread t on t.thread_id = p.thread_id
+                where p.message_state <> 'deleted'
+                ) p on p.post_id = a.content_id
+            join
+                xf_attachment_data ad on ad.data_id = a.data_id
+            where
+                a.content_type = 'post'
+        "
+        );
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function conversations($ex): void
+    {
+        $conversation_Map = array(
+            'conversation_id' => 'ConversationID',
+            'title' => 'Subject',
+            'user_id' => 'InsertUserID',
+            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
+        );
+        $ex->exportTable(
+            'Conversation',
+            "
+         select *
+         from :_conversation_master",
+            $conversation_Map
+        );
+
+        $conversationMessage_Map = array(
+            'message_id' => 'MessageID',
+            'conversation_id' => 'ConversationID',
+            'message_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'user_id' => 'InsertUserID',
+            'message' => 'Body',
+            'format' => 'Format',
+            'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
+        );
+        $ex->exportTable(
+            'ConversationMessage',
+            "
+         select
+            m.*,
+            'BBCode' as format,
+            ip.ip
+         from :_conversation_message m
+         left join :_ip ip
+            on m.ip_id = ip.ip_id",
+            $conversationMessage_Map
+        );
+
+        $userConversation_Map = array(
+            'conversation_id' => 'ConversationID',
+            'user_id' => 'UserID',
+            'Deleted' => 'Deleted'
+        );
+        $ex->exportTable(
+            'UserConversation',
+            "
+         select
+            r.conversation_id,
+            user_id,
+            case when r.recipient_state = 'deleted' then 1 else 0 end as Deleted
+         from :_conversation_recipient r
+         union all
+         select
+            cu.conversation_id,
+            cu.owner_user_id,
+            0
+         from :_conversation_user cu
+         ",
+            $userConversation_Map
+        );
     }
 }
