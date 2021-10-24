@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class Drupal6 extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Drupal 6',
         'prefix' => '',
@@ -52,16 +51,35 @@ class Drupal6 extends ExportController
      */
     protected function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('comment');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Begin
         $ex->beginExport('', 'Drupal');
 
-        // Users
+        $this->users($ex);
+
+        $this->signatures($ex);
+
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->conversations($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'uid' => 'UserID',
             'name' => 'Name',
@@ -82,8 +100,13 @@ class Drupal6 extends ExportController
          where uid > 0",
             $user_Map
         );
+    }
 
-        // Signatures.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
         $userMeta_Map = array(
             'uid' => 'UserID',
             'Name' => 'Name',
@@ -97,8 +120,13 @@ class Drupal6 extends ExportController
          where uid > 0",
             $userMeta_Map
         );
+    }
 
-        // Roles.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'rid' => 'RoleID',
             'name' => 'Name'
@@ -116,8 +144,13 @@ class Drupal6 extends ExportController
          select * from :_users_roles",
             $userRole_Map
         );
+    }
 
-        // Categories (sigh)
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'tid' => 'CategoryID',
             'name' => 'Name',
@@ -133,8 +166,13 @@ class Drupal6 extends ExportController
             on t.tid = h.tid",
             $category_Map
         );
+    }
 
-        // Discussions.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'nid' => 'DiscussionID',
             'title' => 'Name',
@@ -156,8 +194,13 @@ class Drupal6 extends ExportController
             on r.nid = n.nid",
             $discussion_Map
         );
+    }
 
-        // Comments.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'cid' => 'CommentID',
             'uid' => 'InsertUserID',
@@ -184,8 +227,13 @@ class Drupal6 extends ExportController
          where n.type = 'forum_reply'",
             $comment_Map
         );
+    }
 
-        // Conversations.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
         $conversation_Map = array(
             'thread_id' => 'ConversationID',
             'author' => 'InsertUserID',
@@ -251,7 +299,5 @@ class Drupal6 extends ExportController
         ;",
             $userConversation_Map
         );
-
-        $ex->endExport();
     }
 }
