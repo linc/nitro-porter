@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class BbPress2 extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'bbPress 2',
         'prefix' => 'wp_',
@@ -59,10 +58,28 @@ class BbPress2 extends ExportController
      */
     protected function forumExport($ex)
     {
-        // Begin
         $ex->beginExport('', 'bbPress 2.*', array('HashMethod' => 'Vanilla'));
 
-        // Users
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->query("drop table if exists z_user;"); // Cleanup
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $ex->query("drop table if exists z_user;");
         $ex->query(
             "
@@ -133,8 +150,13 @@ class BbPress2 extends ExportController
             'user_registered' => 'DateInserted',
         );
         $ex->exportTable('User', "select * from z_user;", $user_Map);
+    }
 
-        // Roles
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Role',
             "
@@ -174,8 +196,13 @@ class BbPress2 extends ExportController
             where hash_method = 'Random';",
             $userRole_Map
         );
+    }
 
-        // Categories
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'ID' => 'CategoryID',
             'post_title' => 'Name',
@@ -194,8 +221,13 @@ class BbPress2 extends ExportController
             where post_type = 'forum';",
             $category_Map
         );
+    }
 
-        // Discussions
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'ID' => 'DiscussionID',
             'post_parent' => 'CategoryID',
@@ -220,8 +252,13 @@ class BbPress2 extends ExportController
             where post_type = 'topic';",
             $discussion_Map
         );
+    }
 
-        // Comments
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'ID' => 'CommentID',
             'post_parent_id' => 'DiscussionID',
@@ -249,11 +286,5 @@ class BbPress2 extends ExportController
                 or post_type = 'reply';",
             $comment_Map
         );
-
-        // Cleanup
-        $ex->query("drop table if exists z_user;");
-
-        // End
-        $ex->endExport();
     }
 }
