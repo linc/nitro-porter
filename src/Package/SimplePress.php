@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class SimplePress extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'SimplePress 1',
         'prefix' => 'wp_',
@@ -69,10 +68,31 @@ class SimplePress extends ExportController
             $ex->characterSet = $characterSet;
         }
 
-        // Begin
         $ex->beginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
 
-        // Users
+        $this->users($ex);
+
+        $this->roles($ex);
+        $this->permissions($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->tags($ex);
+
+        $this->comments($ex);
+
+        $this->conversations($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'user_id' => 'UserID',
             'display_name' => 'Name',
@@ -89,8 +109,13 @@ class SimplePress extends ExportController
             on u.ID = m.user_id;",
             $user_Map
         );
+    }
 
-        // Roles
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'usergroup_id' => 'RoleID',
             'usergroup_name' => 'Name',
@@ -111,24 +136,6 @@ class SimplePress extends ExportController
             'Administrators',
             ''",
             $role_Map
-        );
-
-        // Permissions.
-        $ex->exportTable(
-            'Permission',
-            "select usergroup_id as RoleID,
-            case
-               when usergroup_name like 'Guest%' then 'View'
-               when usergroup_name like 'Member%'
-                    then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
-               when usergroup_name like 'Mod%'
-                    then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
-                        'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
-            end as _Permissions
-                     from :_sfusergroups
-
-                     union
-                     select 100, 'All'"
         );
 
         // UserRoles
@@ -152,8 +159,36 @@ class SimplePress extends ExportController
                     and um.meta_value like '%PF Manage Forums%'",
             $userRole_Map
         );
+    }
 
-        // Categories
+    /**
+     * @param ExportModel $ex
+     */
+    protected function permissions(ExportModel $ex): void
+    {
+        $ex->exportTable(
+            'Permission',
+            "select usergroup_id as RoleID,
+            case
+               when usergroup_name like 'Guest%' then 'View'
+               when usergroup_name like 'Member%'
+                    then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
+               when usergroup_name like 'Mod%'
+                    then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
+                        'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
+            end as _Permissions
+                     from :_sfusergroups
+
+                     union
+                     select 100, 'All'"
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'forum_id' => 'CategoryID',
             'forum_name' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
@@ -173,9 +208,7 @@ class SimplePress extends ExportController
             lower(f.forum_slug) as forum_slug,
             case when f.parent = 0 then f.group_id + 1000 else f.parent end as parent_id
          from :_sfforums f
-
          union
-
          select
             1000 + g.group_id,
             g.group_name,
@@ -186,8 +219,36 @@ class SimplePress extends ExportController
          from :_sfgroups g",
             $category_Map
         );
+    }
 
-        // Discussions
+    /**
+     * @param ExportModel $ex
+     */
+    protected function tags(ExportModel $ex): void
+    {
+        if ($ex->exists('sftags')) {
+            // Tags
+            $tag_Map = array(
+                'tag_id' => 'TagID',
+                'tag_name' => 'Name'
+            );
+            $ex->exportTable('Tag', "select * from :_sftags", $tag_Map);
+
+            if ($ex->exists('sftagmeta')) {
+                $tagDiscussion_Map = array(
+                    'tag_id' => 'TagID',
+                    'topic_id' => 'DiscussionID'
+                );
+                $ex->exportTable('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
+            }
+        }
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'topic_id' => 'DiscussionID',
             'forum_id' => 'CategoryID',
@@ -205,25 +266,13 @@ class SimplePress extends ExportController
          from :_sftopics t",
             $discussion_Map
         );
+    }
 
-        if ($ex->exists('sftags')) {
-            // Tags
-            $tag_Map = array(
-                'tag_id' => 'TagID',
-                'tag_name' => 'Name'
-            );
-            $ex->exportTable('Tag', "select * from :_sftags", $tag_Map);
-
-            if ($ex->exists('sftagmeta')) {
-                $tagDiscussion_Map = array(
-                    'tag_id' => 'TagID',
-                    'topic_id' => 'DiscussionID'
-                );
-                $ex->exportTable('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
-            }
-        }
-
-        // Comments
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
@@ -240,8 +289,13 @@ class SimplePress extends ExportController
          from :_sfposts p",
             $comment_Map
         );
+    }
 
-        // Conversation.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
         $conv_Map = array(
             'message_id' => 'ConversationID',
             'from_id' => 'InsertUserID',
@@ -289,8 +343,5 @@ class SimplePress extends ExportController
          where is_reply = 0',
             $userConv_Map
         );
-
-        // End
-        $ex->endExport();
     }
 }
