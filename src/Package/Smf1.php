@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class Smf1 extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Simple Machines 1',
         'prefix' => 'smf_',
@@ -62,16 +61,84 @@ class Smf1 extends ExportController
      */
     protected function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('messages');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Begin
         $ex->beginExport('', 'SMF 1.*', array('HashMethod' => 'Django'));
 
-        // Users
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->attachments($ex);
+        $this->conversations($ex);
+
+        $ex->endExport();
+    }
+
+    public function decodeNumericEntity($text)
+    {
+        if (function_exists('mb_decode_numericentity')) {
+            $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
+
+            return mb_decode_numericentity($text, $convmap, 'UTF-8');
+        } else {
+            return $text;
+        }
+    }
+
+    /**
+     * Determine mime type from file name
+     *
+     * @param  string $fileName File name (Can be full path or file name only)
+     * @return null|string Mime type if it could be determined or null.
+     */
+    public function getMimeTypeFromFileName($fileName)
+    {
+        $mimeType = null;
+
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+        if ($extension) {
+            $mimeType = MimeTypeFromExtension('.' . strtolower($extension));
+        }
+
+        return $mimeType;
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see    ExportModel::exportTableWrite
+     *
+     * @param  string $value Current value
+     * @param  string $field Current field
+     * @param  array  $row   Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function filterThumbnailData($value, $field, $row)
+    {
+        $mimeType = $this->getMimeTypeFromFileName($row['Path']);
+        if ($mimeType && strpos($mimeType, 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'ID_MEMBER' => 'UserID',
             'memberName' => 'Name',
@@ -100,8 +167,13 @@ class Smf1 extends ExportController
          left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ",
             $user_Map
         );
+    }
 
-        // Roles
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'ID_GROUP' => 'RoleID',
             'groupName' => 'Name'
@@ -114,8 +186,13 @@ class Smf1 extends ExportController
             'ID_GROUP' => 'RoleID'
         );
         $ex->exportTable('UserRole', "select * from :_members", $userRole_Map);
+    }
 
-        // Categories
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
@@ -145,8 +222,13 @@ class Smf1 extends ExportController
      ",
             $category_Map
         );
+    }
 
-        // Discussions
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'ID_TOPIC' => 'DiscussionID',
             'subject' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
@@ -190,8 +272,13 @@ class Smf1 extends ExportController
        ",
             $discussion_Map
         );
+    }
 
-        // Comments
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'ID_MSG' => 'CommentID',
             'ID_TOPIC' => 'DiscussionID',
@@ -211,8 +298,13 @@ class Smf1 extends ExportController
        ",
             $comment_Map
         );
+    }
 
-        // Media
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
         $media_Map = array(
             'ID_ATTACH' => 'MediaID',
             'ID_MSG' => 'ForeignID',
@@ -246,8 +338,14 @@ class Smf1 extends ExportController
         ",
             $media_Map
         );
+    }
 
-        // Conversations need a bit more conversion so execute a series of queries for that.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
+// Conversations need a bit more conversion so execute a series of queries for that.
         $ex->query(
             'create table :_smfpmto (
   id int,
@@ -426,59 +524,5 @@ join :_personal_messages pm2
         $ex->query('drop table :_smfpmto');
         $ex->query('drop table :_smfpmto2');
         $ex->query('drop table :_smfgroups');
-
-        // End
-        $ex->endExport();
-        //      echo implode("\n\n", $ex->Queries);
-    }
-
-    public function decodeNumericEntity($text)
-    {
-        if (function_exists('mb_decode_numericentity')) {
-            $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
-
-            return mb_decode_numericentity($text, $convmap, 'UTF-8');
-        } else {
-            return $text;
-        }
-    }
-
-    /**
-     * Determine mime type from file name
-     *
-     * @param  string $fileName File name (Can be full path or file name only)
-     * @return null|string Mime type if it could be determined or null.
-     */
-    public function getMimeTypeFromFileName($fileName)
-    {
-        $mimeType = null;
-
-        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
-        if ($extension) {
-            $mimeType = MimeTypeFromExtension('.' . strtolower($extension));
-        }
-
-        return $mimeType;
-    }
-
-    /**
-     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
-     *
-     * @access public
-     * @see    ExportModel::exportTableWrite
-     *
-     * @param  string $value Current value
-     * @param  string $field Current field
-     * @param  array  $row   Contents of the current record.
-     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
-     */
-    public function filterThumbnailData($value, $field, $row)
-    {
-        $mimeType = $this->getMimeTypeFromFileName($row['Path']);
-        if ($mimeType && strpos($mimeType, 'image/') === 0) {
-            return $value;
-        } else {
-            return null;
-        }
     }
 }
