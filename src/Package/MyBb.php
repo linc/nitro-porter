@@ -16,7 +16,6 @@ use NitroPorter\ExportModel;
 
 class MyBb extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'MyBB',
         'prefix' => 'mybb_',
@@ -64,7 +63,6 @@ class MyBb extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -73,7 +71,27 @@ class MyBb extends ExportController
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'MyBB');
 
-        // User.
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->attachments($ex);
+        $this->bookmarks($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'uid' => 'UserID',
             'username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
@@ -95,8 +113,13 @@ class MyBb extends ExportController
          ",
             $user_Map
         );
+    }
 
-        // Role.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'gid' => 'RoleID',
             'title' => 'Name',
@@ -122,8 +145,13 @@ class MyBb extends ExportController
          from :_users u",
             $userRole_Map
         );
+    }
 
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'fid' => 'CategoryID',
             'pid' => 'ParentCategoryID',
@@ -139,8 +167,13 @@ class MyBb extends ExportController
          ",
             $category_Map
         );
+    }
 
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'tid' => 'DiscussionID',
             'fid' => 'CategoryID',
@@ -158,8 +191,13 @@ class MyBb extends ExportController
          from :_threads t",
             $discussion_Map
         );
+    }
 
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'pid' => 'CommentID',
             'tid' => 'DiscussionID',
@@ -175,8 +213,13 @@ class MyBb extends ExportController
          from :_posts p",
             $comment_Map
         );
+    }
 
-        // Media
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
         $media_Map = array(
             'aid' => 'MediaID',
             'pid' => 'ForeignID',
@@ -201,8 +244,13 @@ class MyBb extends ExportController
         ",
             $media_Map
         );
+    }
 
-        // UserDiscussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
         $userDiscussion_Map = array(
             'tid' => 'DiscussionID',
             'uid' => 'UserID',
@@ -215,7 +263,5 @@ class MyBb extends ExportController
          from :_threadsubscriptions t",
             $userDiscussion_Map
         );
-
-        $ex->endExport();
     }
 }
