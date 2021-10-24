@@ -15,7 +15,6 @@ use NitroPorter\ExportModel;
 
 class EsoTalk extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'esoTalk',
         'prefix' => 'et_',
@@ -53,17 +52,41 @@ class EsoTalk extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('post');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'esotalk');
 
+        $this->users($ex);
 
-        // User.
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->bookmarks($ex);
+
+        // Permission.
+        // :_channel_group
+
+        // Media.
+        // :_attachment
+
+        $this->conversations($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'memberId' => 'UserID',
             'username' => 'Name',
@@ -81,9 +104,13 @@ class EsoTalk extends ExportController
          from :_member u",
             $user_Map
         );
+    }
 
-
-        // Role.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'groupId' => 'RoleID',
             'name' => 'Name',
@@ -118,9 +145,13 @@ class EsoTalk extends ExportController
          ",
             $userRole_Map
         );
+    }
 
-
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'channelId' => 'CategoryID',
             'title' => 'Name',
@@ -137,9 +168,13 @@ class EsoTalk extends ExportController
          from :_channel c",
             $category_Map
         );
+    }
 
-
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'conversationId' => 'DiscussionID',
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
@@ -175,9 +210,13 @@ class EsoTalk extends ExportController
 			order by p.time",
             $discussion_Map
         );
+    }
 
-
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'postId' => 'CommentID',
             'conversationId' => 'DiscussionID',
@@ -204,9 +243,13 @@ class EsoTalk extends ExportController
 		where p.postId<>r.m",
             $comment_Map
         );
+    }
 
-
-        // UserDiscussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
         $userDiscussion_Map = array(
             'id' => 'UserID',
             'conversationId' => 'DiscussionID',
@@ -219,24 +262,19 @@ class EsoTalk extends ExportController
          where starred = 1",
             $userDiscussion_Map
         );
+    }
 
-
-        // Permission.
-        // :_channel_group
-
-
-        // Media.
-        // :_attachment
-
-
-        // Conversation.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
         $conversation_map = array(
             'conversationId' => 'ConversationID',
             'countPosts' => 'CountMessages',
             'startMemberId' => 'InsertUserID',
             'countPosts' => 'CountMessages',
         );
-
         $ex->exportTable(
             'Conversation',
             "
@@ -255,7 +293,6 @@ class EsoTalk extends ExportController
             'memberId' => 'UserID',
 
         );
-
         $ex->exportTable(
             'UserConversation',
             "
@@ -276,7 +313,6 @@ class EsoTalk extends ExportController
             'memberId' => 'InsertUserID',
 
         );
-
         $ex->exportTable(
             'ConversationMessage',
             "
@@ -287,7 +323,5 @@ class EsoTalk extends ExportController
         inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1",
             $userConversationMessage_map
         );
-
-        $ex->endExport();
     }
 }
