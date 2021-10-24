@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class CodoForum extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'CodoForum',
         'prefix' => 'codo_',
@@ -61,7 +60,6 @@ class CodoForum extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('codo_posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -69,7 +67,26 @@ class CodoForum extends ExportController
 
         $ex->beginExport('', 'CodoForum');
 
-        // User.
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->userMeta($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $ex->exportTable(
             'User',
             "
@@ -84,8 +101,13 @@ class CodoForum extends ExportController
             from :_users u
          "
         );
+    }
 
-        // Role.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Role',
             "
@@ -107,8 +129,13 @@ class CodoForum extends ExportController
             where ur.is_primary = 1
         "
         );
+    }
 
-        // UserMeta.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function userMeta(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -119,8 +146,13 @@ class CodoForum extends ExportController
             from :_users u
             where u.signature != '' and u.signature is not null"
         );
+    }
 
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Category',
             "
@@ -130,8 +162,13 @@ class CodoForum extends ExportController
             from :_categories c
         "
         );
+    }
 
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Discussion',
             "
@@ -145,8 +182,13 @@ class CodoForum extends ExportController
             from :_topics t
         "
         );
+    }
 
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Comment',
             "
@@ -160,20 +202,5 @@ class CodoForum extends ExportController
             from :_posts p
         "
         );
-
-        // TODO UserDiscussion.
-        // This is the table for assigning bookmarks/subscribed threads.
-
-        // TODO Media.
-        // Attachment data goes here. Vanilla attachments are files under the /uploads folder.
-        // This is usually the trickiest step because you need to translate file paths.
-        // If you need to export blobs from the database, see the vBulletin porter.
-
-        // TODO Conversations.
-        // Private messages often involve the most data manipulation.
-        // If you need a large number of complex SQL statements, consider making it a separate method
-        // to keep the main process easy to understand. Pass $ex as a parameter if you do.
-
-        $ex->endExport();
     }
 }
