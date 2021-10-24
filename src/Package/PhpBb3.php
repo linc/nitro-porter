@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class PhpBb3 extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'phpBB 3',
         'prefix' => 'phpbb_',
@@ -94,7 +93,6 @@ class PhpBb3 extends ExportController
      */
     protected function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -102,12 +100,165 @@ class PhpBb3 extends ExportController
 
         $ex->sourcePrefix = 'phpbb_';
 
-
-        // Begin
         $ex->beginExport('', 'phpBB 3.*', array('HashMethod' => 'phpBB'));
 
-        // Users.
+        $this->users($ex);
 
+        $this->roles($ex);
+        $this->userNotes();
+        $this->ranks($ex);
+        $this->permissions($ex);
+        $this->signatures($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+        $this->bookmarks($ex);
+        $this->polls($ex);
+
+        $this->conversations($ex);
+
+        $this->attachments($ex);
+
+        $this->banList();
+
+        $ex->endExport();
+    }
+
+    protected function userNotes()
+    {
+        $ex = $this->ex;
+
+        $corruptedRecords = [];
+
+        // User notes.
+        $userNote_Map = array(
+            'log_id' => array('Column' => 'UserNoteID', 'Type' => 'int'),
+            'user_id' => array('Column' => 'InsertUserID', 'Type' => 'int'),
+            'reportee_id' => array('Column' => 'UserID', 'Type' => 'int'),
+            'log_ip' => array('Column' => 'InsertIPAddress', 'Type' => 'varchar(15)'),
+            'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => 'timestampToDate'),
+            'log_operation' => array(
+                'Column' => 'Type',
+                'Type' => 'varchar(10)',
+                'Filter' => function ($value) {
+                    switch (strtoupper($value)) {
+                        case 'LOG_USER_WARNING_BODY':
+                            return 'warning';
+                        default:
+                            return 'note';
+                    }
+                }
+            ),
+            'format' => array('Column' => 'Format', 'Type' => 'varchar(20)'),
+            'log_data' => array(
+                'Column' => 'Body',
+                'Type' => 'text',
+                'Filter' => function ($value, $field, $row) use (&$corruptedRecords) {
+                    $unserializedValue = @unserialize($value);
+
+                    if (!$unserializedValue || !is_array($unserializedValue)) {
+                        $corruptedRecords[] = $row['log_id'];
+                        return '';
+                    }
+                    return array_pop($unserializedValue);
+                }
+            )
+        );
+        $ex->exportTable(
+            'UserNote',
+            "select l.*, 'Text' as format
+            from :_log l
+            where reportee_id > 0
+                and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')",
+            $userNote_Map
+        );
+
+        if (count($corruptedRecords) > 0) {
+            $ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n"
+                 . print_r($corruptedRecords, true));
+        }
+    }
+
+    /**
+     * Export email and ip ban list.
+     */
+    public function banList()
+    {
+        $ex = $this->ex;
+        $ex->exportTable(
+            'Ban',
+            "select bl.*,
+                ban_id as BanID,
+                if (ban_ip='', 'Email', 'IpAddress') as BanType,
+                if(ban_ip='', ban_email, ban_ip) as BanValue,
+                Concat('Imported ban. ', ban_give_reason) as Notes,
+                NOW() as DateInserted
+            from :_banlist bl
+            where bl.ban_userid = 0
+                and (ban_ip!='' or ban_email!='')"
+        );
+    }
+
+    public function removeBBCodeUIDs($r, $field = '', $row = '')
+    {
+        if (!$r) {
+            return $r;
+        }
+
+        $UID = trim($row['bbcode_uid']);
+        //      $UID = '2zp03s9s';
+        if ($UID) {
+            $r = preg_replace("`((?::[a-zA-Z])?:$UID)`", '', $r);
+        }
+
+        // Remove smilies.
+        $r = preg_replace('#<!\-\- s(.*?) \-\-><img src="\{SMILIES_PATH\}\/.*? \/><!\-\- s\1 \-\->#', '\1', $r);
+        // Remove links.
+        $regex = '`<!-- [a-z] --><a\s+class="[^"]+"\s+href="([^"]+)">([^<]+)</a><!-- [a-z] -->`';
+        $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
+
+        // Allow mailto: links w/o a class.
+        $regex = '`<!-- [a-z] --><a\s+href="mailto:([^"]+)">([^<]+)</a><!-- [a-z] -->`i';
+        $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
+
+        $r = str_replace(
+            array('&quot;', '&#39;', '&#58;', 'Â', '&#46;', '&amp;'),
+            array('"', "'", ':', '', '.', '&'),
+            $r
+        );
+
+        return $r;
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see    ExportModel::exportTableWrite
+     *
+     * @param  string $value Current value
+     * @param  string $field Current field
+     * @param  array  $row   Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function filterThumbnailData($value, $field, $row)
+    {
+        if (strpos(strtolower($row['mimetype']), 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @return mixed
+     */
+    protected function users(ExportModel $ex)
+    {
         // Grab the avatar salt.
         $px = $ex->getValue("select config_value from :_config where config_name = 'avatar_salt'", '');
         $cdn = $this->param('cdn', '');
@@ -141,19 +292,14 @@ class PhpBb3 extends ExportController
             left join :_banlist bl ON (ban_userid = user_id)
          ",
             $user_Map
-        );  // ":_" will be replace by database prefix
-
-        // Roles
-        $role_Map = array(
-            'group_id' => 'RoleID',
-            'group_name' => 'Name',
-            'group_desc' => 'Description'
         );
-        $ex->exportTable('Role', 'select * from :_groups', $role_Map);
+    }
 
-        $this->exportUserNotes();
-
-        // Ranks.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function ranks(ExportModel $ex): void
+    {
         $rank_Map = array(
             'rank_id' => 'RankID',
             'level' => array(
@@ -198,8 +344,13 @@ class PhpBb3 extends ExportController
         ;",
             $rank_Map
         );
+    }
 
-        // Permissions.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function permissions(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Permission',
             "
@@ -216,6 +367,19 @@ class PhpBb3 extends ExportController
             from :_groups
         "
         );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+        $role_Map = array(
+            'group_id' => 'RoleID',
+            'group_name' => 'Name',
+            'group_desc' => 'Description'
+        );
+        $ex->exportTable('Role', 'select * from :_groups', $role_Map);
 
         // UserRoles
         $userRole_Map = array(
@@ -239,9 +403,13 @@ class PhpBb3 extends ExportController
          ',
             $userRole_Map
         );
+    }
 
-
-        // Signatutes.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
         $userMeta_Map = array(
             'user_id' => 'UserID',
             'name' => 'Name',
@@ -270,8 +438,13 @@ class PhpBb3 extends ExportController
          ",
             $userMeta_Map
         );
+    }
 
-        // Categories
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'forum_id' => 'CategoryID',
             'forum_name' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
@@ -288,8 +461,13 @@ class PhpBb3 extends ExportController
         ",
             $category_Map
         );
+    }
 
-        // Discussions
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'topic_id' => 'DiscussionID',
             'forum_id' => 'CategoryID',
@@ -315,8 +493,13 @@ class PhpBb3 extends ExportController
          ",
             $discussion_Map
         );
+    }
 
-        // Comments
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
@@ -338,8 +521,13 @@ class PhpBb3 extends ExportController
         ",
             $comment_Map
         );
+    }
 
-        // UserDiscussion
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserDiscussion',
             "
@@ -352,8 +540,13 @@ class PhpBb3 extends ExportController
             left join :_bookmarks b on b.user_id = tt.user_id and b.topic_id = tt.topic_id
         "
         );
+    }
 
-        // Conversations tables.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
         $ex->query("drop table if exists z_pmto;");
 
         $ex->query(
@@ -488,70 +681,7 @@ class PhpBb3 extends ExportController
         "
         );
 
-        // Polls.
-        $poll_Map = array(
-            'poll_id' => 'PollID',
-            'poll_title' => 'Name',
-            'topic_id' => 'DiscussionID',
-            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'topic_poster' => 'InsertUserID',
-            'anonymous' => 'Anonymous'
-        );
-        $ex->exportTable(
-            'Poll',
-            "
-            select distinct
-                t.*,
-                t.topic_id as poll_id,
-                1 as anonymous
-            from :_poll_options po
-                join :_topics t on po.topic_id = t.topic_id
-        ",
-            $poll_Map
-        );
-
-        $pollOption_Map = array(
-            'id' => 'PollOptionID',
-            'poll_option_id' => 'Sort',
-            'topic_id' => 'PollID',
-            'poll_option_text' => 'Body',
-            'format' => 'Format',
-            'poll_option_total' => 'CountVotes',
-            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'topic_poster' => 'InsertUserID'
-        );
-        $ex->exportTable(
-            'PollOption',
-            "
-            select
-                po.*,
-                po.poll_option_id * 1000000 + po.topic_id as id,
-                'Html' as format,
-                t.topic_time,
-                t.topic_poster
-            from :_poll_options po
-                join :_topics t on po.topic_id = t.topic_id
-        ",
-            $pollOption_Map
-        );
-
-        $pollVote_Map = array(
-            'vote_user_id' => 'UserID',
-            'id' => 'PollOptionID'
-        );
-        $ex->exportTable(
-            'PollVote',
-            "
-            select
-                v.*,
-                v.poll_option_id * 1000000 + v.topic_id as id
-            from :_poll_votes v
-        ",
-            $pollVote_Map
-        );
-
-        // Conversations.
-        $conversation_Map = array(
+                $conversation_Map = array(
             'msg_id' => 'ConversationID',
             'author_id' => 'InsertUserID',
             'RealSubject' => array(
@@ -616,8 +746,80 @@ class PhpBb3 extends ExportController
         $ex->query('drop table if exists z_pmto2;');
         $ex->query('drop table if exists z_pm;');
         $ex->query('drop table if exists z_pmgroup;');
+    }
 
-        // Media.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function polls(ExportModel $ex): void
+    {
+        $poll_Map = array(
+            'poll_id' => 'PollID',
+            'poll_title' => 'Name',
+            'topic_id' => 'DiscussionID',
+            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'topic_poster' => 'InsertUserID',
+            'anonymous' => 'Anonymous'
+        );
+        $ex->exportTable(
+            'Poll',
+            "
+            select distinct
+                t.*,
+                t.topic_id as poll_id,
+                1 as anonymous
+            from :_poll_options po
+                join :_topics t on po.topic_id = t.topic_id
+        ",
+            $poll_Map
+        );
+
+        $pollOption_Map = array(
+            'id' => 'PollOptionID',
+            'poll_option_id' => 'Sort',
+            'topic_id' => 'PollID',
+            'poll_option_text' => 'Body',
+            'format' => 'Format',
+            'poll_option_total' => 'CountVotes',
+            'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'topic_poster' => 'InsertUserID'
+        );
+        $ex->exportTable(
+            'PollOption',
+            "
+            select
+                po.*,
+                po.poll_option_id * 1000000 + po.topic_id as id,
+                'Html' as format,
+                t.topic_time,
+                t.topic_poster
+            from :_poll_options po
+                join :_topics t on po.topic_id = t.topic_id
+        ",
+            $pollOption_Map
+        );
+
+        $pollVote_Map = array(
+            'vote_user_id' => 'UserID',
+            'id' => 'PollOptionID'
+        );
+        $ex->exportTable(
+            'PollVote',
+            "
+            select
+                v.*,
+                v.poll_option_id * 1000000 + v.topic_id as id
+            from :_poll_votes v
+        ",
+            $pollVote_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
         $cdn = $this->param('cdn', '');
         $media_Map = array(
             'attach_id' => 'MediaID',
@@ -644,137 +846,5 @@ class PhpBb3 extends ExportController
         ",
             $media_Map
         );
-
-        $this->exportBanList();
-
-        // End
-        $ex->endExport();
-    }
-
-    protected function exportUserNotes()
-    {
-        $ex = $this->ex;
-
-        $corruptedRecords = [];
-
-        // User notes.
-        $userNote_Map = array(
-            'log_id' => array('Column' => 'UserNoteID', 'Type' => 'int'),
-            'user_id' => array('Column' => 'InsertUserID', 'Type' => 'int'),
-            'reportee_id' => array('Column' => 'UserID', 'Type' => 'int'),
-            'log_ip' => array('Column' => 'InsertIPAddress', 'Type' => 'varchar(15)'),
-            'log_time' => array('Column' => 'DateInserted', 'Type' => 'datetime', 'Filter' => 'timestampToDate'),
-            'log_operation' => array(
-                'Column' => 'Type',
-                'Type' => 'varchar(10)',
-                'Filter' => function ($value) {
-                    switch (strtoupper($value)) {
-                        case 'LOG_USER_WARNING_BODY':
-                            return 'warning';
-                        default:
-                            return 'note';
-                    }
-                }
-            ),
-            'format' => array('Column' => 'Format', 'Type' => 'varchar(20)'),
-            'log_data' => array(
-                'Column' => 'Body',
-                'Type' => 'text',
-                'Filter' => function ($value, $field, $row) use (&$corruptedRecords) {
-                    $unserializedValue = @unserialize($value);
-
-                    if (!$unserializedValue || !is_array($unserializedValue)) {
-                        $corruptedRecords[] = $row['log_id'];
-                        return '';
-                    }
-                    return array_pop($unserializedValue);
-                }
-            )
-        );
-        $ex->exportTable(
-            'UserNote',
-            "select l.*, 'Text' as format
-            from :_log l
-            where reportee_id > 0
-                and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')",
-            $userNote_Map
-        );
-
-
-        if (count($corruptedRecords) > 0) {
-            $ex->Comment("Corrupted records found in \"_log\" table while exporting to UserNote\n"
-                 . print_r($corruptedRecords, true));
-        }
-    }
-
-    /**
-     * Export email and ip ban list.
-     */
-    public function exportBanList()
-    {
-        $ex = $this->ex;
-        $ex->exportTable(
-            'Ban',
-            "select bl.*,
-                ban_id as BanID,
-                if (ban_ip='', 'Email', 'IpAddress') as BanType,
-                if(ban_ip='', ban_email, ban_ip) as BanValue,
-                Concat('Imported ban. ', ban_give_reason) as Notes,
-                NOW() as DateInserted
-            from :_banlist bl
-            where bl.ban_userid = 0
-                and (ban_ip!='' or ban_email!='')"
-        );
-    }
-
-    public function removeBBCodeUIDs($r, $field = '', $row = '')
-    {
-        if (!$r) {
-            return $r;
-        }
-
-        $UID = trim($row['bbcode_uid']);
-        //      $UID = '2zp03s9s';
-        if ($UID) {
-            $r = preg_replace("`((?::[a-zA-Z])?:$UID)`", '', $r);
-        }
-
-        // Remove smilies.
-        $r = preg_replace('#<!\-\- s(.*?) \-\-><img src="\{SMILIES_PATH\}\/.*? \/><!\-\- s\1 \-\->#', '\1', $r);
-        // Remove links.
-        $regex = '`<!-- [a-z] --><a\s+class="[^"]+"\s+href="([^"]+)">([^<]+)</a><!-- [a-z] -->`';
-        $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
-
-        // Allow mailto: links w/o a class.
-        $regex = '`<!-- [a-z] --><a\s+href="mailto:([^"]+)">([^<]+)</a><!-- [a-z] -->`i';
-        $r = preg_replace($regex, '[url=$1]$2[/url]', $r);
-
-        $r = str_replace(
-            array('&quot;', '&#39;', '&#58;', 'Â', '&#46;', '&amp;'),
-            array('"', "'", ':', '', '.', '&'),
-            $r
-        );
-
-        return $r;
-    }
-
-    /**
-     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
-     *
-     * @access public
-     * @see    ExportModel::exportTableWrite
-     *
-     * @param  string $value Current value
-     * @param  string $field Current field
-     * @param  array  $row   Contents of the current record.
-     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
-     */
-    public function filterThumbnailData($value, $field, $row)
-    {
-        if (strpos(strtolower($row['mimetype']), 'image/') === 0) {
-            return $value;
-        } else {
-            return null;
-        }
     }
 }
