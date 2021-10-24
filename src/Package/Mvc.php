@@ -71,47 +71,6 @@ class Mvc extends ExportController
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'MVC');
 
-        $structures = $ex->structures();
-        $structures['Badge'] = array(
-            'BadgeID' => 'int',
-            'Name' => 'varchar(64)',
-            'Slug' => 'varchar(32)',
-            'Type' => 'varchar(20)',
-            'Body' => 'Text',
-            'Photo' => 'varchar(255)',
-            'Points' => 'int',
-            'Active' => 'tinyint',
-            'Visible' => 'tinyint',
-            'Secret' => 'tinyint',
-            'CanDelete' => 'tinyint',
-            'DateInserted' => 'datetime',
-            'DateUpdated' => 'datetime',
-            'InsertUserID' => 'int',
-            'UpdateUser' => 'int',
-            'CountRecipients' => 'int',
-            'Threshold' => 'int',
-            'Class' => 'varchar(20)',
-            'Level' => 'smallint',
-            'Attributes' => 'text'
-        );
-
-        $structures['UserBadge'] = array(
-            'UserID' => 'int',
-            'BadgeID' => 'int',
-            'Attributes' => 'text',
-            'Reason' => 'varchar(255)',
-            'ShowReason' => 'tinyint',
-            'DateRequested' => 'datetime',
-            'RequestReason' => 'varchar(255)',
-            'Declined' => 'tinyint',
-            'Count' => 'int',
-            "DateCompleted" => 'datetime',
-            'DateInserted' => 'datetime',
-            'InsertUserID' => 'int'
-        );
-
-        $ex->structures($structures);
-
         $this->createPrimaryKeys();
         $this->createIndexesIfNotExists();
 
