@@ -19,7 +19,6 @@ use NitroPorter\ExportModel;
 
 class FuseTalk extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'FuseTalk',
         'prefix' => 'ftdb_',
@@ -66,17 +65,60 @@ class FuseTalk extends ExportController
      */
     public function forumExport($ex)
     {
-
-        // Get the characterset for the comments.
-        // Usually the comments table is the best target for this.
         $characterSet = $ex->getCharacterSet('messages');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'FuseTalk');
 
+        $this->createIndices($ex); // Speed up the export.
+
+        $this->users($ex);
+
+        $this->signatures($ex);
+        $this->roles($ex);
+
+        $this->conversations($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * Fix smileys URL
+     *
+     * @param  $value Value of the current row
+     * @param  $field Name associated with the current field value
+     * @param  $row   Full data row columns
+     * @return string Body
+     */
+    public function fixSmileysURL($value, $field, $row)
+    {
+        static $smileySearch = '<img src="i/expressions/';
+        static $smileyReplace;
+
+        if ($smileyReplace === null) {
+            $smileyReplace = '<img src=' . rtrim($this->cdnPrefix(), '/') . '/expressions/';
+        }
+
+        if (strpos($value, $smileySearch) !== false) {
+            $value = str_replace($smileySearch, $smileyReplace, $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function createIndices(ExportModel $ex): void
+    {
         $ex->comment("Creating indexes... ");
 
         if (!$ex->indexExists('ix_users_userid', ':_users')) {
@@ -102,8 +144,13 @@ class FuseTalk extends ExportController
         }
 
         $ex->comment("Indexes done!");
+    }
 
-        // Users
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array();
         $ex->exportTable(
             'User',
@@ -129,14 +176,13 @@ class FuseTalk extends ExportController
          ;",
             $user_Map
         );  // ":_" will be replaced by database prefix
+    }
 
-        $memberRoleID = 1;
-        $result = $ex->query("select max(igroupid) as maxRoleID from :_groups", true);
-        if ($row = $result->nextResultRow()) {
-            $memberRoleID += $row['maxRoleID'];
-        }
-
-        // UserMeta. (Signatures)
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -157,6 +203,18 @@ class FuseTalk extends ExportController
             where nullif(nullif(user.txsignature, ''), char(0)) is not null
         "
         );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+        $memberRoleID = 1;
+        $result = $ex->query("select max(igroupid) as maxRoleID from :_groups", true);
+        if ($row = $result->nextResultRow()) {
+            $memberRoleID += $row['maxRoleID'];
+        }
 
         // Role.
         $role_Map = array();
@@ -191,7 +249,13 @@ class FuseTalk extends ExportController
         ",
             $userRole_Map
         );
+    }
 
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
         $ex->query("drop table if exists zConversations;");
         $ex->query(
             "
@@ -288,8 +352,13 @@ class FuseTalk extends ExportController
         ;",
             $userConversation_Map
         );
+    }
 
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array();
         $ex->exportTable(
             'Category',
@@ -303,11 +372,16 @@ class FuseTalk extends ExportController
         ",
             $category_Map
         );
+    }
 
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         /* Skip "Body". It will be fixed at import.
-         * The first comment is going to be used to fill the missing data and will then be deleted
-         */
+                 * The first comment is going to be used to fill the missing data and will then be deleted
+                 */
         $discussion_Map = array();
         $ex->exportTable(
             'Discussion',
@@ -325,12 +399,17 @@ class FuseTalk extends ExportController
         ",
             $discussion_Map
         );
+    }
 
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         /*
-         * The iparentid column doesn't make any sense since the display is
-         * ordered by date only (there are no "sub" comment)
-         */
+                 * The iparentid column doesn't make any sense since the display is
+                 * ordered by date only (there are no "sub" comment)
+                 */
         $comment_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
@@ -348,32 +427,5 @@ class FuseTalk extends ExportController
         ",
             $comment_Map
         );
-
-        $ex->endExport();
-    }
-
-
-    /**
-     * Fix smileys URL
-     *
-     * @param  $value Value of the current row
-     * @param  $field Name associated with the current field value
-     * @param  $row   Full data row columns
-     * @return string Body
-     */
-    public function fixSmileysURL($value, $field, $row)
-    {
-        static $smileySearch = '<img src="i/expressions/';
-        static $smileyReplace;
-
-        if ($smileyReplace === null) {
-            $smileyReplace = '<img src=' . rtrim($this->cdnPrefix(), '/') . '/expressions/';
-        }
-
-        if (strpos($value, $smileySearch) !== false) {
-            $value = str_replace($smileySearch, $smileyReplace, $value);
-        }
-
-        return $value;
     }
 }
