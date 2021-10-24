@@ -171,10 +171,11 @@ class Drupal7 extends ExportController
             join :_field_data_body b on b.entity_id = n.nid
             left join :_forum f on f.vid = n.vid
             left join :_field_revision_body r on r.revision_id = n.vid
-            left join ( select i.nid, concat('\n<img src=\"{$this->path}', replace(uri, 'public://', ''), ' alt=\"', fileName, '\">') as image
-                        from :_image i
-                        join :_file_managed fm on fm.fid = i.fid
-                        where image_size not like '%thumbnail') i on i.nid = n.nid
+            left join ( select i.nid,
+                concat('\n<img src=\"{$this->path}', replace(uri, 'public://', ''), ' alt=\"', fileName, '\">') as image
+                    from :_image i
+                    join :_file_managed fm on fm.fid = i.fid
+                    where image_size not like '%thumbnail') i on i.nid = n.nid
             where n.status = 1 and n.moderate = 0 and b.deleted = 0 and n.Type not in ('Page', 'webform')",
             $discussionMap
         );
@@ -194,7 +195,10 @@ class Drupal7 extends ExportController
                 if(c.created <> c.changed, from_unixtime(c.changed), null) as DateUpdated,
                 concat(
                     -- Title of the commment
-                    if(c.subject is not null and c.subject not like 'RE%' and c.subject not like 'Re%' and c.subject <> 'N/A',
+                    if(c.subject is not null
+                        and c.subject not like 'RE%'
+                        and c.subject not like 'Re%'
+                        and c.subject <> 'N/A',
                         concat('<b>', c.subject, '</b>\n'), ''),
                     -- Body
                     ifnull(r.comment_body_value, b.comment_body_value)
