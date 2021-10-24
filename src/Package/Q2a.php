@@ -13,7 +13,6 @@ use NitroPorter\ExportController;
 
 class Q2a extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Questions2Answers',
         'prefix' => 'qa_',
@@ -57,8 +56,24 @@ class Q2a extends ExportController
             $ex->characterSet = $characterSet;
         }
         $ex->beginExport('', 'Questions2Answers');
-        $user_Map = array();
 
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param $ex
+     * @param array $user_Map
+     */
+    protected function users($ex): void
+    {
         $ex->exportTable(
             'User',
             "
@@ -73,10 +88,15 @@ class Q2a extends ExportController
             LEFT JOIN :_userpoints p USING(userid)
             WHERE u.userid IN (Select DISTINCT userid from :_posts)
                 AND (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
-         ",
-            $user_Map
+         "
         );
+    }
 
+    /**
+     * @param $ex
+     */
+    protected function roles($ex): void
+    {
         $ex->exportTable(
             'Role',
             "
@@ -96,7 +116,13 @@ class Q2a extends ExportController
             where (BIN(flags) & BIN(128) = 0) AND (BIN(flags) & BIN(2) = 0);
         "
         );
+    }
 
+    /**
+     * @param $ex
+     */
+    protected function discussions($ex): void
+    {
         $ex->exportTable('Category', "select 1 as CategoryID, 'Legacy' as Name");
         $discussion_Map = array(
             'postid' => 'DiscussionID',
@@ -125,7 +151,13 @@ class Q2a extends ExportController
              AND type = 'Q';
          "
         );
+    }
 
+    /**
+     * @param $ex
+     */
+    protected function comments($ex): void
+    {
         $ex->exportTable(
             'Comment',
             "
@@ -141,6 +173,5 @@ class Q2a extends ExportController
             AND userid IS NOT NULL ;
         "
         );
-        $ex->endExport();
     }
 }
