@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class ExpressionEngine extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Expression Engine Discussion Forum',
         'prefix' => 'forum_',
@@ -48,7 +47,6 @@ class ExpressionEngine extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('topics');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -57,210 +55,23 @@ class ExpressionEngine extends ExportController
         $ex->beginExport('', 'Expression Engine');
         $ex->sourcePrefix = 'forum_';
 
-        $this->exportConversations();
+        $this->conversations();
 
+        $this->permissions($ex);
 
-        // Permissions.
-        $permission_Map = array(
-            'group_id' => 'RoleID',
-            'can_access_cp' => 'Garden.Settings.View',
-            'can_access_edit' => 'Vanilla.Discussions.Edit',
-            'can_edit_all_comments' => 'Vanilla.Comments.Edit',
-            'can_access_admin' => 'Garden.Settings.Manage',
-            'can_admin_members' => 'Garden.Users.Edit',
-            'can_moderate_comments' => 'Garden.Moderation.Manage',
-            'can_view_profiles' => 'Garden.Profiles.View',
-            'can_post_comments' => 'Vanilla.Comments.Add',
-            'can_view_online_system' => 'Vanilla.Discussions.View',
-            'can_sign_in' => 'Garden.SignIn.Allow',
-            'can_view_profiles3' => 'Garden.Activity.View',
-            'can_post_comments2' => 'Vanilla.Discussions.Add'
-        );
-        $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        foreach ($permission_Map as &$info) {
-            if (is_array($info) && isset($info['Column'])) {
-                $info['Filter'] = array($this, 'YNBool');
-            }
-        }
+        $this->users($ex);
 
-        $ex->exportTable(
-            'Permission',
-            "
-         SELECT
-            g.can_view_profiles AS can_view_profiles2,
-            g.can_view_profiles AS can_view_profiles3,
-            g.can_post_comments AS can_post_comments2,
-            g.can_post_comments AS can_sign_in,
-            CASE WHEN can_access_admin = 'y' THEN 'all'
-                WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
-            g.*
-         FROM forum_member_groups g
-      ",
-            $permission_Map
-        );
+        $this->roles($ex);
 
+        $this->signatures($ex);
 
-        // User.
-        $user_Map = array(
-            'member_id' => 'UserID',
-            'username' => array('Column' => 'Username', 'Type' => 'varchar(50)'),
-            'screen_name' => array('Column' => 'Name', 'Filter' => array($ex, 'HTMLDecoder')),
-            'Password2' => 'Password',
-            'email' => 'Email',
-            'ipaddress' => 'InsertIPAddress',
-            'join_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
-            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($ex, 'timestampToDate')),
-            'timezone' => 'HourOffset',
-            'location' => 'Location'
-        );
-        $ex->exportTable(
-            'User',
-            "
-         SELECT
-            'django' AS HashMethod,
-            concat('sha1$$', password) AS Password2,
-            CASE WHEN bday_y > 1900 THEN concat(bday_y, '-', bday_m, '-', bday_d) ELSE NULL END AS DateOfBirth,
-            from_unixtime(join_date) AS DateFirstVisit,
-            ip_address AS LastIPAddress,
-            CASE WHEN avatar_filename = '' THEN NULL ELSE concat('imported/', avatar_filename) END AS Photo,
-            u.*
-         FROM forum_members u",
-            $user_Map
-        );
+        $this->categories($ex);
 
+        $this->discussions($ex);
 
-        // Role.
-        $role_Map = array(
-            'group_id' => 'RoleID',
-            'group_title' => 'Name',
-            'group_description' => 'Description'
-        );
-        $ex->exportTable(
-            'Role',
-            "
-         SELECT *
-         FROM forum_member_groups",
-            $role_Map
-        );
+        $this->comments($ex);
 
-
-        // User Role.
-        $userRole_Map = array(
-            'member_id' => 'UserID',
-            'group_id' => 'RoleID'
-        );
-        $ex->exportTable(
-            'UserRole',
-            "
-         SELECT *
-         FROM forum_members u",
-            $userRole_Map
-        );
-
-
-        // UserMeta
-        $ex->exportTable(
-            'UserMeta',
-            "
-         SELECT
-            member_id AS UserID,
-            'Plugin.Signatures.Sig' AS Name,
-            signature AS Value
-         FROM forum_members
-         WHERE signature <> ''"
-        );
-
-
-        // Category.
-        $category_Map = array(
-            'forum_id' => 'CategoryID',
-            'forum_name' => 'Name',
-            'forum_description' => 'Description',
-            'forum_parent' => 'ParentCategoryID',
-            'forum_order' => 'Sort'
-        );
-        $ex->exportTable(
-            'Category',
-            "
-         SELECT * FROM forum_forums",
-            $category_Map
-        );
-
-
-        // Discussion.
-        $discussion_Map = array(
-            'topic_id' => 'DiscussionID',
-            'forum_id' => 'CategoryID',
-            'author_id' => 'InsertUserID',
-            'title' => array('Column' => 'Name', 'Filter' => array($ex, 'HTMLDecoder')),
-            'ip_address' => 'InsertIPAddress',
-            'body' => array('Column' => 'Body', 'Filter' => array($this, 'cleanBodyBrackets')),
-            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'guessFormat')),
-            'topic_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
-            'topic_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
-            'topic_edit_author' => 'UpdateUserID'
-        );
-        $ex->exportTable(
-            'Discussion',
-            "
-          SELECT
-             CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
-             CASE WHEN status = 'c' THEN 1 ELSE 0 END AS Closed,
-             t.body AS body2,
-             t.*
-          FROM forum_forum_topics t",
-            $discussion_Map
-        );
-
-
-        // Comment.
-        $comment_Map = array(
-            'post_id' => 'CommentID',
-            'topic_id' => 'DiscussionID',
-            'author_id' => 'InsertUserID',
-            'ip_address' => 'InsertIPAddress',
-            'body' => array('Column' => 'Body', 'Filter' => array($this, 'cleanBodyBrackets')),
-            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'guessFormat')),
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
-            'post_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
-            'post_edit_author' => 'UpdateUserID'
-        );
-        $ex->exportTable(
-            'Comment',
-            "
-      SELECT
-         'Html' AS Format,
-         p.body AS body2,
-         p.*
-      FROM forum_forum_posts p",
-            $comment_Map
-        );
-
-
-        // Media.
-        $media_Map = array(
-            'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => 'mimeTypeFromExtension'),
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
-            'filesize' => 'Size',
-            'member_id' => 'InsertUserID',
-            'attachment_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
-            'filehash' => array('Column' => 'FileHash', 'Type' => 'varchar(100)')
-        );
-        $ex->exportTable(
-            'Media',
-            "
-         SELECT
-            concat('imported/', filename) AS Path,
-            concat('imported/', filename) as thumb_path,
-            128 as thumb_width,
-            CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
-            CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
-            a.*
-         FROM forum_forum_attachments a",
-            $media_Map
-        );
+        $this->attachments($ex);
 
         $ex->endExport();
     }
@@ -268,7 +79,7 @@ class ExpressionEngine extends ExportController
     /**
      * Private message conversion.
      */
-    public function exportConversations()
+    public function conversations()
     {
         $ex = $this->ex;
 
@@ -521,5 +332,242 @@ class ExpressionEngine extends ExportController
         } else {
             return null;
         }
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @return array|mixed
+     */
+    protected function permissions(ExportModel $ex)
+    {
+        $permission_Map = array(
+            'group_id' => 'RoleID',
+            'can_access_cp' => 'Garden.Settings.View',
+            'can_access_edit' => 'Vanilla.Discussions.Edit',
+            'can_edit_all_comments' => 'Vanilla.Comments.Edit',
+            'can_access_admin' => 'Garden.Settings.Manage',
+            'can_admin_members' => 'Garden.Users.Edit',
+            'can_moderate_comments' => 'Garden.Moderation.Manage',
+            'can_view_profiles' => 'Garden.Profiles.View',
+            'can_post_comments' => 'Vanilla.Comments.Add',
+            'can_view_online_system' => 'Vanilla.Discussions.View',
+            'can_sign_in' => 'Garden.SignIn.Allow',
+            'can_view_profiles3' => 'Garden.Activity.View',
+            'can_post_comments2' => 'Vanilla.Discussions.Add'
+        );
+        $permission_Map = $ex->fixPermissionColumns($permission_Map);
+        foreach ($permission_Map as &$info) {
+            if (is_array($info) && isset($info['Column'])) {
+                $info['Filter'] = array($this, 'YNBool');
+            }
+        }
+
+        $ex->exportTable(
+            'Permission',
+            "
+         SELECT
+            g.can_view_profiles AS can_view_profiles2,
+            g.can_view_profiles AS can_view_profiles3,
+            g.can_post_comments AS can_post_comments2,
+            g.can_post_comments AS can_sign_in,
+            CASE WHEN can_access_admin = 'y' THEN 'all'
+                WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
+            g.*
+         FROM forum_member_groups g
+      ",
+            $permission_Map
+        );
+        return $info;
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
+        $user_Map = array(
+            'member_id' => 'UserID',
+            'username' => array('Column' => 'Username', 'Type' => 'varchar(50)'),
+            'screen_name' => array('Column' => 'Name', 'Filter' => array($ex, 'HTMLDecoder')),
+            'Password2' => 'Password',
+            'email' => 'Email',
+            'ipaddress' => 'InsertIPAddress',
+            'join_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($ex, 'timestampToDate')),
+            'timezone' => 'HourOffset',
+            'location' => 'Location'
+        );
+        $ex->exportTable(
+            'User',
+            "
+         SELECT
+            'django' AS HashMethod,
+            concat('sha1$$', password) AS Password2,
+            CASE WHEN bday_y > 1900 THEN concat(bday_y, '-', bday_m, '-', bday_d) ELSE NULL END AS DateOfBirth,
+            from_unixtime(join_date) AS DateFirstVisit,
+            ip_address AS LastIPAddress,
+            CASE WHEN avatar_filename = '' THEN NULL ELSE concat('imported/', avatar_filename) END AS Photo,
+            u.*
+         FROM forum_members u",
+            $user_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+        $role_Map = array(
+            'group_id' => 'RoleID',
+            'group_title' => 'Name',
+            'group_description' => 'Description'
+        );
+        $ex->exportTable(
+            'Role',
+            "
+         SELECT *
+         FROM forum_member_groups",
+            $role_Map
+        );
+
+
+        // User Role.
+        $userRole_Map = array(
+            'member_id' => 'UserID',
+            'group_id' => 'RoleID'
+        );
+        $ex->exportTable(
+            'UserRole',
+            "
+         SELECT *
+         FROM forum_members u",
+            $userRole_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
+        $ex->exportTable(
+            'UserMeta',
+            "
+         SELECT
+            member_id AS UserID,
+            'Plugin.Signatures.Sig' AS Name,
+            signature AS Value
+         FROM forum_members
+         WHERE signature <> ''"
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
+        $category_Map = array(
+            'forum_id' => 'CategoryID',
+            'forum_name' => 'Name',
+            'forum_description' => 'Description',
+            'forum_parent' => 'ParentCategoryID',
+            'forum_order' => 'Sort'
+        );
+        $ex->exportTable(
+            'Category',
+            "
+         SELECT * FROM forum_forums",
+            $category_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
+        $discussion_Map = array(
+            'topic_id' => 'DiscussionID',
+            'forum_id' => 'CategoryID',
+            'author_id' => 'InsertUserID',
+            'title' => array('Column' => 'Name', 'Filter' => array($ex, 'HTMLDecoder')),
+            'ip_address' => 'InsertIPAddress',
+            'body' => array('Column' => 'Body', 'Filter' => array($this, 'cleanBodyBrackets')),
+            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'guessFormat')),
+            'topic_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'topic_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
+            'topic_edit_author' => 'UpdateUserID'
+        );
+        $ex->exportTable(
+            'Discussion',
+            "
+          SELECT
+             CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
+             CASE WHEN status = 'c' THEN 1 ELSE 0 END AS Closed,
+             t.body AS body2,
+             t.*
+          FROM forum_forum_topics t",
+            $discussion_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
+        $comment_Map = array(
+            'post_id' => 'CommentID',
+            'topic_id' => 'DiscussionID',
+            'author_id' => 'InsertUserID',
+            'ip_address' => 'InsertIPAddress',
+            'body' => array('Column' => 'Body', 'Filter' => array($this, 'cleanBodyBrackets')),
+            'body2' => array('Column' => 'Format', 'Filter' => array($this, 'guessFormat')),
+            'post_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'post_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
+            'post_edit_author' => 'UpdateUserID'
+        );
+        $ex->exportTable(
+            'Comment',
+            "
+      SELECT
+         'Html' AS Format,
+         p.body AS body2,
+         p.*
+      FROM forum_forum_posts p",
+            $comment_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
+        $media_Map = array(
+            'filename' => 'Name',
+            'extension' => array('Column' => 'Type', 'Filter' => 'mimeTypeFromExtension'),
+            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
+            'filesize' => 'Size',
+            'member_id' => 'InsertUserID',
+            'attachment_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
+            'filehash' => array('Column' => 'FileHash', 'Type' => 'varchar(100)')
+        );
+        $ex->exportTable(
+            'Media',
+            "
+         SELECT
+            concat('imported/', filename) AS Path,
+            concat('imported/', filename) as thumb_path,
+            128 as thumb_width,
+            CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
+            CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
+            a.*
+         FROM forum_forum_attachments a",
+            $media_Map
+        );
     }
 }
