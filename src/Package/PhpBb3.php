@@ -681,7 +681,7 @@ class PhpBb3 extends ExportController
         "
         );
 
-                $conversation_Map = array(
+        $conversation_Map = array(
             'msg_id' => 'ConversationID',
             'author_id' => 'InsertUserID',
             'RealSubject' => array(
