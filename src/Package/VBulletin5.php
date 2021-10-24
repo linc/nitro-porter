@@ -484,7 +484,7 @@ class VBulletin5 extends VBulletin
             $ex->exportTable('Discussion', $sql, $discussion_Map);
 
             // Export polls
-            $this->exportPolls();
+            $this->polls();
 
             // Cleanup tmp table
             $ex->query("drop table vBulletinDiscussionTable;");
@@ -810,7 +810,7 @@ class VBulletin5 extends VBulletin
         $ex->query($sql);
     }
 
-    protected function exportPolls()
+    protected function polls()
     {
         $ex = $this->ex;
         $fp = $ex->file;

@@ -197,7 +197,6 @@ class VBulletin extends ExportController
      */
     protected function forumExport($ex)
     {
-
         // Allow limited export of 1 category via ?forumid=ID
         $forumID = $this->param('forumid');
         if ($forumID) {
@@ -242,349 +241,18 @@ class VBulletin extends ExportController
         $cdn = $this->param('cdn', '');
 
         // Ranks
-        $ranks = $this->exportRanks();
+        $ranks = $this->ranks();
 
-        // Users
-        $user_Map = array(
-            'usertitle' => array(
-                'Column' => 'Title',
-                'Filter' => function ($value) {
-                    return trim(strip_tags(str_replace('&nbsp;', ' ', $value)));
-                }
-            ),
-            'posts' => array(
-                'Column' => 'RankID',
-                'Filter' => function ($value) use ($ranks) {
-                    // Look  up the posts in the ranks table.
-                    foreach ($ranks as $rankID => $row) {
-                        if ($value >= $row['minposts']) {
-                            return $rankID;
-                        }
-                    }
+        $this->users($ranks, $cdn);
 
-                    return null;
-                }
-            )
-        );
+        $this->roles();
+        $this->permissions();
 
-        // Use file avatar or the result of our blob export?
-        if ($this->getConfig('usefileavatar')) {
-            $user_Map['filephoto'] = 'Photo';
-        } else {
-            $user_Map['customphoto'] = 'Photo';
-        }
+        $minDiscussionID = $this->userMeta($forumWhere, $minDate);
 
-        $this->ex->exportTable(
-            'User',
-            "select
-                u.userid as UserID,
-                u.username as Name,
-                u.email as Email,
-                u.referrerid as InviteUserID,
-                u.timezoneoffset as HourOffset,
-                u.timezoneoffset as HourOffset,
-                u.ipaddress as LastIPAddress,
-                u.ipaddress as InsertIPAddress,
-                u.usertitle,
-                u.posts,
-                concat(`password`, salt) as Password,
-                date_format(birthday_search, get_format(DATE, 'ISO')) as DateOfBirth,
-                from_unixtime(joindate) as DateFirstVisit,
-                from_unixtime(lastvisit) as DateLastActive,
-                from_unixtime(joindate) as DateInserted,
-                from_unixtime(lastactivity) as DateUpdated,
-                case when avatarrevision > 0
-                        then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
-                     when av.avatarpath is not null then av.avatarpath
-                     else null
-                     end as filephoto,
-                {$this->avatarSelect},
-                case when ub.userid is not null then 1 else 0 end as Banned,
-                'vbulletin' as HashMethod
-            from :_user u
-                left join :_customavatar a on u.userid = a.userid
-                left join :_avatar av on u.avatarid = av.avatarid
-                left join :_userban ub on u.userid = ub.userid and ub.liftdate <= now()",
-            $user_Map
-        );  // ":_" will be replace by database prefix
+        $minDiscussionWhere = $this->discussions($minDiscussionID, $forumWhere);
 
-
-        // Roles
-        $role_Map = array(
-            'usergroupid' => 'RoleID',
-            'title' => 'Name',
-            'description' => 'Description'
-        );
-        $this->ex->exportTable('Role', 'select * from :_usergroup', $role_Map);
-
-        // UserRoles
-        $userRole_Map = array(
-            'userid' => 'UserID',
-            'usergroupid' => 'RoleID'
-        );
-        $this->ex->query("drop table if exists VbulletinRoles");
-        $this->ex->query(
-            "create table VbulletinRoles (
-            userid int unsigned not null, usergroupid int unsigned not null)"
-        );
-        // Put primary groups into tmp table
-        $this->ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
-        // Put stupid CSV column into tmp table
-        $secondaryRoles = $this->ex->query("select userid, usergroupid, membergroupids from :_user");
-        if (is_resource($secondaryRoles)) {
-            while ($row = $secondaryRoles->nextResultRow()) {
-                if ($row['membergroupids'] != '') {
-                    $groups = explode(',', $row['membergroupids']);
-                    foreach ($groups as $groupID) {
-                        if (!$groupID) {
-                            continue;
-                        }
-                        $this->ex->query(
-                            "insert into VbulletinRoles (userid, usergroupid)
-                            values({$row['userid']},{$groupID})"
-                        );
-                    }
-                }
-            }
-        }
-        // Export from our tmp table and drop
-        $this->ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
-        $this->ex->query("drop table if exists VbulletinRoles");
-
-        // Permissions.
-        $permissions_Map = array(
-            'usergroupid' => 'RoleID',
-            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
-            'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
-            'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
-        );
-        $this->addPermissionColumns(self::$permissions, $permissions_Map);
-        $this->ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
-
-        $this->ex->query("drop table if exists VbulletinUserMeta");
-        // UserMeta
-        $this->ex->query(
-            "
-            create table VbulletinUserMeta(
-                `UserID` int not null,
-                `Name` varchar(255) not null,
-                `Value` text not null
-            );
-        "
-        );
-        // Standard vB user data
-        $userFields = array(
-            'usertitle' => 'Title',
-            'homepage' => 'Website',
-            'styleid' => 'StyleID'
-        );
-
-        if ($this->ex->exists('user', array('skype')) === true) {
-            $userFields['skype'] = 'Skype';
-        }
-
-        foreach ($userFields as $field => $insertAs) {
-            $this->ex->query(
-                "
-                insert into VbulletinUserMeta (UserID, Name, Value)
-                    select
-                        userid,
-                        'Profile.$insertAs',
-                        $field
-                    from :_user where $field != '' and $field != 'http://'
-
-                    union select userid as UserID,
-                        concat('Preferences.Popup.NewComment.', forumid), 1 as Value
-                        from subscribeforum
-                    union select userid as UserID,
-                        concat('Preferences.Popup.NewDiscussion.', forumid), 1 as Value
-                        from subscribeforum
-                    union select userid as UserID,
-                        concat('Preferences.Email.NewComment.', forumid), 1 as Value
-                        from subscribeforum where emailupdate > 1
-                    union select userid as UserID,
-                        concat('Preferences.Email.NewDiscussion.', forumid), 1 as Value
-                        from subscribeforum where emailupdate > 1"
-            );
-        }
-
-        if ($this->ex->exists('phrase', array('product', 'fieldname')) === true) {
-            // Dynamic vB user data (userfield)
-            $profileFields = $this->ex->query(
-                "
-                select distinct
-                    varname,
-                    text
-                from :_phrase
-                where product='vbulletin'
-                    and fieldname='cprofilefield'
-                    and varname like 'field%_title'
-            "
-            );
-
-            if (is_resource($profileFields)) {
-                $profileQueries = array();
-                while ($field = $profileFields->nextResultRow()) {
-                    $column = str_replace('_title', '', $field['varname']);
-                    $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $field['text']);
-                    $profileQueries[] = "
-                        insert into VbulletinUserMeta(UserID, Name, Value)
-                        select
-                            userid,
-                            'Profile." . $name . "',
-                            " . $column . "
-                        from :_userfield
-                        where " . $column . " != ''";
-                }
-                foreach ($profileQueries as $query) {
-                    $this->ex->query($query);
-                }
-            }
-        }
-
-        // Users meta informations
-        $this->ex->exportTable(
-            'UserMeta',
-            "select
-                userid as UserID,
-                'Plugin.Signatures.Sig' as Name,
-                signature as Value
-            from :_usertextfield
-            where nullif(signature, '') is not null
-
-            union
-            select
-                userid,
-                'Plugin.Signatures.Format',
-                'BBCode'
-            from :_usertextfield
-            where nullif(signature, '') is not null
-
-            union
-            select * from VbulletinUserMeta"
-        );
-
-        // Categories
-        $category_Map = array(
-            'title' => array('Column' => 'Name', 'Filter' => array($this, 'htmlDecode')),
-            'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
-        );
-        $this->ex->exportTable(
-            'Category',
-            "select
-                f.forumid as CategoryID,
-                f.description as Description,
-                f.parentid as ParentCategoryID,
-                f.title,
-                f.displayorder
-            from :_forum as f
-            where 1 = 1
-                $forumWhere",
-            $category_Map
-        );
-
-        if ($minDate) {
-            $minDiscussionID = $this->ex->getValue(
-                "select max(threadid)
-                    from :_thread
-                    where dateline < $minDate",
-                false
-            );
-
-            $minDiscussionID2 = $this->ex->getValue(
-                "select min(threadid)
-                    from :_thread
-                    where dateline >= $minDate",
-                false
-            );
-
-            // The two discussion IDs should be the same, but let's average them.
-            $minDiscussionID = floor(($minDiscussionID + $minDiscussionID2) / 2);
-
-            $this->ex->comment('Min topic id: ' . $minDiscussionID);
-        }
-
-        // Discussions
-        $discussion_Map = array(
-            'title' => array('Column' => 'Name', 'Filter' => array($this, 'htmlDecode')),
-            'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
-                    return $value;
-            }
-            ),
-        );
-
-        if ($this->ex->destination == 'database') {
-            // Remove the filter from the title so that this doesn't take too long.
-            $this->ex->HTMLDecoderDb('thread', 'title', 'threadid');
-            unset($discussion_Map['title']['Filter']);
-        }
-
-        if ($minDiscussionID) {
-            $minDiscussionWhere = "and t.threadid > $minDiscussionID";
-        }
-
-        $this->ex->exportTable(
-            'Discussion',
-            "select
-                t.threadid as DiscussionID,
-                t.forumid as CategoryID,
-                t.postuserid as InsertUserID,
-                t.postuserid as UpdateUserID,
-                t.views as CountViews,
-                t.sticky as Announce,
-                t.title,
-                p.postid as ForeignID,
-                p.ipaddress as InsertIPAddress,
-                p.pagetext,
-                'BBCode' as Format,
-                replycount+1 as CountComments,
-                convert(ABS(open-1), char(1)) as Closed,
-                if(convert(sticky, char(1)) > 0, 2, 0) as Announce,
-                from_unixtime(t.dateline) as DateInserted,
-                from_unixtime(lastpost) as DateLastComment,
-                if (t.pollid > 0, 'Poll', null) as Type
-            from :_thread as t
-                left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
-                left join :_post as p on p.postid = t.firstpostid
-            where d.primaryid is null
-                and t.visible = 1
-            $minDiscussionWhere
-            $forumWhere",
-            $discussion_Map
-        );
-
-        // Comments
-        $comment_Map = array(
-            'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
-                    return $value;
-            }
-            ),
-        );
-        if ($minDiscussionID) {
-            $minDiscussionWhere = "and p.threadid > $minDiscussionID";
-        }
-
-        $this->ex->exportTable(
-            'Comment',
-            "select
-                p.postid as CommentID,
-                p.threadid as DiscussionID,
-                p.pagetext,
-                p.ipaddress as InsertIPAddress,
-                'BBCode' as Format,
-                p.userid as InsertUserID,
-                p.userid as UpdateUserID,
-                from_unixtime(p.dateline) as DateInserted
-            from :_post as p
-                inner join :_thread as t on p.threadid = t.threadid
-                left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
-            where p.postid <> t.firstpostid
-                and d.primaryid is null
-                and p.visible = 1
-                $minDiscussionWhere
-                $forumWhere",
-            $comment_Map
-        );
+        $minDiscussionWhere = $this->comments($minDiscussionID, $forumWhere);
 
         // UserDiscussion
         if ($minDiscussionID) {
@@ -612,207 +280,19 @@ class VBulletin extends ExportController
                 $minDiscussionWhere"
         );
 
-        // Activity (from visitor messages in vBulletin 3.8+)
-        if ($this->ex->exists('visitormessage') === true) {
-            if ($minDiscussionID) {
-                $minDiscussionWhere = "and dateline > $minDiscussionID";
-            }
+        $this->wallPosts($minDiscussionID);
 
-
-            $activity_Map = array(
-                'postuserid' => 'RegardingUserID',
-                'userid' => 'ActivityUserID',
-                'pagetext' => 'Story',
-                'NotifyUserID' => 'NotifyUserID',
-                'Format' => 'Format'
-            );
-            $this->ex->exportTable(
-                'Activity',
-                "select
-                    vm.*,
-                    '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
-                    from_unixtime(vm.dateline) as DateInserted,
-                    from_unixtime(vm.dateline) as DateUpdated,
-                    inet_ntoa(vm.ipaddress) as InsertIPAddress,
-                    vm.postuserid as InsertUserID,
-                    -1 as NotifyUserID,
-                    'BBCode' as Format,
-                    'WallPost' as ActivityType
-                from :_visitormessage as vm
-                where state='visible'
-                    $minDiscussionWhere",
-                $activity_Map
-            );
-        }
-
-        $conversation_Map = array();
-        $this->ex->exportTable(
-            'Conversation',
-            "select
-                p.parentpmid as ConversationID,
-                 replace(t.title, 'Re: ', '') as Subject,
-                t.fromuserid as InsertUserID,
-                from_unixtime(t.dateline),
-                t.pmtextid as FirstMessageID
-            from
-            (select
-                parentpmid,
-                min(p.pmtextid) as pmtextid
-            from (
-                select pmtextid, parentpmid from :_pm where parentpmid <> 0 group by pmtextid having count(pmtextid) > 1
-            ) p
-            group by parentpmid)	p
-            join :_pmtext t on t.pmtextid = p.pmtextid",
-            $conversation_Map
-        );
-
-        $conversationMessage_Map = array();
-        $this->ex->exportTable(
-            'ConversationMessage',
-            "
-            select distinct
-                t.pmtextid,
-                p.parentpmid as ConversationID,
-                t.message as Body,
-                'BBCode' as Format,
-                t.fromuserid as InsertUserID,
-                from_unixtime(t.dateline) as DateInserted
-            from :_pmtext t
-            join (
-                select pmtextid
-                from :_pm
-                where parentpmid > 0
-                group by pmtextid having count(pmtextid) > 1
-            ) on t.pmtextid = p.pmtextid
-        ",
-            $conversationMessage_Map
-        );
-
-        // User Conversation.
-        $userConversation_Map = array();
-        $this->ex->exportTable(
-            'UserConversation',
-            "
-                select
-                userid as UserID,
-                parentpmid as ConversationID,
-                messageread as CountReadMessages
-                from pm
-                where parentpmid > 0
-            	group by userid, parentpmid
-            ",
-            $userConversation_Map
-        );
-        $this->exportPolls();
+        $this->conversations();
+        $this->polls();
 
         // Media
         if ($this->ex->exists('attachment') === true) {
-            $this->exportMedia($minDiscussionID);
+            $this->attachments($minDiscussionID);
         }
 
-        // IP Ban list
-        $ipBanlist = $this->param('ipbanlist');
-        if ($ipBanlist) {
-            $this->ex->query("drop table if exists z_ipbanlist");
-            $this->ex->query(
-                "
-                create table z_ipbanlist(
-                    id int(11) unsigned not null auto_increment,
-                    ipaddress varchar(50) default null,
-                    primary key (id),
-                    unique key ipaddress (ipaddress)
-                ) engine=InnoDB default charset=utf8"
-            );
-
-            $result = $this->ex->query("select value from :_setting where varname = 'banip'");
-            $row = $result->nextResultRow();
-
-            if ($row) {
-                $insertSql = 'insert ignore into z_ipbanlist(ipaddress) values ';
-                $ipString = str_replace("\r", "", $row['value']);
-                $IPs = explode(" ", $ipString);
-                foreach ($IPs as $IP) {
-                    $IP = trim($IP);
-                    if (empty($IP)) {
-                        continue;
-                    }
-                    $insertSql .= "({$this->ex->escape($IP)}), ";
-                }
-                $insertSql = substr($insertSql, 0, -2);
-                $this->ex->query($insertSql);
-
-                $ban_Map = array();
-
-                $this->ex->exportTable(
-                    'Ban',
-                    "
-                    select
-                        'IPAddress' as BanType,
-                        ipaddress as BanValue,
-                        'Imported ban' as Notes,
-                        NOW() as DateInserted
-                    from z_ipbanlist
-                    ",
-                    $ban_Map
-                );
-
-                //$this->ex->query('drop table if exists z_ipbanlist');
-            }
-        }
-
-        // Tags
-        $this->ex->exportTable(
-            'Tag',
-            "
-            select
-                tagid as TagID,
-                replace(lower(tagtext), ' ', '-') as Name,
-                tagtext as FullName ,
-                from_unixtime(dateline) as DateInserted
-            from :_tag
-        "
-        );
-
-        $this->ex->exportTable(
-            'TagDiscussion',
-            "
-            select
-                tagid as TagID,
-                threadid as DiscussionID,
-                -1 as CategoryID,
-                from_unixtime(dateline) as DateInserted
-            from :_tagthread
-        "
-        );
-
-        // Reactions
-        $this->ex->exportTable(
-            'UserTag',
-            "
-            select
-                if(t.threadid is not null, 'Discussion', 'Comment') as RecordType,
-                if(t.threadid is not null, t.threadid, p.postid) as RecordID,
-                -1 as TagID,
-                p.userid as UserID,
-                from_unixtime(p.date) as DateInserted,
-                1 as Total
-            from :_post_thanks p
-            left join :_thread t on p.postid = t.firstpostid
-
-            union
-
-            select
-                concat(if(t.threadid is not null, 'Discussion', 'Comment'), '-Total') as RecordType,
-                if(t.threadid is not null, t.threadid, p.postid) as RecordID,
-                -1 as TagID,
-                p.userid as UserID,
-                now() as DateInserted,
-                p.total as Total
-            from (select postid, count(postid) as total, min(userid) as userid from :_post_thanks group by postid) p
-            left join :_thread t on p.postid = t.firstpostid
-        "
-        );
-
+        $this->ipbans();
+        $this->tags();
+        $this->reactions();
 
         // End
         $this->ex->endExport();
@@ -895,7 +375,7 @@ class VBulletin extends ExportController
      *
      * In vBulletin 4.x, the filedata table was introduced.
      */
-    public function exportMedia($minDiscussionID = false)
+    public function attachments($minDiscussionID = false)
     {
         $instance = $this;
 
@@ -1072,7 +552,7 @@ class VBulletin extends ExportController
         }
     }
 
-    protected function exportPolls()
+    protected function polls()
     {
         $poll_Map = array(
             'pollid' => 'PollID',
@@ -1172,7 +652,7 @@ class VBulletin extends ExportController
         );
     }
 
-    public function exportRanks(): array
+    public function ranks(): array
     {
         $rank = $this->ex->query("select count(*) from ranks");
 
@@ -1450,5 +930,602 @@ class VBulletin extends ExportController
     public function htmlDecode($value)
     {
         return ($value);
+    }
+
+    protected function tags(): void
+    {
+        $this->ex->exportTable(
+            'Tag',
+            "
+            select
+                tagid as TagID,
+                replace(lower(tagtext), ' ', '-') as Name,
+                tagtext as FullName ,
+                from_unixtime(dateline) as DateInserted
+            from :_tag
+        "
+        );
+
+        $this->ex->exportTable(
+            'TagDiscussion',
+            "
+            select
+                tagid as TagID,
+                threadid as DiscussionID,
+                -1 as CategoryID,
+                from_unixtime(dateline) as DateInserted
+            from :_tagthread
+        "
+        );
+    }
+
+    protected function conversations(): void
+    {
+        $conversation_Map = array();
+        $this->ex->exportTable(
+            'Conversation',
+            "select
+                p.parentpmid as ConversationID,
+                 replace(t.title, 'Re: ', '') as Subject,
+                t.fromuserid as InsertUserID,
+                from_unixtime(t.dateline),
+                t.pmtextid as FirstMessageID
+            from
+            (select
+                parentpmid,
+                min(p.pmtextid) as pmtextid
+            from (
+                select pmtextid, parentpmid from :_pm where parentpmid <> 0 group by pmtextid having count(pmtextid) > 1
+            ) p
+            group by parentpmid)	p
+            join :_pmtext t on t.pmtextid = p.pmtextid",
+            $conversation_Map
+        );
+
+        $conversationMessage_Map = array();
+        $this->ex->exportTable(
+            'ConversationMessage',
+            "
+            select distinct
+                t.pmtextid,
+                p.parentpmid as ConversationID,
+                t.message as Body,
+                'BBCode' as Format,
+                t.fromuserid as InsertUserID,
+                from_unixtime(t.dateline) as DateInserted
+            from :_pmtext t
+            join (
+                select pmtextid
+                from :_pm
+                where parentpmid > 0
+                group by pmtextid having count(pmtextid) > 1
+            ) on t.pmtextid = p.pmtextid
+        ",
+            $conversationMessage_Map
+        );
+
+        // User Conversation.
+        $userConversation_Map = array();
+        $this->ex->exportTable(
+            'UserConversation',
+            "
+                select
+                userid as UserID,
+                parentpmid as ConversationID,
+                messageread as CountReadMessages
+                from pm
+                where parentpmid > 0
+            	group by userid, parentpmid
+            ",
+            $userConversation_Map
+        );
+    }
+
+    protected function ipbans(): void
+    {
+        $ipBanlist = $this->param('ipbanlist');
+        if ($ipBanlist) {
+            $this->ex->query("drop table if exists z_ipbanlist");
+            $this->ex->query(
+                "
+                create table z_ipbanlist(
+                    id int(11) unsigned not null auto_increment,
+                    ipaddress varchar(50) default null,
+                    primary key (id),
+                    unique key ipaddress (ipaddress)
+                ) engine=InnoDB default charset=utf8"
+            );
+
+            $result = $this->ex->query("select value from :_setting where varname = 'banip'");
+            $row = $result->nextResultRow();
+
+            if ($row) {
+                $insertSql = 'insert ignore into z_ipbanlist(ipaddress) values ';
+                $ipString = str_replace("\r", "", $row['value']);
+                $IPs = explode(" ", $ipString);
+                foreach ($IPs as $IP) {
+                    $IP = trim($IP);
+                    if (empty($IP)) {
+                        continue;
+                    }
+                    $insertSql .= "({$this->ex->escape($IP)}), ";
+                }
+                $insertSql = substr($insertSql, 0, -2);
+                $this->ex->query($insertSql);
+
+                $ban_Map = array();
+
+                $this->ex->exportTable(
+                    'Ban',
+                    "
+                    select
+                        'IPAddress' as BanType,
+                        ipaddress as BanValue,
+                        'Imported ban' as Notes,
+                        NOW() as DateInserted
+                    from z_ipbanlist
+                    ",
+                    $ban_Map
+                );
+
+                //$this->ex->query('drop table if exists z_ipbanlist');
+            }
+        }
+    }
+
+    protected function reactions(): void
+    {
+        $this->ex->exportTable(
+            'UserTag',
+            "
+            select
+                if(t.threadid is not null, 'Discussion', 'Comment') as RecordType,
+                if(t.threadid is not null, t.threadid, p.postid) as RecordID,
+                -1 as TagID,
+                p.userid as UserID,
+                from_unixtime(p.date) as DateInserted,
+                1 as Total
+            from :_post_thanks p
+            left join :_thread t on p.postid = t.firstpostid
+
+            union
+
+            select
+                concat(if(t.threadid is not null, 'Discussion', 'Comment'), '-Total') as RecordType,
+                if(t.threadid is not null, t.threadid, p.postid) as RecordID,
+                -1 as TagID,
+                p.userid as UserID,
+                now() as DateInserted,
+                p.total as Total
+            from (select postid, count(postid) as total, min(userid) as userid from :_post_thanks group by postid) p
+            left join :_thread t on p.postid = t.firstpostid
+        "
+        );
+    }
+
+    /**
+     * @param string $forumWhere
+     */
+    protected function categories(string $forumWhere): void
+    {
+        $category_Map = array(
+            'title' => array('Column' => 'Name', 'Filter' => array($this, 'htmlDecode')),
+            'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
+        );
+        $this->ex->exportTable(
+            'Category',
+            "select
+                f.forumid as CategoryID,
+                f.description as Description,
+                f.parentid as ParentCategoryID,
+                f.title,
+                f.displayorder
+            from :_forum as f
+            where 1 = 1
+                $forumWhere",
+            $category_Map
+        );
+    }
+
+    protected function roles(): void
+    {
+        $role_Map = array(
+            'usergroupid' => 'RoleID',
+            'title' => 'Name',
+            'description' => 'Description'
+        );
+        $this->ex->exportTable('Role', 'select * from :_usergroup', $role_Map);
+
+        // UserRoles
+        $userRole_Map = array(
+            'userid' => 'UserID',
+            'usergroupid' => 'RoleID'
+        );
+        $this->ex->query("drop table if exists VbulletinRoles");
+        $this->ex->query(
+            "create table VbulletinRoles (
+            userid int unsigned not null, usergroupid int unsigned not null)"
+        );
+        // Put primary groups into tmp table
+        $this->ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
+        // Put stupid CSV column into tmp table
+        $secondaryRoles = $this->ex->query("select userid, usergroupid, membergroupids from :_user");
+        if (is_resource($secondaryRoles)) {
+            while ($row = $secondaryRoles->nextResultRow()) {
+                if ($row['membergroupids'] != '') {
+                    $groups = explode(',', $row['membergroupids']);
+                    foreach ($groups as $groupID) {
+                        if (!$groupID) {
+                            continue;
+                        }
+                        $this->ex->query(
+                            "insert into VbulletinRoles (userid, usergroupid)
+                            values({$row['userid']},{$groupID})"
+                        );
+                    }
+                }
+            }
+        }
+        // Export from our tmp table and drop
+        $this->ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
+        $this->ex->query("drop table if exists VbulletinRoles");
+    }
+
+    /**
+     * @param array $ranks
+     * @param $cdn
+     */
+    protected function users(array $ranks, $cdn): void
+    {
+        $user_Map = array(
+            'usertitle' => array(
+                'Column' => 'Title',
+                'Filter' => function ($value) {
+                    return trim(strip_tags(str_replace('&nbsp;', ' ', $value)));
+                }
+            ),
+            'posts' => array(
+                'Column' => 'RankID',
+                'Filter' => function ($value) use ($ranks) {
+                    // Look  up the posts in the ranks table.
+                    foreach ($ranks as $rankID => $row) {
+                        if ($value >= $row['minposts']) {
+                            return $rankID;
+                        }
+                    }
+
+                    return null;
+                }
+            )
+        );
+
+        // Use file avatar or the result of our blob export?
+        if ($this->getConfig('usefileavatar')) {
+            $user_Map['filephoto'] = 'Photo';
+        } else {
+            $user_Map['customphoto'] = 'Photo';
+        }
+
+        $this->ex->exportTable(
+            'User',
+            "select
+                u.userid as UserID,
+                u.username as Name,
+                u.email as Email,
+                u.referrerid as InviteUserID,
+                u.timezoneoffset as HourOffset,
+                u.timezoneoffset as HourOffset,
+                u.ipaddress as LastIPAddress,
+                u.ipaddress as InsertIPAddress,
+                u.usertitle,
+                u.posts,
+                concat(`password`, salt) as Password,
+                date_format(birthday_search, get_format(DATE, 'ISO')) as DateOfBirth,
+                from_unixtime(joindate) as DateFirstVisit,
+                from_unixtime(lastvisit) as DateLastActive,
+                from_unixtime(joindate) as DateInserted,
+                from_unixtime(lastactivity) as DateUpdated,
+                case when avatarrevision > 0
+                        then concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
+                     when av.avatarpath is not null then av.avatarpath
+                     else null
+                     end as filephoto,
+                {$this->avatarSelect},
+                case when ub.userid is not null then 1 else 0 end as Banned,
+                'vbulletin' as HashMethod
+            from :_user u
+                left join :_customavatar a on u.userid = a.userid
+                left join :_avatar av on u.avatarid = av.avatarid
+                left join :_userban ub on u.userid = ub.userid and ub.liftdate <= now()",
+            $user_Map
+        );  // ":_" will be replace by database prefix
+    }
+
+    /**
+     * @param string $forumWhere
+     * @param $minDate
+     * @return false|float
+     */
+    protected function userMeta(string $forumWhere, $minDate)
+    {
+        $this->ex->query("drop table if exists VbulletinUserMeta");
+        // UserMeta
+        $this->ex->query(
+            "
+            create table VbulletinUserMeta(
+                `UserID` int not null,
+                `Name` varchar(255) not null,
+                `Value` text not null
+            );
+        "
+        );
+        // Standard vB user data
+        $userFields = array(
+            'usertitle' => 'Title',
+            'homepage' => 'Website',
+            'styleid' => 'StyleID'
+        );
+
+        if ($this->ex->exists('user', array('skype')) === true) {
+            $userFields['skype'] = 'Skype';
+        }
+
+        foreach ($userFields as $field => $insertAs) {
+            $this->ex->query(
+                "
+                insert into VbulletinUserMeta (UserID, Name, Value)
+                    select
+                        userid,
+                        'Profile.$insertAs',
+                        $field
+                    from :_user where $field != '' and $field != 'http://'
+
+                    union select userid as UserID,
+                        concat('Preferences.Popup.NewComment.', forumid), 1 as Value
+                        from subscribeforum
+                    union select userid as UserID,
+                        concat('Preferences.Popup.NewDiscussion.', forumid), 1 as Value
+                        from subscribeforum
+                    union select userid as UserID,
+                        concat('Preferences.Email.NewComment.', forumid), 1 as Value
+                        from subscribeforum where emailupdate > 1
+                    union select userid as UserID,
+                        concat('Preferences.Email.NewDiscussion.', forumid), 1 as Value
+                        from subscribeforum where emailupdate > 1"
+            );
+        }
+
+        if ($this->ex->exists('phrase', array('product', 'fieldname')) === true) {
+            // Dynamic vB user data (userfield)
+            $profileFields = $this->ex->query(
+                "
+                select distinct
+                    varname,
+                    text
+                from :_phrase
+                where product='vbulletin'
+                    and fieldname='cprofilefield'
+                    and varname like 'field%_title'
+            "
+            );
+
+            if (is_resource($profileFields)) {
+                $profileQueries = array();
+                while ($field = $profileFields->nextResultRow()) {
+                    $column = str_replace('_title', '', $field['varname']);
+                    $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $field['text']);
+                    $profileQueries[] = "
+                        insert into VbulletinUserMeta(UserID, Name, Value)
+                        select
+                            userid,
+                            'Profile." . $name . "',
+                            " . $column . "
+                        from :_userfield
+                        where " . $column . " != ''";
+                }
+                foreach ($profileQueries as $query) {
+                    $this->ex->query($query);
+                }
+            }
+        }
+
+        // Users meta informations
+        $this->ex->exportTable(
+            'UserMeta',
+            "select
+                userid as UserID,
+                'Plugin.Signatures.Sig' as Name,
+                signature as Value
+            from :_usertextfield
+            where nullif(signature, '') is not null
+
+            union
+            select
+                userid,
+                'Plugin.Signatures.Format',
+                'BBCode'
+            from :_usertextfield
+            where nullif(signature, '') is not null
+
+            union
+            select * from VbulletinUserMeta"
+        );
+        $this->categories($forumWhere);
+
+        if ($minDate) {
+            $minDiscussionID = $this->ex->getValue(
+                "select max(threadid)
+                    from :_thread
+                    where dateline < $minDate",
+                false
+            );
+
+            $minDiscussionID2 = $this->ex->getValue(
+                "select min(threadid)
+                    from :_thread
+                    where dateline >= $minDate",
+                false
+            );
+
+            // The two discussion IDs should be the same, but let's average them.
+            $minDiscussionID = floor(($minDiscussionID + $minDiscussionID2) / 2);
+
+            $this->ex->comment('Min topic id: ' . $minDiscussionID);
+        }
+        return $minDiscussionID;
+    }
+
+    /**
+     * @param $minDiscussionID
+     * @param string $forumWhere
+     * @return string
+     */
+    protected function comments($minDiscussionID, string $forumWhere): string
+    {
+// Comments
+        $comment_Map = array(
+            'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
+                return $value;
+            }
+            ),
+        );
+        if ($minDiscussionID) {
+            $minDiscussionWhere = "and p.threadid > $minDiscussionID";
+        }
+
+        $this->ex->exportTable(
+            'Comment',
+            "select
+                p.postid as CommentID,
+                p.threadid as DiscussionID,
+                p.pagetext,
+                p.ipaddress as InsertIPAddress,
+                'BBCode' as Format,
+                p.userid as InsertUserID,
+                p.userid as UpdateUserID,
+                from_unixtime(p.dateline) as DateInserted
+            from :_post as p
+                inner join :_thread as t on p.threadid = t.threadid
+                left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
+            where p.postid <> t.firstpostid
+                and d.primaryid is null
+                and p.visible = 1
+                $minDiscussionWhere
+                $forumWhere",
+            $comment_Map
+        );
+        return $minDiscussionWhere;
+    }
+
+    /**
+     * @param $minDiscussionID
+     */
+    protected function wallPosts($minDiscussionID): void
+    {
+// Activity (from visitor messages in vBulletin 3.8+)
+        if ($this->ex->exists('visitormessage') === true) {
+            if ($minDiscussionID) {
+                $minDiscussionWhere = "and dateline > $minDiscussionID";
+            }
+
+
+            $activity_Map = array(
+                'postuserid' => 'RegardingUserID',
+                'userid' => 'ActivityUserID',
+                'pagetext' => 'Story',
+                'NotifyUserID' => 'NotifyUserID',
+                'Format' => 'Format'
+            );
+            $this->ex->exportTable(
+                'Activity',
+                "select
+                    vm.*,
+                    '{RegardingUserID,you} &rarr; {ActivityUserID,you}' as HeadlineFormat,
+                    from_unixtime(vm.dateline) as DateInserted,
+                    from_unixtime(vm.dateline) as DateUpdated,
+                    inet_ntoa(vm.ipaddress) as InsertIPAddress,
+                    vm.postuserid as InsertUserID,
+                    -1 as NotifyUserID,
+                    'BBCode' as Format,
+                    'WallPost' as ActivityType
+                from :_visitormessage as vm
+                where state='visible'
+                    $minDiscussionWhere",
+                $activity_Map
+            );
+        }
+    }
+
+    /**
+     * @param $minDiscussionID
+     * @param string $forumWhere
+     * @return string
+     */
+    protected function discussions($minDiscussionID, string $forumWhere): string
+    {
+// Discussions
+        $discussion_Map = array(
+            'title' => array('Column' => 'Name', 'Filter' => array($this, 'htmlDecode')),
+            'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
+                return $value;
+            }
+            ),
+        );
+
+        if ($this->ex->destination == 'database') {
+            // Remove the filter from the title so that this doesn't take too long.
+            $this->ex->HTMLDecoderDb('thread', 'title', 'threadid');
+            unset($discussion_Map['title']['Filter']);
+        }
+
+        if ($minDiscussionID) {
+            $minDiscussionWhere = "and t.threadid > $minDiscussionID";
+        }
+
+        $this->ex->exportTable(
+            'Discussion',
+            "select
+                t.threadid as DiscussionID,
+                t.forumid as CategoryID,
+                t.postuserid as InsertUserID,
+                t.postuserid as UpdateUserID,
+                t.views as CountViews,
+                t.sticky as Announce,
+                t.title,
+                p.postid as ForeignID,
+                p.ipaddress as InsertIPAddress,
+                p.pagetext,
+                'BBCode' as Format,
+                replycount+1 as CountComments,
+                convert(ABS(open-1), char(1)) as Closed,
+                if(convert(sticky, char(1)) > 0, 2, 0) as Announce,
+                from_unixtime(t.dateline) as DateInserted,
+                from_unixtime(lastpost) as DateLastComment,
+                if (t.pollid > 0, 'Poll', null) as Type
+            from :_thread as t
+                left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
+                left join :_post as p on p.postid = t.firstpostid
+            where d.primaryid is null
+                and t.visible = 1
+            $minDiscussionWhere
+            $forumWhere",
+            $discussion_Map
+        );
+        return $minDiscussionWhere;
+    }
+
+    /**
+     * @return array
+     */
+    protected function permissions(): void
+    {
+        $permissions_Map = array(
+            'usergroupid' => 'RoleID',
+            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
+            'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
+            'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
+        );
+        $this->addPermissionColumns(self::$permissions, $permissions_Map);
+        $this->ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
     }
 }
