@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class Kunena extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Joomla Kunena',
         'prefix' => 'jos_',
@@ -47,7 +46,6 @@ class Kunena extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('mbox');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -57,7 +55,56 @@ class Kunena extends ExportController
 
         $ex->beginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
 
-        // User.
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        // Permission.
+        //      $ex->ExportTable('Permission',
+        //      "select 2 as RoleID, 'View' as _Permissions
+        //      union
+        //      select 3 as RoleID, 'View' as _Permissions
+        //      union
+        //      select 16 as RoleID, 'All' as _Permissions",
+        //          array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->bookmarks($ex);
+        $this->attachments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
+     *
+     * @access public
+     * @see    ExportModel::exportTableWrite
+     *
+     * @param  string $ralue Current value
+     * @param  string $field Current field
+     * @param  array  $row   Contents of the current record.
+     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     */
+    public function filterThumbnailData($value, $field, $row)
+    {
+        if (strpos(strtolower($row['filetype']), 'image/') === 0) {
+            return $value;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'id' => 'UserID',
             'name' => 'Name',
@@ -68,7 +115,7 @@ class Kunena extends ExportController
             'showemail' => 'ShowEmail',
             'birthdate' => 'DateOfBirth',
             'banned' => 'Banned',
-        //         'DELETED'=>'Deleted',
+            //         'DELETED'=>'Deleted',
             'admin' => array('Column' => 'Admin', 'Type' => 'tinyint(1)'),
             'Photo' => 'Photo'
         );
@@ -87,8 +134,13 @@ class Kunena extends ExportController
             on ku.userid = u.id",
             $user_Map
         );
+    }
 
-        // Role.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'rank_id' => 'RoleID',
             'rank_title' => 'Name',
@@ -107,17 +159,13 @@ class Kunena extends ExportController
          from :_users u",
             $userRole_Map
         );
+    }
 
-        // Permission.
-        //      $ex->ExportTable('Permission',
-        //      "select 2 as RoleID, 'View' as _Permissions
-        //      union
-        //      select 3 as RoleID, 'View' as _Permissions
-        //      union
-        //      select 16 as RoleID, 'All' as _Permissions",
-        //          array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
-
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'id' => 'CategoryID',
             'parent' => 'ParentCategoryID',
@@ -132,8 +180,13 @@ class Kunena extends ExportController
          select * from :_kunena_categories",
             $category_Map
         );
+    }
 
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'id' => 'DiscussionID',
             'catid' => 'CategoryID',
@@ -161,8 +214,13 @@ class Kunena extends ExportController
          where t.thread = t.id",
             $discussion_Map
         );
+    }
 
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'id' => 'CommentID',
             'thread' => 'DiscussionID',
@@ -187,8 +245,13 @@ class Kunena extends ExportController
          where t.thread <> t.id",
             $comment_Map
         );
+    }
 
-        // UserDiscussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
         $userDiscussion_Map = array(
             'thread' => 'DiscussionID',
             'userid' => 'UserID'
@@ -200,8 +263,13 @@ class Kunena extends ExportController
          from :_kunena_subscriptions t",
             $userDiscussion_Map
         );
+    }
 
-        // Media.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
         $media_Map = array(
             'id' => 'MediaID',
             'mesid' => 'ForeignID',
@@ -229,27 +297,5 @@ class Kunena extends ExportController
             on m.id = a.mesid",
             $media_Map
         );
-
-        $ex->endExport();
-    }
-
-    /**
-     * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
-     *
-     * @access public
-     * @see    ExportModel::exportTableWrite
-     *
-     * @param  string $ralue Current value
-     * @param  string $field Current field
-     * @param  array  $row   Contents of the current record.
-     * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
-     */
-    public function filterThumbnailData($value, $field, $row)
-    {
-        if (strpos(strtolower($row['filetype']), 'image/') === 0) {
-            return $value;
-        } else {
-            return null;
-        }
     }
 }
