@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class ModxDiscuss extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'MODX Discuss Extension',
         'prefix' => 'modx_discuss_',
@@ -68,17 +67,32 @@ class ModxDiscuss extends ExportController
      */
     public function forumExport($ex)
     {
-        // Get the characterset for the comments.
-        // Usually the comments table is the best target for this.
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'MODX Discuss Extension', array('HashMethod' => 'Vanilla'));
 
-        // User.
+        $this->users($ex);
+
+        $this->roles($ex);
+        $this->userMeta($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $ex->exportTable(
             'User',
             "
@@ -100,22 +114,14 @@ class ModxDiscuss extends ExportController
                 case u.gender when 0 then 'u' else gender end as gender2
             from :_users u"
         );
+    }
 
-        /**
-         *  No Roles in discuss, wiping the role table doesn't make sense!
-         */
-        // Role.
-        // The Vanilla roles table will be wiped by any import. If your current platform doesn't have roles,
-        // you can hard code new ones into the select statement. See Vanilla's defaults for a good example.
-        /*
-        $role_Map = array(
-            'Group_ID' => 'RoleID',
-            'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
-        );
-        $ex->exportTable('Role', "
-         select *
-         from :_tblGroup", $role_Map);
-        */
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+// Roles do not exist in Discuss.
 
         // User Role.
         // Really simple matchup.
@@ -130,17 +136,13 @@ class ModxDiscuss extends ExportController
                 '32' as roleID
             from :_moderators u"
         );
+    }
 
-        // Permission.
-        // Feel free to add a permission export if this is a major platform or it will see reuse.
-        // For small or custom jobs, it's usually not worth it. Just fix them afterward.
-
-        // UserMeta.
-        // This is an example of pulling Signatures into Vanilla's UserMeta table.
-        // This is often a good place for any extraneous data on the User table too.
-        // The Profile Extender addon uses the namespace "Profile.[FieldName]"
-        // You can add the appropriately-named fields after the migration
-        // and profiles will auto-populate with the migrated data.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function userMeta(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -179,12 +181,13 @@ class ModxDiscuss extends ExportController
             where name_first <> ''
         "
         );
+    }
 
-        // Category.
-        // Be careful to not import hundreds of categories. Try translating huge schemas to Tags instead.
-        // Numeric category slugs aren't allowed in Vanilla, so be careful to sidestep those.
-        // Don't worry about rebuilding the TreeLeft & TreeRight properties. Vanilla can fix this afterward
-        // if you just get the Sort and ParentIDs correct.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Category',
             "
@@ -209,9 +212,13 @@ class ModxDiscuss extends ExportController
             from :_categories
         "
         );
+    }
 
-        // Discussion.
-        // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'title2' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
@@ -238,10 +245,13 @@ class ModxDiscuss extends ExportController
             join :_posts p on t.id = p.thread",
             $discussion_Map
         );
+    }
 
-        // Comment.
-        // This is where big migrations are going to get bogged down.
-        // Be sure you have indexes created for any columns you are joining on.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Comment',
             '
@@ -259,20 +269,5 @@ class ModxDiscuss extends ExportController
             from :_posts p
             where p.parent <> 0'
         );
-
-        // UserDiscussion.
-        // This is the table for assigning bookmarks/subscribed threads.
-
-        // Media.
-        // Attachment data goes here. Vanilla attachments are files under the /uploads folder.
-        // This is usually the trickiest step because you need to translate file paths.
-        // If you need to export blobs from the database, see the vBulletin porter.
-
-        // Conversations.
-        // Private messages often involve the most data manipulation.
-        // If you need a large number of complex SQL statements, consider making it a separate method
-        // to keep the main process easy to understand. Pass $ex as a parameter if you do.
-
-        $ex->endExport();
     }
 }
