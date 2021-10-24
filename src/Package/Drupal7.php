@@ -54,7 +54,6 @@ class Drupal7 extends ExportController
      */
     protected function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('comment');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -67,11 +66,54 @@ class Drupal7 extends ExportController
             mkdir($origin);
         }
 
-        // Begin.
         $ex->beginExport('', 'Drupal 7');
 
-        // Users.
-        // TODO validate password hashing didn't change between drupal 6 and drupal 7.
+        $this->users($ex);
+
+        $this->signatures($ex);
+
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->attachments($ex);
+
+        $ex->endExport();
+    }
+
+    public function convertBase64Attachments($value, $field, $row)
+    {
+        $this->imageCount = 1;
+        $postId = $row['CommentID'] ?? $row['DiscussionID'];
+
+        preg_replace_callback(
+            self::PATTERN,
+            function ($matches) use ($postId) {
+                $file = base64_decode($matches[1]);
+                if ($file !== false) {
+                    $filename = "{$postId}_{$this->imageCount}.png";
+                    $this->imageCount++;
+                    file_put_contents($this->param('attachOrigin', null) . '/' . $filename, $file);
+                    return "\"$this->path/$filename\"";
+                }
+                return '';
+            },
+            $value
+        );
+
+        return $value;
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
+// TODO validate password hashing didn't change between drupal 6 and drupal 7.
         $ex->exportTable(
             'User',
             "
@@ -89,8 +131,13 @@ class Drupal7 extends ExportController
             where uid > 0 and status = 1
         "
         );
+    }
 
-        // Signatures.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -111,8 +158,13 @@ class Drupal7 extends ExportController
             where uid > 0 and status = 1 and signature is not null and signature <> ''
         "
         );
+    }
 
-        // Roles.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Role',
             "
@@ -133,8 +185,13 @@ class Drupal7 extends ExportController
             from :_users_roles
          "
         );
+    }
 
-        // Categories.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Category',
             "
@@ -149,8 +206,13 @@ class Drupal7 extends ExportController
             where tv.name in ('Forums', 'Discussion boards')
         "
         );
+    }
 
-        // Discussions.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussionMap = array(
             'Body' => array('Column' => 'Body', 'Filter' => array($this, 'convertBase64Attachments')),
         );
@@ -179,8 +241,13 @@ class Drupal7 extends ExportController
             where n.status = 1 and n.moderate = 0 and b.deleted = 0 and n.Type not in ('Page', 'webform')",
             $discussionMap
         );
+    }
 
-        // Comments.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $commentMap = array(
             'Body' => array('Column' => 'Body', 'Filter' => array($this, 'convertBase64Attachments')),
         );
@@ -210,8 +277,13 @@ class Drupal7 extends ExportController
             where c.status = 1 and b.deleted = 0",
             $commentMap
         );
+    }
 
-        // Media.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
         $ex->exportTable(
             'Media',
             "
@@ -240,30 +312,5 @@ class Drupal7 extends ExportController
             join file_usage_audio fu on fu.fid = f.fid
          "
         );
-
-        $ex->endExport();
-    }
-
-    public function convertBase64Attachments($value, $field, $row)
-    {
-        $this->imageCount = 1;
-        $postId = $row['CommentID'] ?? $row['DiscussionID'];
-
-        preg_replace_callback(
-            self::PATTERN,
-            function ($matches) use ($postId) {
-                $file = base64_decode($matches[1]);
-                if ($file !== false) {
-                    $filename = "{$postId}_{$this->imageCount}.png";
-                    $this->imageCount++;
-                    file_put_contents($this->param('attachOrigin', null) . '/' . $filename, $file);
-                    return "\"$this->path/$filename\"";
-                }
-                return '';
-            },
-            $value
-        );
-
-        return $value;
     }
 }
