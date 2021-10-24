@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class JForum extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'jforum',
         'prefix' => 'jforum_',
@@ -67,17 +66,45 @@ class JForum extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'jforum');
 
+        $this->users($ex);
 
-        // User.
+        $this->roles($ex);
+
+        $this->userMeta($ex);
+
+        $this->categories($ex);
+
+        if ($ex->exists(':_posts_text')) {
+            $postTextColumm = 't.post_text as Body';
+            $postTextSource = 'left join :_posts_text t on p.post_id = t.post_id';
+        } else {
+            $postTextColumm = 'p.post_text as Body';
+            $postTextSource = '';
+        }
+
+        $this->discussions($ex, $postTextColumm, $postTextSource);
+
+        $this->comments($ex, $postTextColumm, $postTextSource);
+
+        $this->bookmarks($ex);
+
+        $this->conversations($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array();
         $ex->exportTable(
             'User',
@@ -97,9 +124,13 @@ class JForum extends ExportController
             from :_users as u",
             $user_Map
         );
+    }
 
-
-        // Role.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array();
         $ex->exportTable(
             'Role',
@@ -124,9 +155,13 @@ class JForum extends ExportController
             from :_user_groups as u",
             $userRole_Map
         );
+    }
 
-
-        // UserMeta.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function userMeta(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -169,10 +204,14 @@ class JForum extends ExportController
             from :_users
             where user_interests is not null"
         );
+    }
 
-
-        // Category.
-        // _categories is tier 1, _forum is tier 2.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
+// _categories is tier 1, _forum is tier 2.
         // Overlapping IDs, so fast-forward _categories by 1000.
         $category_Map = array();
         $ex->exportTable(
@@ -198,16 +237,16 @@ class JForum extends ExportController
             from :_forums as f",
             $category_Map
         );
+    }
 
-        if ($ex->exists(':_posts_text')) {
-            $postTextColumm = 't.post_text as Body';
-            $postTextSource = 'left join :_posts_text t on p.post_id = t.post_id';
-        } else {
-            $postTextColumm = 'p.post_text as Body';
-            $postTextSource = '';
-        }
-
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     * @param string $postTextColumm
+     * @param string $postTextSource
+     */
+    protected function discussions(ExportModel $ex, string $postTextColumm, string $postTextSource): void
+    {
+// Discussion.
         $discussion_Map = array(
             'topic_title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
@@ -231,11 +270,16 @@ class JForum extends ExportController
                 $postTextSource",
             $discussion_Map
         );
+    }
 
-
-        // Comment.
-        $comment_Map = array(
-        );
+    /**
+     * @param ExportModel $ex
+     * @param string $postTextColumm
+     * @param string $postTextSource
+     */
+    protected function comments(ExportModel $ex, string $postTextColumm, string $postTextSource): void
+    {
+        $comment_Map = array();
         $ex->exportTable(
             'Comment',
             "
@@ -254,10 +298,14 @@ class JForum extends ExportController
             where t.topic_first_post_id is null",
             $comment_Map
         );
+    }
 
-
-        // UserDiscussion.
-        // Guessing table is called "_watch" because they are all bookmarks.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
+// Guessing table is called "_watch" because they are all bookmarks.
         $userDiscussion_Map = array(
             'topic_id' => 'DiscussionID',
             'user_id' => 'UserID',
@@ -273,10 +321,14 @@ class JForum extends ExportController
             from :_topics_watch as w",
             $userDiscussion_Map
         );
+    }
 
-
-        // Conversation.
-        // Thread using tmp table based on the pair of users talking.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
+// Thread using tmp table based on the pair of users talking.
         if (!$ex->indexExists('ix_zconversation_from_to', ':_privmsgs')) {
             $ex->query('create index ix_zconversation_from_to
                 on :_privmsgs (privmsgs_from_userid, privmsgs_to_userid)');
@@ -372,7 +424,5 @@ class JForum extends ExportController
         $ex->comment('update GDN_UserConversation
             set CountReadMessages = (select count(MessageID) from GDN_ConversationMessage
                 where GDN_ConversationMessage.ConversationID = GDN_UserConversation.ConversationID)');
-
-        $ex->endExport();
     }
 }
