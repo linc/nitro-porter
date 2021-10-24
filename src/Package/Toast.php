@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class Toast extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Toast',
         'prefix' => 'tstdb_',
@@ -48,7 +47,6 @@ class Toast extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('Post');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -57,7 +55,25 @@ class Toast extends ExportController
         $ex->beginExport('', 'Toast Forum');
         $ex->sourcePrefix = 'tstdb_';
 
-        // User.
+        $this->users($ex);
+
+        $this->roles($ex);
+        $this->signatures($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'ID' => 'UserID',
             'Username' => 'Name',
@@ -74,8 +90,14 @@ class Toast extends ExportController
          from :_Member u",
             $user_Map
         );
+    }
 
-        // Determine safe RoleID to use for non-existant Member role
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+// Determine safe RoleID to use for non-existant Member role
         $lastRoleID = 1001;
         $lastRoleResult = $ex->query("select max(ID) as LastID from :_Group");
         if ($lastRole = $lastRoleResult->nextResultRow()) {
@@ -130,8 +152,13 @@ class Toast extends ExportController
          where l.GroupID is null",
             $userRole_Map
         );
+    }
 
-        // Signatures.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -151,8 +178,13 @@ class Toast extends ExportController
          from :_Member
          where Signature <> '';"
         );
+    }
 
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'ID' => 'CategoryID',
             'CategoryID' => 'ParentCategoryID',
@@ -180,8 +212,13 @@ class Toast extends ExportController
          from :_Category c;",
             $category_Map
         );
+    }
 
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'ID' => 'DiscussionID',
             'ForumID' => 'CategoryID',
@@ -204,8 +241,13 @@ class Toast extends ExportController
             and p.Deleted = 0;",
             $discussion_Map
         );
+    }
 
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'ID' => 'CommentID',
             'TopicID' => 'DiscussionID',
@@ -223,8 +265,5 @@ class Toast extends ExportController
          where Topic = 0 and Deleted = 0;",
             $comment_Map
         );
-
-
-        $ex->endExport();
     }
 }
