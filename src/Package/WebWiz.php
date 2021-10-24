@@ -48,7 +48,6 @@ class WebWiz extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('Topic');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -57,203 +56,24 @@ class WebWiz extends ExportController
         $ex->beginExport('', 'Web Wiz Forums');
         $ex->sourcePrefix = 'tbl';
 
-        //      // Permissions.
-        //      $Permission_Map = array(
-        //          'group_id' => 'RoleID',
-        //          'can_access_cp' => 'Garden.Settings.View',
-        //          'can_access_edit' => 'Vanilla.Discussions.Edit',
-        //          'can_edit_all_comments' => 'Vanilla.Comments.Edit',
-        //          'can_access_admin' => 'Garden.Settings.Manage',
-        //          'can_admin_members' => 'Garden.Users.Edit',
-        //          'can_moderate_comments' => 'Garden.Moderation.Manage',
-        //          'can_view_profiles' => 'Garden.Profiles.View',
-        //          'can_post_comments' => 'Vanilla.Comments.Add',
-        //          'can_view_online_system' => 'Vanilla.Discussions.View',
-        //          'can_sign_in' => 'Garden.SignIn.Allow',
-        //          'can_view_profiles3' => 'Garden.Activity.View',
-        //          'can_post_comments2' => 'Vanilla.Discussions.Add'
-        //      );
-        //      $Permission_Map = $ex->FixPermissionColumns($Permission_Map);
-        //      foreach ($Permission_Map as $Column => &$Info) {
-        //         if (is_array($Info) && isset($Info['Column']))
-        //            $Info['Filter'] = array($this, 'Bool');
-        //      }
-        //
-        //      $ex->ExportTable('Permission', "
-        //         select
-        //            g.can_view_profiles as can_view_profiles2,
-        //            g.can_view_profiles as can_view_profiles3,
-        //            g.can_post_comments as can_post_comments2,
-        //            g.can_post_comments as can_sign_in,
-        //            case when can_access_admin = 'y' then 'all'
-        //              when can_view_online_system = 'y' then 'view' end as _Permissions,
-        //            g.*
-        //         from forum_member_groups g
-        //      ", $Permission_Map);
+        //$Info = $this->permissions($ex);
 
+        $this->users($ex);
 
-        // User.
-        $user_Map = array(
-            'Author_ID' => 'UserID',
-            'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-            'Real_name' => array('Column' => 'FullName', 'Type' => 'varchar(50)', 'Filter' => 'HTMLDecoder'),
-            'Password2' => 'Password',
-            'Gender2' => 'Gender',
-            'Author_email' => 'Email',
-            'Photo2' => array('Column' => 'Photo', 'Filter' => 'HTMLDecoder'),
-            'Login_IP' => 'LastIPAddress',
-            'Banned' => 'Banned',
-            'Join_date' => array('Column' => 'DateInserted'),
-            'Last_visit' => array('Column' => 'DateLastActive'),
-            'Location' => array('Column' => 'Location', 'Filter' => 'HTMLDecoder'),
-            'DOB' => 'DateOfBirth',
-            'Show_email' => 'ShowEmail'
-        );
-        $ex->exportTable(
-            'User',
-            "
-         select
-            concat(Salt, '$', Password) as Password2,
-            case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
-         case when Avatar like 'http%' then Avatar when Avatar > ''
-            then concat('webwiz/', Avatar) else null end as Photo2,
-            'webwiz' as HashMethod,
-            u.*
-         from :_Author u
-         ",
-            $user_Map
-        );
+        $this->roles($ex);
+        $this->usermeta($ex);
 
+        $this->categories($ex);
 
-        // Role.
-        $role_Map = array(
-            'Group_ID' => 'RoleID',
-            'Name' => 'Name'
-        );
-        $ex->exportTable(
-            'Role',
-            "
-         select *
-         from :_Group",
-            $role_Map
-        );
+        $this->discussions($ex);
 
-        // User Role.
-        $userRole_Map = array(
-            'Author_ID' => 'UserID',
-            'Group_ID' => 'RoleID'
-        );
-        $ex->exportTable(
-            'UserRole',
-            "
-         select u.*
-         from :_Author u",
-            $userRole_Map
-        );
-
-        // UserMeta
-        $ex->exportTable(
-            'UserMeta',
-            "
-         select
-            Author_ID as UserID,
-            'Plugin.Signatures.Sig' as `Name`,
-            Signature as `Value`
-         from :_Author
-         where Signature <> ''"
-        );
-
-        // Category.
-        $category_Map = array(
-            'Forum_ID' => 'CategoryID',
-            'Forum_name' => 'Name',
-            'Forum_description' => 'Description',
-            'Parent_ID' => 'ParentCategoryID',
-            'Forum_order' => 'Sort'
-        );
-        $ex->exportTable(
-            'Category',
-            "
-         select
-            f.Forum_ID,
-            f.Cat_ID * 1000 as Parent_ID,
-            f.Forum_order,
-            f.Forum_name,
-            f.Forum_description
-         from :_Forum f
-
-         union all
-
-         select
-            c.Cat_ID * 1000,
-            null,
-            c.Cat_order,
-            c.Cat_name,
-            null
-         from :_Category c
-         ",
-            $category_Map
-        );
-
-        // Discussion.
-        $discussion_Map = array(
-            'Topic_ID' => 'DiscussionID',
-            'Forum_ID' => 'CategoryID',
-            'Author_ID' => 'InsertUserID',
-            'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
-            'IP_addr' => 'InsertIPAddress',
-            'Message' => array('Column' => 'Body'),
-            'Format' => 'Format',
-            'Message_date' => array('Column' => 'DateInserted'),
-            'No_of_views' => 'CountViews',
-            'Locked' => 'Closed',
-
-        );
-        $ex->exportTable(
-            'Discussion',
-            "
-         select
-            th.Author_ID,
-            th.Message,
-            th.Message_date,
-            th.IP_addr,
-            'Html' as Format,
-            t.*
-         from :_Topic t
-         join :_Thread th
-            on t.Start_Thread_ID = th.Thread_ID",
-            $discussion_Map
-        );
-
-        // Comment.
-        $comment_Map = array(
-            'Thread_ID' => 'CommentID',
-            'Topic_ID' => 'DiscussionID',
-            'Author_ID' => 'InsertUserID',
-            'IP_addr' => 'InsertIPAddress',
-            'Message' => array('Column' => 'Body'),
-            'Format' => 'Format',
-            'Message_date' => array('Column' => 'DateInserted')
-        );
-        $ex->exportTable(
-            'Comment',
-            "
-      select
-         th.*,
-         'Html' as Format
-      from :_Thread th
-      join :_Topic t
-         on t.Topic_ID = th.Topic_ID
-      where th.Thread_ID <> t.Start_Thread_ID",
-            $comment_Map
-        );
-
-        $this->exportConversations();
+        $this->comments($ex);
+        $this->conversations();
 
         $ex->endExport();
     }
 
-    public function exportConversations()
+    public function conversations()
     {
         $ex = $this->ex;
 
@@ -422,5 +242,232 @@ class WebWiz extends ExportController
                set pm.Group_ID = g.Group_ID;";
 
         $this->ex->queryN($sql);
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @return array|mixed
+     */
+    protected function permissions(ExportModel $ex)
+    {
+        $Permission_Map = array(
+            'group_id' => 'RoleID',
+            'can_access_cp' => 'Garden.Settings.View',
+            'can_access_edit' => 'Vanilla.Discussions.Edit',
+            'can_edit_all_comments' => 'Vanilla.Comments.Edit',
+            'can_access_admin' => 'Garden.Settings.Manage',
+            'can_admin_members' => 'Garden.Users.Edit',
+            'can_moderate_comments' => 'Garden.Moderation.Manage',
+            'can_view_profiles' => 'Garden.Profiles.View',
+            'can_post_comments' => 'Vanilla.Comments.Add',
+            'can_view_online_system' => 'Vanilla.Discussions.View',
+            'can_sign_in' => 'Garden.SignIn.Allow',
+            'can_view_profiles3' => 'Garden.Activity.View',
+            'can_post_comments2' => 'Vanilla.Discussions.Add'
+        );
+        $Permission_Map = $ex->FixPermissionColumns($Permission_Map);
+        foreach ($Permission_Map as $Column => &$Info) {
+            if (is_array($Info) && isset($Info['Column'])) {
+                $Info['Filter'] = array($this, 'Bool');
+            }
+        }
+
+        $ex->ExportTable('Permission', "
+                 select
+                    g.can_view_profiles as can_view_profiles2,
+                    g.can_view_profiles as can_view_profiles3,
+                    g.can_post_comments as can_post_comments2,
+                    g.can_post_comments as can_sign_in,
+                    case when can_access_admin = 'y' then 'all'
+                      when can_view_online_system = 'y' then 'view' end as _Permissions,
+                    g.*
+                 from forum_member_groups g
+              ", $Permission_Map);
+        return $Info;
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
+        $user_Map = array(
+            'Author_ID' => 'UserID',
+            'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'Real_name' => array('Column' => 'FullName', 'Type' => 'varchar(50)', 'Filter' => 'HTMLDecoder'),
+            'Password2' => 'Password',
+            'Gender2' => 'Gender',
+            'Author_email' => 'Email',
+            'Photo2' => array('Column' => 'Photo', 'Filter' => 'HTMLDecoder'),
+            'Login_IP' => 'LastIPAddress',
+            'Banned' => 'Banned',
+            'Join_date' => array('Column' => 'DateInserted'),
+            'Last_visit' => array('Column' => 'DateLastActive'),
+            'Location' => array('Column' => 'Location', 'Filter' => 'HTMLDecoder'),
+            'DOB' => 'DateOfBirth',
+            'Show_email' => 'ShowEmail'
+        );
+        $ex->exportTable(
+            'User',
+            "
+         select
+            concat(Salt, '$', Password) as Password2,
+            case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
+         case when Avatar like 'http%' then Avatar when Avatar > ''
+            then concat('webwiz/', Avatar) else null end as Photo2,
+            'webwiz' as HashMethod,
+            u.*
+         from :_Author u
+         ",
+            $user_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+        $role_Map = array(
+            'Group_ID' => 'RoleID',
+            'Name' => 'Name'
+        );
+        $ex->exportTable(
+            'Role',
+            "
+         select *
+         from :_Group",
+            $role_Map
+        );
+
+        // User Role.
+        $userRole_Map = array(
+            'Author_ID' => 'UserID',
+            'Group_ID' => 'RoleID'
+        );
+        $ex->exportTable(
+            'UserRole',
+            "
+         select u.*
+         from :_Author u",
+            $userRole_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function usermeta(ExportModel $ex): void
+    {
+        $ex->exportTable(
+            'UserMeta',
+            "
+         select
+            Author_ID as UserID,
+            'Plugin.Signatures.Sig' as `Name`,
+            Signature as `Value`
+         from :_Author
+         where Signature <> ''"
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
+        $category_Map = array(
+            'Forum_ID' => 'CategoryID',
+            'Forum_name' => 'Name',
+            'Forum_description' => 'Description',
+            'Parent_ID' => 'ParentCategoryID',
+            'Forum_order' => 'Sort'
+        );
+        $ex->exportTable(
+            'Category',
+            "
+         select
+            f.Forum_ID,
+            f.Cat_ID * 1000 as Parent_ID,
+            f.Forum_order,
+            f.Forum_name,
+            f.Forum_description
+         from :_Forum f
+
+         union all
+
+         select
+            c.Cat_ID * 1000,
+            null,
+            c.Cat_order,
+            c.Cat_name,
+            null
+         from :_Category c
+         ",
+            $category_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
+        $discussion_Map = array(
+            'Topic_ID' => 'DiscussionID',
+            'Forum_ID' => 'CategoryID',
+            'Author_ID' => 'InsertUserID',
+            'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'IP_addr' => 'InsertIPAddress',
+            'Message' => array('Column' => 'Body'),
+            'Format' => 'Format',
+            'Message_date' => array('Column' => 'DateInserted'),
+            'No_of_views' => 'CountViews',
+            'Locked' => 'Closed',
+
+        );
+        $ex->exportTable(
+            'Discussion',
+            "
+         select
+            th.Author_ID,
+            th.Message,
+            th.Message_date,
+            th.IP_addr,
+            'Html' as Format,
+            t.*
+         from :_Topic t
+         join :_Thread th
+            on t.Start_Thread_ID = th.Thread_ID",
+            $discussion_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
+        $comment_Map = array(
+            'Thread_ID' => 'CommentID',
+            'Topic_ID' => 'DiscussionID',
+            'Author_ID' => 'InsertUserID',
+            'IP_addr' => 'InsertIPAddress',
+            'Message' => array('Column' => 'Body'),
+            'Format' => 'Format',
+            'Message_date' => array('Column' => 'DateInserted')
+        );
+        $ex->exportTable(
+            'Comment',
+            "
+      select
+         th.*,
+         'Html' as Format
+      from :_Thread th
+      join :_Topic t
+         on t.Topic_ID = th.Topic_ID
+      where th.Thread_ID <> t.Start_Thread_ID",
+            $comment_Map
+        );
     }
 }
