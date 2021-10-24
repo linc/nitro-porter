@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class AspPlayground extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'ASP Playground',
         'prefix' => 'pgd_',
@@ -49,7 +48,6 @@ class AspPlayground extends ExportController
      */
     public function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('Threads');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -58,7 +56,26 @@ class AspPlayground extends ExportController
         $ex->beginExport('', 'ASP Playground');
         $ex->sourcePrefix = 'pgd_';
 
-        // User.
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->signatures($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'Mem' => 'UserID',
             'Login' => 'Name',
@@ -78,24 +95,25 @@ class AspPlayground extends ExportController
          from :_Members m;",
             $user_Map
         );
+    }
 
-        // Role.
-        /*$role_Map = array(
-            'GroupID' => 'RoleID',
-            'Name' => 'Name');
-        $ex->ExportTable('Role', "
-           select *
-           from yaf_Group;", $role_Map);
-        */
-
-        // UserRole.
-        // Make everyone a member since there's no used roles.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+// Make everyone a member since there's no used roles.
         $userRole_Map = array(
             'Mem' => 'UserID'
         );
         $ex->exportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $userRole_Map);
+    }
 
-        // Signatures.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function signatures(ExportModel $ex): void
+    {
         $ex->exportTable(
             'UserMeta',
             "
@@ -115,8 +133,13 @@ class AspPlayground extends ExportController
          from :_Members
          where signature <> '';"
         );
+    }
 
-        // Category.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'ForumID' => 'CategoryID',
             'ForumTitle' => 'Name',
@@ -132,8 +155,13 @@ class AspPlayground extends ExportController
          from :_Forums f;",
             $category_Map
         );
+    }
 
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'messageID' => 'DiscussionID',
             'ForumID' => 'CategoryID',
@@ -154,8 +182,13 @@ class AspPlayground extends ExportController
          ;",
             $discussion_Map
         );
+    }
 
-        // Comment.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'messageID' => 'CommentID',
             'threadID' => 'DiscussionID',
@@ -173,54 +206,5 @@ class AspPlayground extends ExportController
          from :_Messages m;",
             $comment_Map
         );
-
-        /*
-        // Conversation.
-        $this->_ExportConversationTemps();
-
-        $Conversation_Map = array(
-            'PMessageID' => 'ConversationID',
-            'FromUserID' => 'InsertUserID',
-            'Created' => 'DateInserted',
-            'Title' => array('Column' => 'Subject', 'Type' => 'varchar(512)')
-            );
-        $ex->ExportTable('Conversation', "
-           select
-              pm.*,
-              g.Title
-           from z_pmgroup g
-           join yaf_PMessage pm
-              on g.Group_ID = pm.PMessageID;", $Conversation_Map);
-
-        // UserConversation.
-        $UserConversation_Map = array(
-            'PM_ID' => 'ConversationID',
-            'User_ID' => 'UserID',
-            'Deleted' => 'Deleted');
-        $ex->ExportTable('UserConversation', "
-           select pto.*
-           from z_pmto pto
-           join z_pmgroup g
-              on pto.PM_ID = g.Group_ID;", $UserConversation_Map);
-
-        // ConversationMessage.
-        $ConversationMessage_Map = array(
-            'PMessageID' => 'MessageID',
-            'Group_ID' => 'ConversationID',
-            'FromUserID' => 'InsertUserID',
-            'Created' => 'DateInserted',
-            'Body' => 'Body',
-            'Format' => 'Format');
-        $ex->ExportTable('ConversationMessage', "
-           select
-              pm.*,
-              case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
-              t.Group_ID
-           from yaf_PMessage pm
-           join z_pmtext t
-              on t.PM_ID = pm.PMessageID;", $ConversationMessage_Map);
-        */
-
-        $ex->endExport();
     }
 }
