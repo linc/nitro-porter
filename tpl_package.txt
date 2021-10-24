@@ -1,4 +1,5 @@
 <?php
+
 /**
  * __NAME__ exporter tool.
  *
@@ -11,8 +12,8 @@ namespace NitroPorter\Package;
 use NitroPorter\ExportController;
 use NitroPorter\ExportModel;
 
-class __NAME__ extends ExportController {
-
+class __NAME__ extends ExportController
+{
     public const SUPPORTED = [
         'name' => '__NAME__',
         'prefix' => '',
@@ -46,37 +47,52 @@ class __NAME__ extends ExportController {
      * @param ExportModel $ex
      * @see $_structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
-        // Get the characterset for the comments.
-        // Usually the comments table is the best target for this.
+    public function forumExport($ex)
+    {
         $characterSet = $ex->getCharacterSet('posts');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
         }
 
-        // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', '__NAME__');
 
+        $this->users($ex);
 
-        // User.
-        $user_Map = array(
-            //'Source' => 'Vanilla',
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
+        $user_Map = array(//'Source' => 'Vanilla',
         );
         $ex->exportTable('User', "
             select u.*
             from :_tblUser u
         ", $user_Map);
+    }
 
-
-        // Role.
-        $role_Map = array(
-            //'Source' => 'Vanilla',
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
+        $role_Map = array(//'Source' => 'Vanilla',
         );
         $ex->exportTable('Role', "
             select *
             from :_tblGroup
         ", $role_Map);
-
 
         // User Role.
         $userRole_Map = array(
@@ -86,18 +102,26 @@ class __NAME__ extends ExportController {
             select u.*
             from :_tblAuthor u
         ", $userRole_Map);
+    }
 
-        // Category.
-        $category_Map = array(
-            //'SourceName' => 'VanillaName',
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
+        $category_Map = array(//'SourceName' => 'VanillaName',
         );
         $ex->exportTable('Category', "
             select *
             from :_tblCategory c
         ", $category_Map);
+    }
 
-
-        // Discussion.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             //'SourceName' => 'VanillaName',
             //'SourceName' => array('Column' => 'VanillaName', 'Filter' => 'HTMLDecoder'),
@@ -108,31 +132,18 @@ class __NAME__ extends ExportController {
                 FROM_UNIXTIME(Message_date) as Message_date
             from :_tblTopic t
         ", $discussion_Map);
+    }
 
-
-        // Comment.
-        $comment_Map = array(
-            //'SourceName' => 'VanillaName',
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
+        $comment_Map = array(//'SourceName' => 'VanillaName',
         );
         $ex->exportTable('Comment', "
             select th.*
             from :_tblThread th
         ", $comment_Map);
-
-
-        // UserDiscussion.
-
-        // Permission.
-
-        // UserMeta.
-
-        // Media.
-
-        // Conversations.
-
-        // Polls.
-
-        $ex->endExport();
     }
 }
-
