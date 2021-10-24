@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class PhpBb2 extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'phpBB 2',
         'prefix' => 'phpbb_',
@@ -91,7 +90,6 @@ class PhpBb2 extends ExportController
      */
     protected function forumExport($ex)
     {
-
         $characterSet = $ex->getCharacterSet('posts_text');
         if ($characterSet) {
             $ex->characterSet = $characterSet;
@@ -103,6 +101,66 @@ class PhpBb2 extends ExportController
         $ex->beginExport('', 'phpBB 2.*', array('HashMethod' => 'phpBB'));
 
         // Users
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        $this->conversations($ex);
+
+        $this->attachments($ex);
+
+        $ex->endExport();
+    }
+
+    public static function entityDecode($value)
+    {
+        return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    }
+
+    public function removeBBCodeUIDs($value, $field, $row)
+    {
+        $UID = $row['bbcode_uid'];
+
+        return str_replace(':' . $UID, '', $value);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
+        $ex->exportTable(
+            'Media',
+            "
+            select
+                ad.attach_id as MediaID,
+                ad.real_filename as Name,
+                concat('attachments/',ad.physical_filename) as Path,
+                concat('attachments/',ad.physical_filename) as ThumbPath,
+                if(ad.mimetype = '', 'application/octet-stream', ad.mimetype) as Type,
+                ad.filesize as Size,
+                FROM_UNIXTIME(ad.filetime) as DateInserted,
+                ifnull(t.topic_id, a.post_id) as ForeignID,
+                if(t.topic_id is not null, 'discussion', 'comment') as ForeignTable,
+                a.user_id_1 as InsertUserID
+            from :_attachments_desc ad
+            inner join :_attachments a on a.attach_id = ad.attach_id
+            left join :_topics t on t.topic_first_post_id = a.post_id
+        "
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         $user_Map = array(
             'user_id' => 'UserID',
             'username' => 'Name',
@@ -120,9 +178,13 @@ class PhpBb2 extends ExportController
          from :_users",
             $user_Map
         );  // ":_" will be replace by database prefix
+    }
 
-
-        // Roles
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         $role_Map = array(
             'group_id' => 'RoleID',
             'group_name' => 'Name',
@@ -149,8 +211,13 @@ class PhpBb2 extends ExportController
         ;',
             $userRole_Map
         );
+    }
 
-        // Categories
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         $category_Map = array(
             'id' => 'CategoryID',
             'cat_title' => 'Name',
@@ -160,28 +227,33 @@ class PhpBb2 extends ExportController
         $ex->exportTable(
             'Category',
             "select
-  c.cat_id * 1000 as id,
-  c.cat_title,
-  c.cat_order * 1000 as Sort,
-  null as parentid,
-  '' as description
-from :_categories c
+              c.cat_id * 1000 as id,
+              c.cat_title,
+              c.cat_order * 1000 as Sort,
+              null as parentid,
+              '' as description
+            from :_categories c
 
-union all
+            union all
 
-select
-  f.forum_id,
-  f.forum_name,
-  c.cat_order * 1000 + f.forum_order,
-  c.cat_id * 1000 as parentid,
-  f.forum_desc
-from :_forums f
-left join :_categories c
-  on f.cat_id = c.cat_id",
+            select
+              f.forum_id,
+              f.forum_name,
+              c.cat_order * 1000 + f.forum_order,
+              c.cat_id * 1000 as parentid,
+              f.forum_desc
+            from :_forums f
+            left join :_categories c
+              on f.cat_id = c.cat_id",
             $category_Map
         );
+    }
 
-        // Discussions
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         $discussion_Map = array(
             'topic_id' => 'DiscussionID',
             'forum_id' => 'CategoryID',
@@ -200,8 +272,13 @@ left join :_categories c
         from :_topics t",
             $discussion_Map
         );
+    }
 
-        // Comments
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         $comment_Map = array(
             'post_id' => 'CommentID',
             'topic_id' => 'DiscussionID',
@@ -218,8 +295,13 @@ left join :_categories c
          from :_posts p inner join :_posts_text pt on p.post_id = pt.post_id",
             $comment_Map
         );
+    }
 
-        // Conversations tables.
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex): void
+    {
         $ex->query("drop table if exists z_pmto;");
 
         $ex->query(
@@ -393,41 +475,5 @@ join z_pmgroup g
         $ex->query('drop table if exists z_pmto2;');
         $ex->query('drop table if exists z_pm;');
         $ex->query('drop table if exists z_pmgroup;');
-
-        // Media
-        $ex->exportTable(
-            'Media',
-            "
-            select
-                ad.attach_id as MediaID,
-                ad.real_filename as Name,
-                concat('attachments/',ad.physical_filename) as Path,
-                concat('attachments/',ad.physical_filename) as ThumbPath,
-                if(ad.mimetype = '', 'application/octet-stream', ad.mimetype) as Type,
-                ad.filesize as Size,
-                FROM_UNIXTIME(ad.filetime) as DateInserted,
-                ifnull(t.topic_id, a.post_id) as ForeignID,
-                if(t.topic_id is not null, 'discussion', 'comment') as ForeignTable,
-                a.user_id_1 as InsertUserID
-            from :_attachments_desc ad
-            inner join :_attachments a on a.attach_id = ad.attach_id
-            left join :_topics t on t.topic_first_post_id = a.post_id
-        "
-        );
-
-        // End
-        $ex->endExport();
-    }
-
-    public static function entityDecode($value)
-    {
-        return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
-    }
-
-    public function removeBBCodeUIDs($value, $field, $row)
-    {
-        $UID = $row['bbcode_uid'];
-
-        return str_replace(':' . $UID, '', $value);
     }
 }
