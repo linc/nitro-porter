@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SampleName exporter tool.
  *
@@ -11,8 +12,8 @@ namespace NitroPorter\Package;
 use NitroPorter\ExportController;
 use NitroPorter\ExportModel;
 
-class SampleName extends ExportController {
-
+class SampleName extends ExportController
+{
     public const SUPPORTED = [
         'name' => '',
         'prefix' => '',
@@ -63,7 +64,8 @@ class SampleName extends ExportController {
      * @param ExportModel $ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex) {
+    public function forumExport($ex)
+    {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
         $characterSet = $ex->getCharacterSet('CommentsTableNameGoesHere');
@@ -76,6 +78,41 @@ class SampleName extends ExportController {
 
         // It's usually a good idea to do the porting in the approximate order laid out here.
 
+        $this->users($ex);
+
+        $this->roles($ex);
+
+        // Permission.
+        // Feel free to add a permission export if this is a major platform or it will see reuse.
+        // For small or custom jobs, it's usually not worth it. Just fix them afterward.
+
+        $this->userMeta($ex);
+
+        $this->categories($ex);
+
+        $this->discussions($ex);
+
+        $this->comments($ex);
+
+        // UserDiscussion.
+        // This is the table for assigning bookmarks/subscribed threads.
+
+        // Media.
+        // Attachment data goes here. Vanilla attachments are files under the /uploads folder.
+        // This is usually the trickiest step because you need to translate file paths.
+        // If you need to export blobs from the database, see the vBulletin porter.
+
+        // Conversations.
+        // Private messages often involve the most data manipulation.
+
+        $ex->endExport();
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function users(ExportModel $ex): void
+    {
         // User.
         // Map as much as possible using the $x_Map array for clarity.
         // Key is always the source column name.
@@ -95,7 +132,13 @@ class SampleName extends ExportController {
          select u.*
          from :_User u
          ", $user_Map);
+    }
 
+    /**
+     * @param ExportModel $ex
+     */
+    protected function roles(ExportModel $ex): void
+    {
         // Role.
         // The Vanilla roles table will be wiped by any import. If your current platform doesn't have roles,
         // you can hard code new ones into the select statement. See Vanilla's defaults for a good example.
@@ -118,11 +161,13 @@ class SampleName extends ExportController {
         $ex->exportTable('UserRole', "
          select u.*
          from :_tblAuthor u", $userRole_Map);
+    }
 
-        // Permission.
-        // Feel free to add a permission export if this is a major platform or it will see reuse.
-        // For small or custom jobs, it's usually not worth it. Just fix them afterward.
-
+    /**
+     * @param ExportModel $ex
+     */
+    protected function userMeta(ExportModel $ex): void
+    {
         // UserMeta.
         // This is an example of pulling Signatures into Vanilla's UserMeta table.
         // This is often a good place for any extraneous data on the User table too.
@@ -135,7 +180,13 @@ class SampleName extends ExportController {
             Signature as `Value`
          from :_tblAuthor
          where Signature <> ''");
+    }
 
+    /**
+     * @param ExportModel $ex
+     */
+    protected function categories(ExportModel $ex): void
+    {
         // Category.
         // Be careful to not import hundreds of categories. Try translating huge schemas to Tags instead.
         // Numeric category slugs aren't allowed in Vanilla, so be careful to sidestep those.
@@ -149,7 +200,13 @@ class SampleName extends ExportController {
          select *
          from :_tblCategory c
          ", $category_Map);
+    }
 
+    /**
+     * @param ExportModel $ex
+     */
+    protected function discussions(ExportModel $ex): void
+    {
         // Discussion.
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
         $discussion_Map = array(
@@ -165,7 +222,13 @@ class SampleName extends ExportController {
          from :_tblTopic t
          join :_tblThread th
             on t.Start_Thread_ID = th.Thread_ID", $discussion_Map);
+    }
 
+    /**
+     * @param ExportModel $ex
+     */
+    protected function comments(ExportModel $ex): void
+    {
         // Comment.
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
@@ -181,22 +244,5 @@ class SampleName extends ExportController {
         $ex->exportTable('Comment', "
          select th.*
          from :_tblThread th", $comment_Map);
-
-        // UserDiscussion.
-        // This is the table for assigning bookmarks/subscribed threads.
-
-        // Media.
-        // Attachment data goes here. Vanilla attachments are files under the /uploads folder.
-        // This is usually the trickiest step because you need to translate file paths.
-        // If you need to export blobs from the database, see the vBulletin porter.
-
-        // Conversations.
-        // Private messages often involve the most data manipulation.
-        // If you need a large number of complex SQL statements, consider making it a separate method
-        // to keep the main process easy to understand. Pass $ex as a parameter if you do.
-
-        $ex->endExport();
     }
-
 }
-
