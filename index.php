@@ -8,7 +8,9 @@
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
-define('APPLICATION_VERSION', '2.5');
+
+const VERSION = '2.5';
+const ROOT_DIR = __DIR__;
 
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
 ini_set('display_errors', 'on');
@@ -22,6 +24,10 @@ if (ini_get('date.timezone') == '') {
 // Recognize if we're running from cli.
 if (PHP_SAPI == 'cli') {
     define('CONSOLE', true);
+}
+
+if (!file_exists(ROOT_DIR . '/config.php')) {
+    die('Required file config.php missing');
 }
 
 // Autoloader.

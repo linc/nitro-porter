@@ -23,7 +23,7 @@ function pageHeader()
     <div id="Content">
         <div class="Title">
             <h1>
-                <p>Nitro Porter <span class="Version">Version <?php echo APPLICATION_VERSION; ?></span></p>
+                <p>Nitro Porter <span class="Version">Version <?php echo VERSION; ?></span></p>
             </h1>
         </div>
     <?php
@@ -105,33 +105,6 @@ function viewForm($data)
                             value="<?php echo htmlspecialchars(getValue('prefix')) != ''
                                 ? htmlspecialchars(getValue('prefix')) : ''; ?>"
                             id="ForumPrefix"/>
-                    </label>
-                </li>
-                <li>
-                    <label>
-                        Database Host <span>Usually "localhost".</span>
-                        <input class="InputBox" type="text" name="dbhost"
-                            value="<?php echo htmlspecialchars(getValue('dbhost', '', 'localhost')) ?>"/>
-                    </label>
-                </li>
-                <li>
-                    <label>
-                        Database Name
-                        <input class="InputBox" type="text" name="dbname"
-                            value="<?php echo htmlspecialchars(getValue('dbname')) ?>"/>
-                    </label>
-                </li>
-                <li>
-                    <label>
-                        Database Username
-                        <input class="InputBox" type="text" name="dbuser"
-                            value="<?php echo htmlspecialchars(getValue('dbuser')) ?>"/>
-                    </label>
-                </li>
-                <li>
-                    <label>Database Password
-                        <input class="InputBox" type="password" name="dbpass"
-                            value="<?php echo htmlspecialchars(getValue('dbpass')) ?>"/>
                     </label>
                 </li>
                 <li>

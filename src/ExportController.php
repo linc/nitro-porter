@@ -49,6 +49,7 @@ abstract class ExportController
         $this->registerSupport();
         $supported = SupportManager::getInstance()->getSupport();
 
+        $this->loadConfig();
         $this->handleInfoForm();
         $dbfactory = new DbFactory($this->dbInfo, DB_EXTENSION);
         $this->ex = new ExportModel($dbfactory);
@@ -147,14 +148,22 @@ abstract class ExportController
      */
     public function handleInfoForm()
     {
-        $this->dbInfo = array(
-            'dbhost' => $_POST['dbhost'],
-            'dbuser' => $_POST['dbuser'],
-            'dbpass' => $_POST['dbpass'],
-            'dbname' => $_POST['dbname'],
-            'type' => $_POST['type'],
-            'prefix' => !isset($_POST['emptyprefix']) ? preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null,
-        );
+        $this->dbInfo['type'] = $_POST['type'];
+        $this->dbInfo['prefix'] = !isset($_POST['emptyprefix']) ?
+            preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null;
+    }
+
+    /**
+     * Retreive and set settings from the config.
+     */
+    public function loadConfig()
+    {
+        $config = include(ROOT_DIR . '/config.php');
+        $primary_db = $config['sources']['databases'][0];
+        $this->dbInfo['dbhost'] = $primary_db['host'];
+        $this->dbInfo['dbuser'] = $primary_db['user'];
+        $this->dbInfo['dbpass'] = $primary_db['pass'];
+        $this->dbInfo['dbname'] = $primary_db['name'];
     }
 
     /**
