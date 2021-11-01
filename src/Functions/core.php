@@ -12,6 +12,11 @@ function loadConfig()
     return include(ROOT_DIR . '/config.php');
 }
 
+function loadManifest()
+{
+    return include(ROOT_DIR . '/manifest.php');
+}
+
 /**
  * Retrieve test db creds from main config for Phinx.
  */

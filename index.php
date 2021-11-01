@@ -1,99 +1,51 @@
 <?php
+
 /**
- * Vanilla 2 Exporter
- *
- * This script exports other forum databases to the Vanilla 2 import format.
- * To use this script, copy it to your web server and open it in your browser.
- * If you have a large database, make the directory writable so that the export file can be saved locally and zipped.
- *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
+// Environment.
 const VERSION = '2.5';
 const ROOT_DIR = __DIR__;
+const DB_EXTENSION = 'pdo'; // @todo
 
-error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
-ini_set('display_errors', 'on');
-ini_set('track_errors', 1);
-
-// Make sure a default time zone is set
-if (ini_get('date.timezone') == '') {
-    date_default_timezone_set('America/Montreal');
-}
-
-// Recognize if we're running from cli.
 if (PHP_SAPI == 'cli') {
+    // Running from CLI.
     define('CONSOLE', true);
 }
 
 if (!file_exists(ROOT_DIR . '/config.php')) {
+    // Require config.
     die('Required file config.php missing');
 }
 
-// Autoloader.
+error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
+ini_set('display_errors', 'on');
+ini_set('track_errors', 1);
+if (ini_get('date.timezone') == '') {
+    // Set default time zone.
+    date_default_timezone_set('America/Detroit');
+}
+
+// Autoload.
 require_once 'vendor/autoload.php';
 
-$packages = [
-    'AdvancedForum',
-    'AnswerHub',
-    'AspPlayground',
-    'BbPress1',
-    'BbPress2',
-    'CodoForum',
-    'Drupal6',
-    'Drupal7',
-    'EsoTalk',
-    'ExpressionEngine',
-    'FluxBb',
-    'FuseTalk',
-    'IpBoard3',
-    'JForum',
-    'Kunena',
-    'Mbox',
-    'ModxDiscuss',
-    'Mvc',
-    'MyBb',
-    'NodeBb',
-    'PhpBb2',
-    'PhpBb3',
-    'PunBb',
-    'Q2a',
-    'SimplePress',
-    'Smf1',
-    'Smf2',
-    'Toast',
-    'UserVoice',
-    'Vanilla1',
-    'Vanilla2',
-    'VBulletin',
-    'VBulletin5',
-    'WebWiz',
-    'Xenforo',
-    'Yaf',
-];
-
+// Bootstrap.
+$packages = loadManifest();
 foreach ($packages as $name) {
-    $classname = '\NitroPorter\Package\\'.$name;
+    $classname = '\NitroPorter\Package\\' . $name;
     $classname::registerSupport();
 }
-
 $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
 
-// Select database driver.
-define('DB_EXTENSION', 'pdo');
-
-// Use error handler in functions.php
 set_error_handler("ErrorHandler");
-if(!defined('DB_EXTENSION')) {
-    die('There is an error in your config. You need to set your database extension properly.');
-}
 
-// If running from cli, execute its command.
 if (defined('CONSOLE')) {
+    // Execute CLI commends.
     parseCommandLine();
 }
 
-// Instantiate the appropriate controller or display the input page.
+// Router.
 $method = 'DoExport';
 if (isset($_REQUEST['features'])) {
     // Feature list or table.
@@ -107,7 +59,7 @@ if (isset($_REQUEST['features'])) {
     }
 } elseif (isset($_POST['type'])) {
     if (array_key_exists($_POST['type'], $supported)) {
-        // Mini-Factory for conducting exports.
+        // Factory.
         $class = ucwords($_POST['type']);
         $controller = new $class();
         if (!method_exists($controller, $method)) {
@@ -119,12 +71,12 @@ if (isset($_REQUEST['features'])) {
         echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
     }
 } else {
-    // Show the web UI to start an export.
+    // Web UI.
     $canWrite = testWrite();
     viewForm(array('Supported' => $supported, 'CanWrite' => $canWrite));
 }
 
-// Console output should end in newline.
 if (defined('CONSOLE')) {
+    // Console output should end in newline.
     echo "\n";
 }
