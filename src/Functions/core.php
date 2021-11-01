@@ -27,6 +27,25 @@ function getTestDatabaseCredentials()
 }
 
 /**
+ * Main export process.
+ */
+function dispatch($type)
+{
+    $method = 'DoExport';
+    if (array_key_exists($type, getSupportList())) {
+        $class = ucwords($type);
+        $controller = new $class();
+        if (!method_exists($controller, $method)) {
+            echo "This datasource type does not support {$method}.\n";
+            exit();
+        }
+        $controller->$method();
+    } else {
+        echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
+    }
+}
+
+/**
  * Error handler.
  *
  * @param $errno

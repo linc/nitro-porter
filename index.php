@@ -31,13 +31,6 @@ if (ini_get('date.timezone') == '') {
 require_once 'vendor/autoload.php';
 
 // Bootstrap.
-$packages = loadManifest();
-foreach ($packages as $name) {
-    $classname = '\NitroPorter\Package\\' . $name;
-    $classname::registerSupport();
-}
-$supported = \NitroPorter\SupportManager::getInstance()->getSupport();
-
 set_error_handler("ErrorHandler");
 
 if (defined('CONSOLE')) {
@@ -45,35 +38,19 @@ if (defined('CONSOLE')) {
     parseCommandLine();
 }
 
-// Router.
-$method = 'DoExport';
+// Web Router.
 if (isset($_REQUEST['features'])) {
-    // Feature list or table.
-    $set = (isset($_REQUEST['cloud'])) ? array('core', 'addons', 'cloud') : false;
-    $set = vanillaFeatures($set);
-
     if (isset($_REQUEST['type'])) {
-        viewFeatureList($_REQUEST['type'], $set);
+        // Single package feature list.
+        viewFeatureList($_REQUEST['type'], vanillaFeatures());
     } else {
-        viewFeatureTable($set);
+        // Overview table.
+        viewFeatureTable();
     }
 } elseif (isset($_POST['type'])) {
-    if (array_key_exists($_POST['type'], $supported)) {
-        // Factory.
-        $class = ucwords($_POST['type']);
-        $controller = new $class();
-        if (!method_exists($controller, $method)) {
-            echo "This datasource type does not support {$method}.\n";
-            exit();
-        }
-        $controller->$method();
-    } else {
-        echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
-    }
+    dispatch($_POST['type']);
 } else {
-    // Web UI.
-    $canWrite = testWrite();
-    viewForm(array('Supported' => $supported, 'CanWrite' => $canWrite));
+    viewForm(); // Starting Web UI.
 }
 
 if (defined('CONSOLE')) {

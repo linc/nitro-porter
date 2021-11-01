@@ -44,11 +44,11 @@ function pageFooter()
 /**
  * Form: Database connection info.
  */
-function viewForm($data)
+function viewForm($data = [])
 {
-    $forums = getValue('Supported', $data, array());
+    $forums = getSupportList();
     $msg = getValue('Msg', $data, '');
-    $canWrite = getValue('CanWrite', $data, null);
+    $canWrite = testWrite();
 
     if ($canWrite === null) {
         $canWrite = testWrite();
@@ -221,7 +221,7 @@ function viewExportResult($msgs = array(), $class = 'Info', $path = false)
  */
 function viewFeatureList($platform, $features = array())
 {
-    $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
+    $supported = getSupportList();
 
     pageHeader();
 
@@ -244,9 +244,10 @@ function viewFeatureList($platform, $features = array())
  *
  * @param array $features
  */
-function viewFeatureTable($features = array())
+function viewFeatureTable()
 {
-    $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
+    $features = vanillaFeatures();
+    $supported = getSupportList();
     $platforms = array_keys($supported);
 
     pageHeader();

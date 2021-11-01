@@ -4,6 +4,16 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
+function getSupportList()
+{
+    $packages = loadManifest();
+    foreach ($packages as $name) {
+        $classname = '\NitroPorter\Package\\' . $name;
+        $classname::registerSupport();
+    }
+    return \NitroPorter\SupportManager::getInstance()->getSupport();
+}
+
 /**
  * Get the data support status for a single platform feature.
  *
@@ -62,69 +72,28 @@ function featureName($feature)
  *
  * @return array
  */
-function vanillaFeatures($set = false)
+function vanillaFeatures()
 {
-    if (!$set) {
-        $set = array('core', 'addon');
-    }
-
-    $features = array();
-    if (is_array($set)) {
-        foreach ($set as $section) {
-            $features += vanillaFeatureSet($section);
-        }
-    } else {
-        $features = vanillaFeatureSet($set);
-    }
-
-    return $features;
-}
-
-/**
- * Get features by availability in Vanilla.
- *
- * @param  string $section
- * @return array
- */
-function vanillaFeatureSet($section)
-{
-    switch ($section) {
-        case 'addon':
-            $set = array(
-            'Tags' => 0,
-
-            );
-            break;
-        case 'cloud':
-            $set = array(
-            'Badges' => 0,
-            'Ranks' => 0,
-            'Polls' => 0,
-            'Groups' => 0,
-            );
-            break;
-        case 'core':
-        default:
-            $set = array(
-            'Comments' => 0,
-            'Discussions' => 0,
-            'Users' => 0,
-            'Categories' => 0,
-            'Roles' => 0,
-            'Passwords' => 0,
-            'Avatars' => 0,
-            'PrivateMessages' => 0,
-            'Signatures' => 0,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            //'UserWall'        => 0,
-            'UserNotes' => 0,
-
-            //'Emoji'           => 0,
-            );
-            break;
-    }
-
-    return $set;
+    return [
+        'Comments' => 0,
+        'Discussions' => 0,
+        'Users' => 0,
+        'Categories' => 0,
+        'Roles' => 0,
+        'Passwords' => 0,
+        'Avatars' => 0,
+        'PrivateMessages' => 0,
+        'Signatures' => 0,
+        'Attachments' => 0,
+        'Bookmarks' => 0,
+        'Permissions' => 0,
+        'Polls' => 0,
+        'Tags' => 0,
+        'UserNotes' => 0,
+        'Badges' => 0,
+        'Ranks' => 0,
+        'Groups' => 0,
+        'Emoji' => 0,
+        'UserWall' => 0,
+    ];
 }
