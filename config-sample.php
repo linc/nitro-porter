@@ -2,7 +2,7 @@
 
 return [
     'debug' => false,
-    'sources' => [
+    'connections' => [
         'databases' => [
             'alias' => 'First Database',
             'driver' => 'mysql',

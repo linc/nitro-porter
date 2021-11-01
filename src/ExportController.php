@@ -159,7 +159,7 @@ abstract class ExportController
     public function loadConfig()
     {
         $config = include(ROOT_DIR . '/config.php');
-        $primary_db = $config['sources']['databases'][0];
+        $primary_db = $config['connections']['databases'][0]; // @todo
         $this->dbInfo['dbhost'] = $primary_db['host'];
         $this->dbInfo['dbuser'] = $primary_db['user'];
         $this->dbInfo['dbpass'] = $primary_db['pass'];
