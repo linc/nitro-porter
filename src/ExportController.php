@@ -49,7 +49,7 @@ abstract class ExportController
         $this->registerSupport();
         $supported = SupportManager::getInstance()->getSupport();
 
-        $this->loadConfig();
+        $this->loadPrimaryDatabase();
         $this->handleInfoForm();
         $dbfactory = new DbFactory($this->dbInfo, DB_EXTENSION);
         $this->ex = new ExportModel($dbfactory);
@@ -154,11 +154,11 @@ abstract class ExportController
     }
 
     /**
-     * Retreive and set settings from the config.
+     * Set primary database connection data.
      */
-    public function loadConfig()
+    public function loadPrimaryDatabase()
     {
-        $config = include(ROOT_DIR . '/config.php');
+        $config = loadConfig();
         $primary_db = $config['connections']['databases'][0]; // @todo
         $this->dbInfo['dbhost'] = $primary_db['host'];
         $this->dbInfo['dbuser'] = $primary_db['user'];

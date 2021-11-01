@@ -5,6 +5,23 @@
  */
 
 /**
+ * Retreive settings from the config.
+ */
+function loadConfig()
+{
+    return include(ROOT_DIR . '/config.php');
+}
+
+/**
+ * Retrieve test db creds from main config for Phinx.
+ */
+function getTestDatabaseCredentials()
+{
+    $config = loadConfig();
+    return $config['test_connections']['databases'][0]; // @todo
+}
+
+/**
  * Error handler.
  *
  * @param $errno
