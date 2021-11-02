@@ -219,10 +219,10 @@ function viewExportResult($msgs = array(), $class = 'Info', $path = false)
  * @param string $platform
  * @param array  $features
  */
-function viewFeatureList($platform, $features = array())
+function viewFeatureList($platform)
 {
     $supported = getSupportList();
-
+    $features = vanillaFeatures();
     pageHeader();
 
     echo '<div class="Info">';
@@ -258,7 +258,7 @@ function viewFeatureTable()
     // Header row of labels for each platform
     echo '<th><i>Feature</i></th>';
     foreach ($platforms as $slug) {
-        echo '<th class="Platform"><div><span><a href="?features=1&type='
+        echo '<th class="Platform"><div><span><a href="?list='
              . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
     }
 

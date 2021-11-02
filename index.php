@@ -39,16 +39,12 @@ if (defined('CONSOLE')) {
 }
 
 // Web Router.
-if (isset($_REQUEST['features'])) {
-    if (isset($_REQUEST['type'])) {
-        // Single package feature list.
-        viewFeatureList($_REQUEST['type'], vanillaFeatures());
-    } else {
-        // Overview table.
-        viewFeatureTable();
-    }
-} elseif (isset($_POST['type'])) {
+if (isset($_POST['type'])) {
     dispatch($_POST['type']);
+} elseif (isset($_REQUEST['list'])) {
+    viewFeatureList($_REQUEST['list']); // Single package feature list.
+} elseif (isset($_REQUEST['features'])) {
+    viewFeatureTable();  // Overview table.
 } else {
     viewForm(); // Starting Web UI.
 }
