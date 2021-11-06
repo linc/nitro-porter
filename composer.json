@@ -39,7 +39,6 @@
             "NitroPorter\\": "src/"
        },
        "files": [
-            "src/Functions/commandline.php",
             "src/Functions/core.php",
             "src/Functions/feature.php",
             "src/Functions/filter.php",
