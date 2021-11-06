@@ -401,7 +401,7 @@ class ExportModel
                 }
 
                 $thumbPath = str_replace('/avat', '/navat', $path);
-                generateThumbnail($picPath, $thumbPath, $thumbnail, $thumbnail);
+                $this->generateThumbnail($picPath, $thumbPath, $thumbnail, $thumbnail);
             }
             $count++;
         }
@@ -1304,5 +1304,87 @@ class ExportModel
         "
         );
         return $result->nextResultRow() !== false;
+    }
+
+    /**
+     * Create a thumbnail from an image file.
+     *
+     * @param  $path
+     * @param  $thumbPath
+     * @param  int $height
+     * @param  int $width
+     * @return bool
+     */
+    public function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
+    {
+        list($widthSource, $heightSource, $type) = getimagesize($path);
+
+        $XCoord = 0;
+        $YCoord = 0;
+        $heightDiff = $heightSource - $height;
+        $widthDiff = $widthSource - $width;
+        if ($widthDiff > $heightDiff) {
+            // Crop the original width down
+            $newWidthSource = round(($width * $heightSource) / $height);
+
+            // And set the original x position to the cropped start point.
+            $XCoord = round(($widthSource - $newWidthSource) / 2);
+            $widthSource = $newWidthSource;
+        } else {
+            // Crop the original height down
+            $newHeightSource = round(($height * $widthSource) / $width);
+
+            // And set the original y position to the cropped start point.
+            $YCoord = round(($heightSource - $newHeightSource) / 2);
+            $heightSource = $newHeightSource;
+        }
+
+        try {
+            switch ($type) {
+                case 1:
+                    $sourceImage = imagecreatefromgif($path);
+                    break;
+                case 2:
+                    $sourceImage = @imagecreatefromjpeg($path);
+                    if (!$sourceImage) {
+                        $sourceImage = imagecreatefromstring(file_get_contents($path));
+                    }
+                    break;
+                case 3:
+                    $sourceImage = imagecreatefrompng($path);
+                    imagealphablending($sourceImage, true);
+                    break;
+            }
+
+            $targetImage = imagecreatetruecolor($width, $height);
+            imagecopyresampled(
+                $targetImage,
+                $sourceImage,
+                0,
+                0,
+                $XCoord,
+                $YCoord,
+                $width,
+                $height,
+                $widthSource,
+                $heightSource
+            );
+            imagedestroy($sourceImage);
+
+            switch ($type) {
+                case 1:
+                    imagegif($targetImage, $thumbPath);
+                    break;
+                case 2:
+                    imagejpeg($targetImage, $thumbPath);
+                    break;
+                case 3:
+                    imagepng($targetImage, $thumbPath);
+                    break;
+            }
+            imagedestroy($targetImage);
+        } catch (Exception $e) {
+            echo "Could not generate a thumnail for " . $targetImage;
+        }
     }
 }

@@ -125,7 +125,7 @@ abstract class ExportController
                 // Good src tables - Start dump
                 $this->ex->useCompression(true);
                 $this->ex->filenamePrefix = $this->dbInfo['dbname'];
-                increaseMaxExecutionTime(3600);
+                $this->increaseMaxExecutionTime(3600);
                 //            ob_start();
                 $this->forumExport($this->ex);
                 //            $Errors = ob_get_clean();
@@ -141,6 +141,28 @@ abstract class ExportController
         } else {
             viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
         } // Back to form with error
+    }
+
+    /**
+     * Used to increase php max_execution_time value.
+     *
+     * @param  int $maxExecutionTime PHP max execution time in seconds.
+     * @return bool Returns true if max_execution_time was increased (or stayed the same) or false otherwise.
+     */
+    protected function increaseMaxExecutionTime($maxExecutionTime)
+    {
+        $iniMaxExecutionTime = ini_get('max_execution_time');
+        // max_execution_time == 0 means no limit.
+        if ($iniMaxExecutionTime === '0') {
+            return true;
+        }
+        if (((string)$maxExecutionTime) === '0') {
+            return set_time_limit(0);
+        }
+        if (!ctype_digit($iniMaxExecutionTime) || $iniMaxExecutionTime < $maxExecutionTime) {
+            return set_time_limit($maxExecutionTime);
+        }
+        return true;
     }
 
     /**

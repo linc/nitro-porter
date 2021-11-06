@@ -119,7 +119,7 @@ class UserVoice extends ExportController
 
                 //$PicPath = str_replace('/avat', '/pavat', $photoPath);
                 $thumbPath = str_replace('/pavat', '/navat', $photoPath);
-                generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
+                $this->ex->generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
             }
             $count++;
         }

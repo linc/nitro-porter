@@ -118,6 +118,24 @@ function parseCommandLine($options = null, $files = null)
 }
 
 /**
+ * Take the template package, add our new name, and make a new package from it.
+ *
+ * @param string $name
+ */
+function spawnPackage($name)
+{
+
+    if ($name && strlen($name) > 2) {
+        $name = preg_replace('/[^A-Za-z0-9]/', '', $name);
+        $template = file_get_contents(__DIR__ . '/../tpl_package.txt');
+        file_put_contents(__DIR__ . '/../Package/' . $name . '.php', str_replace('__NAME__', $name, $template));
+        echo "Created new package: " . $name . "\n";
+    } else {
+        echo "Invalid name: 2+ alphanumeric characters only.";
+    }
+}
+
+/**
  * Basically does the same thing than getopt() with one minor difference.
  *
  * The difference is that an empty option (-o="" || -o= || --option="" || --option=)
