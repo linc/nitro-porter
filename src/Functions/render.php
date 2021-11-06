@@ -10,8 +10,7 @@
  */
 function pageHeader()
 {
-    ?>
-<!DOCTYPE html>
+    echo '<!DOCTYPE html>
 <html>
 <head>
     <title>Nitro Porter - Forum Export Tool</title>
@@ -23,10 +22,10 @@ function pageHeader()
     <div id="Content">
         <div class="Title">
             <h1>
-                <p>Nitro Porter <span class="Version">Version <?php echo VERSION; ?></span></p>
+                <p>Nitro Porter <span class="Version">Version ' . VERSION . '</span></p>
             </h1>
         </div>
-    <?php
+    ';
 }
 
 /**
@@ -34,11 +33,7 @@ function pageHeader()
  */
 function pageFooter()
 {
-    ?>
-    </div>
-</div>
-</body>
-</html><?php
+    echo "\n    </div>\n</div>\n</body>\n</html>";
 }
 
 /**
