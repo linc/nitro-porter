@@ -114,33 +114,33 @@ abstract class ExportController
      */
     public function doExport()
     {
-        $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
-
         // Test connection
         $msg = $this->testDatabase();
-        if ($msg === true) {
-            // Test src tables' existence structure
-            $msg = $this->ex->verifySource($this->sourceTables);
-            if ($msg === true) {
-                // Good src tables - Start dump
-                $this->ex->useCompression(true);
-                $this->ex->filenamePrefix = $this->dbInfo['dbname'];
-                $this->increaseMaxExecutionTime(3600);
-                //            ob_start();
-                $this->forumExport($this->ex);
-                //            $Errors = ob_get_clean();
+        if ($msg !== true) {
+            // Back to form with error
+            Render::viewForm(array('Msg' => $msg, 'Info' => $this->dbInfo));
+            exit();
+        }
 
-                $msg = $this->ex->comments;
+        // Test src tables' existence structure
+        $msg = $this->ex->verifySource($this->sourceTables);
+        if ($msg !== true) {
+            // Back to form with error
+            Render::viewForm(array('Msg' => $msg, 'Info' => $this->dbInfo));
+            exit();
+        }
 
-                // Write the results.  Send no path if we don't know where it went.
-                $relativePath = ($this->param('destpath', false)) ? false : $this->ex->path;
-                Render::viewExportResult($msg, 'Info', $relativePath);
-            } else {
-                Render::viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
-            } // Back to form with error
-        } else {
-            Render::viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
-        } // Back to form with error
+        // Good src tables - Start dump
+        $this->ex->useCompression(true);
+        $this->ex->filenamePrefix = $this->dbInfo['dbname'];
+        $this->increaseMaxExecutionTime(3600);
+
+        $this->forumExport($this->ex);
+        $msg = $this->ex->comments;
+
+        // Write the results.  Send no path if we don't know where it went.
+        $relativePath = ($this->param('destpath', false)) ? false : $this->ex->path;
+        Render::viewExportResult($msg, 'Info', $relativePath);
     }
 
     /**
