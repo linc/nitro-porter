@@ -271,7 +271,9 @@ function viewFeatureTable()
 
         // Status per platform.
         foreach ($platforms as $platform) {
-            echo '<td>' . \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature, false) . '</td>';
+            echo '<td>' .
+                \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature, false) .
+            '</td>';
         }
         echo '</tr>';
     }
