@@ -1,4 +1,5 @@
 <?php
+
 /**
  * HTML views for the export tool.
  *
@@ -252,7 +253,8 @@ class Render
 
         self::pageHeader();
         echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
-        echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>.</p>';
+        echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>
+            . </p>';
         echo '<table class="Features"><thead><tr>';
 
         // Header row of labels for each platform
