@@ -32,7 +32,7 @@ function getTestDatabaseCredentials()
 function dispatch($type)
 {
     $method = 'DoExport';
-    if (array_key_exists($type, getSupportList())) {
+    if (array_key_exists($type, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
         $class = ucwords($type);
         $controller = new $class();
         if (!method_exists($controller, $method)) {

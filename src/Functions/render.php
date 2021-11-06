@@ -46,7 +46,7 @@ function pageFooter()
  */
 function viewForm($data = [])
 {
-    $forums = getSupportList();
+    $forums = \NitroPorter\SupportManager::getInstance()->getSupportList();
     $msg = getValue('Msg', $data, '');
     $canWrite = testWrite();
 
@@ -221,8 +221,8 @@ function viewExportResult($msgs = array(), $class = 'Info', $path = false)
  */
 function viewFeatureList($platform)
 {
-    $supported = getSupportList();
-    $features = vanillaFeatures();
+    $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
+    $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
     pageHeader();
 
     echo '<div class="Info">';
@@ -232,7 +232,7 @@ function viewFeatureList($platform)
     foreach ($features as $feature => $trash) {
         echo '
       <dt>' . featureName($feature) . '</dt>
-      <dd>' . featureStatus($platform, $feature) . '</dd>';
+      <dd>' . \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature) . '</dd>';
     }
     echo '</dl>';
 
@@ -246,8 +246,8 @@ function viewFeatureList($platform)
  */
 function viewFeatureTable()
 {
-    $features = vanillaFeatures();
-    $supported = getSupportList();
+    $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
+    $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
     $platforms = array_keys($supported);
 
     pageHeader();
@@ -271,11 +271,22 @@ function viewFeatureTable()
 
         // Status per platform.
         foreach ($platforms as $platform) {
-            echo '<td>' . featureStatus($platform, $feature, false) . '</td>';
+            echo '<td>' . \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature, false) . '</td>';
         }
         echo '</tr>';
     }
 
     echo '</tbody></table>';
     pageFooter();
+}
+
+/**
+ * Insert spaces into a CamelCaseName => Camel Case Name.
+ *
+ * @param  $feature
+ * @return string
+ */
+function featureName($feature)
+{
+    return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
 }
