@@ -9,11 +9,6 @@ const VERSION = '2.5';
 const ROOT_DIR = __DIR__;
 const DB_EXTENSION = 'pdo'; // @todo
 
-if (PHP_SAPI == 'cli') {
-    // Running from CLI.
-    define('CONSOLE', true);
-}
-
 if (!file_exists(ROOT_DIR . '/config.php')) {
     // Require config.
     die('Required file config.php missing');
@@ -33,9 +28,11 @@ require_once 'vendor/autoload.php';
 // Bootstrap.
 set_error_handler("ErrorHandler");
 
-if (defined('CONSOLE')) {
-    // Execute CLI commends.
-    parseCommandLine();
+// CLI Router.
+if (PHP_SAPI == 'cli') {
+    define('CONSOLE', true);
+    $cli = new \NitroPorter\CommandLine();
+    $cli->parseCommandLine();
 }
 
 // Web Router.

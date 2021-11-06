@@ -88,7 +88,7 @@ function testWrite()
 
 /**
  *
- *
+ * @deprecated
  * @param  $key
  * @param  null   $collection
  * @param  string $default
@@ -101,6 +101,22 @@ function getValue($key, $collection = null, $default = '')
     }
     if (array_key_exists($key, $collection)) {
         return $collection[$key];
+    }
+
+    return $default;
+}
+
+/**
+ * @deprecated
+ * @param $name
+ * @param $array
+ * @param null $default
+ * @return mixed|null
+ */
+function v($name, $array, $default = null)
+{
+    if (isset($array[$name])) {
+        return $array[$name];
     }
 
     return $default;
