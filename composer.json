@@ -24,6 +24,9 @@
         "phinx": "vendor/bin/phinx",
         "seed": "vendor/bin/phinx seed:run"
     },
+    "bin": [
+        "bin/porter"
+    ],
     "require": {
         "php": ">=7.3"
     },
