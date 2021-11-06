@@ -28,7 +28,8 @@
         "bin/porter"
     ],
     "require": {
-        "php": ">=7.3"
+        "php": ">=7.3",
+        "doctrine/orm": "^2"
     },
     "require-dev": {
         "phing/phing": "^2.0",
