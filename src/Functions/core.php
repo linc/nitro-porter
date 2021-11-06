@@ -34,6 +34,7 @@ function dispatch($type)
     $method = 'DoExport';
     if (!array_key_exists($type, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
         echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
+        exit();
     }
     $class = ucwords($type);
     $controller = new $class();
