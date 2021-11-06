@@ -33,11 +33,11 @@ if (PHP_SAPI == 'cli') {
 if (isset($_POST['type'])) {
     dispatch($_POST['type']);
 } elseif (isset($_REQUEST['list'])) {
-    viewFeatureList($_REQUEST['list']); // Single package feature list.
+    \NitroPorter\Render::viewFeatureList($_REQUEST['list']); // Single package feature list.
 } elseif (isset($_REQUEST['features'])) {
-    viewFeatureTable();  // Overview table.
+    \NitroPorter\Render::viewFeatureTable();  // Overview table.
 } else {
-    viewForm(); // Starting Web UI.
+    \NitroPorter\Render::viewForm(); // Starting Web UI.
 }
 
 if (defined('CONSOLE')) {

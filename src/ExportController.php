@@ -134,12 +134,12 @@ abstract class ExportController
 
                 // Write the results.  Send no path if we don't know where it went.
                 $relativePath = ($this->param('destpath', false)) ? false : $this->ex->path;
-                viewExportResult($msg, 'Info', $relativePath);
+                Render::viewExportResult($msg, 'Info', $relativePath);
             } else {
-                viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
+                Render::viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
             } // Back to form with error
         } else {
-            viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
+            Render::viewForm(array('Supported' => $supported, 'Msg' => $msg, 'Info' => $this->dbInfo));
         } // Back to form with error
     }
 

@@ -5,12 +5,17 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-/**
- * HTML header.
- */
-function pageHeader()
+namespace NitroPorter;
+
+class Render
 {
-    echo '<!DOCTYPE html>
+
+    /**
+     * HTML header.
+     */
+    public static function pageHeader()
+    {
+        echo '<!DOCTYPE html>
 <html>
 <head>
     <title>Nitro Porter - Forum Export Tool</title>
@@ -26,40 +31,40 @@ function pageHeader()
             </h1>
         </div>
     ';
-}
+    }
 
-/**
- * HTML footer.
- */
-function pageFooter()
-{
-    echo "\n    </div>\n</div>\n</body>\n</html>";
-}
+    /**
+     * HTML footer.
+     */
+    public static function pageFooter()
+    {
+        echo "\n    </div>\n</div>\n</body>\n</html>";
+    }
 
-/**
- * Form: Database connection info.
- */
-function viewForm($data = [])
-{
-    $forums = \NitroPorter\SupportManager::getInstance()->getSupportList();
-    $msg = getValue('Msg', $data, '');
-    $canWrite = testWrite();
-
-    if ($canWrite === null) {
+    /**
+     * Form: Database connection info.
+     */
+    public static function viewForm($data = [])
+    {
+        $forums = \NitroPorter\SupportManager::getInstance()->getSupportList();
+        $msg = getValue('Msg', $data, '');
         $canWrite = testWrite();
-    }
-    if (!$canWrite) {
-        $msg = 'The porter does not have write permission to write to this folder. '
-        . 'You need to give the porter permission to create files so that it can generate the export file.' . $msg;
-    }
 
-    if (defined('CONSOLE')) {
-        echo $msg . "\n";
+        if ($canWrite === null) {
+            $canWrite = testWrite();
+        }
+        if (!$canWrite) {
+            $msg = 'The porter does not have write permission to write to this folder. '
+            . 'You need to give the porter permission to create files so that it can generate the export file.' . $msg;
+        }
 
-        return;
-    }
+        if (defined('CONSOLE')) {
+            echo $msg . "\n";
 
-    pageHeader(); ?>
+            return;
+        }
+
+        self::pageHeader(); ?>
     <div class="Info">
         Need help?
         <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide"
@@ -169,121 +174,122 @@ function viewForm($data = [])
 
         }
     }
-    </script>
+        </script>
 
-    <?php pageFooter();
-}
-
-/**
- * Message: Result of export.
- *
- * @param array       $msgs  Comments / logs from the export.
- * @param string      $class CSS class for wrapper.
- * @param string|bool $path  Path to file for download, or false.
- */
-function viewExportResult($msgs = array(), $class = 'Info', $path = false)
-{
-    if (defined('CONSOLE')) {
-        return;
+        <?php self::pageFooter();
     }
 
-    pageHeader();
-
-    echo "<p class=\"DownloadLink\">Success!";
-    if ($path) {
-        " <a href=\"$path\"><b>Download exported file</b></a>";
-    }
-    echo "</p>";
-
-    if (count($msgs)) {
-        echo "<div class=\"$class\">";
-        echo "<p>Really boring export logs follow:</p>\n";
-        foreach ($msgs as $msg) {
-            echo "<p>$msg</p>\n";
+    /**
+     * Message: Result of export.
+     *
+     * @param array       $msgs  Comments / logs from the export.
+     * @param string      $class CSS class for wrapper.
+     * @param string|bool $path  Path to file for download, or false.
+     */
+    public static function viewExportResult($msgs = array(), $class = 'Info', $path = false)
+    {
+        if (defined('CONSOLE')) {
+            return;
         }
 
-        echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
-        echo "</div>";
-    }
-    pageFooter();
-}
+        self::pageHeader();
 
-/**
- * Output a definition list of features for a single platform.
- *
- * @param string $platform
- * @param array  $features
- */
-function viewFeatureList($platform)
-{
-    $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
-    $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
-    pageHeader();
-
-    echo '<div class="Info">';
-    echo '<h2>' . htmlspecialchars($supported[$platform]['name']) . '</h2>';
-    echo '<dl>';
-
-    foreach ($features as $feature => $trash) {
-        echo '
-      <dt>' . featureName($feature) . '</dt>
-      <dd>' . \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature) . '</dd>';
-    }
-    echo '</dl>';
-
-    pageFooter();
-}
-
-/**
- * Output a table of features per all platforms.
- *
- * @param array $features
- */
-function viewFeatureTable()
-{
-    $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
-    $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
-    $platforms = array_keys($supported);
-
-    pageHeader();
-    echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
-    echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>.</p>';
-    echo '<table class="Features"><thead><tr>';
-
-    // Header row of labels for each platform
-    echo '<th><i>Feature</i></th>';
-    foreach ($platforms as $slug) {
-        echo '<th class="Platform"><div><span><a href="?list='
-             . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
-    }
-
-    echo '</tr></thead><tbody>';
-
-    // Checklist of features per platform.
-    foreach ($features as $feature => $trash) {
-        // Name
-        echo '<tr><td class="FeatureName">' . featureName($feature) . '</td>';
-
-        // Status per platform.
-        foreach ($platforms as $platform) {
-            echo '<td>' .
-                \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature, false) .
-            '</td>';
+        echo "<p class=\"DownloadLink\">Success!";
+        if ($path) {
+            " <a href=\"$path\"><b>Download exported file</b></a>";
         }
-        echo '</tr>';
+        echo "</p>";
+
+        if (count($msgs)) {
+            echo "<div class=\"$class\">";
+            echo "<p>Really boring export logs follow:</p>\n";
+            foreach ($msgs as $msg) {
+                echo "<p>$msg</p>\n";
+            }
+
+            echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
+            echo "</div>";
+        }
+        self::pageFooter();
     }
 
-    echo '</tbody></table>';
-    pageFooter();
-}
+    /**
+     * Output a definition list of features for a single platform.
+     *
+     * @param string $platform
+     * @param array  $features
+     */
+    public static function viewFeatureList($platform)
+    {
+        $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
+        $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
+        self::pageHeader();
 
-/**
- * Insert spaces into a CamelCaseName => Camel Case Name.
- *
- * @param  $feature
- * @return string
- */
-function featureName($feature)
-{
-    return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
+        echo '<div class="Info">';
+        echo '<h2>' . htmlspecialchars($supported[$platform]['name']) . '</h2>';
+        echo '<dl>';
+
+        foreach ($features as $feature => $trash) {
+            echo '
+          <dt>' . self::featureName($feature) . '</dt>
+          <dd>' . \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature) . '</dd>';
+        }
+        echo '</dl>';
+
+        self::pageFooter();
+    }
+
+    /**
+     * Output a table of features per all platforms.
+     *
+     * @param array $features
+     */
+    public static function viewFeatureTable()
+    {
+        $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
+        $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
+        $platforms = array_keys($supported);
+
+        self::pageHeader();
+        echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
+        echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>.</p>';
+        echo '<table class="Features"><thead><tr>';
+
+        // Header row of labels for each platform
+        echo '<th><i>Feature</i></th>';
+        foreach ($platforms as $slug) {
+            echo '<th class="Platform"><div><span><a href="?list='
+                 . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
+        }
+
+        echo '</tr></thead><tbody>';
+
+        // Checklist of features per platform.
+        foreach ($features as $feature => $trash) {
+            // Name
+            echo '<tr><td class="FeatureName">' . self::featureName($feature) . '</td>';
+
+            // Status per platform.
+            foreach ($platforms as $platform) {
+                echo '<td>' .
+                    \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature, false) .
+                '</td>';
+            }
+            echo '</tr>';
+        }
+
+        echo '</tbody></table>';
+        self::pageFooter();
+    }
+
+    /**
+     * Insert spaces into a CamelCaseName => Camel Case Name.
+     *
+     * @param  $feature
+     * @return string
+     */
+    public static function featureName($feature)
+    {
+        return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
+    }
 }
