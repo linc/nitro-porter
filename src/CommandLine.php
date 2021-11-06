@@ -269,7 +269,8 @@ class CommandLine
 
             if ($allowedValues = v('Values', $row)) {
                 if (!in_array($value, $allowedValues)) {
-                    $errors[] = "Invalid value for parameter: $longCode. Must be one of: " . implode(', ', $allowedValues);
+                    $errors[] = "Invalid value for parameter: $longCode. Must be one of: " .
+                        implode(', ', $allowedValues);
                     continue;
                 }
             }
