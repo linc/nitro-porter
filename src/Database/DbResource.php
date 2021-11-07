@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter;
+namespace NitroPorter\Database;
 
 interface DbResource
 {
@@ -14,7 +14,7 @@ interface DbResource
     /**
      * Query method.
      *
-     * @param  $sql
+     * @param string $sql
      * @return bool|ResultSet return instance of ResultSet on success false on failure
      */
     public function query($sql);
@@ -22,7 +22,7 @@ interface DbResource
     /**
      * Prints the mysql error.
      *
-     * @param $sql query string
+     * @param string $sql query
      */
     public function error($sql);
 
@@ -37,7 +37,7 @@ interface DbResource
     /**
      * Escape string
      *
-     * @param  $sql string
+     * @param string $sql
      * @return string
      */
     public function escape($sql);

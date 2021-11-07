@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter;
+namespace NitroPorter\Database;
 
 /**
  * Class ResultSet
@@ -25,7 +25,7 @@ class ResultSet
     /**
      * Iterate to new result row via the db resource.
      *
-     * @param  bool $assoc will return result row as an enumerated array if false.
+     * @param bool $assoc will return result row as an enumerated array if false.
      * @return array|bool
      */
     public function nextResultRow($assoc = true)

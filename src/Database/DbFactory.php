@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter;
+namespace NitroPorter\Database;
 
 /**
  * Creating desired db instances on the go
@@ -34,7 +34,7 @@ class DbFactory
     /**
      * Returns a db instance
      *
-     * @return db instance
+     * @return object db instance
      */
     public function getInstance()
     {
@@ -47,7 +47,8 @@ class DbFactory
                 die($className . 'does not implement DbRerousce.');
             }
         } else {
-            die(DBTYPE . ' extension not found. See config.php and make sure the necessary extensions are installed.');
+            die(DB_EXTENSION
+                . ' extension not found. See config.php and make sure the necessary extensions are installed.');
         }
     }
 }

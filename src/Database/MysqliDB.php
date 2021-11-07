@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter;
+namespace NitroPorter\Database;
 
 /**
  * Class MysqliDB
@@ -31,11 +31,11 @@ class MysqliDB implements DbResource
             if (!$this->link) {
                 die('Could not connect: ' . mysqli_error());
             }
-        } catch (Throwable $t) {
+        } catch (\Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5
             echo $t . PHP_EOL;
             die();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Executed only in PHP 5, will not be reached in PHP 7
             echo $e . PHP_EOL;
             die();
@@ -47,8 +47,8 @@ class MysqliDB implements DbResource
      */
     public function query($sql)
     {
-        if (isset($this->result) && $this->result instanceof mysqli_result) {
-            mysqli_free_result($this->result);
+        if (isset($this->result) && $this->result instanceof \mysqli_result) {
+            \mysqli_free_result($this->result);
         }
         $result = $this->link->query($sql, MYSQLI_USE_RESULT);
 
@@ -78,15 +78,15 @@ class MysqliDB implements DbResource
     public function nextRow($assoc)
     {
         if ($assoc) {
-            $row = mysqli_fetch_assoc($this->result);
+            $row = \mysqli_fetch_assoc($this->result);
         } else {
-            $row = mysqli_fetch_row($this->result);
+            $row = \mysqli_fetch_row($this->result);
         }
 
         if (isset($row)) {
             return $row;
         } else {
-            mysqli_free_result($this->result);
+            \mysqli_free_result($this->result);
             return false;
         }
     }
@@ -96,7 +96,7 @@ class MysqliDB implements DbResource
      */
     public function escape($sql)
     {
-        return mysqli_real_escape_string($this->link, $sql);
+        return \mysqli_real_escape_string($this->link, $sql);
     }
 
     /**
@@ -104,7 +104,7 @@ class MysqliDB implements DbResource
      */
     public function close()
     {
-        mysqli_close($this->link);
+        \mysqli_close($this->link);
         $this->link = null;
     }
 }
