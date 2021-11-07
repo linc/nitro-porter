@@ -30,7 +30,7 @@
     ],
     "require": {
         "php": ">=7.3",
-        "doctrine/orm": "^2"
+        "illuminate/database": "^8.0"
     },
     "suggest": {
         "ext-gd": "For transforming image attachments.",
