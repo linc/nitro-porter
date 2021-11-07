@@ -7,6 +7,7 @@
 namespace NitroPorter;
 
 use NitroPorter\Database\ResultSet;
+use NitroPorter\Database\DbFactory;
 
 /**
  * Object for exporting other database structures into a format that can be imported.
@@ -82,7 +83,7 @@ class ExportModel
     public static $escapeReplace = array();
 
     /**
-     * @var object File pointer
+     * @var resource File pointer
      */
     public $file = null;
 
@@ -178,7 +179,7 @@ class ExportModel
     protected $username;
 
     /**
-     * @var object Instance DbFactory
+     * @var DbFactory Instance DbFactory
      */
     protected $dbFactory;
 
@@ -238,7 +239,7 @@ class ExportModel
         $fp = $this->openFile();
 
         // Build meta info about where this file came from.
-        $comment = 'Nitro Porter Export: ' . $this->version();
+        $comment = 'Nitro Porter Export: ' . \VERSION;
         if ($source) {
             $comment .= self::DELIM . ' Source: ' . $source;
         }
@@ -616,7 +617,7 @@ class ExportModel
      *
      * @param  string $sql
      * @param  bool   $indexColumn
-     * @return type
+     * @return array
      */
     public function get($sql, $indexColumn = false)
     {
@@ -879,7 +880,7 @@ class ExportModel
      * Wrapper for _Query().
      *
      * @param  string $query The sql to execute.
-     * @return ResultSet|string The query cursor.
+     * @return ResultSet|string|false The query cursor.
      */
     public function query($query)
     {
@@ -929,7 +930,7 @@ class ExportModel
     /**
      * Echo a status message to the console.
      *
-     * @param $msg
+     * @param string $msg
      */
     public function status($msg)
     {
@@ -945,7 +946,6 @@ class ExportModel
      * in the order here, regardless of how their order in the query.
      *
      * @return array
-     * @see    vnExport::ExportTable()
      */
     public function structures($newStructures = false)
     {
@@ -969,17 +969,6 @@ class ExportModel
         }
 
         return $this->useCompression && $this->destination == 'file' && function_exists('gzopen');
-    }
-
-    /**
-     * Returns the version of export file that will be created with this export.
-     * The version is used when importing to determine the format of this file.
-     *
-     * @return string
-     */
-    public function version()
-    {
-        return APPLICATION_VERSION;
     }
 
     /**
@@ -1045,7 +1034,7 @@ class ExportModel
      * Checks all required source tables are present.
      *
      * @param  array $requiredTables
-     * @return array|string
+     * @return array|string|true
      */
     public function verifySource($requiredTables)
     {
@@ -1115,9 +1104,9 @@ class ExportModel
     /**
      * Start table write to file.
      *
-     * @param $fp
-     * @param $tableName
-     * @param $exportStructure
+     * @param resource $fp
+     * @param string $tableName
+     * @param array $exportStructure
      */
     public function writeBeginTable($fp, $tableName, $exportStructure)
     {
@@ -1150,7 +1139,7 @@ class ExportModel
     /**
      * End table write to file.
      *
-     * @param $fp
+     * @param resource $fp
      */
     public function writeEndTable($fp)
     {
@@ -1160,10 +1149,10 @@ class ExportModel
     /**
      * Write a table's row to file.
      *
-     * @param $fp
-     * @param $row
-     * @param $exportStructure
-     * @param $revMappings
+     * @param resource $fp
+     * @param array $row
+     * @param array $exportStructure
+     * @param array $revMappings
      */
     public function writeRow($fp, $row, $exportStructure, $revMappings)
     {
@@ -1240,8 +1229,8 @@ class ExportModel
     /**
      * Execute a SQL query on the current connection.
      *
-     * @param  $sql
-     * @return ResultSet instance of ResultSet of success false on failure
+     * @param string $sql
+     * @return ResultSet|false instance of ResultSet of success false on failure
      */
     private function executeQuery($sql)
     {
@@ -1259,7 +1248,7 @@ class ExportModel
     /**
      * Escaping string using the db resource
      *
-     * @param  $string
+     * @param string $string
      * @return string escaped string
      */
     public function escape($string)
@@ -1271,8 +1260,8 @@ class ExportModel
     /**
      * Determine if an index exists in a table
      *
-     * @param  $indexName
-     * @param  $table
+     * @param  string $indexName
+     * @param  string $table
      * @return bool
      */
     public function indexExists($indexName, $table)
@@ -1285,7 +1274,7 @@ class ExportModel
     /**
      * Determine if a table exists
      *
-     * @param  $tableName
+     * @param string $tableName
      * @return bool
      */
     public function tableExists($tableName)
@@ -1298,8 +1287,8 @@ class ExportModel
     /**
      * Determine if a column exists in a table
      *
-     * @param  $tableName
-     * @param  $columnName
+     * @param string $tableName
+     * @param string $columnName
      * @return bool
      */
     public function columnExists($tableName, $columnName)
@@ -1319,8 +1308,8 @@ class ExportModel
     /**
      * Create a thumbnail from an image file.
      *
-     * @param  $path
-     * @param  $thumbPath
+     * @param string $path
+     * @param string $thumbPath
      * @param  int $height
      * @param  int $width
      * @return void
