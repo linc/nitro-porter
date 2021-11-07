@@ -9,12 +9,12 @@ class MysqliDB implements DbResource
 {
 
     /**
-     * @var mysql resource
+     * @var \mysqli|false|null resource
      */
     private $link = null;
 
     /**
-     * @var query result
+     * @var \mysqli_result|bool|null query result
      */
     private $result = null;
 
@@ -29,15 +29,11 @@ class MysqliDB implements DbResource
         try {
             $this->link = mysqli_connect($args['dbhost'], $args['dbuser'], $args['dbpass'], $args['dbname']);
             if (!$this->link) {
-                die('Could not connect: ' . mysqli_error());
+                die('Could not connect to database');
             }
         } catch (\Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5
             echo $t . PHP_EOL;
-            die();
-        } catch (\Exception $e) {
-            // Executed only in PHP 5, will not be reached in PHP 7
-            echo $e . PHP_EOL;
             die();
         }
     }

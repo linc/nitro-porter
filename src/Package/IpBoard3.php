@@ -500,7 +500,7 @@ EOT;
             if (!is_array($filter)) {
                 switch ($filter) {
                     case 'HTMLDecoder':
-                        $this->ex->HTMLDecoderDb($table, $column, $PK);
+                        //$this->ex->HTMLDecoderDb($table, $column, $PK);
                         unset($map[$column]['Filter']);
                         break;
                     case 'timestampToDate':
@@ -542,9 +542,8 @@ EOT;
     /**
      * @param string $memberID
      * @param ExportModel $ex
-     * @return array
      */
-    protected function users(string $memberID, ExportModel $ex): array
+    protected function users(string $memberID, ExportModel $ex)
     {
         $user_Map = array(
             $memberID => 'UserID',
@@ -557,7 +556,6 @@ EOT;
                 'Filter' => 'timestampToDate'
             ),
             'ip_address' => 'InsertIPAddress',
-            'title' => 'Title',
             'time_offset' => 'HourOffset',
             'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate'),
             'member_banned' => 'Banned',
@@ -659,9 +657,8 @@ EOT;
     /**
      * @param ExportModel $ex
      * @param string $memberID
-     * @return string
      */
-    protected function roles(ExportModel $ex, string $memberID): string
+    protected function roles(ExportModel $ex, string $memberID)
     {
         $role_Map = array(
             'g_id' => 'RoleID',
@@ -773,9 +770,8 @@ EOT;
 
     /**
      * @param ExportModel $ex
-     * @return array
      */
-    protected function discussions(ExportModel $ex): array
+    protected function discussions(ExportModel $ex)
     {
         $descriptionSQL = 'p.post';
         $hasTopicDescription = ($ex->exists('topics', array('description')) === true);
@@ -857,9 +853,8 @@ EOT;
 
     /**
      * @param ExportModel $ex
-     * @return array
      */
-    protected function comments(ExportModel $ex): array
+    protected function comments(ExportModel $ex)
     {
         $comment_Map = array(
             'pid' => 'CommentID',
@@ -885,9 +880,8 @@ EOT;
 
     /**
      * @param ExportModel $ex
-     * @return array
      */
-    protected function attachments(ExportModel $ex): array
+    protected function attachments(ExportModel $ex)
     {
         $media_Map = array(
             'attach_id' => 'MediaID',

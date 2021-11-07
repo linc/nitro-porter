@@ -131,6 +131,10 @@ class VBulletin extends ExportController
 
     public static $permissions2 = array();
 
+    public $siteID;
+
+    public $attachmentPath;
+
     /**
      * @var array Required tables => columns. Commented values are optional.
      */

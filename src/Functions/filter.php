@@ -54,7 +54,6 @@ function formatUrl($str)
         'Á' => 'A',
         'Â' => 'A',
         'Ã' => 'A',
-        'Ä' => 'Ae',
         'Ä' => 'A',
         'Å' => 'A',
         'Ā' => 'A',
@@ -110,7 +109,6 @@ function formatUrl($str)
         'Ô' => 'O',
         'Õ' => 'O',
         'Ö' => 'Oe',
-        'Ö' => 'Oe',
         'Ō' => 'O',
         'Ő' => 'O',
         'Ŏ' => 'O',
@@ -124,11 +122,9 @@ function formatUrl($str)
         'Ť' => 'T',
         'Ţ' => 'T',
         'Ŧ' => 'T',
-        'Ț' => 'T',
         'Ù' => 'U',
         'Ú' => 'U',
         'Û' => 'U',
-        'Ü' => 'Ue',
         'Ū' => 'U',
         'Ü' => 'Ue',
         'Ů' => 'U',
@@ -148,7 +144,6 @@ function formatUrl($str)
         'á' => 'a',
         'â' => 'a',
         'ã' => 'a',
-        'ä' => 'ae',
         'ä' => 'ae',
         'å' => 'a',
         'ā' => 'a',
@@ -208,7 +203,6 @@ function formatUrl($str)
         'ô' => 'o',
         'õ' => 'o',
         'ö' => 'oe',
-        'ö' => 'oe',
         'ø' => 'o',
         'ō' => 'o',
         'ő' => 'o',
@@ -221,7 +215,6 @@ function formatUrl($str)
         'ù' => 'u',
         'ú' => 'u',
         'û' => 'u',
-        'ü' => 'ue',
         'ū' => 'u',
         'ü' => 'ue',
         'ů' => 'u',
@@ -433,7 +426,7 @@ function guessFormat($value)
 /**
  * Derive mimetype from file extension.
  *
- * @param  $value
+ * @param  string $value
  * @return string
  */
 function mimeTypeFromExtension($value)
@@ -465,6 +458,7 @@ function mimeTypeFromExtension($value)
         case 'avi':
             return 'video/' . $value;
     }
+    return '';
 }
 
 /**

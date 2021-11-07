@@ -273,7 +273,6 @@ class EsoTalk extends ExportController
             'conversationId' => 'ConversationID',
             'countPosts' => 'CountMessages',
             'startMemberId' => 'InsertUserID',
-            'countPosts' => 'CountMessages',
         );
         $ex->exportTable(
             'Conversation',

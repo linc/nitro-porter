@@ -6,6 +6,8 @@
 
 namespace NitroPorter;
 
+use NitroPorter\Database\ResultSet;
+
 /**
  * Object for exporting other database structures into a format that can be imported.
  */
@@ -60,6 +62,14 @@ class ExportModel
      * @var string *
      */
     public $destPrefix = 'GDN_z';
+
+    public $destDb;
+
+    public $beginTime;
+
+    public $endTime;
+
+    public $totalTime;
 
     /**
      * @var array *
@@ -413,11 +423,11 @@ class ExportModel
      * Process for writing an entire single table to file.
      *
      * @see    ExportTable()
-     * @param  $tableName
-     * @param  $query
+     * @param  string $tableName
+     * @param  string $query
      * @param  array $mappings
      * @param  array $options
-     * @return int
+     * @return int|void
      */
     protected function exportTableWrite($tableName, $query, $mappings = [], $options = [])
     {
@@ -434,7 +444,7 @@ class ExportModel
             return;
         }
         if ($this->destination == 'database') {
-            $this->_exportTableDB($tableName, $query, $mappings);
+            //$this->_exportTableDB($tableName, $query, $mappings);
 
             return;
         }
@@ -455,7 +465,7 @@ class ExportModel
 
         $firstQuery = true;
 
-        $data = $this->execute_query($query);
+        $data = $this->executeQuery($query);
 
         // Loop through the data and write it to the file.
         $rowCount = 0;
@@ -610,7 +620,7 @@ class ExportModel
      */
     public function get($sql, $indexColumn = false)
     {
-        $r = $this->execute_query($sql);
+        $r = $this->executeQuery($sql);
         $result = [];
 
         while ($row = ($r->nextResultRow())) {
@@ -682,10 +692,10 @@ class ExportModel
         $prefixes = array();
 
         // Loop through each table and get its prefixes.
-        foreach ($tables as $table) {
+/*        foreach ($tables as $table) {
             $pxFound = false;
             foreach ($prefixes as $pxIndex => $px) {
-                $newPx = $this->_getPrefix($table, $px);
+                $newPx = $this->getPrefix($table, $px);
                 if (strlen($newPx) > 0) {
                     $pxFound = true;
                     if ($newPx != $px) {
@@ -697,7 +707,7 @@ class ExportModel
             if (!$pxFound) {
                 $prefixes[] = $table;
             }
-        }
+        }*/
 
         return $prefixes;
     }
@@ -883,7 +893,7 @@ class ExportModel
             }
         }
 
-        return $this->execute_query($query);
+        return $this->executeQuery($query);
     }
 
     /**
@@ -1044,7 +1054,7 @@ class ExportModel
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->execute_query('describe :_' . $reqTable);
+            $tableDescriptions = $this->executeQuery('describe :_' . $reqTable);
 
             //echo 'describe '.$prefix.$reqTable;
             if ($tableDescriptions === false) { // Table doesn't exist
@@ -1313,7 +1323,7 @@ class ExportModel
      * @param  $thumbPath
      * @param  int $height
      * @param  int $width
-     * @return bool
+     * @return void
      */
     public function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
     {
@@ -1383,7 +1393,7 @@ class ExportModel
                     break;
             }
             imagedestroy($targetImage);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             echo "Could not generate a thumnail for " . $targetImage;
         }
     }

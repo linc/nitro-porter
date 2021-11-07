@@ -49,6 +49,8 @@ class Drupal7 extends ExportController
 
     protected $path;
 
+    public $imageCount;
+
     /**
      * @param ExportModel $ex
      */

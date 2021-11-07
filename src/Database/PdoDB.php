@@ -8,12 +8,12 @@ namespace NitroPorter\Database;
 class PdoDB implements DbResource
 {
     /**
-     * @var mysql resource
+     * @var \PDO|null resource
      */
     private $link = null;
 
     /**
-     * @var query result
+     * @var \PDOStatement|false|null query result
      */
     private $result = null;
 
@@ -28,14 +28,10 @@ class PdoDB implements DbResource
         try {
             $this->link = new \PDO('mysql:host=' . $args['dbhost'] . ';dbname='
                  . $args['dbname'] . ';charset=utf8mb4', $args['dbuser'], $args['dbpass']);
-            $this->link->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+            $this->link->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         } catch (\Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5
             echo $t . PHP_EOL;
-            die();
-        } catch (\Exception $e) {
-            // Executed only in PHP 5, will not be reached in PHP 7
-            echo $e . PHP_EOL;
             die();
         }
     }
@@ -73,7 +69,7 @@ class PdoDB implements DbResource
      */
     public function nextRow($assoc)
     {
-        $row = $this->result->fetch($assoc ? PDO::FETCH_ASSOC : PDO::FETCH_NUM);
+        $row = $this->result->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM);
 
         if (isset($row)) {
             return $row;

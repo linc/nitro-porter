@@ -6,6 +6,8 @@
 
 namespace NitroPorter;
 
+use NitroPorter\Database\DbFactory;
+
 /**
  * Generic controller implemented by forum-specific ones.
  */
@@ -51,7 +53,7 @@ abstract class ExportController
 
         $this->loadPrimaryDatabase();
         $this->handleInfoForm();
-        $dbfactory = new DbFactory($this->dbInfo, DB_EXTENSION);
+        $dbfactory = new DbFactory($this->dbInfo, \DB_EXTENSION);
         $this->ex = new ExportModel($dbfactory);
         $this->ex->controller = $this;
         $this->ex->prefix = '';
