@@ -264,12 +264,12 @@ table.Features td {
    width: 150px;
 }
 .No {
-   color: darkred;
+   color: #A17E61;
    font-width: bold;
-   font-size: 1.2em;
+   font-size: .6em;
 }
 .Yes {
-   color: limegreen;
+   color: darkgreen;
    text-shadow: 0px 1px #555;
    font-width: bold;
    font-size: 1.2em;
