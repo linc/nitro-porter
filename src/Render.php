@@ -27,9 +27,7 @@ class Render
 <div id="Frame">
     <div id="Content">
         <div class="Title">
-            <h1>
-                <p>Nitro Porter <span class="Version">Version ' . VERSION . '</span></p>
-            </h1>
+            <h1>Nitro Porter ' . VERSION . '</h1>
         </div>
     ';
     }
@@ -84,10 +82,20 @@ class Render
                     </ul>
                 </div>
             <?php endif; ?>
+            <h2>Source</h2>
             <ul>
                 <li>
-                    <label>
-                        Source Package
+                    <label>Connection
+                        <select disabled name="source_connection" >
+                            <option selected value>database 0</option>
+                            <option>database 1</option>
+                            <option>API</option>
+                            <option>CSV</option>
+                        </select>
+                    </label>
+                </li>
+                <li>
+                    <label>Package
                         <select name="type" id="ForumType" onchange="setPrefix()">
                             <option disabled selected value> — selection required — </option>
                             <?php foreach ($forums as $forumClass => $forumInfo) : ?>
@@ -100,17 +108,40 @@ class Render
                     </label>
                 </li>
                 <li>
-                    <label>Table Prefix <span>Most installations have a database prefix.
-                        If you&rsquo;re sure you don&rsquo;t have one, leave this blank.</span>
+                    <label>Table Prefix <span>(optional)</span>
                         <input class="InputBox" type="text" name="prefix"
                             value="<?php echo htmlspecialchars(getValue('prefix')) != ''
                                 ? htmlspecialchars(getValue('prefix')) : ''; ?>"
                             id="ForumPrefix"/>
                     </label>
                 </li>
+            </ul>
+            <h2>Target</h2>
+            <ul>
                 <li>
-                    <label>
-                        Export Type
+                    <label>Package
+                        <select disabled name="target_type" id="TargetType" onchange="">
+                            <option selected value="Vanilla">Vanilla Forums (custom CSV)</option>
+                        </select>
+                    </label>
+                </li>
+                <li style="display:none;">
+                    <label>Connection
+                        <select disabled name="target_connection" >
+                            <option>database 1</option>
+                        </select>
+                    </label>
+                </li>
+                <li style="display:none;">
+                    <label>Table Prefix <span>(optional)</span>
+                        <input class="InputBox" type="text" name="target_prefix" value="" id="TargetPrefix"/>
+                    </label>
+                </li>
+            </ul>
+            <h2>Transfer</h2>
+            <ul>
+                <li>
+                    <label>Data
                         <select name="tables" id="ExportTables">
                             <option value="">All supported data</option>
                             <option value="User,Role,UserRole,Permission">Only users and roles</option>
@@ -119,13 +150,11 @@ class Render
                 </li>
                 <li id="FileExports">
                     <fieldset>
-                        <legend>Export Options:</legend>
-                        <label>
-                            Avatars
+                        <legend>Files:</legend>
+                        <label>Avatars
                             <input type="checkbox" name="avatars" value="1">
                         </label>
-                        <label>
-                            Files
+                        <label>Attachments
                             <input type="checkbox" name="files" value="1">
                         </label>
 
