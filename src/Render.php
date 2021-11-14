@@ -281,31 +281,31 @@ class Render
         $platforms = array_keys($supported);
 
         self::pageHeader();
-        echo '<h2 class="FeatureTitle">Data currently supported per platform</h2>';
-        echo '<p>Click any platform name for details, or <a href="/" style="text-decoration:underline;">go back</a>
+        echo '<h2 class="FeatureTitle">Features supported per platform</h2>';
+        echo '<p>Click a platform name for single view, or <a href="/" style="text-decoration:underline;">go back</a>
             . </p>';
         echo '<table class="Features"><thead><tr>';
 
         // Header row of labels for each platform
-        echo '<th><i>Feature</i></th>';
-        foreach ($platforms as $slug) {
-            echo '<th class="Platform"><div><span><a href="?list='
-                 . $slug . '">' . $supported[$slug]['name'] . '</a></span></div></th>';
+        echo '<th></th>';
+        foreach ($features as $feature => $trash) {
+            echo '<th class="FeatureName"><div><span>'
+                 . self::featureName($feature) . '</span></div></th>';
         }
 
         echo '</tr></thead><tbody>';
 
-        // Checklist of features per platform.
-        foreach ($features as $feature => $trash) {
-            // Name
-            echo '<tr><td class="FeatureName">' . self::featureName($feature) . '</td>';
+        foreach ($platforms as $slug) {
+            echo '<tr><td class="Platform"><span><a href="?list='
+                 . $slug . '">' . $supported[$slug]['name'] . '</a></span></td>';
 
             // Status per platform.
-            foreach ($platforms as $platform) {
+            foreach ($features as $feature => $trash) {
                 echo '<td>' .
-                    \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature, false) .
+                    \NitroPorter\SupportManager::getInstance()->featureStatus($slug, $feature, false) .
                 '</td>';
             }
+
             echo '</tr>';
         }
 
