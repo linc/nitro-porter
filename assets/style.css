@@ -274,7 +274,8 @@ table.Features td {
    font-width: bold;
    font-size: 1.2em;
 }
-.FeatureTitle {
+h2 {
+   margin-top: 50px;
    margin-bottom: 0;
 }
 
