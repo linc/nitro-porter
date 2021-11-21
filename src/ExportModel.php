@@ -8,6 +8,7 @@ namespace NitroPorter;
 
 use NitroPorter\Database\ResultSet;
 use NitroPorter\Database\DbFactory;
+use NitroPorter\Log;
 
 /**
  * Object for exporting other database structures into a format that can be imported.
@@ -279,7 +280,7 @@ class ExportModel
             $message
         ) . self::NEWLINE;
 
-        fwrite($this->file, $comment);
+        Log::comment($comment);
         if ($echo) {
             if (defined('CONSOLE')) {
                 echo $comment;
