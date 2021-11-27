@@ -51,6 +51,12 @@ abstract class ExportController
         $this->registerSupport();
         $supported = SupportManager::getInstance()->getSupport();
 
+        // Wire new database.
+        $config = loadConfig();
+        $dbConfig = $config['connections']['databases'][0]; // @todo
+        bootDatabase($dbConfig);
+
+        // Wire old database into model.
         $this->loadPrimaryDatabase();
         $this->handleInfoForm();
         $dbfactory = new DbFactory($this->dbInfo, \DB_EXTENSION);
