@@ -86,11 +86,13 @@ class Render
             <ul>
                 <li>
                     <label>Connection
-                        <select disabled name="source_connection" >
-                            <option selected value>database 0</option>
-                            <option>database 1</option>
-                            <option>API</option>
-                            <option>CSV</option>
+                        <select name="source_connection" >
+                            <option disabled selected value> — selection required — </option>
+                            <?php foreach (getSourceConnections() as $id => $name) {
+                                echo '<option value="' . $id . '">' . $name . '</option>';
+                            } ?>
+                            <option disabled>API</option>
+                            <option disabled>CSV</option>
                         </select>
                     </label>
                 </li>
@@ -108,8 +110,8 @@ class Render
                     </label>
                 </li>
                 <li>
-                    <label>Table Prefix <span>(optional)</span>
-                        <input class="InputBox" type="text" name="prefix"
+                    <label>Database Table Prefix <span>(selecting Package will add a default here)</span>
+                        <input class="InputBox" type="text" name="prefix" placeholder="optional"
                             value="<?php echo htmlspecialchars(getValue('prefix')) != ''
                                 ? htmlspecialchars(getValue('prefix')) : ''; ?>"
                             id="ForumPrefix"/>

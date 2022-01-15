@@ -22,8 +22,21 @@ function loadManifest()
  */
 function getTestDatabaseCredentials()
 {
-    $config = loadConfig();
-    return $config['test_connections']['databases'][0]; // @todo
+    return loadConfig()['test_connections']['databases'][0]; // @todo
+}
+
+/**
+ * Get a cleaned up database source list for forms.
+ *
+ * @return array A list of connections in the config (id => name).
+ */
+function getSourceConnections()
+{
+    $prepared_connections = [];
+    foreach (loadConfig()['connections']['databases'] as $c) {
+        $prepared_connections[$c['alias']] = $c['alias'] . ' (' . $c['user'] . '@' . $c['name'] . ')';
+    }
+    return $prepared_connections;
 }
 
 /**
