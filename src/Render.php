@@ -42,9 +42,6 @@ class Render
 <body>
 <div id="Frame">
     <div id="Content">
-        <div class="Title">
-            <h1>Nitro Porter</h1>
-        </div>
     ';
     }
 
@@ -80,12 +77,15 @@ class Render
         }
 
         self::pageHeader(); ?>
-    <div class="Info">
+    <p class="Info">
         Need help?
         <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide"
             style="text-decoration:underline;"
            target="_blank">Try the guide</a> and peep our
         <a href="?features=1" style="text-decoration:underline;">feature support table</a>.
+    </p>
+    <div class="Title">
+        <h1>Nitro Porter</h1>
     </div>
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?' . http_build_query($_GET); ?>" method="post">
         <input type="hidden" name="step" value="info"/>
@@ -126,7 +126,7 @@ class Render
                     </label>
                 </li>
                 <li>
-                    <label>Database Table Prefix <span>(selecting Package may add a default here)</span>
+                    <label>Database Table Prefix
                         <input class="InputBox" type="text" name="prefix" placeholder="optional"
                             value="<?php echo htmlspecialchars(getValue('prefix')) != ''
                                 ? htmlspecialchars(getValue('prefix')) : ''; ?>"
@@ -251,10 +251,11 @@ class Render
         if (count($msgs)) {
             echo "<div class=\"$class\">";
             echo "<p>Really boring export logs follow:</p>\n";
+            echo '<ol>';
             foreach ($msgs as $msg) {
-                echo "<p>$msg</p>\n";
+                echo "<li>$msg</li>\n";
             }
-
+            echo '</ol>';
             echo "<p>It worked! You&rsquo;re free! Sweet, sweet victory.</p>\n";
             echo "</div>";
         }
@@ -273,9 +274,10 @@ class Render
         $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
         self::pageHeader();
 
-        echo '<div class="Info">';
+        echo '<p class="Info"><a href="/?features=1" style="text-decoration:underline;">&larr; Back</a></p>';
         echo '<h2>' . htmlspecialchars($supported[$platform]['name']) . '</h2>';
-        echo '<dl>';
+
+        echo '<dl class="Info">';
 
         foreach ($features as $feature => $trash) {
             echo '
@@ -299,9 +301,11 @@ class Render
         $platforms = array_keys($supported);
 
         self::pageHeader();
-        echo '<h2 class="FeatureTitle">Features supported per platform</h2>';
-        echo '<p>Click a platform name for single view, or <a href="/" style="text-decoration:underline;">go back</a>
-            . </p>';
+
+        echo '<p class="Info">Click a platform to zoom in or
+            <a href="/" style="text-decoration:underline;">go back</a></p>';
+
+        echo '<h1 class="FeatureTitle">Supported Features</h1>';
         echo '<table class="Features"><thead><tr>';
 
         // Header row of labels for each platform
