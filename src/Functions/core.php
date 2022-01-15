@@ -30,7 +30,7 @@ function getTestDatabaseCredentials()
  *
  * @return array A list of connections in the config (id => name).
  */
-function getSourceConnections()
+function getSourceConnections(): array
 {
     $prepared_connections = [];
     foreach (loadConfig()['connections']['databases'] as $c) {
@@ -40,28 +40,20 @@ function getSourceConnections()
 }
 
 /**
- * Main export process.
- */
-function dispatch($package)
-{
-    forceValidPackage($package);
-    $class = '\NitroPorter\Package\\' . ucwords($package);
-    $controller = new $class();
-    $controller->doExport();
-}
-
-/**
- * Exit app if invalid package is given.
+ * Get valid package class. Exit app if invalid package name is given.
  *
- * @param $type
- * @return void
+ * @param string $packageName
+ * @return \NitroPorter\ExportController
  */
-function forceValidPackage($package): void
+function getValidPackage(string $packageName): \NitroPorter\ExportController
 {
-    if (!array_key_exists($package, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
-        echo 'Unsupported package: ' . $package;
+    if (!array_key_exists($packageName, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
+        echo 'Unsupported package: ' . $packageName;
         exit();
     }
+
+    $class = '\NitroPorter\Package\\' . ucwords($packageName);
+    return new $class();
 }
 
 /**
