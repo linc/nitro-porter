@@ -42,20 +42,26 @@ function getSourceConnections()
 /**
  * Main export process.
  */
-function dispatch($type)
+function dispatch($package)
 {
-    $method = 'DoExport';
-    if (!array_key_exists($type, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
-        echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
-        exit();
-    }
-    $class = '\NitroPorter\Package\\' . ucwords($type);
+    forceValidPackage($package);
+    $class = '\NitroPorter\Package\\' . ucwords($package);
     $controller = new $class();
-    if (!method_exists($controller, $method)) {
-        echo "This datasource type does not support {$method}.\n";
+    $controller->doExport();
+}
+
+/**
+ * Exit app if invalid package is given.
+ *
+ * @param $type
+ * @return void
+ */
+function forceValidPackage($package): void
+{
+    if (!array_key_exists($package, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
+        echo 'Unsupported package: ' . $package;
         exit();
     }
-    $controller->$method();
 }
 
 /**
