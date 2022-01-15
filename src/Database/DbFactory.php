@@ -47,7 +47,7 @@ class DbFactory
                 die($className . 'does not implement DbRerousce.');
             }
         } else {
-            die(DB_EXTENSION
+            die($this->extension
                 . ' extension not found. See config.php and make sure the necessary extensions are installed.');
         }
     }

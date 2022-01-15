@@ -59,7 +59,7 @@ abstract class ExportController
         // Wire old database into model.
         $this->loadPrimaryDatabase();
         $this->handleInfoForm();
-        $dbfactory = new DbFactory($this->dbInfo, \DB_EXTENSION);
+        $dbfactory = new DbFactory($this->dbInfo, 'pdo');
         $this->ex = new ExportModel($dbfactory);
         $this->ex->controller = $this;
         $this->ex->prefix = '';
@@ -221,7 +221,7 @@ abstract class ExportController
      */
     public function testDatabase()
     {
-        $dbFactory = new DbFactory($this->dbInfo, DB_EXTENSION);
+        $dbFactory = new DbFactory($this->dbInfo, 'pdo');
         // Will die on error
         $dbFactory->getInstance();
 
