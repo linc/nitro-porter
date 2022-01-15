@@ -19,7 +19,7 @@ class Render
         echo '<!DOCTYPE html>
 <html>
 <head>
-    <title>Nitro Porter - Forum Export Tool</title>
+    <title>Nitro Porter</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="assets/style.css" media="screen"/>
 </head>
