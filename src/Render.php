@@ -12,6 +12,22 @@ class Render
 {
 
     /**
+     * Routing logic for which view to render.
+     *
+     * @return void
+     */
+    public static function route()
+    {
+        if (isset($_REQUEST['list'])) {
+            Render::viewFeatureList($_REQUEST['list']); // Single package feature list.
+        } elseif (isset($_REQUEST['features'])) {
+            Render::viewFeatureTable();  // Overview table.
+        } else {
+            Render::viewForm(); // Starting Web UI.
+        }
+    }
+
+    /**
      * HTML header.
      */
     public static function pageHeader()

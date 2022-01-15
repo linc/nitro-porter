@@ -32,12 +32,8 @@ if (PHP_SAPI == 'cli') {
 // Web Router.
 if (isset($_POST['type'])) {
     dispatch($_POST['type']);
-} elseif (isset($_REQUEST['list'])) {
-    \NitroPorter\Render::viewFeatureList($_REQUEST['list']); // Single package feature list.
-} elseif (isset($_REQUEST['features'])) {
-    \NitroPorter\Render::viewFeatureTable();  // Overview table.
 } else {
-    \NitroPorter\Render::viewForm(); // Starting Web UI.
+    \NitroPorter\Render::route();
 }
 
 if (defined('CONSOLE')) {
