@@ -110,7 +110,7 @@ class Render
                     </label>
                 </li>
                 <li>
-                    <label>Database Table Prefix <span>(selecting Package will add a default here)</span>
+                    <label>Database Table Prefix <span>(selecting Package may add a default here)</span>
                         <input class="InputBox" type="text" name="prefix" placeholder="optional"
                             value="<?php echo htmlspecialchars(getValue('prefix')) != ''
                                 ? htmlspecialchars(getValue('prefix')) : ''; ?>"
