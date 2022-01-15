@@ -43,7 +43,7 @@ class Render
 <div id="Frame">
     <div id="Content">
         <div class="Title">
-            <h1>Nitro Porter ' . VERSION . '</h1>
+            <h1>Nitro Porter</h1>
         </div>
     ';
     }

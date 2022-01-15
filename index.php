@@ -11,7 +11,6 @@ if (!file_exists(__DIR__ . '/config.php')) {
 }
 
 // Environment.
-const VERSION = '3.0';
 const ROOT_DIR = __DIR__;
 const DB_EXTENSION = 'pdo'; // @todo
 error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);

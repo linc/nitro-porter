@@ -240,7 +240,7 @@ class ExportModel
         $fp = $this->openFile();
 
         // Build meta info about where this file came from.
-        $comment = 'Nitro Porter Export: ' . \VERSION;
+        $comment = 'Nitro Porter Export';
         if ($source) {
             $comment .= self::DELIM . ' Source: ' . $source;
         }
