@@ -136,6 +136,7 @@ form input.InputBox {
    -moz-border-radius: 4px;
    -webkit-border-radius: 4px;
    padding: 8px;
+   margin-top: 4px;
    width: 480px;
    border: 1px solid #ccc;
    color: #555;
