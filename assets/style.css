@@ -235,7 +235,7 @@ dl.Info {
 /* Feature table */
 table.Features {
    padding: 0 0 50px;
-   margin: 20px auto 0;
+   margin: 0 auto;
 }
 table.Features td {
    padding: 2px 12px;
@@ -263,7 +263,7 @@ h2 {
 /* Feature table column headings */
 th.FeatureName {
   /* Something you can count on */
-  height: 140px;
+  height: 100px;
   white-space: nowrap;
   font-weight: normal;
 }
