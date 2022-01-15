@@ -38,7 +38,7 @@ class DbFactory
      */
     public function getInstance()
     {
-        $className = $this->extension . 'Db';
+        $className = '\NitroPorter\Database\\' . $this->extension . 'Db';
         if (class_exists($className)) {
             $dbFactory = new $className($this->dbInfo);
             if ($dbFactory instanceof DbResource) {

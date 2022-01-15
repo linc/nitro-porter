@@ -36,7 +36,7 @@ function dispatch($type)
         echo 'Invalid type specified: ' . htmlspecialchars($_POST['type']);
         exit();
     }
-    $class = ucwords($type);
+    $class = '\NitroPorter\Package\\' . ucwords($type);
     $controller = new $class();
     if (!method_exists($controller, $method)) {
         echo "This datasource type does not support {$method}.\n";
