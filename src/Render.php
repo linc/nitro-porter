@@ -164,7 +164,7 @@ class Render
                 </li>
             </ul>
             <div class="Button">
-                <input class="Button" type="submit" value="Begin Export"/>
+                <input class="Button" type="submit" value="Start"/>
             </div>
         </div>
     </form>
