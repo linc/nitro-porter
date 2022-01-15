@@ -135,7 +135,7 @@ class Render
             <h2>Target</h2>
             <ul>
                 <li>
-                    <label>Package
+                    <label>Output
                         <select name="target_type" id="TargetType" onchange="setTarget()">
                             <option disabled selected value> — selection required — </option>
                             <option value="Flarum">Flarum (MySQL)</option>
