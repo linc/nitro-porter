@@ -146,6 +146,7 @@ class Render
                 <li id="TargetConnection" style="display:none;">
                     <label>Connection
                         <select name="target_connection" >
+                            <option disabled selected value> — selection required — </option>
                             <?php foreach (getSourceConnections() as $id => $name) {
                                 echo '<option value="' . $id . '">' . $name . '</option>';
                             } ?>
