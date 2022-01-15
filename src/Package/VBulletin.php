@@ -296,7 +296,11 @@ class VBulletin extends ExportController
 
         $this->ipbans();
         $this->tags();
-        $this->reactions();
+
+        // Reactions
+        if ($this->ex->exists('post_thanks') === true) {
+            $this->reactions();
+        }
 
         // End
         $this->ex->endExport();
@@ -658,7 +662,7 @@ class VBulletin extends ExportController
 
     public function ranks(): array
     {
-        $rank = $this->ex->query("select count(*) from ranks");
+        $rank = $this->ex->query("select count(*) from :_ranks");
 
         if ($rank->nextResultRow() > 0) {
             $ranks = $this->ex->get(
@@ -749,10 +753,10 @@ class VBulletin extends ExportController
             $filePath = $row['hash'] . '.' . $row['extension'];
         } else { // Newer than 3.0
             // Build user directory path
-            $n = strlen($row['userid']);
+            $chars = str_split($row['userid']);
             $dirParts = array();
-            for ($i = 0; $i < $n; $i++) {
-                $dirParts[] = $row['userid'][$i];
+            foreach ($chars as $char) {
+                $dirParts[] = $char;
             }
 
             // 3.x uses attachmentid, 4.x uses filedataid
@@ -999,11 +1003,11 @@ class VBulletin extends ExportController
                 from_unixtime(t.dateline) as DateInserted
             from :_pmtext t
             join (
-                select pmtextid
+                select pmtextid, parentpmid
                 from :_pm
                 where parentpmid > 0
                 group by pmtextid having count(pmtextid) > 1
-            ) on t.pmtextid = p.pmtextid
+            ) p on t.pmtextid = p.pmtextid
         ",
             $conversationMessage_Map
         );
@@ -1017,7 +1021,7 @@ class VBulletin extends ExportController
                 userid as UserID,
                 parentpmid as ConversationID,
                 messageread as CountReadMessages
-                from pm
+                from :_pm
                 where parentpmid > 0
             	group by userid, parentpmid
             ",
@@ -1248,9 +1252,8 @@ class VBulletin extends ExportController
     /**
      * @param string $forumWhere
      * @param $minDate
-     * @return false|float
      */
-    protected function userMeta(string $forumWhere, $minDate)
+    protected function userMeta(string $forumWhere, $minDate): void
     {
         $this->ex->query("drop table if exists VbulletinUserMeta");
         // UserMeta
@@ -1286,16 +1289,16 @@ class VBulletin extends ExportController
 
                     union select userid as UserID,
                         concat('Preferences.Popup.NewComment.', forumid), 1 as Value
-                        from subscribeforum
+                        from :_subscribeforum
                     union select userid as UserID,
                         concat('Preferences.Popup.NewDiscussion.', forumid), 1 as Value
-                        from subscribeforum
+                        from :_subscribeforum
                     union select userid as UserID,
                         concat('Preferences.Email.NewComment.', forumid), 1 as Value
-                        from subscribeforum where emailupdate > 1
+                        from :_subscribeforum where emailupdate > 1
                     union select userid as UserID,
                         concat('Preferences.Email.NewDiscussion.', forumid), 1 as Value
-                        from subscribeforum where emailupdate > 1"
+                        from :_subscribeforum where emailupdate > 1"
             );
         }
 
@@ -1376,7 +1379,6 @@ class VBulletin extends ExportController
 
             $this->ex->comment('Min topic id: ' . $minDiscussionID);
         }
-        return $minDiscussionID;
     }
 
     /**
@@ -1384,7 +1386,7 @@ class VBulletin extends ExportController
      * @param string $forumWhere
      * @return string
      */
-    protected function comments($minDiscussionID, string $forumWhere): string
+    protected function comments($minDiscussionID, string $forumWhere): void
     {
 // Comments
         $comment_Map = array(
@@ -1393,6 +1395,8 @@ class VBulletin extends ExportController
             }
             ),
         );
+
+        $minDiscussionWhere = '';
         if ($minDiscussionID) {
             $minDiscussionWhere = "and p.threadid > $minDiscussionID";
         }
@@ -1418,7 +1422,6 @@ class VBulletin extends ExportController
                 $forumWhere",
             $comment_Map
         );
-        return $minDiscussionWhere;
     }
 
     /**
@@ -1427,6 +1430,7 @@ class VBulletin extends ExportController
     protected function wallPosts($minDiscussionID): void
     {
 // Activity (from visitor messages in vBulletin 3.8+)
+        $minDiscussionWhere = '';
         if ($this->ex->exists('visitormessage') === true) {
             if ($minDiscussionID) {
                 $minDiscussionWhere = "and dateline > $minDiscussionID";
@@ -1465,7 +1469,7 @@ class VBulletin extends ExportController
      * @param string $forumWhere
      * @return string
      */
-    protected function discussions($minDiscussionID, string $forumWhere): string
+    protected function discussions($minDiscussionID, string $forumWhere): void
     {
 // Discussions
         $discussion_Map = array(
@@ -1482,6 +1486,7 @@ class VBulletin extends ExportController
             unset($discussion_Map['title']['Filter']);
         }
 
+        $minDiscussionWhere = '';
         if ($minDiscussionID) {
             $minDiscussionWhere = "and t.threadid > $minDiscussionID";
         }
@@ -1515,7 +1520,6 @@ class VBulletin extends ExportController
             $forumWhere",
             $discussion_Map
         );
-        return $minDiscussionWhere;
     }
 
     /**
