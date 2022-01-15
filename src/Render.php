@@ -78,10 +78,10 @@ class Render
 
         self::pageHeader(); ?>
     <p class="Info">
-        Need help?
+        Need help? Try the
         <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide"
             style="text-decoration:underline;"
-           target="_blank">Try the guide</a> and peep our
+           target="_blank">guide</a> and
         <a href="?features=1" style="text-decoration:underline;">feature support table</a>.
     </p>
     <div class="Title">
