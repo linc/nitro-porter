@@ -49,6 +49,12 @@ div.Form ul {
    padding: 0;
 }
 
+.Warnings {
+    padding: 0 10px;
+    font-style: italic;
+    color: #855832;
+}
+
 div.Errors {
    background: #d00;
    font-family: Monaco, Courier, monospace;

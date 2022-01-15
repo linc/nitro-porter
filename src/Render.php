@@ -105,8 +105,8 @@ class Render
                             <?php foreach (getSourceConnections() as $id => $name) {
                                 echo '<option value="' . $id . '">' . $name . '</option>';
                             } ?>
-                            <option disabled>API</option>
-                            <option disabled>CSV</option>
+                            <!--<option disabled>API</option>
+                            <option disabled>CSV</option>-->
                         </select>
                     </label>
                 </li>
@@ -136,17 +136,23 @@ class Render
             <ul>
                 <li>
                     <label>Package
-                        <select disabled name="target_type" id="TargetType" onchange="">
-                            <option selected value="Vanilla">Vanilla Forums (custom CSV)</option>
+                        <select name="target_type" id="TargetType" onchange="setTarget()">
+                            <option disabled selected value> — selection required — </option>
+                            <option value="Flarum">Flarum (MySQL)</option>
+                            <option value="Vanilla">Vanilla Forums (custom CSV)</option>
                         </select>
                     </label>
                 </li>
-                <li style="display:none;">
+                <li id="TargetConnection" style="display:none;">
                     <label>Connection
-                        <select disabled name="target_connection" >
-                            <option>database 1</option>
+                        <select name="target_connection" >
+                            <?php foreach (getSourceConnections() as $id => $name) {
+                                echo '<option value="' . $id . '">' . $name . '</option>';
+                            } ?>
                         </select>
                     </label>
+
+                    <p class="Warnings">Any existing Flarum data in the target connection will be overwritten.</p>
                 </li>
                 <li style="display:none;">
                     <label>Table Prefix <span>(optional)</span>
@@ -158,23 +164,20 @@ class Render
             <ul>
                 <li>
                     <label>Data
-                        <select name="tables" id="ExportTables">
-                            <option value="">All supported data</option>
-                            <option value="User,Role,UserRole,Permission">Only users and roles</option>
-                        </select>
+                    <select name="tables" id="ExportTables">
+                        <option value="">All supported data</option>
+                        <option value="User,Role,UserRole,Permission">Users and roles</option>
+                        <option value="User,Category,Discussion,Comment">Users, categories, and discussions</option>
+                    </select>
                     </label>
                 </li>
                 <li id="FileExports">
-                    <fieldset>
-                        <legend>Files:</legend>
-                        <label>Avatars
-                            <input type="checkbox" name="avatars" value="1">
-                        </label>
-                        <label>Attachments
-                            <input type="checkbox" name="files" value="1">
-                        </label>
-
-                    </fieldset>
+                    <label><input type="checkbox" name="avatars" value="1">
+                        Avatars
+                    </label>
+                    <label><input type="checkbox" name="files" value="1">
+                        Attachments
+                    </label>
                 </li>
             </ul>
             <div class="Button">
@@ -220,7 +223,17 @@ class Render
 
         }
     }
-        </script>
+    function setTarget() {
+        let target = document.getElementById('TargetType').value;
+        switch (target) {
+            case 'Flarum':
+                document.getElementById("TargetConnection").style.display = 'block';
+                break;
+            default:
+                document.getElementById("TargetConnection").style.display = 'none';
+        }
+    }
+    </script>
 
         <?php self::pageFooter();
     }
