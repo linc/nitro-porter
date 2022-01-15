@@ -12,13 +12,10 @@ if (!file_exists(__DIR__ . '/config.php')) {
 
 // Environment.
 const ROOT_DIR = __DIR__;
-error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR | E_RECOVERABLE_ERROR);
-ini_set('display_errors', 'on');
-ini_set('track_errors', 1);
+set_error_handler("ErrorHandler");
 if (ini_get('date.timezone') == '') {
     date_default_timezone_set('America/Detroit');
 }
-set_error_handler("ErrorHandler");
 
 // CLI Router.
 if (PHP_SAPI == 'cli') {
