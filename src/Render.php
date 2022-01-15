@@ -79,10 +79,8 @@ class Render
         self::pageHeader(); ?>
     <p class="Info">
         Need help? Try the
-        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide"
-            style="text-decoration:underline;"
-           target="_blank">guide</a> and
-        <a href="?features=1" style="text-decoration:underline;">feature support table</a>.
+        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide" target="_blank">guide</a> and
+        <a href="?features=1">feature support table</a>.
     </p>
     <div class="Title">
         <h1>Nitro Porter</h1>
@@ -274,7 +272,7 @@ class Render
         $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
         self::pageHeader();
 
-        echo '<p class="Info"><a href="/?features=1" style="text-decoration:underline;">&larr; Back</a></p>';
+        echo '<p class="Info"><a href="/?features=1">&larr; Back</a></p>';
         echo '<h2>' . htmlspecialchars($supported[$platform]['name']) . '</h2>';
 
         echo '<dl class="Info">';
@@ -302,8 +300,7 @@ class Render
 
         self::pageHeader();
 
-        echo '<p class="Info">Click a platform to zoom in or
-            <a href="/" style="text-decoration:underline;">go back</a></p>';
+        echo '<p class="Info">Click a platform to zoom in or <a href="/">go back</a></p>';
 
         echo '<h1 class="FeatureTitle">Supported Features</h1>';
         echo '<table class="Features"><thead><tr>';

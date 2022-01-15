@@ -202,6 +202,9 @@ p.Info, dl.Info {
     color: #362925;
     padding: 6px 0;
 }
+p.Info a {
+    text-decoration: underline;
+}
 
 /* Results */
 .Info ol {
