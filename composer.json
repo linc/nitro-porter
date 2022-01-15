@@ -36,8 +36,7 @@
     "suggest": {
         "ext-gd": "For transforming image attachments.",
         "ext-json": "Using a JSON data source.",
-        "ext-pdo": "Using a MySQL data source.",
-        "ext-mysqli": "Using a MySQL data source."
+        "ext-pdo": "Using a MySQL data source."
     },
     "require-dev": {
         "phing/phing": "^2.0",
