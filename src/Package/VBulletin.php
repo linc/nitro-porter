@@ -251,11 +251,11 @@ class VBulletin extends ExportController
         $this->roles();
         $this->permissions();
 
-        $minDiscussionID = $this->userMeta($forumWhere, $minDate);
+        $this->userMeta($forumWhere, $minDate);
 
-        $minDiscussionWhere = $this->discussions($minDiscussionID, $forumWhere);
+        $this->discussions($minDiscussionID, $forumWhere);
 
-        $minDiscussionWhere = $this->comments($minDiscussionID, $forumWhere);
+        $this->comments($minDiscussionID, $forumWhere);
 
         // UserDiscussion
         if ($minDiscussionID) {
