@@ -19,6 +19,7 @@
     ],
     "scripts": {
         "lint": "vendor/bin/phpcs --standard=PSR12 ./src",
+        "delint": "vendor/bin/phpcbf --standard=PSR12 ./src",
         "test": "vendor/bin/phpunit --no-coverage --no-extensions --colors=always",
         "build": "cd build; ../vendor/bin/phing; cd ..",
         "phinx": "vendor/bin/phinx",
