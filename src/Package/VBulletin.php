@@ -47,7 +47,6 @@ class VBulletin extends ExportController
             'ipbanlist' => array('Export IP ban list, which is a terrible idea.'),
             'filepath' => array('Full path of file attachments to be renamed.', 'Sx' => '::'),
             'filesHashSeparator' => array('Separator used to split the hash of attachments. ("" or "/")', 'Sx' => '::'),
-            'siteID' => array('Vanilla site ID', 'Sx' => '::'),
         ],
         'features' => [
             'Comments' => 1,
@@ -129,10 +128,6 @@ class VBulletin extends ExportController
     );
 
     public static $permissions2 = array();
-
-    public $siteID;
-
-    public $attachmentPath;
 
     /**
      * @var array Required tables => columns. Commented values are optional.
@@ -230,9 +225,6 @@ class VBulletin extends ExportController
 
         $minDiscussionID = false;
         $minDiscussionWhere = false;
-
-        $this->siteID = $this->param('siteID') ?? '000000';
-        $this->attachmentPath = 'https://us.v-cdn.net/' . $this->siteID . '/uploads/attachments';
 
         // Check to see if there is a max date.
         $minDate = $this->param('mindate');
