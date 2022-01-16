@@ -13,6 +13,12 @@ use NitroPorter\Database\DbFactory;
  */
 abstract class ExportController
 {
+    public const SUPPORTED = [
+        'name' => '',
+        'prefix' => '',
+        'features' => [],
+    ];
+
     /**
      * @var array Database connection info
      */
@@ -36,11 +42,9 @@ abstract class ExportController
     /**
      * Register supported features.
      */
-    public static function registerSupport()
+    public static function getSupport(): array
     {
-        $name = get_called_class();
-        $slug = str_replace('NitroPorter\Package\\', '', $name);
-        SupportManager::getInstance()->registerSupport($slug, $name::SUPPORTED);
+        return static::SUPPORTED;
     }
 
     /**
@@ -48,9 +52,6 @@ abstract class ExportController
      */
     public function __construct()
     {
-        $this->registerSupport();
-        $supported = SupportManager::getInstance()->getSupport();
-
         // Wire new database.
         $config = loadConfig();
         $dbConfig = $config['connections']['databases'][0]; // @todo
@@ -65,6 +66,7 @@ abstract class ExportController
         $this->ex->prefix = '';
 
         // That's not sexy but it gets the job done :D
+        $supported = SupportManager::getInstance()->getSupport();
         $lcClassName = strtolower(get_class($this));
         $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
 

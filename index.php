@@ -19,6 +19,9 @@ if (!file_exists(__DIR__ . '/config.php')) {
     die('Required file config.php missing');
 }
 
+// Load the support manifest.
+\NitroPorter\SupportManager::getInstance()->setSupport(loadManifest());
+
 // CLI Router.
 if (PHP_SAPI == 'cli') {
     define('CONSOLE', true);

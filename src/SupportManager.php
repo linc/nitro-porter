@@ -155,14 +155,18 @@ class SupportManager
         return $options;
     }
 
-    public function getSupportList()
+    /**
+     * Accepts the `SUPPORTED` array from each package to build a list.
+     *
+     * @param array $packages
+     * @return void
+     */
+    public function setSupport(array $packages): void
     {
-        $packages = loadManifest();
         foreach ($packages as $name) {
             $classname = '\NitroPorter\Package\\' . $name;
-            $classname::registerSupport();
+            $this->packages[$name] = $classname::getSupport();
         }
-        return \NitroPorter\SupportManager::getInstance()->getSupport();
     }
 
     /**

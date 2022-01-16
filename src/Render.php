@@ -57,7 +57,7 @@ class Render
      */
     public static function viewForm($data = [])
     {
-        $forums = \NitroPorter\SupportManager::getInstance()->getSupportList();
+        $forums = \NitroPorter\SupportManager::getInstance()->getSupport();
         $msg = getValue('Msg', $data, '');
         $canWrite = testWrite();
 
@@ -281,7 +281,7 @@ class Render
      */
     public static function viewFeatureList($platform)
     {
-        $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
+        $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
         $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
         self::pageHeader();
 
@@ -308,7 +308,7 @@ class Render
     public static function viewFeatureTable()
     {
         $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
-        $supported = \NitroPorter\SupportManager::getInstance()->getSupportList();
+        $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
         $platforms = array_keys($supported);
 
         self::pageHeader();

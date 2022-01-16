@@ -47,7 +47,7 @@ function getSourceConnections(): array
  */
 function getValidPackage(string $packageName): \NitroPorter\ExportController
 {
-    if (!array_key_exists($packageName, \NitroPorter\SupportManager::getInstance()->getSupportList())) {
+    if (!array_key_exists($packageName, \NitroPorter\SupportManager::getInstance()->getSupport())) {
         echo 'Unsupported package: ' . $packageName;
         exit();
     }
