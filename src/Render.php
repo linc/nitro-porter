@@ -10,7 +10,6 @@ namespace NitroPorter;
 
 class Render
 {
-
     /**
      * Routing logic for which view to render.
      *

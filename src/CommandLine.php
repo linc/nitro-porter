@@ -8,7 +8,6 @@ namespace NitroPorter;
 
 class CommandLine
 {
-
     public function getAllCommandLineOptions($sections = false)
     {
         $globalOptions = SupportManager::getInstance()->getOptions();

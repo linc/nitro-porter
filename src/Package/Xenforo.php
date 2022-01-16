@@ -15,7 +15,6 @@ use NitroPorter\ExportController;
 
 class Xenforo extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Xenforo',
         'prefix' => 'xf_',

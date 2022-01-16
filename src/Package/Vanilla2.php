@@ -14,7 +14,6 @@ use NitroPorter\ExportModel;
 
 class Vanilla2 extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'Vanilla 2',
         'prefix' => 'GDN_',

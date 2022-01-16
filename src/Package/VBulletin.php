@@ -37,7 +37,6 @@ use NitroPorter\ExportModel;
 
 class VBulletin extends ExportController
 {
-
     public const SUPPORTED = [
         'name' => 'vBulletin 3 & 4',
         'prefix' => 'vb_',

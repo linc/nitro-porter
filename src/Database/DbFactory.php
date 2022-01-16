@@ -8,7 +8,6 @@ namespace NitroPorter\Database;
  */
 class DbFactory
 {
-
     /**
      * @var array DB connection info
      */
