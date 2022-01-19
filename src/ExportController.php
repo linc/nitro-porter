@@ -52,18 +52,10 @@ abstract class ExportController
      */
     public function __construct()
     {
-        // Wire new database.
-        $config = loadConfig();
-        $dbConfig = $config['connections']['databases'][0]; // @todo
-        bootDatabase($dbConfig);
-
         // Wire old database into model.
         $this->loadPrimaryDatabase();
         $this->handleInfoForm();
-        $dbfactory = new DbFactory($this->dbInfo, 'pdo');
-        $this->ex = new ExportModel($dbfactory);
-        $this->ex->controller = $this;
-        $this->ex->prefix = '';
+        $this->wireupModel();
 
         // That's not sexy but it gets the job done :D
         $supported = SupportManager::getInstance()->getSupport();
@@ -228,5 +220,16 @@ abstract class ExportController
         $dbFactory->getInstance();
 
         return true;
+    }
+
+    /**
+     * @return void
+     */
+    public function wireupModel(): void
+    {
+        $dbfactory = new DbFactory($this->dbInfo, 'pdo');
+        $this->ex = new ExportModel($dbfactory);
+        $this->ex->controller = $this;
+        $this->ex->prefix = '';
     }
 }

@@ -31,8 +31,8 @@ if (PHP_SAPI == 'cli') {
 
 // Web Router.
 if (isset($_POST['type'])) {
-    $controller = getValidPackage($_POST['type']);
-    $controller->doExport();
+    $package = \NitroPorter\ExportFactory::build();
+    $package->doExport();
 } else {
     \NitroPorter\Render::route();
 }
