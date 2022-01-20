@@ -168,61 +168,29 @@ class CommandLine
 
     /**
      * Main process for bootstrap.
-     *
-     * @param null $options
-     * @param null $files
-     * @return array
      */
-    public function parse($options = null, $files = null)
+    public function parse(): void
     {
-        global $argv; // @see https://www.php.net/manual/en/reserved.variables.argv.php
+        // Get the inputs.
         $commandOptions = $this->getAllOptions();
-
         list($shortCodes, $longCodes) = $this->getOptCodes($commandOptions);
-
         $opts = $this->getOptFromArgv($shortCodes, $longCodes);
 
+        // Output help.
         if (array_key_exists('help', $opts) || array_key_exists('h', $opts)) {
             $options = $this->getAllOptions(true);
             $this->outputHelp($options);
             die();
         }
 
-        // Spawn new packages from the command line!
+        // Spawn new package.
         if (isset($opts['spawn']) || isset($opts['s'])) {
             $name = (isset($opts['spawn'])) ? $opts['spawn'] : $opts['s'];
             spawnPackage($name);
             die();
         }
 
-        $opts = $this->validate($opts, $commandOptions);
-
-        if (is_array($files)) {
-            $opts2 = array();
-            foreach ($files as $name) {
-                $value = array_pop($argv);
-                if (!$value) {
-                    echo "Missing required parameter: $name";
-                } else {
-                    $opts2[$name] = $value;
-                }
-            }
-            if ($opts2) {
-                if ($opts === false) {
-                    $opts = $opts2;
-                } else {
-                    $opts = array_merge($opts, $opts2);
-                }
-            }
-        }
-
-        if ($opts === false) {
-            die();
-        }
-
-        $_POST = $opts;
-
-        return $opts;
+        $_POST = $this->validate($opts, $commandOptions);
     }
 
     /**
@@ -302,9 +270,9 @@ class CommandLine
     }
 
     /**
-     * @param $values
-     * @param $options
-     * @return array|false
+     * @param array $values
+     * @param array $options
+     * @return array
      */
     public function validate($values, $options)
     {
@@ -363,10 +331,10 @@ class CommandLine
             $result[$field] = $value;
         }
 
+        // Badly handle errors.
         if (count($errors)) {
             echo implode("\n", $errors) . "\n";
-
-            return false;
+            die();
         }
 
         return $result;
