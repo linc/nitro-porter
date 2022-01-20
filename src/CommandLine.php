@@ -8,10 +8,111 @@ namespace NitroPorter;
 
 class CommandLine
 {
-    public function getAllCommandLineOptions($sections = false)
+    public const CLI_OPTIONS = array(
+        // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s, b
+        'type' => array(
+            'Type of forum we\'re freeing you from.',
+            'Req' => true,
+            'Sx' => ':',
+            'Field' => 'type',
+            'Short' => 't',
+        ),
+        'dbname' => array(
+            'Database name.',
+            'Req' => true,
+            'Sx' => ':',
+            'Field' => 'dbname',
+            'Short' => 'n',
+        ),
+        'user' => array(
+            'Database connection username.',
+            'Req' => true,
+            'Sx' => ':',
+            'Field' => 'dbuser',
+            'Short' => 'u',
+        ),
+        'password' => array(
+            'Database connection password.',
+            'Sx' => '::',
+            'Field' => 'dbpass',
+            'Short' => 'p',
+            'Default' => '',
+        ),
+        'host' => array(
+            'IP address or hostname to connect to. Default is 127.0.0.1.',
+            'Sx' => ':',
+            'Field' => 'dbhost',
+            'Short' => 'o',
+            'Default' => '127.0.0.1',
+        ),
+        'prefix' => array(
+            'The table prefix in the database.',
+            'Field' => 'prefix',
+            'Sx' => ':',
+            'Short' => 'x',
+            'Default' => 'PACKAGE_DEFAULT',
+        ),
+        'avatars' => array(
+            'Enables exporting avatars from the database if supported.',
+            'Sx' => '::',
+            'Field' => 'avatars',
+            'Short' => 'a',
+            'Default' => false,
+        ),
+        'cdn' => array(
+            'Prefix to be applied to file paths.',
+            'Field' => 'cdn',
+            'Sx' => ':',
+            'Short' => 'c',
+            'Default' => '',
+        ),
+        'files' => array(
+            'Enables exporting attachments from database if supported.',
+            'Sx' => '::',
+            'Short' => 'f',
+            'Default' => false,
+        ),
+        'destpath' => array(
+            'Define destination path for the export file.',
+            'Sx' => '::',
+            'Short' => 'd',
+            'Default' => './',
+        ),
+        'spawn' => array(
+            'Create a new package with this name.',
+            'Sx' => '::',
+            'Short' => 's',
+            'Default' => '',
+        ),
+        'help' => array(
+            'Show this help, duh.',
+            'Short' => 'h',
+        ),
+        'tables' => array(
+            'Selective export, limited to specified tables, if provided',
+            'Sx' => ':',
+        )
+    );
+
+    /**
+     * @return array
+     */
+    public function getGlobalOptions(): array
     {
-        $globalOptions = SupportManager::getInstance()->getOptions();
+        $options = self::CLI_OPTIONS;
+        $options['type']['Values'] = array_keys(SupportManager::getInstance()->getSupport());
+        return $options;
+    }
+
+    /**
+     * @param bool $sections
+     * @return array
+     */
+    public function getAllOptions($sections = false): array
+    {
+        $globalOptions = $this->getGlobalOptions();
         $supported = SupportManager::getInstance()->getSupport();
+        $result = [];
 
         if ($sections) {
             $result['Global Options'] = $globalOptions;
@@ -43,7 +144,11 @@ class CommandLine
         return $result;
     }
 
-    public function getOptCodes($options)
+    /**
+     * @param array $options
+     * @return array
+     */
+    public function getOptCodes(array $options): array
     {
         $shortCodes = '';
         $longCodes = array();
@@ -68,35 +173,29 @@ class CommandLine
      * @param null $files
      * @return array
      */
-    public function parseCommandLine($options = null, $files = null)
+    public function parse($options = null, $files = null)
     {
         global $argv; // @see https://www.php.net/manual/en/reserved.variables.argv.php
-        $globalOptions = SupportManager::getInstance()->getOptions();
-        $supported = SupportManager::getInstance()->getSupport();
-
-        if (isset($options)) {
-            $globalOptions = $options;
-        }
-
-        $commandOptions = $this->getAllCommandLineOptions();
+        $commandOptions = $this->getAllOptions();
 
         list($shortCodes, $longCodes) = $this->getOptCodes($commandOptions);
 
         $opts = $this->getOptFromArgv($shortCodes, $longCodes);
 
         if (array_key_exists('help', $opts) || array_key_exists('h', $opts)) {
-            $this->writeCommandLineHelp();
+            $options = $this->getAllOptions(true);
+            $this->outputHelp($options);
             die();
         }
 
         // Spawn new packages from the command line!
         if (isset($opts['spawn']) || isset($opts['s'])) {
             $name = (isset($opts['spawn'])) ? $opts['spawn'] : $opts['s'];
-            $this->spawnPackage($name);
+            spawnPackage($name);
             die();
         }
 
-        $opts = $this->validateCommandLine($opts, $commandOptions);
+        $opts = $this->validate($opts, $commandOptions);
 
         if (is_array($files)) {
             $opts2 = array();
@@ -124,24 +223,6 @@ class CommandLine
         $_POST = $opts;
 
         return $opts;
-    }
-
-    /**
-     * Take the template package, add our new name, and make a new package from it.
-     *
-     * @param string $name
-     */
-    public function spawnPackage($name)
-    {
-
-        if ($name && strlen($name) > 2) {
-            $name = preg_replace('/[^A-Za-z0-9]/', '', $name);
-            $template = file_get_contents(__DIR__ . '/../tpl_package.txt');
-            file_put_contents(__DIR__ . '/../Package/' . $name . '.php', str_replace('__NAME__', $name, $template));
-            echo "Created new package: " . $name . "\n";
-        } else {
-            echo "Invalid name: 2+ alphanumeric characters only.";
-        }
     }
 
     /**
@@ -220,7 +301,12 @@ class CommandLine
         return $options;
     }
 
-    public function validateCommandLine($values, $options)
+    /**
+     * @param $values
+     * @param $options
+     * @return array|false
+     */
+    public function validate($values, $options)
     {
         $errors = array();
         $result = array();
@@ -237,6 +323,7 @@ class CommandLine
                 continue;
             }
 
+            $value = null;
             if (array_key_exists($longCode, $values)) {
                 $value = $values[$longCode];
                 if ($value === null) {
@@ -249,8 +336,6 @@ class CommandLine
                 }
             } elseif (isset($row['Default'])) {
                 $value = $row['Default'];
-            } else {
-                $value = null;
             }
 
             if ($value === null) {
@@ -284,47 +369,67 @@ class CommandLine
             return false;
         }
 
-
         return $result;
     }
 
-    public function writeCommandLineHelp($options = null, $section = '')
+    /**
+     * Output help to the CLI.
+     *
+     * @param array $options Multi-dimensional array of CLI options.
+     */
+    public function outputHelp(array $options)
     {
-        if ($options === null) {
-            $options = $this->getAllCommandLineOptions(true);
-            foreach ($options as $section => $options) {
-                $this->writeCommandLineHelp($options, $section);
+        $output = '';
+
+        foreach ($options as $section => $options) {
+            $output .= $section . "\n";
+
+            foreach ($options as $longname => $properties) {
+                $output .= $this->buildSingleOptionOutput($longname, $properties) . "\n";
             }
 
-            return;
+            $output .= "\n";
         }
 
-        echo "$section\n";
-        foreach ($options as $longname => $options) {
-            $output = "  ";
+        echo $output;
+    }
 
-            if (isset($options['Short'])) {
-                $output .= '-' . $options['Short'] . ', ';
-            }
+    /**
+     * Build a single line of help output for a single CLI command.
+     *
+     * @param string $longname
+     * @param array $properties
+     * @return string
+     */
+    public function buildSingleOptionOutput(string $longname, array $properties): string
+    {
+        // Indent.
+        $output = "  ";
 
-            $output .= "--$longname";
-
-            // Align our descriptions by passing
-            $output = str_pad($output, 18, ' ');
-
-            if (v('Req', $options)) {
-                $output .= 'Required. ';
-            }
-
-            $output .= "{$options[0]}\n";
-
-            if ($values = v('Values', $options)) {
-                $output .= '    Valid Values: ' . implode(', ', $values) . "\n";
-            }
-
-            echo $output;
+        // Short code.
+        if (isset($properties['Short'])) {
+            $output .= '-' . $properties['Short'] . ', ';
         }
 
-        echo "\n";
+        // Long code.
+        $output .= "--$longname";
+
+        // Align descriptions by padding.
+        $output = str_pad($output, 18, ' ');
+
+        // Whether param is required.
+        if (v('Req', $properties)) {
+            $output .= 'Required. ';
+        }
+
+        // Description.
+        $output .= "{$properties[0]}";
+
+        // List valid values for --type.
+        if ($values = v('Values', $properties)) {
+            //$output .= ' (Choose from: ' . implode(', ', $values) . ')';
+        }
+
+        return $output;
     }
 }

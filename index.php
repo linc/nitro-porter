@@ -26,7 +26,7 @@ if (!file_exists(__DIR__ . '/config.php')) {
 if (PHP_SAPI == 'cli') {
     define('CONSOLE', true);
     $cli = new \NitroPorter\CommandLine();
-    $cli->parseCommandLine();
+    $cli->parse();
 }
 
 // Web Router.

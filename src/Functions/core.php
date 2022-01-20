@@ -57,6 +57,23 @@ function getValidPackage(string $packageName): \NitroPorter\ExportController
 }
 
 /**
+ * Take the template package, add our new name, and make a new package from it.
+ *
+ * @param string $name
+ */
+function spawnPackage(string $name)
+{
+    $name = preg_replace('/[^A-Za-z0-9]/', '', $name);
+    if (!$name || strlen($name) < 3) {
+        die("Invalid name: 2+ alphanumeric characters only.");
+    }
+
+    $template = file_get_contents(__DIR__ . '/../tpl_package.txt');
+    file_put_contents(__DIR__ . '/../Package/' . $name . '.php', str_replace('__NAME__', $name, $template));
+    echo "Created new package: " . $name . "\n";
+}
+
+/**
  * Error handler.
  *
  * @param $errno
