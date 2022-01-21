@@ -135,7 +135,7 @@ class CommandLine
         // Get the inputs.
         $commandOptions = $this->getAllOptions();
         list($shortCodes, $longCodes) = $this->getOptCodes($commandOptions);
-        $opts = $this->getOptFromArgv($shortCodes, $longCodes);
+        $opts = getopt($shortCodes, $longCodes);
 
         // Output help.
         if (array_key_exists('help', $opts) || array_key_exists('h', $opts)) {
@@ -145,82 +145,6 @@ class CommandLine
         }
 
         $_POST = $this->validate($opts, $commandOptions);
-    }
-
-    /**
-     * Basically does the same thing than getopt() with one minor difference.
-     *
-     * The difference is that an empty option (-o="" || -o= || --option="" || --option=)
-     * will show up in the result as if the the option is set with an empty value.
-     *
-     * @see getopt
-     *
-     * @param  $shortCodes
-     * @param  $longCodes
-     * @return array
-     */
-    public function getOptFromArgv($shortCodes, $longCodes)
-    {
-        global $argv; // @see https://www.php.net/manual/en/reserved.variables.argv.php
-
-        $options = array();
-
-        $shortCodesArray = array();
-        $longCodesArray = array();
-
-        $matches = array();
-        if (
-            strlen($shortCodes) > 1 &&
-            preg_match_all('#([a-z\d])(:{0,2})#i', $shortCodes, $matches, PREG_SET_ORDER) != false
-        ) {
-            foreach ($matches as $match) {
-                $shortCodesArray[$match[1]] = strlen($match[2]);
-            }
-        }
-
-        foreach ($longCodes as $longCode) {
-            $explodedLongCode = explode(':', $longCode);
-            $longCodesArray[$explodedLongCode[0]] = count($explodedLongCode) - 1;
-        }
-
-        $argvCount = count($argv);
-        for ($i = 1; $i < $argvCount; $i++) {
-            $currentArg = $argv[$i];
-
-            $matches = array();
-            if (preg_match('#^(-{1,2})([a-z\d]+)(?:=(.*))?$#i', $currentArg, $matches) === 1) {
-                $optionType = $matches[1];
-                $optionName = $matches[2];
-
-                $optionValue = isset($matches[3]) ? $matches[3] : null;
-
-                if ($optionType === '-') {
-                    $argType = 'short';
-                } else {
-                    $argType = 'long';
-                }
-
-                if (!isset(${$argType . 'CodesArray'}[$optionName])) {
-                    continue;
-                }
-
-                $optionValueRequirement = ${$argType . 'CodesArray'}[$optionName];
-
-                if ($optionValueRequirement === 0) { // 0 = No value permitted
-                    if ($optionValue !== null) {
-                        continue;
-                    }
-                } elseif ($optionValueRequirement === 1) { // 1 = Value required
-                    if ($optionValue === null) {
-                        continue;
-                    }
-                }
-
-                $options[$optionName] = $optionValue;
-            }
-        }
-
-        return $options;
     }
 
     /**
