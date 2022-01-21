@@ -3,7 +3,7 @@
 /**
  * Invision Powerboard exporter tool.
  *
- * To export avatars, provide ?avatars=1&avatarpath=/path/to/avatars
+ * To export avatars, provide ?db-avatars=1&avatars-source=/path/to/avatars
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
@@ -19,13 +19,15 @@ class IpBoard3 extends ExportController
     public const SUPPORTED = [
         'name' => 'IP.Board 3',
         'prefix' => 'ibf_',
-        'CommandLine' => [
-            'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
-            'source' => array(
+        'options' => [
+            'avatars-source' => [
+                'Full path of source avatars to process.',
+                'Sx' => ':',
+            ],
+            'users-source' => [
                 'Source user table: profile_portal (default) or member_extra.',
                 'Sx' => ':',
-                'Field' => 'sourcetable'
-            ),
+            ],
         ],
         'features' => [
             'Users' => 1,
@@ -57,10 +59,10 @@ class IpBoard3 extends ExportController
     public function doAvatars()
     {
         // Source table
-        $sourceTable = $this->param('source', 'profile_portal');
+        $sourceTable = $this->param('users-source', 'profile_portal');
 
         // Check source folder
-        $sourceFolder = $this->param('avatarpath');
+        $sourceFolder = $this->param('avatars-source');
         if (!is_dir($sourceFolder)) {
             trigger_error("Source avatar folder '{$sourceFolder}' does not exist.");
         }

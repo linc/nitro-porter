@@ -30,7 +30,7 @@ if (PHP_SAPI == 'cli') {
 }
 
 // Web Router.
-if (isset($_POST['type'])) {
+if (isset($_POST['package'])) {
     $package = \NitroPorter\ExportFactory::build();
     $package->doExport();
 } else {

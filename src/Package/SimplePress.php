@@ -17,7 +17,7 @@ class SimplePress extends ExportController
     public const SUPPORTED = [
         'name' => 'SimplePress 1',
         'prefix' => 'wp_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

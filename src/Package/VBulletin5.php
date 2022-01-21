@@ -20,6 +20,18 @@ class VBulletin5 extends VBulletin
     public const SUPPORTED = [
         'name' => 'vBulletin 5 Connect',
         'prefix' => 'vb_',
+        'options' => [
+            'db-avatars' => [
+                'Enables exporting avatars from the database.',
+                'Sx' => '::',
+                'Default' => false,
+            ],
+            'db-files' => [
+                'Enables exporting attachments from database.',
+                'Sx' => '::',
+                'Default' => false,
+            ],
+        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -87,8 +99,8 @@ class VBulletin5 extends VBulletin
         $ex->beginExport('', 'vBulletin 5 Connect');
 
         $this->exportBlobs(
-            $this->param('files'),
-            $this->param('avatars')
+            $this->param('db-files'),
+            $this->param('db-avatars')
         );
 
         if ($this->param('noexport')) {

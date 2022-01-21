@@ -8,7 +8,7 @@ class SupportManager
         'name',
         'prefix',
         'features',
-        'CommandLine',
+        'options',
     ];
 
     public const SUPPORTED_FEATURES = [

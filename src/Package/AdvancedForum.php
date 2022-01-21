@@ -17,8 +17,11 @@ class AdvancedForum extends ExportController
     public const SUPPORTED = [
         'name' => 'Advanced Forum 7.x-2.*',
         'prefix' => '',
-        'CommandLine' => [
-            'filepath' => array('Path to files, such as avatars.', 'Sx' => '::')
+        'options' => [
+            'avatars-prefix' => [
+                'Path to be prefixed to avatar filenames.',
+                'Sx' => '::'
+            ],
         ],
         'features' => [
             'Users' => 1,
@@ -59,7 +62,7 @@ class AdvancedForum extends ExportController
 
         $ex->beginExport('', 'Advanced Forum 7.x-2.*');
 
-        $filePath = $this->param('filepath', '');
+        $filePath = $this->param('avatars-prefix', '');
 
         $this->users($ex, $filePath);
 

@@ -172,7 +172,7 @@ abstract class ExportController
      */
     public function handleInfoForm()
     {
-        $this->dbInfo['type'] = $_POST['type'];
+        $this->dbInfo['package'] = $_POST['package'];
         $this->dbInfo['prefix'] = !isset($_POST['emptyprefix']) ?
             preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null;
     }

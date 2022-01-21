@@ -99,7 +99,7 @@ class Render
             <ul>
                 <li>
                     <label>Connection
-                        <select name="source_connection" >
+                        <select name="source" >
                             <option disabled selected value> — selection required — </option>
                             <?php foreach (getSourceConnections() as $id => $name) {
                                 echo '<option value="' . $id . '">' . $name . '</option>';
@@ -111,11 +111,11 @@ class Render
                 </li>
                 <li>
                     <label>Package
-                        <select name="type" id="ForumType" onchange="setPrefix()">
+                        <select name="package" id="ForumType" onchange="setPrefix()">
                             <option disabled selected value> — selection required — </option>
                             <?php foreach ($forums as $forumClass => $forumInfo) : ?>
                                 <option value="<?php echo $forumClass; ?>"<?php
-                                if (getValue('type') == $forumClass) {
+                                if (getValue('package') == $forumClass) {
                                     echo ' selected="selected"';
                                 } ?>><?php echo $forumInfo['name']; ?></option>
                             <?php endforeach; ?>
@@ -124,9 +124,9 @@ class Render
                 </li>
                 <li>
                     <label>Database Table Prefix
-                        <input class="InputBox" type="text" name="prefix" placeholder="optional"
-                            value="<?php echo htmlspecialchars(getValue('prefix')) != ''
-                                ? htmlspecialchars(getValue('prefix')) : ''; ?>"
+                        <input class="InputBox" type="text" name="src-prefix" placeholder="optional"
+                            value="<?php echo htmlspecialchars(getValue('src-prefix')) != ''
+                                ? htmlspecialchars(getValue('src-prefix')) : ''; ?>"
                             id="ForumPrefix"/>
                     </label>
                 </li>
@@ -135,7 +135,7 @@ class Render
             <ul>
                 <li>
                     <label>Output
-                        <select name="target_type" id="TargetType" onchange="setTarget()">
+                        <select name="output" id="TargetType" onchange="setTarget()">
                             <option disabled selected value> — selection required — </option>
                             <option value="Flarum">Flarum (MySQL)</option>
                             <option value="Vanilla">Vanilla Forums (custom CSV)</option>
@@ -144,7 +144,7 @@ class Render
                 </li>
                 <li id="TargetConnection" style="display:none;">
                     <label>Connection
-                        <select name="target_connection" >
+                        <select name="target" >
                             <option disabled selected value> — selection required — </option>
                             <?php foreach (getSourceConnections() as $id => $name) {
                                 echo '<option value="' . $id . '">' . $name . '</option>';
@@ -156,7 +156,7 @@ class Render
                 </li>
                 <li style="display:none;">
                     <label>Table Prefix <span>(optional)</span>
-                        <input class="InputBox" type="text" name="target_prefix" value="" id="TargetPrefix"/>
+                        <input class="InputBox" type="text" name="tar-prefix" value="" id="TargetPrefix"/>
                     </label>
                 </li>
             </ul>
@@ -171,12 +171,12 @@ class Render
                     </select>
                     </label>
                 </li>
-                <li id="FileExports">
-                    <label><input type="checkbox" name="avatars" value="1">
-                        Avatars
+                <li id="vBulletin-files" style="display:none;">
+                    <label><input type="checkbox" name="db-avatars" value="1">
+                        Avatars in database
                     </label>
-                    <label><input type="checkbox" name="files" value="1">
-                        Attachments
+                    <label><input type="checkbox" name="db-files" value="1">
+                        Attachments in database
                     </label>
                 </li>
             </ul>

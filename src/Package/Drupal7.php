@@ -19,9 +19,15 @@ class Drupal7 extends ExportController
     public const SUPPORTED = [
         'name' => 'Drupal 7',
         'prefix' => '',
-        'CommandLine' => [
-            'attachOrigin' => ['URL or folder destination for the uploads folder, no trailing slash.', 'Sx' => '::'],
-            'attachDest' => ['URL or folder destination for the uploads folder, no trailing slash.', 'Sx' => '::']
+        'options' => [
+            'attach-source' => [
+                'URL or folder destination for the uploads folder, no trailing slash.',
+                'Sx' => '::'
+            ],
+            'attach-target' => [
+                'URL or folder destination for the uploads folder, no trailing slash.',
+                'Sx' => '::'
+            ],
         ],
         'features' => [
             'Users' => 1,
@@ -61,9 +67,9 @@ class Drupal7 extends ExportController
             $ex->characterSet = $characterSet;
         }
 
-        $this->path = $this->param('attachDest', null) . '/uploads/';
+        $this->path = $this->param('attach-target', null) . '/uploads/';
 
-        $origin = $this->param('attachOrigin', null);
+        $origin = $this->param('attach-source', null);
         if ($origin && !is_dir($origin)) {
             mkdir($origin);
         }
@@ -99,7 +105,7 @@ class Drupal7 extends ExportController
                 if ($file !== false) {
                     $filename = "{$postId}_{$this->imageCount}.png";
                     $this->imageCount++;
-                    file_put_contents($this->param('attachOrigin', null) . '/' . $filename, $file);
+                    file_put_contents($this->param('attach-source', null) . '/' . $filename, $file);
                     return "\"$this->path/$filename\"";
                 }
                 return '';

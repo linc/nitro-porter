@@ -17,7 +17,7 @@ class Mvc extends ExportController
     public const SUPPORTED = [
         'name' => 'MVC',
         'prefix' => '',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

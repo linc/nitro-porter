@@ -17,7 +17,7 @@ class JForum extends ExportController
     public const SUPPORTED = [
         'name' => 'jforum',
         'prefix' => 'jforum_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

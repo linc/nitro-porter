@@ -18,13 +18,13 @@ class AnswerHub extends ExportController
     public const SUPPORTED = [
         'name' => 'answerhub',
         'prefix' => '',
-        'CommandLine' => [
-            'noemaildomain' => array(
+        'options' => [
+            'noemaildomain' => [
                 'Domain to use when generating email addresses for users that does not have one.',
                 'Field' => 'noemaildomain',
                 'Sx' => '::',
                 'Default' => 'answerhub.com',
-            ),
+            ],
         ],
         'features' => [
             'Users' => 1,

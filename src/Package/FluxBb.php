@@ -17,8 +17,8 @@ class FluxBb extends ExportController
     public const SUPPORTED = [
         'name' => 'FluxBB 1',
         'prefix' => '',
-        'CommandLine' => [
-            'avatarpath' => array(
+        'options' => [
+            'avatars-source' => array(
                 'Full path of forum avatars.',
                 'Sx' => '::',
             )
@@ -81,7 +81,7 @@ class FluxBb extends ExportController
 
         $this->cdn = $this->param('cdn', '');
 
-        if ($this->avatarPath = $this->param('avatarpath')) {
+        if ($this->avatarPath = $this->param('avatars-source')) {
             if (!$this->avatarPath = realpath($this->avatarPath)) {
                 echo "Unable to access path to avatars: $this->avatarPath\n";
                 exit(1);

@@ -17,7 +17,7 @@ class PhpBb3 extends ExportController
     public const SUPPORTED = [
         'name' => 'phpBB 3',
         'prefix' => 'phpbb_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

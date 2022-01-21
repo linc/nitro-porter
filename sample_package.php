@@ -17,7 +17,7 @@ class SampleName extends ExportController
     public const SUPPORTED = [
         'name' => '',
         'prefix' => '',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [  // Set features you support to 1 or a string (for support notes).
             'Users' => 1,

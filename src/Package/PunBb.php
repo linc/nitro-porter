@@ -17,8 +17,11 @@ class PunBb extends ExportController
     public const SUPPORTED = [
         'name' => 'PunBB 1',
         'prefix' => 'punbb_',
-        'CommandLine' => [
-            'avatarpath' => array('Full path of forum avatars.', 'Sx' => '::')
+        'options' => [
+            'avatars-source' => [
+                'Full path of forum avatars.',
+                'Sx' => '::'
+            ],
         ],
         'features' => [
             'Users' => 1,
@@ -77,7 +80,7 @@ class PunBb extends ExportController
 
         $this->cdn = $this->param('cdn', '');
 
-        if ($avatarPath = $this->param('avatarpath', false)) {
+        if ($avatarPath = $this->param('avatars-source', false)) {
             if (!$avatarPath = realpath($avatarPath)) {
                 echo "Unable to access path to avatars: $avatarPath\n";
                 exit(1);

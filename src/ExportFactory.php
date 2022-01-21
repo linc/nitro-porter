@@ -12,7 +12,7 @@ class ExportFactory
         bootDatabase($dbConfig);
 
         // Get the package controller.
-        $package = getValidPackage($_POST['type']);
+        $package = getValidPackage($_POST['package']);
 
         return $package;
     }

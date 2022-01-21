@@ -8,99 +8,60 @@ namespace NitroPorter;
 
 class CommandLine
 {
-    public const CLI_OPTIONS = array(
-        // Used shortcodes: t, n, u, p, h, x, a, c, f, d, o, s, b
-        'type' => array(
-            'Type of forum we\'re freeing you from.',
+    public const RUN_OPTIONS = [
+        // Used shortcodes: s, t, p, o, h
+        'source' => [
+            'Alias of a connection in the config.',
             'Req' => true,
             'Sx' => ':',
-            'Field' => 'type',
-            'Short' => 't',
-        ),
-        'dbname' => array(
-            'Database name.',
-            'Req' => true,
-            'Sx' => ':',
-            'Field' => 'dbname',
-            'Short' => 'n',
-        ),
-        'user' => array(
-            'Database connection username.',
-            'Req' => true,
-            'Sx' => ':',
-            'Field' => 'dbuser',
-            'Short' => 'u',
-        ),
-        'password' => array(
-            'Database connection password.',
-            'Sx' => '::',
-            'Field' => 'dbpass',
-            'Short' => 'p',
-            'Default' => '',
-        ),
-        'host' => array(
-            'IP address or hostname to connect to. Default is 127.0.0.1.',
-            'Sx' => ':',
-            'Field' => 'dbhost',
-            'Short' => 'o',
-            'Default' => '127.0.0.1',
-        ),
-        'prefix' => array(
-            'The table prefix in the database.',
-            'Field' => 'prefix',
-            'Sx' => ':',
-            'Short' => 'x',
-            'Default' => 'PACKAGE_DEFAULT',
-        ),
-        'avatars' => array(
-            'Enables exporting avatars from the database if supported.',
-            'Sx' => '::',
-            'Field' => 'avatars',
-            'Short' => 'a',
-            'Default' => false,
-        ),
-        'cdn' => array(
-            'Prefix to be applied to file paths.',
-            'Field' => 'cdn',
-            'Sx' => ':',
-            'Short' => 'c',
-            'Default' => '',
-        ),
-        'files' => array(
-            'Enables exporting attachments from database if supported.',
-            'Sx' => '::',
-            'Short' => 'f',
-            'Default' => false,
-        ),
-        'destpath' => array(
-            'Define destination path for the export file.',
-            'Sx' => '::',
-            'Short' => 'd',
-            'Default' => './',
-        ),
-        'spawn' => array(
-            'Create a new package with this name.',
-            'Sx' => '::',
             'Short' => 's',
-            'Default' => '',
-        ),
-        'help' => array(
+        ],
+        'target' => [
+            'Alias of a connection in the config.',
+            'Req' => true,
+            'Sx' => ':',
+            'Short' => 't',
+            'Default' => 'vanilla-csv',
+        ],
+        'package' => [
+            'Source software package alias.',
+            'Req' => true,
+            'Sx' => ':',
+            'Short' => 'p',
+        ],
+        'output' => [
+            'Target software package alias.',
+            'Req' => true,
+            'Sx' => ':',
+            'Short' => 'o',
+        ],
+        'help' => [
             'Show this help, duh.',
             'Short' => 'h',
-        ),
-        'tables' => array(
-            'Selective export, limited to specified tables, if provided',
+        ],
+        'src-prefix' => [
+            'Source database table prefix.',
             'Sx' => ':',
-        )
-    );
+            'Default' => '',
+        ],
+        'tar-prefix' => [
+            'Target database table prefix.',
+            'Sx' => ':',
+            'Default' => '',
+        ],
+        'tables' => [
+            'Selective export, limited to specified tables, if provided.',
+            'Sx' => ':',
+        ],
+    ];
 
     /**
      * @return array
      */
     public function getGlobalOptions(): array
     {
-        $options = self::CLI_OPTIONS;
-        $options['type']['Values'] = array_keys(SupportManager::getInstance()->getSupport());
+        $options = self::RUN_OPTIONS;
+        $options['package']['Values'] = array_keys(SupportManager::getInstance()->getSupport());
         return $options;
     }
 
@@ -121,7 +82,7 @@ class CommandLine
         }
 
         foreach ($supported as $type => $options) {
-            $commandLine = v('CommandLine', $options);
+            $commandLine = v('options', $options);
             if (!$commandLine) {
                 continue;
             }
@@ -132,9 +93,9 @@ class CommandLine
                 // We need to add the types to each command line option for validation purposes.
                 foreach ($commandLine as $longCode => $row) {
                     if (isset($result[$longCode])) {
-                        $result[$longCode]['Types'][] = $type;
+                        $result[$longCode]['Packages'][] = $type;
                     } else {
-                        $row['Types'] = array($type);
+                        $row['Packages'] = array($type);
                         $result[$longCode] = $row;
                     }
                 }
@@ -279,7 +240,7 @@ class CommandLine
         $errors = array();
         $result = array();
 
-        $type = v('type', $values, v('t', $values));
+        $type = v('package', $values, v('t', $values));
 
         foreach ($options as $longCode => $row) {
             $req = v('Req', $row);
@@ -383,7 +344,7 @@ class CommandLine
         $output .= "--$longname";
 
         // Align descriptions by padding.
-        $output = str_pad($output, 18, ' ');
+        $output = str_pad($output, 20, ' ');
 
         // Whether param is required.
         if (v('Req', $properties)) {

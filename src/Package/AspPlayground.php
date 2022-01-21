@@ -17,7 +17,7 @@ class AspPlayground extends ExportController
     public const SUPPORTED = [
         'name' => 'ASP Playground',
         'prefix' => 'pgd_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

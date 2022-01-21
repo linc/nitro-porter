@@ -16,7 +16,7 @@ class Q2a extends ExportController
     public const SUPPORTED = [
         'name' => 'Questions2Answers',
         'prefix' => 'qa_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

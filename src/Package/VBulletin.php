@@ -11,11 +11,11 @@
  * and transferred.
  *
  * To export only 1 category, add 'forumid=#' parameter to the URL.
- * To extract avatars stored in database, add 'avatars=1' parameter to the URL.
- * To extract attachments stored in db, add 'attachments=1' parameter to the URL.
+ * To extract avatars stored in database, add 'db-avatars=1' parameter to the URL.
+ * To extract attachments stored in db, add 'db-files=1' parameter to the URL.
  * To extract all usermeta data (title, skype, custom profile fields, etc),
  *    add 'usermeta=1' parameter to the URL.
- * To stop the export after only extracting files, add 'noexport=1' param to the URL.
+ * To stop the export after only extracting files, add 'files-only=1' param to the URL.
  *
  * TO MIGRATE FILES, BEFORE IMPORTING YOU MUST:
  * 1) Copy entire 'customavatars' folder into Vanilla's /upload folder.
@@ -23,7 +23,7 @@
  * 3) Make BOTH folders writable by the server.
  * 4) Enable the FileUpload plugin. (Media table must be present.)
  *
- * filepath - Command line option to fix / check files are on disk.  Files named .attach are renamed
+ * files-source - Command line option to fix / check files are on disk.  Files named .attach are renamed
  * to the proper name and missing files are reported in missing-files.txt.
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
@@ -40,13 +40,38 @@ class VBulletin extends ExportController
     public const SUPPORTED = [
         'name' => 'vBulletin 3 & 4',
         'prefix' => 'vb_',
-        'CommandLine' => [
-            //'noexport' => array('Exports only the blobs.', 'Sx' => '::'),
-            'mindate' => array('A date to import from. Like selective amnesia.'),
-            //'forumid' => array('Only export 1 forum'),
-            'ipbanlist' => array('Export IP ban list, which is a terrible idea.'),
-            'filepath' => array('Full path of file attachments to be renamed.', 'Sx' => '::'),
-            'filesHashSeparator' => array('Separator used to split the hash of attachments. ("" or "/")', 'Sx' => '::'),
+        'options' => [
+            'db-avatars' => [
+                'Enables exporting avatars from the database.',
+                'Sx' => '::',
+                'Default' => false,
+            ],
+            'db-files' => [
+                'Enables exporting attachments from database.',
+                'Sx' => '::',
+                'Default' => false,
+            ],
+            'files-only' => [
+                'Skip all exports except files stored in database.',
+                'Sx' => '::'
+            ],
+            'mindate' => [
+                'A date to import from. Like selective amnesia.'
+            ],
+            'forumid' => [
+                'Only export 1 forum (category) with given ID.'
+            ],
+            //'ipbanlist' => [
+            //    'Export IP ban list, which is a terrible idea.'
+            //],
+            'files-source' => [
+                'Full path of file attachments to be renamed.',
+                'Sx' => '::'
+            ],
+            'separator' => [
+                'Character used to split the hash of attachments. ("" or "/")',
+                'Sx' => '::'
+            ],
         ],
         'features' => [
             'Comments' => 1,
@@ -213,11 +238,11 @@ class VBulletin extends ExportController
         // Begin
         $this->ex->beginExport('', 'vBulletin 3.* and 4.*');
         $this->exportBlobs(
-            $this->param('files'),
-            $this->param('avatars')
+            $this->param('db-files'),
+            $this->param('db-avatars')
         );
 
-        if ($this->param('noexport')) {
+        if ($this->param('files-only')) {
             $this->ex->comment('Skipping the export.');
             $this->ex->endExport();
             return;
@@ -500,7 +525,7 @@ class VBulletin extends ExportController
         // files named .attach need to be named properly.
         // file needs to be renamed and db updated.
         // if its an images; we need to include .thumb
-        $attachmentPath = $this->param('filepath');
+        $attachmentPath = $this->param('files-source');
         if ($attachmentPath) {
             $missingFiles = array();
             if (is_dir($attachmentPath)) {
@@ -755,7 +780,7 @@ class VBulletin extends ExportController
 
             // If we're exporting blobs, simplify the folder structure.
             // Otherwise, we need to preserve vBulletin's eleventy subfolders.
-            $separator = $this->param('filesHashSeparator', '');
+            $separator = $this->param('separator', '');
             $filePath = implode($separator, $dirParts) . '/' . $identity . '.' . $row['extension'];
         }
 

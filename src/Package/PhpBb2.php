@@ -17,7 +17,7 @@ class PhpBb2 extends ExportController
     public const SUPPORTED = [
         'name' => 'phpBB 2',
         'prefix' => 'phpbb_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

@@ -18,7 +18,7 @@ class EsoTalk extends ExportController
     public const SUPPORTED = [
         'name' => 'esoTalk',
         'prefix' => 'et_',
-        'CommandLine' => [
+        'options' => [
         ],
         'features' => [
             'Users' => 1,

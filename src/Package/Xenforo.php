@@ -18,14 +18,19 @@ class Xenforo extends ExportController
     public const SUPPORTED = [
         'name' => 'Xenforo',
         'prefix' => 'xf_',
-        'CommandLine' => [
-            'avatarpath' => array('Full path of source avatars to process.', 'Sx' => ':', 'Field' => 'avatarpath'),
-            'attachmentpath' => array(
+        'options' => [
+            'avatars-source' => [
+                'Full path of source avatars to process.',
+                'Sx' => ':',
+            ],
+            'attach-source' => [
                 'Full path of source attachments to process.',
                 'Sx' => ':',
-                'Field' => 'attachmentpath'
-            ),
-            'attachment' => array('Set to 1 to export attachments.', 'Sx' => ':', 'Field' => 'attachment'),
+            ],
+            'attach-rename' => [
+                'Whether to rename the attachment files.',
+                'Sx' => ':',
+            ],
         ],
         'features' => [
             'Users' => 1,
@@ -63,7 +68,7 @@ class Xenforo extends ExportController
     public function attachmentFiles()
     {
         // Check source folder
-        $this->sourceFolder = $this->param('attachmentpath');
+        $this->sourceFolder = $this->param('attach-source');
         if (!is_dir($this->sourceFolder)) {
             trigger_error("Source attachment folder '{$this->sourceFolder}' does not exist.");
         }
@@ -117,7 +122,7 @@ class Xenforo extends ExportController
     {
 
         // Check source folder
-        $this->sourceFolder = $this->param('avatarpath');
+        $this->sourceFolder = $this->param('avatars-source');
         if (!is_dir($this->sourceFolder)) {
             trigger_error("Source avatar folder '{$this->sourceFolder}' does not exist.");
         }
@@ -240,7 +245,7 @@ class Xenforo extends ExportController
         }
 
         // Export attachments
-        if ($this->param('attachment')) {
+        if ($this->param('attach-rename')) {
             $this->attachmentFiles();
         }
 
