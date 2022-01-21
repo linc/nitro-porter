@@ -144,13 +144,6 @@ class CommandLine
             die();
         }
 
-        // Spawn new package.
-        if (isset($opts['spawn']) || isset($opts['s'])) {
-            $name = (isset($opts['spawn'])) ? $opts['spawn'] : $opts['s'];
-            spawnPackage($name);
-            die();
-        }
-
         $_POST = $this->validate($opts, $commandOptions);
     }
 
