@@ -20,7 +20,7 @@ if (!file_exists(__DIR__ . '/config.php')) {
 }
 
 // Load the support manifest.
-\NitroPorter\SupportManager::getInstance()->setSupport(loadManifest());
+\NitroPorter\PackageSupport::getInstance()->set(loadManifest());
 
 // CLI Router.
 if (PHP_SAPI == 'cli') {
@@ -32,7 +32,7 @@ if (PHP_SAPI == 'cli') {
 // Web Router.
 if (isset($_POST['package'])) {
     $package = \NitroPorter\ExportFactory::build();
-    $package->doExport();
+    $package->run();
 } else {
     \NitroPorter\Render::route();
 }

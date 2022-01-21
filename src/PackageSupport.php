@@ -2,7 +2,7 @@
 
 namespace NitroPorter;
 
-class SupportManager
+class PackageSupport
 {
     public const SUPPORTED_META = [
         'name',
@@ -23,14 +23,16 @@ class SupportManager
         'PrivateMessages',
         'Signatures',
         'Attachments',
+        'Tags',
         'Bookmarks',
         'Permissions',
+        'Ranks',
+        'Reactions',
         'Badges',
         'UserNotes',
-        'Ranks',
+        'UserWall',
         'Groups',
-        'Tags',
-        'Reactions',
+        'Emoji',
         'Articles',
     ];
 
@@ -46,18 +48,18 @@ class SupportManager
     public static function getInstance()
     {
         if (self::$instance == null) {
-            self::$instance = new SupportManager();
+            self::$instance = new PackageSupport();
         }
 
         return self::$instance;
     }
 
-    public function registerSupport(string $name, array $meta)
+    public function register(string $name, array $meta)
     {
         $this->packages[$name] = $meta;
     }
 
-    public function getSupport(): array
+    public function get(): array
     {
         return $this->packages;
     }
@@ -68,7 +70,7 @@ class SupportManager
      * @param array $packages
      * @return void
      */
-    public function setSupport(array $packages): void
+    public function set(array $packages): void
     {
         foreach ($packages as $name) {
             $classname = '\NitroPorter\Package\\' . $name;
@@ -79,19 +81,19 @@ class SupportManager
     /**
      * Get the data support status for a single platform feature.
      *
-     * @param  $platform
-     * @param  $feature
-     * @return string
+     * @param string $package
+     * @param string $feature
+     * @return string HTML-wrapped Yes or No symbols.
      */
-    public function featureStatus($platform, $feature, $notes = true)
+    public function getFeatureStatusHtml(string $package, string $feature, bool $notes = true): string
     {
-        $supported = $this->getSupport();
+        $supported = $this->get();
 
-        if (!isset($supported[$platform]['features'])) {
+        if (!isset($supported[$package]['features'])) {
             return '<span class="No">No</span>';
         }
 
-        $available = $supported[$platform]['features'];
+        $available = $supported[$package]['features'];
 
         // Calculate feature availability.
         $status = '<span class="No">&#x2717;</span>';
@@ -123,29 +125,8 @@ class SupportManager
      *
      * @return array
      */
-    public function vanillaFeatures()
+    public function getAllFeatures(): array
     {
-        return [
-            'Comments' => 0,
-            'Discussions' => 0,
-            'Users' => 0,
-            'Categories' => 0,
-            'Roles' => 0,
-            'Passwords' => 0,
-            'Avatars' => 0,
-            'PrivateMessages' => 0,
-            'Signatures' => 0,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Polls' => 0,
-            'Tags' => 0,
-            'UserNotes' => 0,
-            'Badges' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Emoji' => 0,
-            'UserWall' => 0,
-        ];
+        return array_fill_keys(self::SUPPORTED_FEATURES, 0);
     }
 }

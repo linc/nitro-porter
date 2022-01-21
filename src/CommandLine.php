@@ -61,7 +61,7 @@ class CommandLine
     public function getGlobalOptions(): array
     {
         $options = self::RUN_OPTIONS;
-        $options['package']['Values'] = array_keys(SupportManager::getInstance()->getSupport());
+        $options['package']['Values'] = array_keys(PackageSupport::getInstance()->get());
         return $options;
     }
 
@@ -72,7 +72,7 @@ class CommandLine
     public function getAllOptions($sections = false): array
     {
         $globalOptions = $this->getGlobalOptions();
-        $supported = SupportManager::getInstance()->getSupport();
+        $supported = PackageSupport::getInstance()->get();
         $result = [];
 
         if ($sections) {

@@ -57,7 +57,7 @@ class Render
      */
     public static function viewForm($data = [])
     {
-        $forums = \NitroPorter\SupportManager::getInstance()->getSupport();
+        $forums = \NitroPorter\PackageSupport::getInstance()->get();
         $msg = getValue('Msg', $data, '');
         $canWrite = testWrite();
 
@@ -281,8 +281,8 @@ class Render
      */
     public static function viewFeatureList($platform)
     {
-        $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
-        $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
+        $supported = \NitroPorter\PackageSupport::getInstance()->get();
+        $features = \NitroPorter\PackageSupport::getInstance()->getAllFeatures();
         self::pageHeader();
 
         echo '<p class="Info"><a href="/?features=1">&larr; Back</a></p>';
@@ -293,7 +293,7 @@ class Render
         foreach ($features as $feature => $trash) {
             echo '
           <dt>' . self::featureName($feature) . '</dt>
-          <dd>' . \NitroPorter\SupportManager::getInstance()->featureStatus($platform, $feature) . '</dd>';
+          <dd>' . \NitroPorter\PackageSupport::getInstance()->getFeatureStatusHtml($platform, $feature) . '</dd>';
         }
         echo '</dl>';
 
@@ -307,9 +307,9 @@ class Render
      */
     public static function viewFeatureTable()
     {
-        $features = \NitroPorter\SupportManager::getInstance()->vanillaFeatures();
-        $supported = \NitroPorter\SupportManager::getInstance()->getSupport();
-        $platforms = array_keys($supported);
+        $features = \NitroPorter\PackageSupport::getInstance()->getAllFeatures();
+        $supported = \NitroPorter\PackageSupport::getInstance()->get();
+        $packages = array_keys($supported);
 
         self::pageHeader();
 
@@ -327,14 +327,14 @@ class Render
 
         echo '</tr></thead><tbody>';
 
-        foreach ($platforms as $slug) {
+        foreach ($packages as $package) {
             echo '<tr><td class="Platform"><span><a href="?list='
-                 . $slug . '">' . $supported[$slug]['name'] . '</a></span></td>';
+                 . $package . '">' . $supported[$package]['name'] . '</a></span></td>';
 
             // Status per platform.
             foreach ($features as $feature => $trash) {
                 echo '<td>' .
-                    \NitroPorter\SupportManager::getInstance()->featureStatus($slug, $feature, false) .
+                    \NitroPorter\PackageSupport::getInstance()->getFeatureStatusHtml($package, $feature, false) .
                 '</td>';
             }
 

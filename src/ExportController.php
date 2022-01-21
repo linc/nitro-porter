@@ -58,7 +58,7 @@ abstract class ExportController
         $this->wireupModel();
 
         // That's not sexy but it gets the job done :D
-        $supported = SupportManager::getInstance()->getSupport();
+        $supported = PackageSupport::getInstance()->get();
         $lcClassName = strtolower(get_class($this));
         $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
 
@@ -114,7 +114,7 @@ abstract class ExportController
     /**
      * Logic for export process.
      */
-    public function doExport()
+    public function run()
     {
         // Test connection
         $msg = $this->testDatabase();
