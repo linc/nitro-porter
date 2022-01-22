@@ -1,7 +1,20 @@
 #!/usr/bin/env php
 <?php
 
-// turn off html errors
+// Disable HTML errors.
 ini_set('html_errors', 'off');
 
-require_once dirname(__DIR__) . '/index.php';
+// Bootstrap.
+define('CONSOLE', true);
+require_once dirname(__DIR__) . '/bootstrap.php';
+
+// Parse CLI request.
+$cli = new \NitroPorter\CommandLine();
+$cli->parse();
+
+// Do request.
+$package = \NitroPorter\ExportFactory::build();
+$package->run();
+
+// Console output should end in newline.
+echo "\n";
