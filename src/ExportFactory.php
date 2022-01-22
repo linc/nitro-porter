@@ -2,6 +2,8 @@
 
 namespace NitroPorter;
 
+use NitroPorter\Database\DbFactory;
+
 class ExportFactory
 {
     public static function build(): \NitroPorter\ExportController
@@ -13,6 +15,18 @@ class ExportFactory
 
         // Get the package controller.
         $package = getValidPackage($_POST['package']);
+
+        // Wire old database / model mess.
+        $package->loadPrimaryDatabase();
+        $package->handleInfoForm();
+        $dbfactory = new DbFactory($package->getDbInfo(), 'pdo');
+        $model = new ExportModel($dbfactory);
+        $model->controller = $package;
+        $model->prefix = '';
+        $package->setModel($model);
+
+        // Legacy construct.
+        $package->build();
 
         return $package;
     }

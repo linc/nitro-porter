@@ -50,14 +50,9 @@ abstract class ExportController
     /**
      * Construct and set the controller's properties from the posted form.
      */
-    public function __construct()
+    public function build()
     {
-        // Wire old database into model.
-        $this->loadPrimaryDatabase();
-        $this->handleInfoForm();
-        $this->wireupModel();
-
-        // That's not sexy but it gets the job done :D
+        // Set the database source prefix.
         $supported = PackageSupport::getInstance()->get();
         $lcClassName = strtolower(get_class($this));
         $hasDefaultPrefix = !empty($supported[$lcClassName]['prefix']);
@@ -72,6 +67,7 @@ abstract class ExportController
             }
         }
 
+        // Set model properties.
         $this->ex->destination = $this->param('dest', 'file');
         $this->ex->destDb = $this->param('destdb', null);
         $this->ex->testMode = $this->param('test', false);
@@ -94,6 +90,14 @@ abstract class ExportController
                 $this->ex->restrictedTables = $restrictedTables;
             }
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getDbInfo(): array
+    {
+        return $this->dbInfo;
     }
 
     /**
@@ -152,7 +156,7 @@ abstract class ExportController
     {
         $this->dbInfo['package'] = $_POST['package'];
         $this->dbInfo['prefix'] = !isset($_POST['emptyprefix']) ?
-            preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['prefix']) : null;
+            preg_replace('/[^A-Za-z0-9_-]/', '', $_POST['src-prefix']) : null;
     }
 
     /**
@@ -201,13 +205,11 @@ abstract class ExportController
     }
 
     /**
+     * @param ExportModel
      * @return void
      */
-    public function wireupModel(): void
+    public function setModel(ExportModel $model): void
     {
-        $dbfactory = new DbFactory($this->dbInfo, 'pdo');
-        $this->ex = new ExportModel($dbfactory);
-        $this->ex->controller = $this;
-        $this->ex->prefix = '';
+        $this->ex = $model;
     }
 }
