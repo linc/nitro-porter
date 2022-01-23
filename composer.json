@@ -49,7 +49,7 @@
    },
    "autoload": {
        "psr-4": {
-            "NitroPorter\\": "src/"
+            "Porter\\": "src/"
        },
        "files": [
             "src/Functions/core.php",

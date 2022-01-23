@@ -1,12 +1,12 @@
 <?php
 
-namespace NitroPorter;
+namespace Porter;
 
-use NitroPorter\Database\DbFactory;
+use Porter\Database\DbFactory;
 
 class ExportFactory
 {
-    public static function build(): \NitroPorter\ExportController
+    public static function build(): \Porter\ExportController
     {
         // Wire new database.
         $config = loadConfig();

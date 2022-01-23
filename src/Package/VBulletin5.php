@@ -11,9 +11,9 @@
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
-namespace NitroPorter\Package;
+namespace Porter\Package;
 
-use NitroPorter\ExportModel;
+use Porter\ExportModel;
 
 class VBulletin5 extends VBulletin
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter;
+namespace Porter;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 

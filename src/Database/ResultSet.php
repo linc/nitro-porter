@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter\Database;
+namespace Porter\Database;
 
 /**
  * Class ResultSet

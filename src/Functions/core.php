@@ -43,16 +43,16 @@ function getSourceConnections(): array
  * Get valid package class. Exit app if invalid package name is given.
  *
  * @param string $packageName
- * @return \NitroPorter\ExportController
+ * @return \Porter\ExportController
  */
-function getValidPackage(string $packageName): \NitroPorter\ExportController
+function getValidPackage(string $packageName): \Porter\ExportController
 {
-    if (!array_key_exists($packageName, \NitroPorter\PackageSupport::getInstance()->get())) {
+    if (!array_key_exists($packageName, \Porter\PackageSupport::getInstance()->get())) {
         echo 'Unsupported package: ' . $packageName;
         exit();
     }
 
-    $class = '\NitroPorter\Package\\' . ucwords($packageName);
+    $class = '\Porter\Package\\' . ucwords($packageName);
     return new $class();
 }
 

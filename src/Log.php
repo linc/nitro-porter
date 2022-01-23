@@ -4,7 +4,7 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-namespace NitroPorter;
+namespace Porter;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;

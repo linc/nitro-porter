@@ -7,9 +7,9 @@
  * @author  Eduardo Casarero
  */
 
-namespace NitroPorter\Package;
+namespace Porter\Package;
 
-use NitroPorter\ExportController;
+use Porter\ExportController;
 
 class Q2a extends ExportController
 {

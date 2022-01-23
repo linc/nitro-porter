@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter\Database;
+namespace Porter\Database;
 
 /**
  * Creating desired db instances on the go
@@ -37,7 +37,7 @@ class DbFactory
      */
     public function getInstance()
     {
-        $className = '\NitroPorter\Database\\' . $this->extension . 'Db';
+        $className = '\Porter\Database\\' . $this->extension . 'Db';
         if (class_exists($className)) {
             $dbFactory = new $className($this->dbInfo);
             if ($dbFactory instanceof DbResource) {

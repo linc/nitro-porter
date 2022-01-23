@@ -7,10 +7,10 @@
  * @author YOUR NAME
  */
 
-namespace NitroPorter\Package;
+namespace Porter\Package;
 
-use NitroPorter\ExportController;
-use NitroPorter\ExportModel;
+use Porter\ExportController;
+use Porter\ExportModel;
 
 class SampleName extends ExportController
 {

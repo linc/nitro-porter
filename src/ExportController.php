@@ -4,9 +4,9 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-namespace NitroPorter;
+namespace Porter;
 
-use NitroPorter\Database\DbFactory;
+use Porter\Database\DbFactory;
 
 /**
  * Generic controller implemented by forum-specific ones.
@@ -181,13 +181,11 @@ abstract class ExportController
      */
     public function param($name, $default = false)
     {
-        if (isset($_POST[$name])) {
-            return $_POST[$name];
-        } elseif (isset($_GET[$name])) {
-            return $_GET[$name];
-        } else {
-            return $default;
+        $value = Request::instance()->get($name);
+        if ($value === '') {
+            $value = $default;
         }
+        return $value;
     }
 
     /**

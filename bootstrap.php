@@ -20,4 +20,4 @@ if (!file_exists(__DIR__ . '/config.php')) {
 }
 
 // Load package manifest.
-\NitroPorter\PackageSupport::getInstance()->set(loadManifest());
+\Porter\PackageSupport::getInstance()->set(loadManifest());

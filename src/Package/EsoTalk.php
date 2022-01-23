@@ -8,10 +8,10 @@
  * @author  Frederik Nielsen
  */
 
-namespace NitroPorter\Package;
+namespace Porter\Package;
 
-use NitroPorter\ExportController;
-use NitroPorter\ExportModel;
+use Porter\ExportController;
+use Porter\ExportModel;
 
 class EsoTalk extends ExportController
 {

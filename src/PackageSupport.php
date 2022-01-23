@@ -1,6 +1,6 @@
 <?php
 
-namespace NitroPorter;
+namespace Porter;
 
 class PackageSupport
 {
@@ -68,7 +68,7 @@ class PackageSupport
     public function set(array $packages): void
     {
         foreach ($packages as $name) {
-            $classname = '\NitroPorter\Package\\' . $name;
+            $classname = '\Porter\Package\\' . $name;
             $this->packages[$name] = $classname::getSupport();
         }
     }

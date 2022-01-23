@@ -6,7 +6,7 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-namespace NitroPorter;
+namespace Porter;
 
 class Render
 {
@@ -57,7 +57,7 @@ class Render
      */
     public static function viewForm($data = [])
     {
-        $forums = \NitroPorter\PackageSupport::getInstance()->get();
+        $forums = \Porter\PackageSupport::getInstance()->get();
         $msg = getValue('Msg', $data, '');
         $canWrite = testWrite();
 
@@ -281,8 +281,8 @@ class Render
      */
     public static function viewFeatureList($platform)
     {
-        $supported = \NitroPorter\PackageSupport::getInstance()->get();
-        $features = \NitroPorter\PackageSupport::getInstance()->getAllFeatures();
+        $supported = \Porter\PackageSupport::getInstance()->get();
+        $features = \Porter\PackageSupport::getInstance()->getAllFeatures();
         self::pageHeader();
 
         echo '<p class="Info"><a href="/?features=1">&larr; Back</a></p>';
@@ -293,7 +293,7 @@ class Render
         foreach ($features as $feature => $trash) {
             echo '
           <dt>' . self::featureName($feature) . '</dt>
-          <dd>' . \NitroPorter\PackageSupport::getInstance()->getFeatureStatusHtml($platform, $feature) . '</dd>';
+          <dd>' . \Porter\PackageSupport::getInstance()->getFeatureStatusHtml($platform, $feature) . '</dd>';
         }
         echo '</dl>';
 
@@ -307,8 +307,8 @@ class Render
      */
     public static function viewFeatureTable()
     {
-        $features = \NitroPorter\PackageSupport::getInstance()->getAllFeatures();
-        $supported = \NitroPorter\PackageSupport::getInstance()->get();
+        $features = \Porter\PackageSupport::getInstance()->getAllFeatures();
+        $supported = \Porter\PackageSupport::getInstance()->get();
         $packages = array_keys($supported);
 
         self::pageHeader();
@@ -334,7 +334,7 @@ class Render
             // Status per platform.
             foreach ($features as $feature => $trash) {
                 echo '<td>' .
-                    \NitroPorter\PackageSupport::getInstance()->getFeatureStatusHtml($package, $feature, false) .
+                    \Porter\PackageSupport::getInstance()->getFeatureStatusHtml($package, $feature, false) .
                 '</td>';
             }
 

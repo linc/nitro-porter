@@ -9,10 +9,10 @@
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
-namespace NitroPorter\Package;
+namespace Porter\Package;
 
-use NitroPorter\ExportController;
-use NitroPorter\ExportModel;
+use Porter\ExportController;
+use Porter\ExportModel;
 
 class IpBoard3 extends ExportController
 {

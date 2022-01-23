@@ -9,9 +9,9 @@
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
-namespace NitroPorter\Package;
+namespace Porter\Package;
 
-use NitroPorter\ExportController;
+use Porter\ExportController;
 
 class Xenforo extends ExportController
 {

@@ -4,11 +4,11 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-namespace NitroPorter;
+namespace Porter;
 
-use NitroPorter\Database\ResultSet;
-use NitroPorter\Database\DbFactory;
-use NitroPorter\Log;
+use Porter\Database\ResultSet;
+use Porter\Database\DbFactory;
+use Porter\Log;
 
 /**
  * Object for exporting other database structures into a format that can be imported.

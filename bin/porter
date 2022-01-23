@@ -9,11 +9,11 @@ define('CONSOLE', true);
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 // Parse CLI request.
-$request = new \NitroPorter\Request();
-$request->parseCli();
+$input = \Porter\Request::instance()->parseCli();
+\Porter\Request::instance()->load($input);
 
 // Do request.
-$package = \NitroPorter\ExportFactory::build();
+$package = \Porter\ExportFactory::build();
 $package->run();
 
 // Console output should end in newline.

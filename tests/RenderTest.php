@@ -12,7 +12,7 @@ final class RenderTest extends TestCase
     public function testCanBeUsedAsString(): void
     {
         ob_start();
-        \NitroPorter\Render::pageFooter();
+        \Porter\Render::pageFooter();
         $output = ob_get_clean();
         $this->assertStringContainsString('</html>', $output);
     }
