@@ -118,7 +118,7 @@ abstract class ExportController
     /**
      * Logic for export process.
      */
-    public function run()
+    public function run(\Porter\Request $request)
     {
         // Test connection
         $msg = $this->testDatabase();

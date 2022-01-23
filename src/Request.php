@@ -35,10 +35,6 @@ class Request
             'Sx' => ':',
             'Short' => 'o',
         ],
-        'help' => [
-            'Show this help, duh.',
-            'Short' => 'h',
-        ],
         'src-prefix' => [
             'Source database table prefix.',
             'Sx' => ':',
@@ -53,12 +49,6 @@ class Request
             'Selective export, limited to specified tables, if provided.',
             'Sx' => ':',
         ],
-        /*'list' => [
-            'Show features for one package.',
-        ],
-        'features' => [
-            'Show overview features table.',
-        ],*/
     ];
 
     private static $instance = null;
@@ -92,6 +82,16 @@ class Request
     }
 
     /**
+     * Get all data from request.
+     *
+     * @return array
+     */
+    public function getAll(): array
+    {
+        return $this->request;
+    }
+
+    /**
      * @return array
      */
     public function getGlobalOptions(): array
@@ -112,7 +112,7 @@ class Request
         $result = [];
 
         if ($sections) {
-            $result['Global Options'] = $globalOptions;
+            $result['Run Options'] = $globalOptions;
         } else {
             $result = $globalOptions;
         }
@@ -170,19 +170,19 @@ class Request
      */
     public function parseCli(): array
     {
-        // Get the inputs.
+        global $argv;
+        $command = $argv[1];
+
+        if ($command !== 'run') {
+            return [$command => 1];
+        }
+
+        // Get the options for 'run'.
         $commandOptions = $this->getAllOptions();
         list($shortCodes, $longCodes) = $this->getOptCodes($commandOptions);
         $opts = getopt($shortCodes, $longCodes);
 
-        // Output help.
-        if (array_key_exists('help', $opts) || array_key_exists('h', $opts)) {
-            $options = $this->getAllOptions(true);
-            $this->outputHelp($options);
-            die();
-        }
-
-        return $this->validate($opts, $commandOptions);
+        return $this->validateRunOptions($opts, $commandOptions);
     }
 
     /**
@@ -210,7 +210,7 @@ class Request
      * @param array $options
      * @return array
      */
-    public function validate($values, $options)
+    public function validateRunOptions($values, $options)
     {
         $errors = array();
         $result = array();
@@ -274,66 +274,5 @@ class Request
         }
 
         return $result;
-    }
-
-    /**
-     * Output help to the CLI.
-     *
-     * @param array $options Multi-dimensional array of CLI options.
-     */
-    public function outputHelp(array $options)
-    {
-        $output = '';
-
-        foreach ($options as $section => $options) {
-            $output .= $section . "\n";
-
-            foreach ($options as $longname => $properties) {
-                $output .= $this->buildSingleOptionOutput($longname, $properties) . "\n";
-            }
-
-            $output .= "\n";
-        }
-
-        echo $output;
-    }
-
-    /**
-     * Build a single line of help output for a single CLI command.
-     *
-     * @param string $longname
-     * @param array $properties
-     * @return string
-     */
-    public function buildSingleOptionOutput(string $longname, array $properties): string
-    {
-        // Indent.
-        $output = "  ";
-
-        // Short code.
-        if (isset($properties['Short'])) {
-            $output .= '-' . $properties['Short'] . ', ';
-        }
-
-        // Long code.
-        $output .= "--$longname";
-
-        // Align descriptions by padding.
-        $output = str_pad($output, 20, ' ');
-
-        // Whether param is required.
-        if (v('Req', $properties)) {
-            $output .= 'Required. ';
-        }
-
-        // Description.
-        $output .= "{$properties[0]}";
-
-        // List valid values for --type.
-        if ($values = v('Values', $properties)) {
-            //$output .= ' (Choose from: ' . implode(', ', $values) . ')';
-        }
-
-        return $output;
     }
 }

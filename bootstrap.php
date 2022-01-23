@@ -1,9 +1,5 @@
 <?php
 
-if (!defined('WEB') && !defined('CONSOLE')) {
-    die('Cannot call bootstrap directly.');
-}
-
 // Autoload.
 require_once 'vendor/autoload.php';
 

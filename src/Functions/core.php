@@ -57,6 +57,16 @@ function getValidPackage(string $packageName): \Porter\ExportController
 }
 
 /**
+ * Provides a chained callable for the router.
+ *
+ * @param \Porter\Request $request
+ */
+function buildAndRun(\Porter\Request $request): void
+{
+    \Porter\ExportFactory::build()->run($request);
+}
+
+/**
  * Error handler.
  *
  * @param $errno

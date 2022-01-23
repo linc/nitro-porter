@@ -14,7 +14,7 @@ class ExportFactory
         bootDatabase($dbConfig);
 
         // Get the package controller.
-        $package = getValidPackage($_POST['package']);
+        $package = getValidPackage(\Porter\Request::instance()->get('package'));
 
         // Wire old database / model mess.
         $package->loadPrimaryDatabase();

@@ -11,19 +11,66 @@ namespace Porter;
 class Render
 {
     /**
-     * Routing logic for which view to render.
+     * Output help to the CLI.
      *
-     * @return void
+     * @param array $options Multi-dimensional array of CLI options.
      */
-    public static function route()
+    public static function cliHelp(\Porter\Request $request)
     {
-        if (isset($_REQUEST['list'])) {
-            Render::viewFeatureList($_REQUEST['list']); // Single package feature list.
-        } elseif (isset($_REQUEST['features'])) {
-            Render::viewFeatureTable();  // Overview table.
-        } else {
-            Render::viewForm(); // Starting Web UI.
+        $options = $request->getAllOptions(true);
+
+        $output = '';
+
+        foreach ($options as $section => $options) {
+            $output .= $section . "\n";
+
+            foreach ($options as $longname => $properties) {
+                $output .= self::cliSingleOption($longname, $properties) . "\n";
+            }
+
+            $output .= "\n";
         }
+
+        echo $output;
+    }
+
+    /**
+     * Build a single line of help output for a single CLI command.
+     *
+     * @param string $longname
+     * @param array $properties
+     * @return string
+     */
+    public static function cliSingleOption(string $longname, array $properties): string
+    {
+        // Indent.
+        $output = "  ";
+
+        // Short code.
+        if (isset($properties['Short'])) {
+            $output .= '-' . $properties['Short'] . ', ';
+        }
+
+        // Long code.
+        $output .= "--$longname";
+
+        // Align descriptions by padding.
+        $output = str_pad($output, 20, ' ');
+
+        // Whether param is required.
+        if (v('Req', $properties)) {
+            $output .= 'Required. ';
+        }
+
+        // Description.
+        $output .= "{$properties[0]}";
+
+        // List valid values for --type.
+        if ($values = v('Values', $properties)) {
+            //$output .= ' (Choose from: ' . implode(', ', $values) . ')';
+        }
+
+        return $output;
     }
 
     /**
@@ -55,10 +102,10 @@ class Render
     /**
      * Form: Database connection info.
      */
-    public static function viewForm($data = [])
+    public static function viewForm(\Porter\Request $request)
     {
         $forums = \Porter\PackageSupport::getInstance()->get();
-        $msg = getValue('Msg', $data, '');
+        $msg = getValue('Msg', $request->getAll(), '');
         $canWrite = testWrite();
 
         if ($canWrite === null) {
@@ -279,8 +326,9 @@ class Render
      * @param string $platform
      * @param array  $features
      */
-    public static function viewFeatureList($platform)
+    public static function viewFeatureList($request)
     {
+        $platform = $request->get('list');
         $supported = \Porter\PackageSupport::getInstance()->get();
         $features = \Porter\PackageSupport::getInstance()->getAllFeatures();
         self::pageHeader();
