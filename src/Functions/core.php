@@ -112,9 +112,9 @@ function testWrite(): bool
  * @param  string $key
  * @param  array $collection
  * @param  string $default
- * @return string
+ * @return mixed
  */
-function getValue(string $key, array $collection = [], string $default = ''): string
+function getValue(string $key, array $collection = [], string $default = '')
 {
     if (!$collection) {
         $collection = $_POST;
@@ -133,7 +133,7 @@ function getValue(string $key, array $collection = [], string $default = ''): st
  * @param string $default
  * @return mixed|null
  */
-function v(string $name, array $array, $default = ''): string
+function v(string $name, array $array, $default = '')
 {
     if (isset($array[$name])) {
         return $array[$name];
