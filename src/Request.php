@@ -6,7 +6,7 @@
 
 namespace NitroPorter;
 
-class CommandLine
+class Request
 {
     public const RUN_OPTIONS = [
         // Used shortcodes: s, t, p, o, h
@@ -53,7 +53,43 @@ class CommandLine
             'Selective export, limited to specified tables, if provided.',
             'Sx' => ':',
         ],
+        /*'list' => [
+            'Show features for one package.',
+        ],
+        'features' => [
+            'Show overview features table.',
+        ],*/
     ];
+
+    private static $instance = null;
+
+    protected $request = [];
+
+    public static function getInstance(): self
+    {
+        if (self::$instance == null) {
+            self::$instance = new Request();
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Get a single value from the request.
+     *
+     * @param string $name
+     * @return string
+     */
+    public function get(string $name): string
+    {
+        $value = '';
+
+        if (isset($this->request[$name])) {
+            $value = $this->request[$name];
+        }
+
+        return $value;
+    }
 
     /**
      * @return array
@@ -130,7 +166,7 @@ class CommandLine
     /**
      * Main process for bootstrap.
      */
-    public function parse(): void
+    public function parseCli(): void
     {
         // Get the inputs.
         $commandOptions = $this->getAllOptions();

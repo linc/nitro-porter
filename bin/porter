@@ -9,8 +9,8 @@ define('CONSOLE', true);
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 // Parse CLI request.
-$cli = new \NitroPorter\CommandLine();
-$cli->parse();
+$request = new \NitroPorter\Request();
+$request->parseCli();
 
 // Do request.
 $package = \NitroPorter\ExportFactory::build();
