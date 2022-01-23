@@ -128,7 +128,6 @@ abstract class ExportController
 
         // Good src tables - Start dump
         $this->ex->useCompression(true);
-        $this->ex->filenamePrefix = $this->dbInfo['dbname'];
         set_time_limit(0);
 
         $this->forumExport($this->ex);

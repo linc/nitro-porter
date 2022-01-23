@@ -89,11 +89,6 @@ class ExportModel
     public $file = null;
 
     /**
-     * @var string A prefix to put into an automatically generated filename.
-     */
-    public $filenamePrefix = '';
-
-    /**
      * @var string Database host. *
      */
     public $host = 'localhost';
@@ -232,7 +227,7 @@ class ExportModel
 
         // Allow the $path parameter to override this default naming.
         if (!$path) {
-            $this->path .= 'export_' . ($this->filenamePrefix ? $this->filenamePrefix . '_' : '')
+            $this->path .= 'export_'
                  . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
         }
 
