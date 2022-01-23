@@ -5,14 +5,14 @@
  */
 
 /**
- * Retreive settings from the config.
+ * Retrieve settings from the config.
  */
-function loadConfig()
+function loadConfig(): array
 {
     return include(ROOT_DIR . '/config.php');
 }
 
-function loadManifest()
+function loadManifest(): array
 {
     return include(ROOT_DIR . '/manifest.php');
 }
@@ -20,7 +20,7 @@ function loadManifest()
 /**
  * Retrieve test db creds from main config for Phinx.
  */
-function getTestDatabaseCredentials()
+function getTestDatabaseCredentials(): array
 {
     return loadConfig()['test_connections']['databases'][0]; // @todo
 }
@@ -71,8 +71,10 @@ function buildAndRun(\Porter\Request $request): void
  *
  * @param $errno
  * @param $errstr
+ * @param $errFile
+ * @param $errLine
  */
-function errorHandler($errno, $errstr, $errFile, $errLine)
+function errorHandler($errno, $errstr, $errFile, $errLine): void
 {
     $reportingLevel = error_reporting();
 
@@ -93,14 +95,12 @@ function errorHandler($errno, $errstr, $errFile, $errLine)
 /**
  * Test filesystem permissions.
  */
-function testWrite()
+function testWrite(): bool
 {
-    // Create file
-    $file = 'vanilla2test.txt';
+    $file = 'portertest.txt';
     @touch($file);
     if (is_writable($file)) {
         @unlink($file);
-
         return true;
     } else {
         return false;
@@ -108,14 +108,13 @@ function testWrite()
 }
 
 /**
- *
  * @deprecated
- * @param  $key
- * @param  null   $collection
+ * @param  string $key
+ * @param  array $collection
  * @param  string $default
  * @return string
  */
-function getValue($key, $collection = null, $default = '')
+function getValue(string $key, array $collection = [], string $default = ''): string
 {
     if (!$collection) {
         $collection = $_POST;
@@ -129,12 +128,12 @@ function getValue($key, $collection = null, $default = '')
 
 /**
  * @deprecated
- * @param $name
- * @param $array
- * @param null $default
+ * @param string $name
+ * @param array $array
+ * @param string $default
  * @return mixed|null
  */
-function v($name, $array, $default = null)
+function v(string $name, array $array, $default = ''): string
 {
     if (isset($array[$name])) {
         return $array[$name];
@@ -146,11 +145,11 @@ function v($name, $array, $default = null)
 /**
  *
  *
- * @param  $paths
+ * @param  array|string $paths
  * @param  string $delimiter
- * @return mixed
+ * @return string
  */
-function combinePaths($paths, $delimiter = '/')
+function combinePaths($paths, string $delimiter = '/'): string
 {
     if (is_array($paths)) {
         $mungedPath = implode($delimiter, $paths);
