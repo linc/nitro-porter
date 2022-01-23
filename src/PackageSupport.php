@@ -40,12 +40,7 @@ class PackageSupport
 
     private $packages = [];
 
-    private function __construct()
-    {
-        // Do nothing.
-    }
-
-    public static function getInstance()
+    public static function getInstance(): self
     {
         if (self::$instance == null) {
             self::$instance = new PackageSupport();
