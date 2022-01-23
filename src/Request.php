@@ -4,7 +4,7 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-namespace NitroPorter;
+namespace Porter;
 
 class Request
 {
@@ -65,7 +65,7 @@ class Request
 
     protected $request = [];
 
-    public static function getInstance(): self
+    public static function instance(): self
     {
         if (self::$instance == null) {
             self::$instance = new Request();
@@ -164,9 +164,11 @@ class Request
     }
 
     /**
-     * Main process for bootstrap.
+     * Get the request from the CLI.
+     *
+     * @return array
      */
-    public function parseCli(): void
+    public function parseCli(): array
     {
         // Get the inputs.
         $commandOptions = $this->getAllOptions();
@@ -180,7 +182,27 @@ class Request
             die();
         }
 
-        $_POST = $this->validate($opts, $commandOptions);
+        return $this->validate($opts, $commandOptions);
+    }
+
+    /**
+     * Get the request from a web form submission.
+     *
+     * @return array
+     */
+    public function parseWeb(): array
+    {
+        return $_REQUEST;
+    }
+
+    /**
+     * Set request data on this object.
+     *
+     * @param array $request
+     */
+    public function load(array $request): void
+    {
+        $this->request = $request;
     }
 
     /**

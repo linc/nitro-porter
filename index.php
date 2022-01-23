@@ -4,10 +4,14 @@
 define('WEB', true);
 require_once './bootstrap.php';
 
+// Parse the web request.
+$input = \Porter\Request::instance()->parseWeb();
+\Porter\Request::instance()->load($input);
+
 // Web Router.
-if (isset($_POST['package'])) {
-    $package = \NitroPorter\ExportFactory::build();
+if (\Porter\Request::instance()->get('package')) {
+    $package = \Porter\ExportFactory::build();
     $package->run();
 } else {
-    \NitroPorter\Render::route();
+    \Porter\Render::route();
 }
