@@ -126,10 +126,8 @@ abstract class ExportController
         // Test src tables' existence & structure.
         $this->ex->verifySource($this->sourceTables);
 
-        // Good src tables - Start dump
-        $this->ex->useCompression(true);
+        // Start export.
         set_time_limit(0);
-
         $this->forumExport($this->ex);
 
         // Write the results.  Send no path if we don't know where it went.
