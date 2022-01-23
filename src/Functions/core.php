@@ -74,20 +74,17 @@ function buildAndRun(\Porter\Request $request): void
  * @param $errFile
  * @param $errLine
  */
-function errorHandler($errno, $errstr, $errFile, $errLine): void
+function errorHandler(int $level, string $msg, string $file, int $line, array $context): void
 {
     $reportingLevel = error_reporting();
-
-    // If error reporting is turned off, possibly by @.  Bail out.
     if (!$reportingLevel) {
-        return;
+        return; // Error reporting is off or suppressed.
     }
 
-    if (defined('DEBUG') || ($errno != E_DEPRECATED && $errno != E_USER_DEPRECATED)) {
+    if (defined('DEBUG') || ($level !== E_DEPRECATED && $level !== E_USER_DEPRECATED)) {
         $baseDir = realpath(__DIR__ . '/../') . '/';
-        $errFile = str_replace($baseDir, null, $errFile);
-
-        echo "Error in $errFile line $errLine: ($errno) $errstr\n";
+        $errFile = str_replace($baseDir, null, $file);
+        echo "Error in $errFile line $line: ($level) $msg\n";
         die();
     }
 }

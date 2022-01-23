@@ -1035,9 +1035,8 @@ class ExportModel
      * Checks all required source tables are present.
      *
      * @param  array $requiredTables
-     * @return array|string|true
      */
-    public function verifySource($requiredTables)
+    public function verifySource(array $requiredTables)
     {
         $missingTables = false;
         $countMissingTables = 0;
@@ -1071,34 +1070,29 @@ class ExportModel
         // Return results
         if ($missingTables === false) {
             if (count($missingColumns) > 0) {
-                $result = array();
-
+                $error = [];
                 // Build a string of missing columns.
                 foreach ($missingColumns as $table => $columns) {
-                    $result[] = "The $table table is missing the following column(s): " . implode(', ', $columns);
+                    $error[] = "The $table table is missing the following column(s): " . implode(', ', $columns);
                 }
-
-                return implode("<br />\n", $result);
-            } else {
-                return true;
-            } // Nothing missing!
+                trigger_error(implode("<br />\n", $error));
+            }
         } elseif ($countMissingTables == count($requiredTables)) {
-            $result = 'The required tables are not present in the database.
+            $error = 'The required tables are not present in the database.
                 Make sure you entered the correct database name and prefix and try again.';
 
             // Guess the prefixes to notify the user.
             $prefixes = $this->getDatabasePrefixes();
             if (count($prefixes) == 1) {
-                $result .= ' Based on the database you provided,
+                $error .= ' Based on the database you provided,
                     your database prefix is probably ' . implode(', ', $prefixes);
             } elseif (count($prefixes) > 0) {
-                $result .= ' Based on the database you provided,
+                $error .= ' Based on the database you provided,
                     your database prefix is probably one of the following: ' . implode(', ', $prefixes);
             }
-
-            return $result;
+            trigger_error($error);
         } else {
-            return 'Missing required database tables: ' . $missingTables;
+            trigger_error('Missing required database tables: ' . $missingTables);
         }
     }
 

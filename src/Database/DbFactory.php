@@ -43,11 +43,10 @@ class DbFactory
             if ($dbFactory instanceof DbResource) {
                 return $dbFactory;
             } else {
-                die($className . 'does not implement DbRerousce.');
+                trigger_error($className . 'does not implement DbResource.');
             }
         } else {
-            die($this->extension
-                . ' extension not found. See config.php and make sure the necessary extensions are installed.');
+            trigger_error($this->extension . ' extension not found.');
         }
     }
 }

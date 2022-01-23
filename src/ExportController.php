@@ -120,21 +120,11 @@ abstract class ExportController
      */
     public function run(\Porter\Request $request)
     {
-        // Test connection
-        $msg = $this->testDatabase();
-        if ($msg !== true) {
-            // Back to form with error
-            Render::viewForm(array('Msg' => $msg, 'Info' => $this->dbInfo));
-            exit();
-        }
+        // Test connection.
+        $this->testDatabase();
 
-        // Test src tables' existence structure
-        $msg = $this->ex->verifySource($this->sourceTables);
-        if ($msg !== true) {
-            // Back to form with error
-            Render::viewForm(array('Msg' => $msg, 'Info' => $this->dbInfo));
-            exit();
-        }
+        // Test src tables' existence & structure.
+        $this->ex->verifySource($this->sourceTables);
 
         // Good src tables - Start dump
         $this->ex->useCompression(true);
@@ -142,11 +132,10 @@ abstract class ExportController
         set_time_limit(0);
 
         $this->forumExport($this->ex);
-        $msg = $this->ex->comments;
 
         // Write the results.  Send no path if we don't know where it went.
         $relativePath = ($this->param('destpath', false)) ? false : $this->ex->path;
-        Render::viewExportResult($msg, 'Info', $relativePath);
+        Render::viewExportResult($this->ex->comments, 'Info', $relativePath);
     }
 
     /**
@@ -190,16 +179,11 @@ abstract class ExportController
 
     /**
      * Test database connection info.
-     *
-     * @return string|bool True on success, message on failure.
      */
     public function testDatabase()
     {
         $dbFactory = new DbFactory($this->dbInfo, 'pdo');
-        // Will die on error
         $dbFactory->getInstance();
-
-        return true;
     }
 
     /**
