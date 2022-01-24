@@ -57,6 +57,7 @@ class ExportModel
 
     /**
      * @var string *
+     * @deprecated
      */
     public $destPrefix = 'GDN_z';
 
@@ -85,6 +86,7 @@ class ExportModel
 
     /**
      * @var string Database host. *
+     * @deprecated
      */
     public $host = 'localhost';
 
@@ -95,22 +97,26 @@ class ExportModel
 
     /**
      * @var object PDO instance
+     * @deprecated
      */
     protected $pdo = null;
 
     /**
      * @var string Database password. *
+     * @deprecated
      */
     protected $password;
 
     /**
      * @var string The path to the export file.
+     * @deprecated
      */
     public $path = '';
 
     /**
      * @var string DB prefix. SQL strings passed to ExportTable() will replace occurances of :_ with this.
      * @see ExportModel::ExportTable()
+     * @deprecated
      */
     public $prefix = '';
 
@@ -131,11 +137,13 @@ class ExportModel
 
     /**
      * @var string The path to the source of the export in the case where a file is being converted.
+     * @deprecated
      */
     public $sourcePath = '';
 
     /**
      * @var string
+     * @deprecated
      */
     public $sourcePrefix = '';
 
@@ -166,11 +174,13 @@ class ExportModel
 
     /**
      * @var string Database username.
+     * @deprecated
      */
     protected $username;
 
     /**
      * @var DbFactory Instance DbFactory
+     * @deprecated
      */
     protected $dbFactory;
 
@@ -827,11 +837,10 @@ class ExportModel
     }
 
     /**
-     *
-     *
      * @param  $sql
      * @param  $default
      * @return mixed
+     * @deprecated
      */
     public function getValue($sql, $default)
     {

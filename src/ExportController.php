@@ -96,6 +96,7 @@ abstract class ExportController
 
     /**
      * User submitted db connection info.
+     * @deprecated
      */
     public function handleInfoForm()
     {
@@ -106,6 +107,7 @@ abstract class ExportController
 
     /**
      * Set primary database connection data.
+     * @deprecated
      */
     public function loadPrimaryDatabase()
     {
@@ -119,6 +121,7 @@ abstract class ExportController
 
     /**
      * Retrieve a parameter passed to the export process.
+     * @deprecated
      *
      * @param  string $name
      * @param  mixed  $default Fallback value.
@@ -134,6 +137,7 @@ abstract class ExportController
     }
 
     /**
+     * @deprecated
      * Test database connection info.
      */
     public function testDatabase()
@@ -143,6 +147,7 @@ abstract class ExportController
     }
 
     /**
+     * @deprecated
      * @param ExportModel
      * @return void
      */
