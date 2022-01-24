@@ -21,7 +21,6 @@ class ExportFactory
         $package->handleInfoForm();
         $dbfactory = new DbFactory($package->getDbInfo(), 'pdo');
         $model = new ExportModel($dbfactory);
-        $model->controller = $package;
         $model->prefix = '';
         $package->setModel($model);
 

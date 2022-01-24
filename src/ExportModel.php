@@ -36,11 +36,6 @@ class ExportModel
     public $comments = array();
 
     /**
-     * @var ExportController *
-     */
-    public $controller = null;
-
-    /**
      * @var string The charcter set to set as the connection anytime the database connects.
      */
     public $characterSet = 'utf8';
@@ -217,8 +212,8 @@ class ExportModel
         // Allow us to define where the output file goes.
         if ($path) {
             $this->path = $path;
-        } elseif ($this->controller->param('destpath')) {
-            $this->path = $this->controller->param('destpath');
+        } elseif (Request::instance()->get('destpath')) {
+            $this->path = Request::instance()->get('destpath');
             if (strstr($this->path, '/') !== false && substr($this->path, 1, -1) != '/') {
                 // We're using slash paths but didn't include a final slash.
                 $this->path .= '/';
@@ -299,7 +294,7 @@ class ExportModel
         $this->comment('Export Completed: ' . date('Y-m-d H:i:s'));
         $this->comment(sprintf('Elapsed Time: %s', self::formatElapsed($this->totalTime)));
 
-        if ($this->testMode || $this->controller->param('dumpsql') || $this->captureOnly) {
+        if ($this->testMode || Request::instance()->get('dumpsql') || $this->captureOnly) {
             $queries = implode("\n\n", $this->queries);
             if ($this->destination == 'database') {
                 fwrite($this->file, $queries);
