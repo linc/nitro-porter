@@ -67,16 +67,14 @@ class WebWiz extends ExportController
         $this->discussions($ex);
 
         $this->comments($ex);
-        $this->conversations();
+        $this->conversations($ex);
 
         $ex->endExport();
     }
 
-    public function conversations()
+    public function conversations($ex)
     {
-        $ex = $this->ex;
-
-        $this->exportConversationTemps();
+        $this->exportConversationTemps($ex);
 
         // Conversation.
         $conversation_Map = array(
@@ -137,7 +135,7 @@ class WebWiz extends ExportController
         );
     }
 
-    protected function exportConversationTemps()
+    protected function exportConversationTemps($ex)
     {
         $sql = "
          drop table if exists z_pmto;
@@ -240,7 +238,7 @@ class WebWiz extends ExportController
                  on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
                set pm.Group_ID = g.Group_ID;";
 
-        $this->ex->queryN($sql);
+        $ex->queryN($sql);
     }
 
     /**

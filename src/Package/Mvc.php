@@ -71,8 +71,8 @@ class Mvc extends ExportController
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'MVC');
 
-        $this->createPrimaryKeys();
-        $this->createIndexesIfNotExists();
+        $this->createPrimaryKeys($ex);
+        $this->createIndexesIfNotExists($ex);
 
         $this->users($ex);
 
@@ -96,73 +96,73 @@ class Mvc extends ExportController
      * Create indexes on current tables to accelerate the export process. Initial ids are varchar, which can make the
      * queries hang when joining or using some columns in conditions. Ignore the creation if the index already exist.
      */
-    private function createIndexesIfNotExists()
+    private function createIndexesIfNotExists($ex)
     {
-        if (!$this->ex->indexExists('mvc_users_id', ':_MembershipUser')) {
-            $this->ex->query("create INDEX mvc_users_id on :_MembershipUser(Id);");
+        if (!$ex->indexExists('mvc_users_id', ':_MembershipUser')) {
+            $ex->query("create INDEX mvc_users_id on :_MembershipUser(Id);");
         }
-        if (!$this->ex->indexExists('mvc_role_id', ':_MembershipRole')) {
-            $this->ex->query("create INDEX mvc_role_id on `:_MembershipRole` (Id);");
+        if (!$ex->indexExists('mvc_role_id', ':_MembershipRole')) {
+            $ex->query("create INDEX mvc_role_id on `:_MembershipRole` (Id);");
         }
-        if (!$this->ex->indexExists('mvc_badge_id', ':_Badge')) {
-            $this->ex->query("create INDEX mvc_badge_id on `:_Badge` (Id);");
+        if (!$ex->indexExists('mvc_badge_id', ':_Badge')) {
+            $ex->query("create INDEX mvc_badge_id on `:_Badge` (Id);");
         }
-        if (!$this->ex->indexExists('mvc_category_id', ':_Category')) {
-            $this->ex->query("create INDEX mvc_category_id on `:_Category` (Id);");
+        if (!$ex->indexExists('mvc_category_id', ':_Category')) {
+            $ex->query("create INDEX mvc_category_id on `:_Category` (Id);");
         }
-        if (!$this->ex->indexExists('mvc_tag_id', ':_TopicTag')) {
-            $this->ex->query("create INDEX mvc_tag_id on `:_TopicTag` (Id);");
+        if (!$ex->indexExists('mvc_tag_id', ':_TopicTag')) {
+            $ex->query("create INDEX mvc_tag_id on `:_TopicTag` (Id);");
         }
-        if (!$this->ex->indexExists('mvc_file_id', ':_UploadedFile')) {
-            $this->ex->query("create INDEX mvc_file_id on `:_UploadedFile` (Id);");
+        if (!$ex->indexExists('mvc_file_id', ':_UploadedFile')) {
+            $ex->query("create INDEX mvc_file_id on `:_UploadedFile` (Id);");
         }
 
         // Topic
-        if (!$this->ex->indexExists('mvc_topic_id', ':_Topic')) {
-            $this->ex->query("create INDEX mvc_topic_id on `:_Topic` (Id);");
+        if (!$ex->indexExists('mvc_topic_id', ':_Topic')) {
+            $ex->query("create INDEX mvc_topic_id on `:_Topic` (Id);");
         }
-        if (!$this->ex->indexExists('mvc_topic_id', ':_Topic')) {
-            $this->ex->query("create INDEX mvc_topic_membershipuser_id on `:_Topic` (MembershipUser_Id);");
+        if (!$ex->indexExists('mvc_topic_id', ':_Topic')) {
+            $ex->query("create INDEX mvc_topic_membershipuser_id on `:_Topic` (MembershipUser_Id);");
         }
-        if (!$this->ex->indexExists('mvc_topic_id', ':_Topic')) {
-            $this->ex->query("create INDEX mvc_topic_category_id on `:_Topic` (Category_Id);");
+        if (!$ex->indexExists('mvc_topic_id', ':_Topic')) {
+            $ex->query("create INDEX mvc_topic_category_id on `:_Topic` (Category_Id);");
         }
 
         // Post
-        if (!$this->ex->indexExists('mvc_post_id', ':_Post')) {
-            $this->ex->query("create INDEX mvc_post_id on `:_Post` (Id);");
+        if (!$ex->indexExists('mvc_post_id', ':_Post')) {
+            $ex->query("create INDEX mvc_post_id on `:_Post` (Id);");
         }
-        if (!$this->ex->indexExists('mvc_post_id', ':_Post')) {
-            $this->ex->query("create INDEX mvc_post_topic_id on `:_Post` (Topic_Id);");
+        if (!$ex->indexExists('mvc_post_id', ':_Post')) {
+            $ex->query("create INDEX mvc_post_topic_id on `:_Post` (Topic_Id);");
         }
-        if (!$this->ex->indexExists('mvc_post_id', ':_Post')) {
-            $this->ex->query("create INDEX mvc_post_membershipuser_id on `:_Post` (MembershipUser_Id);");
+        if (!$ex->indexExists('mvc_post_id', ':_Post')) {
+            $ex->query("create INDEX mvc_post_membershipuser_id on `:_Post` (MembershipUser_Id);");
         }
     }
 
     /**
      * For each table in the database, check if the primary key exists and create it if it doesn't.
      */
-    private function createPrimaryKeys()
+    private function createPrimaryKeys($ex)
     {
-        $this->addMembershipUserPrimaryKeyIfNotExists();
-        $this->addRolePrimaryKeyIfNotExists();
-        $this->addBadgePrimaryKeyIfNotExists();
-        $this->addCategoryPrimaryKeyIfNotExists();
-        $this->addTopicPrimaryKeyIfNotExists();
-        $this->addPostPrimaryKeyIfNotExists();
-        $this->addTopicTagPrimaryKeyIfNotExists();
-        $this->addUploadFilePrimaryKeyIfNotExists();
+        $this->addMembershipUserPrimaryKeyIfNotExists($ex);
+        $this->addRolePrimaryKeyIfNotExists($ex);
+        $this->addBadgePrimaryKeyIfNotExists($ex);
+        $this->addCategoryPrimaryKeyIfNotExists($ex);
+        $this->addTopicPrimaryKeyIfNotExists($ex);
+        $this->addPostPrimaryKeyIfNotExists($ex);
+        $this->addTopicTagPrimaryKeyIfNotExists($ex);
+        $this->addUploadFilePrimaryKeyIfNotExists($ex);
     }
 
     /**
      * Add the UserID column to the `MembershipUser` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addMembershipUserPrimaryKeyIfNotExists()
+    private function addMembershipUserPrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('MembershipUser', 'UserID')) {
-            $this->ex->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
+        if (!$ex->columnExists('MembershipUser', 'UserID')) {
+            $ex->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
         }
     }
 
@@ -170,10 +170,10 @@ class Mvc extends ExportController
      * Add the RoleID column to the `MembershipRole` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addRolePrimaryKeyIfNotExists()
+    private function addRolePrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('MembershipRole', 'RoleID')) {
-            $this->ex->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
+        if (!$ex->columnExists('MembershipRole', 'RoleID')) {
+            $ex->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
         }
     }
 
@@ -181,10 +181,10 @@ class Mvc extends ExportController
      * Add the BadgeID column to the `Badge` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addBadgePrimaryKeyIfNotExists()
+    private function addBadgePrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('Badge', 'BadgeID')) {
-            $this->ex->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
+        if (!$ex->columnExists('Badge', 'BadgeID')) {
+            $ex->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
         }
     }
 
@@ -192,10 +192,10 @@ class Mvc extends ExportController
      * Add the CategoryID column to the `Category` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addCategoryPrimaryKeyIfNotExists()
+    private function addCategoryPrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('Category', 'CategoryID')) {
-            $this->ex->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
+        if (!$ex->columnExists('Category', 'CategoryID')) {
+            $ex->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
         }
     }
 
@@ -203,10 +203,10 @@ class Mvc extends ExportController
      * Add the DiscussionID column to the Topic` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addTopicPrimaryKeyIfNotExists()
+    private function addTopicPrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('Topic', 'TopicID')) {
-            $this->ex->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
+        if (!$ex->columnExists('Topic', 'TopicID')) {
+            $ex->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
         }
     }
 
@@ -214,10 +214,10 @@ class Mvc extends ExportController
      * Add the CommentID column to the 'Post` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addPostPrimaryKeyIfNotExists()
+    private function addPostPrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('Post', 'PostID')) {
-            $this->ex->query("alter table :_Post add column PostID int(11) primary key auto_increment");
+        if (!$ex->columnExists('Post', 'PostID')) {
+            $ex->query("alter table :_Post add column PostID int(11) primary key auto_increment");
         }
     }
 
@@ -225,10 +225,10 @@ class Mvc extends ExportController
      * Add the TagID column to the 'TopicTag` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addTopicTagPrimaryKeyIfNotExists()
+    private function addTopicTagPrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('TopicTag', 'TagID')) {
-            $this->ex->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
+        if (!$ex->columnExists('TopicTag', 'TagID')) {
+            $ex->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
         }
     }
 
@@ -236,10 +236,10 @@ class Mvc extends ExportController
      * Add the MediaID column to the 'UploadedFile` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addUploadFilePrimaryKeyIfNotExists()
+    private function addUploadFilePrimaryKeyIfNotExists($ex)
     {
-        if (!$this->ex->columnExists('UploadedFile', 'MediaID')) {
-            $this->ex->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
+        if (!$ex->columnExists('UploadedFile', 'MediaID')) {
+            $ex->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
         }
     }
 

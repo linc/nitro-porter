@@ -105,7 +105,7 @@ class PhpBb3 extends ExportController
         $this->users($ex);
 
         $this->roles($ex);
-        $this->userNotes();
+        $this->userNotes($ex);
         $this->ranks($ex);
         $this->permissions($ex);
         $this->signatures($ex);
@@ -122,15 +122,13 @@ class PhpBb3 extends ExportController
 
         $this->attachments($ex);
 
-        $this->banList();
+        $this->banList($ex);
 
         $ex->endExport();
     }
 
-    protected function userNotes()
+    protected function userNotes($ex)
     {
-        $ex = $this->ex;
-
         $corruptedRecords = [];
 
         // User notes.
@@ -185,9 +183,8 @@ class PhpBb3 extends ExportController
     /**
      * Export email and ip ban list.
      */
-    public function banList()
+    public function banList($ex)
     {
-        $ex = $this->ex;
         $ex->exportTable(
             'Ban',
             "select bl.*,

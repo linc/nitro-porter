@@ -442,7 +442,7 @@ class VBulletin5 extends VBulletin
         ;";
 
         // Polls need to be wrapped in a discussion so we are gonna need to postpone discussion creations
-        if ($this->getPollsCount()) {
+        if ($this->getPollsCount($ex)) {
             // NOTE: Only polls that are directly under a channel (discussion) will be exported.
             // Vanilla poll plugin does not support polls as comments.
 
@@ -472,7 +472,7 @@ class VBulletin5 extends VBulletin
             );
             $ex->query("insert into vBulletinDiscussionTable $discussionQuery");
 
-            $this->generatePollsDiscussion();
+            $this->generatePollsDiscussion($ex);
 
             // Export discussions
             $sql = "
@@ -495,7 +495,7 @@ class VBulletin5 extends VBulletin
             $ex->exportTable('Discussion', $sql, $discussion_Map);
 
             // Export polls
-            $this->polls();
+            $this->polls($ex);
 
             // Cleanup tmp table
             $ex->query("drop table vBulletinDiscussionTable;");
@@ -741,12 +741,12 @@ class VBulletin5 extends VBulletin
     /**
      * @return int Number of poll that can be exported by the porter.
      */
-    protected function getPollsCount()
+    protected function getPollsCount($ex)
     {
         $count = 0;
 
         $sql = "show tables like ':_poll';";
-        $result = $this->ex->query($sql, true);
+        $result = $ex->query($sql, true);
 
         if ($result->nextResultRow()) {
             $sql = "
@@ -758,7 +758,7 @@ class VBulletin5 extends VBulletin
                 where ct.class = 'Channel'
             ;";
 
-            $result = $this->ex->query($sql);
+            $result = $ex->query($sql);
             if ($row = $result->nextResultRow()) {
                 $count = $row['Count'];
             }
@@ -770,10 +770,8 @@ class VBulletin5 extends VBulletin
     /**
      * Generate discussions for polls.
      */
-    protected function generatePollsDiscussion()
+    protected function generatePollsDiscussion($ex)
     {
-        $ex = $this->ex;
-
         $pollsThatNeedWrappingQuery = "
             select
                 'poll' as type,
@@ -821,9 +819,8 @@ class VBulletin5 extends VBulletin
         $ex->query($sql);
     }
 
-    protected function polls()
+    protected function polls($ex)
     {
-        $ex = $this->ex;
         $fp = $ex->file;
 
         $poll_Map = array(

@@ -69,8 +69,8 @@ class UserVoice extends ExportController
         //$this->attachments();
 
         // Decode files in database.
-        $this->exportHexAvatars();
-        //$this->ExportHexAttachments();
+        $this->exportHexAvatars($ex);
+        //$this->ExportHexAttachments($ex);
 
         // El fin.
         $ex->endExport();
@@ -91,11 +91,12 @@ class UserVoice extends ExportController
     /**
      * Avatars are hex-encoded in the database.
      */
-    public function exportHexAvatars($thumbnail = true)
+    public function exportHexAvatars($ex)
     {
-        $this->ex->comment("Exporting hex encoded columns...");
+        $thumbnail = true;
+        $ex->comment("Exporting hex encoded columns...");
 
-        $result = $this->ex->query("select UserID, Length, ContentType, Content from :_UserAvatar");
+        $result = $ex->query("select UserID, Length, ContentType, Content from :_UserAvatar");
         $path = '/www/porter/userpics';
         $count = 0;
 
@@ -110,7 +111,7 @@ class UserVoice extends ExportController
 
             $photoPath = $path . '/pavatar' . $row['UserID'] . '.jpg';
             file_put_contents($photoPath, hex2bin($row['Content']));
-            $this->ex->status('.');
+            $ex->status('.');
 
             if ($thumbnail) {
                 if ($thumbnail === true) {
@@ -119,22 +120,22 @@ class UserVoice extends ExportController
 
                 //$PicPath = str_replace('/avat', '/pavat', $photoPath);
                 $thumbPath = str_replace('/pavat', '/navat', $photoPath);
-                $this->ex->generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
+                $ex->generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
             }
             $count++;
         }
-        $this->ex->status("$count Hex Encoded.\n");
-        $this->ex->comment("$count Hex Encoded.", false);
+        $ex->status("$count Hex Encoded.\n");
+        $ex->comment("$count Hex Encoded.", false);
     }
 
     /**
      *
      */
-    public function exportHexAttachments()
+    public function exportHexAttachments($ex)
     {
-        $this->ex->comment("Exporting hex encoded columns...");
+        $ex->comment("Exporting hex encoded columns...");
 
-        $result = $this->ex->query(
+        $result = $ex->query(
             "select a.*, p.PostID
          from :_PostAttachments a
          left join :_Posts p on p.PostID = a.PostID
@@ -155,8 +156,8 @@ class UserVoice extends ExportController
             file_put_contents($path . '/' . $row['FileName'], hex2bin($row['Content']));
             $count++;
         }
-        $this->ex->status("$count Hex Encoded.\n");
-        $this->ex->comment("$count Hex Encoded.", false);
+        $ex->status("$count Hex Encoded.\n");
+        $ex->comment("$count Hex Encoded.", false);
     }
 
     /**

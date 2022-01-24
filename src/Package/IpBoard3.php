@@ -56,7 +56,7 @@ class IpBoard3 extends ExportController
     /**
      * Export avatars into vanilla-compatibles names
      */
-    public function doAvatars()
+    public function doAvatars($ex)
     {
         // Source table
         $sourceTable = $this->param('users-source', 'profile_portal');
@@ -78,7 +78,7 @@ class IpBoard3 extends ExportController
 
         switch ($sourceTable) {
             case 'profile_portal':
-                $userList = $this->ex->query(
+                $userList = $ex->query(
                     "select
                   pp_member_id as member_id,
                   pp_main_photo as main_photo,
@@ -92,7 +92,7 @@ class IpBoard3 extends ExportController
                 break;
 
             case 'member_extra':
-                $userList = $this->ex->query(
+                $userList = $ex->query(
                     "select
                   id as member_id,
                   avatar_location as photo
@@ -195,7 +195,7 @@ class IpBoard3 extends ExportController
 
         // Export avatars
         if ($this->param('avatars')) {
-            $this->doAvatars();
+            $this->doAvatars($ex);
         }
 
         if ($ex->exists('members', 'member_id') === true) {
@@ -221,18 +221,16 @@ class IpBoard3 extends ExportController
         $this->attachments($ex);
 
         if ($ex->exists('message_topic_user_map')) {
-            $this->conversations(); // v3
+            $this->conversations($ex); // v3
         } else {
-            $this->conversationsV2(); // v2
+            $this->conversationsV2($ex); // v2
         }
 
         $ex->endExport();
     }
 
-    protected function conversationsV2()
+    protected function conversationsV2($ex)
     {
-        $ex = $this->ex;
-
         $sql = <<<EOT
             create table tmp_to (
                id int,
@@ -432,10 +430,8 @@ EOT;
     }
 
 
-    protected function conversations()
+    protected function conversations($ex)
     {
-        $ex = $this->ex;
-
         // Conversations.
         $conversation_Map = array(
             'mt_id' => 'ConversationID',

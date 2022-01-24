@@ -65,7 +65,7 @@ class Xenforo extends ExportController
     /**
      * Export attachments into vanilla-compatibles names
      */
-    public function attachmentFiles()
+    public function attachmentFiles($ex)
     {
         // Check source folder
         $this->sourceFolder = $this->param('attach-source');
@@ -82,7 +82,7 @@ class Xenforo extends ExportController
             }
         }
 
-        $r = $this->ex->query(
+        $r = $ex->query(
             "
             select
                 ad.data_id,
@@ -112,7 +112,7 @@ class Xenforo extends ExportController
             }
         }
 
-        $this->ex->comment("Attachments: " . $found . " attachment(s) were found and converted during the process.");
+        $ex->comment("Attachments: " . $found . " attachment(s) were found and converted during the process.");
     }
 
     /**
@@ -225,8 +225,6 @@ class Xenforo extends ExportController
 
     protected function forumExport($ex)
     {
-        $this->ex = $ex;
-
         $cdn = $this->cdnPrefix();
 
         $characterSet = $ex->getCharacterSet('posts');
@@ -246,14 +244,14 @@ class Xenforo extends ExportController
 
         // Export attachments
         if ($this->param('attach-rename')) {
-            $this->attachmentFiles();
+            $this->attachmentFiles($ex);
         }
 
         $this->users($ex, $cdn);
 
         $this->roles($ex);
-        $this->permissions();
-        $this->userMeta();
+        $this->permissions($ex);
+        $this->userMeta($ex);
         $this->categories($ex);
 
         $this->discussions($ex);
@@ -266,10 +264,8 @@ class Xenforo extends ExportController
         $ex->endExport();
     }
 
-    public function permissions()
+    public function permissions($ex)
     {
-        $ex = $this->ex;
-
         $permissions = array();
 
         // Export the global permissions.
@@ -327,8 +323,6 @@ class Xenforo extends ExportController
 
     public function userMeta()
     {
-        $ex = $this->ex;
-
         $sql = "
          select
            user_id as UserID,

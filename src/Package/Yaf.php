@@ -100,7 +100,7 @@ class Yaf extends ExportController
         return $result;
     }
 
-    protected function exportConversationTemps()
+    protected function exportConversationTemps($ex)
     {
         $sql = "
          drop table if exists z_pmto;
@@ -208,7 +208,7 @@ class Yaf extends ExportController
                  on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
                set pm.Group_ID = g.Group_ID;";
 
-        $this->ex->queryN($sql);
+        $ex->queryN($sql);
     }
 
     /**
@@ -419,7 +419,7 @@ class Yaf extends ExportController
      */
     protected function conversations(ExportModel $ex): void
     {
-        $this->exportConversationTemps();
+        $this->exportConversationTemps($ex);
 
         $conversation_Map = array(
             'PMessageID' => 'ConversationID',

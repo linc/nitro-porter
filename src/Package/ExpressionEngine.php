@@ -55,7 +55,7 @@ class ExpressionEngine extends ExportController
         $ex->beginExport('', 'Expression Engine');
         $ex->sourcePrefix = 'forum_';
 
-        $this->conversations();
+        $this->conversations($ex);
 
         $this->permissions($ex);
 
@@ -79,11 +79,9 @@ class ExpressionEngine extends ExportController
     /**
      * Private message conversion.
      */
-    public function conversations()
+    public function conversations($ex)
     {
-        $ex = $this->ex;
-
-        $this->exportConversationTemps();
+        $this->exportConversationTemps($ex);
 
         // Conversation.
         $conversation_Map = array(
@@ -146,10 +144,8 @@ class ExpressionEngine extends ExportController
     /**
      * Create temporary tables for private message conversion.
      */
-    public function exportConversationTemps()
+    public function exportConversationTemps($ex)
     {
-        $ex = $this->ex;
-
         $ex->query('DROP TABLE IF EXISTS z_pmto;');
         $ex->query(
             'CREATE TABLE z_pmto (
