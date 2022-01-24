@@ -799,7 +799,7 @@ class VBulletin extends ExportController
     public function buildMediaDimension($value, $field, $row)
     {
         // Non-images get no height/width
-        if ($this->ex->exists('attachment', array('extension')) === true) {
+        if ($this->exportModel->exists('attachment', array('extension')) === true) {
             $extension = $row['extension'];
         } else {
             $extension = pathinfo($row['filename'], PATHINFO_EXTENSION);

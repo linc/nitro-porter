@@ -35,7 +35,7 @@ abstract class ExportController
      * @deprecated
      * @var ExportModel
      */
-    protected $ex = null;
+    protected $exportModel = null;
 
     /**
      * Forum-specific export routine
@@ -83,15 +83,15 @@ abstract class ExportController
         $this->testDatabase();
 
         // Test src tables' existence & structure.
-        $this->ex->verifySource($this->sourceTables);
+        $this->exportModel->verifySource($this->sourceTables);
 
         // Start export.
         set_time_limit(0);
-        $this->forumExport($this->ex);
+        $this->forumExport($this->exportModel);
 
         // Write the results.  Send no path if we don't know where it went.
-        $relativePath = ($this->param('destpath', false)) ? false : $this->ex->path;
-        Render::viewExportResult($this->ex->comments, 'Info', $relativePath);
+        $relativePath = ($this->param('destpath', false)) ? false : $this->exportModel->path;
+        Render::viewExportResult($this->exportModel->comments, 'Info', $relativePath);
     }
 
     /**
@@ -148,6 +148,6 @@ abstract class ExportController
      */
     public function setModel(ExportModel $model): void
     {
-        $this->ex = $model;
+        $this->exportModel = $model;
     }
 }

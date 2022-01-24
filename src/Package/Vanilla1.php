@@ -124,7 +124,7 @@ class Vanilla1 extends ExportController
 
         if (is_array($permissions2)) {
             $row = array_merge($row, $permissions2);
-            $this->ex->currentRow = $row;
+            $this->exportModel->currentRow = $row;
 
             return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
         }
