@@ -3,53 +3,54 @@
 return [
     'debug' => false,
     'connections' => [
-        'databases' => [
-            [
-                'alias' => 'source',
-                'adapter' => 'mysql',
-                'host' => 'localhost',
-                'port' => '3306',
-                'name' => 'some_db_name',
-                'user' => 'root',
-                'pass' => 'password_here',
-                'charset' => 'utf8',
-            ],
+        [
+            'alias' => 'source',
+            'type' => 'database',
+            'adapter' => 'mysql',
+            'host' => 'localhost',
+            'port' => '3306',
+            'name' => 'some_db_name',
+            'user' => 'root',
+            'pass' => 'password_here',
+            'charset' => 'utf8',
         ],
-        'files' => [
-            [
-                'alias' => 'vanilla-csv',
-                'path' => '',
-            ],
-            [
-                'alias' => 'avatars-source',
-                'path' => '',
-            ],
-            [
-                'alias' => 'avatars-target',
-                'path' => '',
-            ],
-            [
-                'alias' => 'attach-source',
-                'path' => '',
-            ],
-            [
-                'alias' => 'attach-target',
-                'path' => '',
-            ],
-        ]
+        [
+            'alias' => 'vanilla-csv',
+            'type' => 'files',
+            'path' => '',
+        ],
+        [
+            'alias' => 'avatars-source',
+            'type' => 'files',
+            'path' => '',
+        ],
+        [
+            'alias' => 'avatars-target',
+            'type' => 'files',
+            'path' => '',
+        ],
+        [
+            'alias' => 'attach-source',
+            'type' => 'files',
+            'path' => '',
+        ],
+        [
+            'alias' => 'attach-target',
+            'type' => 'files',
+            'path' => '',
+        ],
     ],
     'test_connections' => [
-       'databases' => [
-           [
-                'alias' => 'test',
-                'adapter' => 'mysql',
-                'host' => '127.0.0.1',
-                'port' => '3306',
-                'name' => 'testing_db',
-                'user' => 'root',
-                'pass' => 'password_here',
-                'charset' => 'utf8',
-           ],
-        ],
+       [
+           'alias' => 'test',
+           'type' => 'database',
+           'adapter' => 'mysql',
+           'host' => '127.0.0.1',
+           'port' => '3306',
+           'name' => 'testing_db',
+           'user' => 'root',
+           'pass' => 'password_here',
+           'charset' => 'utf8',
+       ],
     ],
 ];
