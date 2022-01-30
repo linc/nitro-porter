@@ -144,7 +144,7 @@ class VBulletin5 extends VBulletin
         );
 
         // Use file avatar or the result of our blob export?
-        if ($this->getConfig('usefileavatar')) {
+        if ($this->getConfig($ex, 'usefileavatar')) {
             $user_Map['filephoto'] = 'Photo';
         } else {
             $user_Map['customphoto'] = 'Photo';
