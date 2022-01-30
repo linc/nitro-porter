@@ -17,7 +17,7 @@ _notes
 export_*
 attachments/*
 custom*
-config.php
+/config.php
 *.sql
 *.log
 
