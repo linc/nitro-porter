@@ -79,7 +79,7 @@ function buildAndRun(\Porter\Request $request): void
  * @param $errFile
  * @param $errLine
  */
-function errorHandler(int $level, string $msg, string $file, int $line, array $context): void
+function errorHandler(int $level, string $msg, string $file, int $line, array $context = []): void
 {
     $reportingLevel = error_reporting();
     if (!$reportingLevel) {
