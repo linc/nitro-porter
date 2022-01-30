@@ -10,7 +10,7 @@ namespace Porter\Package;
 use Porter\ExportController;
 use Porter\ExportModel;
 
-class _Example extends ExportController
+class Example extends ExportController
 {
     public const SUPPORTED = [
         'name' => '_Example',
