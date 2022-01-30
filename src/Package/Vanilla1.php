@@ -17,6 +17,7 @@ class Vanilla1 extends ExportController
     public const SUPPORTED = [
         'name' => 'Vanilla 1',
         'prefix' => 'LUM_',
+        'charset_table' => 'Comment',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -76,29 +77,18 @@ class Vanilla1 extends ExportController
     /**
      * Forum-specific export format
      *
-     * @todo  Project file size / export time and possibly break into multiple files
      * @param ExportModel $ex
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('Comment');
-
-
-        $ex->beginExport('', 'Vanilla 1.*');
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->categories($ex);
         $this->discussions($ex);
         $this->conversations($ex);
-
         $this->comments($ex);
         $this->permissions($ex);
-
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     public function stripMediaPath($absPath)

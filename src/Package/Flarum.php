@@ -15,6 +15,7 @@ class Flarum extends ExportController
     public const SUPPORTED = [
         'name' => 'Flarum',
         'prefix' => 'FLA_',
+        'charset_table' => 'posts',
         'options' => [
         ],
         'features' => [  // Set features you support to 1 or a string (for support notes).
@@ -60,24 +61,11 @@ class Flarum extends ExportController
      */
     public function forumExport(ExportModel $ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        $ex->beginExport('', 'Flarum');
-
         $this->users($ex);
-
         $this->roles($ex); // Groups
-
         $this->categories($ex); // Tags
-
         $this->discussions($ex);
-
         $this->comments($ex); // Posts
-
-        // UserDiscussion.
-
-        $ex->endExport();
     }
 
     /**

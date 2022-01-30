@@ -18,6 +18,7 @@ class EsoTalk extends ExportController
     public const SUPPORTED = [
         'name' => 'esoTalk',
         'prefix' => 'et_',
+        'charset_table' => 'post',
         'options' => [
         ],
         'features' => [
@@ -52,32 +53,17 @@ class EsoTalk extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('post');
-
-
-        $ex->beginExport('', 'esotalk');
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->bookmarks($ex);
-
         // Permission.
         // :_channel_group
-
         // Media.
         // :_attachment
-
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     /**

@@ -17,6 +17,8 @@ class ModxDiscuss extends ExportController
     public const SUPPORTED = [
         'name' => 'MODX Discuss Extension',
         'prefix' => 'modx_discuss_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -67,23 +69,12 @@ class ModxDiscuss extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        $ex->beginExport('', 'MODX Discuss Extension', array('HashMethod' => 'Vanilla'));
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->userMeta($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

@@ -17,6 +17,7 @@ class Drupal6 extends ExportController
     public const SUPPORTED = [
         'name' => 'Drupal 6',
         'prefix' => '',
+        'charset_table' => 'comment',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -51,26 +52,13 @@ class Drupal6 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('comment');
-
-
-        $ex->beginExport('', 'Drupal');
-
         $this->users($ex);
-
         $this->signatures($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     /**

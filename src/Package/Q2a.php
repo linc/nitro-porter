@@ -16,6 +16,7 @@ class Q2a extends ExportController
     public const SUPPORTED = [
         'name' => 'Questions2Answers',
         'prefix' => 'qa_',
+        'charset_table' => 'posts',
         'options' => [
         ],
         'features' => [
@@ -42,6 +43,7 @@ class Q2a extends ExportController
         ]
     ];
 
+    /** @var array[] List of required tables. */
     protected $sourceTables = array(
         'blobs' => array(),
         'categories' => array(),
@@ -49,21 +51,17 @@ class Q2a extends ExportController
         'users' => array(),
     );
 
+    /**
+     * Main export process.
+     *
+     * @param $ex
+     */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-        $ex->beginExport('', 'Questions2Answers');
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

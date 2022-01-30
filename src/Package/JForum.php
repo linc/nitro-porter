@@ -17,6 +17,7 @@ class JForum extends ExportController
     public const SUPPORTED = [
         'name' => 'jforum',
         'prefix' => 'jforum_',
+        'charset_table' => 'posts',
         'options' => [
         ],
         'features' => [
@@ -66,15 +67,8 @@ class JForum extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        $ex->beginExport('', 'jforum');
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->userMeta($ex);
 
         $this->categories($ex);
@@ -86,16 +80,10 @@ class JForum extends ExportController
             $postTextColumm = 'p.post_text as Body';
             $postTextSource = '';
         }
-
         $this->discussions($ex, $postTextColumm, $postTextSource);
-
         $this->comments($ex, $postTextColumm, $postTextSource);
-
         $this->bookmarks($ex);
-
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     /**

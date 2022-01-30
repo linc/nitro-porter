@@ -17,6 +17,7 @@ class WebWiz extends ExportController
     public const SUPPORTED = [
         'name' => 'Web Wiz Forums',
         'prefix' => 'tbl',
+        'charset_table' => 'Topic',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -47,27 +48,14 @@ class WebWiz extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('Topic');
-
-
-        $ex->beginExport('', 'Web Wiz Forums');
-        $ex->sourcePrefix = 'tbl';
-
-        //$Info = $this->permissions($ex);
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->usermeta($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     public function conversations($ex)

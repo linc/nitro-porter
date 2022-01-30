@@ -17,6 +17,7 @@ class Toast extends ExportController
     public const SUPPORTED = [
         'name' => 'Toast',
         'prefix' => 'tstdb_',
+        'charset_table' => 'Post',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -42,29 +43,18 @@ class Toast extends ExportController
     ];
 
     /**
+     * Main export method.
      *
      * @param ExportModel $ex
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('Post');
-
-
-        $ex->beginExport('', 'Toast Forum');
-        $ex->sourcePrefix = 'tstdb_';
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->signatures($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

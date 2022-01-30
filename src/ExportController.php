@@ -87,7 +87,12 @@ abstract class ExportController
 
         // Start export.
         set_time_limit(0);
+        if (isset(self::SUPPORTED['charset_table'])) {
+            $this->exportModel->setCharacterSet(self::SUPPORTED['charset_table']);
+        }
+        $this->exportModel->beginExport('', self::SUPPORTED['name']);
         $this->forumExport($this->exportModel);
+        $this->exportModel->endExport();
 
         // Write the results.  Send no path if we don't know where it went.
         $relativePath = ($this->param('destpath', false)) ? false : $this->exportModel->path;

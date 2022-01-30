@@ -17,6 +17,8 @@ class Smf2 extends ExportController
     public const SUPPORTED = [
         'name' => 'Simple Machines 2',
         'prefix' => 'smf_',
+        'charset_table' => 'messages',
+        'hashmethod' => 'Django',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -61,27 +63,13 @@ class Smf2 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('messages');
-
-
-        // Begin
-        $ex->beginExport('', 'SMF 2.*', array('HashMethod' => 'Django'));
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->attachments($ex);
-
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     public function decodeNumericEntity($text)

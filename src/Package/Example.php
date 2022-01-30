@@ -15,6 +15,7 @@ class Example extends ExportController
     public const SUPPORTED = [
         'name' => '_Example',
         'prefix' => '',
+        'charset_table' => 'comments',  // Usually put the comments table name here. Used to derive charset.
         'options' => [
         ],
         'features' => [  // Set features you support to 1 or a string (for support notes).
@@ -64,18 +65,8 @@ class Example extends ExportController
      */
     public function forumExport(ExportModel $ex)
     {
-        // Get the characterset for the comments.
-        // Usually the comments table is the best target for this.
-        $ex->setCharacterSet('CommentsTableNameGoesHere');
-
-
-        // Reiterate the platform name here to be included in the porter file header.
-        $ex->beginExport('', 'Proper Platform Name Goes Here');
-
         // It's usually a good idea to do the porting in the approximate order laid out here.
-
         $this->users($ex); // Always pass $ex to these methods.
-
         $this->roles($ex);
 
         // Permission.
@@ -83,11 +74,8 @@ class Example extends ExportController
         // For small or custom jobs, it's usually not worth it. Just fix them afterward.
 
         $this->userMeta($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
 
         // UserDiscussion.
@@ -100,8 +88,6 @@ class Example extends ExportController
 
         // Conversations.
         // Private messages often involve the most data manipulation.
-
-        $ex->endExport();
     }
 
     /**

@@ -19,6 +19,7 @@ class MyBb extends ExportController
     public const SUPPORTED = [
         'name' => 'MyBB',
         'prefix' => 'mybb_',
+        'charset_table' => 'posts',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -63,26 +64,13 @@ class MyBb extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        // Reiterate the platform name here to be included in the porter file header.
-        $ex->beginExport('', 'MyBB');
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->attachments($ex);
         $this->bookmarks($ex);
-
-        $ex->endExport();
     }
 
     /**

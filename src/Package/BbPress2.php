@@ -17,6 +17,8 @@ class BbPress2 extends ExportController
     public const SUPPORTED = [
         'name' => 'bbPress 2',
         'prefix' => 'wp_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -58,21 +60,12 @@ class BbPress2 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->beginExport('', 'bbPress 2.*', array('HashMethod' => 'Vanilla'));
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $ex->query("drop table if exists z_user;"); // Cleanup
-
-        $ex->endExport();
     }
 
     /**

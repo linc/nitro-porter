@@ -17,6 +17,8 @@ class Kunena extends ExportController
     public const SUPPORTED = [
         'name' => 'Joomla Kunena',
         'prefix' => 'jos_',
+        'charset_table' => 'kunena_messages',
+        'hashmethod' => 'joomla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -46,15 +48,7 @@ class Kunena extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('mbox');
-
-
-        $ex->destPrefix = 'jos';
-
-        $ex->beginExport('', 'Joomla Kunena', array('HashMethod' => 'joomla'));
-
         $this->users($ex);
-
         $this->roles($ex);
 
         // Permission.
@@ -67,15 +61,10 @@ class Kunena extends ExportController
         //          array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->bookmarks($ex);
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     /**

@@ -17,6 +17,7 @@ class UserVoice extends ExportController
     public const SUPPORTED = [
         'name' => 'User Voice',
         'prefix' => 'cs_',
+        'charset_table' => 'Threads',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -42,36 +43,24 @@ class UserVoice extends ExportController
     ];
 
     /**
+     * Main export method.
      *
      * @param ExportModel $ex
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('Threads');
-
-
-        $ex->beginExport('', 'User Voice');
-        $ex->sourcePrefix = 'cs_';
-
         $this->users($ex);
-
         $this->roles($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
         $this->bookmarks($ex);
 
         //$this->attachments();
-
         // Decode files in database.
         $this->exportHexAvatars($ex);
         //$this->ExportHexAttachments($ex);
-
-        // El fin.
-        $ex->endExport();
     }
 
     /**

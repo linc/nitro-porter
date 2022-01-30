@@ -20,6 +20,7 @@ class VBulletin5 extends VBulletin
     public const SUPPORTED = [
         'name' => 'vBulletin 5 Connect',
         'prefix' => 'vb_',
+        'charset_table' => 'node',
         'options' => [
             'db-avatars' => [
                 'Enables exporting avatars from the database.',
@@ -90,12 +91,6 @@ class VBulletin5 extends VBulletin
      */
     public function forumExport($ex)
     {
-
-        $ex->setCharacterSet('nodes');
-
-
-        $ex->beginExport('', 'vBulletin 5 Connect');
-
         $this->exportBlobs(
             $this->param('db-files'),
             $this->param('db-avatars')
@@ -103,17 +98,13 @@ class VBulletin5 extends VBulletin
 
         if ($this->param('noexport')) {
             $ex->comment('Skipping the export.');
-            $ex->endExport();
-
             return;
         }
 
         $cdn = $this->param('cdn', '');
 
-
         // Grab all of the ranks.
         $ranks = $ex->get("select * from :_usertitle order by minposts desc", 'usertitleid');
-
 
         // Users
         $user_Map = array(
@@ -726,14 +717,10 @@ class VBulletin5 extends VBulletin
             $userConversation_Map
         );
 
-
         /// Groups
         // class='SocialGroup'
         // class='SocialGroupDiscussion'
         // class='SocialGroupMessage'
-
-
-        $ex->endExport();
     }
 
     /**

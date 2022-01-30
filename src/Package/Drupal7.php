@@ -19,6 +19,7 @@ class Drupal7 extends ExportController
     public const SUPPORTED = [
         'name' => 'Drupal 7',
         'prefix' => '',
+        'charset_table' => 'comment',
         'options' => [
             'attach-source' => [
                 'URL or folder destination for the uploads folder, no trailing slash.',
@@ -62,33 +63,19 @@ class Drupal7 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('comment');
-
-
         $this->path = $this->param('attach-target', null) . '/uploads/';
-
         $origin = $this->param('attach-source', null);
         if ($origin && !is_dir($origin)) {
             mkdir($origin);
         }
 
-        $ex->beginExport('', 'Drupal 7');
-
         $this->users($ex);
-
         $this->signatures($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     public function convertBase64Attachments($value, $field, $row)

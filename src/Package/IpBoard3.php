@@ -19,6 +19,8 @@ class IpBoard3 extends ExportController
     public const SUPPORTED = [
         'name' => 'IP.Board 3',
         'prefix' => 'ibf_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'ipb',
         'options' => [
             'avatars-source' => [
                 'Full path of source avatars to process.',
@@ -184,13 +186,6 @@ class IpBoard3 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->sourcePrefix = ':_';
-
-        $ex->setCharacterSet('posts');
-
-
-        $ex->beginExport('', 'IPB 3.*', array('HashMethod' => 'ipb'));
-
         // Export avatars
         if ($this->param('avatars')) {
             $this->doAvatars($ex);
@@ -203,19 +198,14 @@ class IpBoard3 extends ExportController
         }
 
         $this->users($memberID, $ex);
-
         $this->roles($ex, $memberID);
         $this->permissions($ex);
         $this->userMeta($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->tags($ex);
-
         $this->comments($ex);
-
         $this->attachments($ex);
 
         if ($ex->exists('message_topic_user_map')) {
@@ -223,8 +213,6 @@ class IpBoard3 extends ExportController
         } else {
             $this->conversationsV2($ex); // v2
         }
-
-        $ex->endExport();
     }
 
     protected function conversationsV2($ex)

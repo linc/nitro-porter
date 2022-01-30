@@ -18,6 +18,7 @@ class AnswerHub extends ExportController
     public const SUPPORTED = [
         'name' => 'answerhub',
         'prefix' => '',
+        'charset_table' => 'nodes',
         'options' => [
             'noemaildomain' => [
                 'Domain to use when generating email addresses for users that does not have one.',
@@ -58,26 +59,13 @@ class AnswerHub extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('nodes');
-
-
-        $ex->beginExport('', 'AnswerHub');
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->tags($ex);
-
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     /**

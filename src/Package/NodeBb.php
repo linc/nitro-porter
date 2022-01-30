@@ -17,6 +17,8 @@ class NodeBb extends ExportController
     public const SUPPORTED = [
         'name' => 'NodeBB 0.*',
         'prefix' => 'gdn_',
+        'charset_table' => 'post',
+        'hashmethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -46,31 +48,18 @@ class NodeBb extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('topic');
-
-
-        $ex->beginExport('', 'NodeBB 0.*', array('HashMethod' => 'Vanilla'));
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->signatures($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->polls($ex);
         $this->tags($ex);
         $this->bookmarks($ex);
-
         $this->conversations($ex);
-
         $this->reactions($ex);
-
-        $ex->endExport();
     }
 
     public function nameToSlug($name)

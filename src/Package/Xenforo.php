@@ -12,12 +12,15 @@
 namespace Porter\Package;
 
 use Porter\ExportController;
+use Porter\ExportModel;
 
 class Xenforo extends ExportController
 {
     public const SUPPORTED = [
         'name' => 'Xenforo',
         'prefix' => 'xf_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'xenforo',
         'options' => [
             'avatars-source' => [
                 'Full path of source avatars to process.',
@@ -218,48 +221,32 @@ class Xenforo extends ExportController
         }
     }
 
-    /*
+    /**
      * Forum-specific export format.
+     *
      * @param ExportModel $ex
      */
-
     protected function forumExport($ex)
     {
-        $cdn = $this->cdnPrefix();
-
-        $ex->setCharacterSet('posts');
-
-
-        $ex->sourcePrefix = 'xf_';
-        //      $ex->UseCompression(FALSE);
-        // Begin
-        $ex->beginExport('', 'xenforo', array('HashMethod' => 'xenforo'));
-
         // Export avatars
         if ($this->param('avatars')) {
             $this->avatars();
         }
-
         // Export attachments
         if ($this->param('attach-rename')) {
             $this->attachmentFiles($ex);
         }
 
-        $this->users($ex, $cdn);
-
+        $this->users($ex, $this->cdnPrefix());
         $this->roles($ex);
         $this->permissions($ex);
         $this->userMeta($ex);
+
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->attachments($ex);
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     public function permissions($ex)

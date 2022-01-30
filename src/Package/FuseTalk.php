@@ -22,6 +22,7 @@ class FuseTalk extends ExportController
     public const SUPPORTED = [
         'name' => 'FuseTalk',
         'prefix' => 'ftdb_',
+        'charset_table' => 'messages',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -65,27 +66,15 @@ class FuseTalk extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('messages');
-
-
-        $ex->beginExport('', 'FuseTalk');
-
         $this->createIndices($ex); // Speed up the export.
 
         $this->users($ex);
-
         $this->signatures($ex);
         $this->roles($ex);
-
         $this->conversations($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

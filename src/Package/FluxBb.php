@@ -17,6 +17,8 @@ class FluxBb extends ExportController
     public const SUPPORTED = [
         'name' => 'FluxBB 1',
         'prefix' => '',
+        'charset_table' => 'posts',
+        'hashmethod' => 'punbb', // FluxBB is a fork of punbb and the password works.
         'options' => [
             'avatars-source' => array(
                 'Full path of forum avatars.',
@@ -71,37 +73,22 @@ class FluxBb extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        //FluxBB is a fork of punbb and the password works
-        $ex->beginExport('', 'FluxBB 1.*', array('HashMethod' => 'punbb'));
-
         $this->cdn = $this->param('cdn', '');
-
         if ($this->avatarPath = $this->param('avatars-source')) {
             if (!$this->avatarPath = realpath($this->avatarPath)) {
-                echo "Unable to access path to avatars: $this->avatarPath\n";
-                exit(1);
+                exit("Unable to access path to avatars: $this->avatarPath\n");
             }
         }
 
         $this->users($ex);
-
         $this->permissions($ex);
         $this->roles($ex);
         $this->signatures($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->tags($ex);
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     /**

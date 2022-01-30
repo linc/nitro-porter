@@ -17,6 +17,8 @@ class SimplePress extends ExportController
     public const SUPPORTED = [
         'name' => 'SimplePress 1',
         'prefix' => 'wp_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'Vanilla',
         'options' => [
         ],
         'features' => [
@@ -61,29 +63,15 @@ class SimplePress extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->sourcePrefix = 'wp_';
-
-        $ex->setCharacterSet('posts');
-
-
-        $ex->beginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->permissions($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->tags($ex);
-
         $this->comments($ex);
-
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     /**

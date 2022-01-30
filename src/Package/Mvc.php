@@ -17,6 +17,7 @@ class Mvc extends ExportController
     public const SUPPORTED = [
         'name' => 'MVC',
         'prefix' => '',
+        'charset_table' => 'Post',
         'options' => [
         ],
         'features' => [
@@ -63,31 +64,19 @@ class Mvc extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        // Reiterate the platform name here to be included in the porter file header.
-        $ex->beginExport('', 'MVC');
-
         $this->createPrimaryKeys($ex);
         $this->createIndexesIfNotExists($ex);
 
         $this->users($ex);
-
         $this->userMeta($ex);
         $this->roles($ex);
         $this->badges($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->tags($ex);
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     /**

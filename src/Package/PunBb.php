@@ -17,6 +17,8 @@ class PunBb extends ExportController
     public const SUPPORTED = [
         'name' => 'PunBB 1',
         'prefix' => 'punbb_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'punbb',
         'options' => [
             'avatars-source' => [
                 'Full path of forum avatars.',
@@ -71,39 +73,25 @@ class PunBb extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        $ex->beginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
-
         $this->cdn = $this->param('cdn', '');
-
         if ($avatarPath = $this->param('avatars-source', false)) {
             if (!$avatarPath = realpath($avatarPath)) {
                 echo "Unable to access path to avatars: $avatarPath\n";
                 exit(1);
             }
-
             $this->avatarPath = $avatarPath;
         }
-        unset($avatarPath);
 
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->permissions($ex);
         $this->signatures($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
         $this->tags($ex);
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     /**

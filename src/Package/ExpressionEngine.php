@@ -17,6 +17,7 @@ class ExpressionEngine extends ExportController
     public const SUPPORTED = [
         'name' => 'Expression Engine Discussion Forum',
         'prefix' => 'forum_',
+        'charset_table' => 'topics',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -47,31 +48,15 @@ class ExpressionEngine extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('topics');
-
-
-        $ex->beginExport('', 'Expression Engine');
-        $ex->sourcePrefix = 'forum_';
-
         $this->conversations($ex);
-
         $this->permissions($ex);
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->signatures($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     /**

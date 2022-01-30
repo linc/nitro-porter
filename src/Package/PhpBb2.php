@@ -17,6 +17,8 @@ class PhpBb2 extends ExportController
     public const SUPPORTED = [
         'name' => 'phpBB 2',
         'prefix' => 'phpbb_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'phpBB',
         'options' => [
         ],
         'features' => [
@@ -90,30 +92,13 @@ class PhpBb2 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('posts_text');
-
-
-        $ex->sourcePrefix = 'phpbb_';
-
-        // Begin
-        $ex->beginExport('', 'phpBB 2.*', array('HashMethod' => 'phpBB'));
-
-        // Users
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
         $this->conversations($ex);
-
         $this->attachments($ex);
-
-        $ex->endExport();
     }
 
     public static function entityDecode($value)

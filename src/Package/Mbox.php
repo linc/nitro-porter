@@ -69,27 +69,18 @@ class Mbox extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('mbox');
-
-
-        $ex->beginExport('', 'Mbox', array());
-
         $this->setup($ex); // Here be dragons.
 
         $this->users($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
 
         // Remove Temporary tables
         //$ex->Query('drop table :_mbox_post');
         //$ex->Query('drop table :_mbox_category');
         //$ex->Query('drop table :_mbox_user');
-
-        $ex->endExport();
     }
 
     /**

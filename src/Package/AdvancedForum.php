@@ -17,6 +17,7 @@ class AdvancedForum extends ExportController
     public const SUPPORTED = [
         'name' => 'Advanced Forum 7.x-2.*',
         'prefix' => '',
+        'charset_table' => 'Comment',
         'options' => [
             'avatars-prefix' => [
                 'Path to be prefixed to avatar filenames.',
@@ -55,24 +56,11 @@ class AdvancedForum extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('node');
-
-
-        $ex->beginExport('', 'Advanced Forum 7.x-2.*');
-
-        $filePath = $this->param('avatars-prefix', '');
-
-        $this->users($ex, $filePath);
-
+        $this->users($ex, $this->param('avatars-prefix', ''));
         $this->roles($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

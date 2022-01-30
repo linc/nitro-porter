@@ -17,6 +17,7 @@ class Yaf extends ExportController
     public const SUPPORTED = [
         'name' => 'YAF.NET',
         'prefix' => 'yaf_',
+        'charset_table' => 'Topic',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -44,31 +45,21 @@ class Yaf extends ExportController
     public static $passwordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
 
     /**
+     * Main export method.
      *
      * @param ExportModel $ex
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('Topic');
-
-
-        $ex->beginExport('', 'YAF.NET (Yet Another Forum)');
-        $ex->sourcePrefix = 'yaf_';
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->ranks($ex);
         $this->signatures($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
         $this->conversations($ex);
-
-        $ex->endExport();
     }
 
     public function cleanDate($value)

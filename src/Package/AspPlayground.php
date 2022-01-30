@@ -17,6 +17,7 @@ class AspPlayground extends ExportController
     public const SUPPORTED = [
         'name' => 'ASP Playground',
         'prefix' => 'pgd_',
+        'charset_table' => 'Threads',
         'options' => [
         ],
         'features' => [
@@ -48,25 +49,12 @@ class AspPlayground extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('Threads');
-
-
-        $ex->beginExport('', 'ASP Playground');
-        $ex->sourcePrefix = 'pgd_';
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->signatures($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

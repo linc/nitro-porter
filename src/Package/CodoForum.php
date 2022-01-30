@@ -17,6 +17,7 @@ class CodoForum extends ExportController
     public const SUPPORTED = [
         'name' => 'CodoForum',
         'prefix' => 'codo_',
+        'charset_table' => 'posts',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -60,24 +61,12 @@ class CodoForum extends ExportController
      */
     public function forumExport($ex)
     {
-        $ex->setCharacterSet('codo_posts');
-
-
-        $ex->beginExport('', 'CodoForum');
-
         $this->users($ex);
-
         $this->roles($ex);
-
         $this->userMeta($ex);
-
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
-
-        $ex->endExport();
     }
 
     /**

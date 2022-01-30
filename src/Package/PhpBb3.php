@@ -17,6 +17,8 @@ class PhpBb3 extends ExportController
     public const SUPPORTED = [
         'name' => 'phpBB 3',
         'prefix' => 'phpbb_',
+        'charset_table' => 'posts',
+        'hashmethod' => 'phpBB',
         'options' => [
         ],
         'features' => [
@@ -93,15 +95,7 @@ class PhpBb3 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $ex->setCharacterSet('posts');
-
-
-        $ex->sourcePrefix = 'phpbb_';
-
-        $ex->beginExport('', 'phpBB 3.*', array('HashMethod' => 'phpBB'));
-
         $this->users($ex);
-
         $this->roles($ex);
         $this->userNotes($ex);
         $this->ranks($ex);
@@ -109,20 +103,13 @@ class PhpBb3 extends ExportController
         $this->signatures($ex);
 
         $this->categories($ex);
-
         $this->discussions($ex);
-
         $this->comments($ex);
         $this->bookmarks($ex);
         $this->polls($ex);
-
         $this->conversations($ex);
-
         $this->attachments($ex);
-
         $this->banList($ex);
-
-        $ex->endExport();
     }
 
     protected function userNotes($ex)

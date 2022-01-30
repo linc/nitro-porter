@@ -40,6 +40,7 @@ class VBulletin extends ExportController
     public const SUPPORTED = [
         'name' => 'vBulletin 3 & 4',
         'prefix' => 'vb_',
+        'charset_table' => 'post',
         'options' => [
             'db-avatars' => [
                 'Enables exporting avatars from the database.',
@@ -228,11 +229,6 @@ class VBulletin extends ExportController
             $forumWhere = '';
         }
 
-        $ex->setCharacterSet('post');
-
-
-        // Begin
-        $ex->beginExport('', 'vBulletin 3.* and 4.*');
         $this->exportBlobs(
             $ex,
             $this->param('db-files'),
@@ -241,7 +237,6 @@ class VBulletin extends ExportController
 
         if ($this->param('files-only')) {
             $ex->comment('Skipping the export.');
-            $ex->endExport();
             return;
         }
 
@@ -264,11 +259,9 @@ class VBulletin extends ExportController
 
         $this->roles($ex);
         $this->permissions($ex);
-
         $this->userMeta($ex, $forumWhere, $minDate);
 
         $this->discussions($ex, $minDiscussionID, $forumWhere);
-
         $this->comments($ex, $minDiscussionID, $forumWhere);
 
         // UserDiscussion
@@ -314,9 +307,6 @@ class VBulletin extends ExportController
         if ($ex->exists('post_thanks') === true) {
             $this->reactions($ex);
         }
-
-        // End
-        $ex->endExport();
     }
 
     /**

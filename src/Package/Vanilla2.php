@@ -17,6 +17,8 @@ class Vanilla2 extends ExportController
     public const SUPPORTED = [
         'name' => 'Vanilla 2',
         'prefix' => 'GDN_',
+        'charset_table' => 'Comment',
+        'hashmethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -69,13 +71,9 @@ class Vanilla2 extends ExportController
             'UserRole'
         );
 
-        $ex->beginExport('', 'Vanilla 2.*', array('HashMethod' => 'Vanilla'));
-
         foreach ($tables as $tableName) {
             $this->exportEntireTable($ex, $tableName);
         }
-
-        $ex->endExport();
     }
 
     /**
