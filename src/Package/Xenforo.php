@@ -321,7 +321,7 @@ class Xenforo extends ExportController
         //       var_export($permissions);
     }
 
-    public function userMeta()
+    public function userMeta($ex)
     {
         $sql = "
          select
