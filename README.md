@@ -1,12 +1,12 @@
 Nitro Porter
 ============
 
-Nitro Porter is a nifty tool for exporting your community forum into an easy-to-import format.
+The only multi-platform community migration tool.
 
 ## Requirements
 
-* PHP 7.3+
-* Installed PHP support for your data source (like a db extension for MySQL or PostgreSQL).
+* PHP 7.4+
+* PHP's PDO driver for your data sources (probably MySQL or PostgreSQL).
 
 Some specific data transfers may have additional requirements.
 
@@ -20,17 +20,10 @@ Drop the latest release in a web-enabled directory and navigate to the folder in
 
 ### CLI
 
-Run `index.php` with the `--help` flag for a full list of options. 
-
-```
-cd /path/to/porter
-php index.php --help
-```
-
-### Optional Tips
-
-1. Run migrations locally instead of on a remote webserver.
-2. Prefer the CLI if you're comfortable doing so.
+1. [Get Composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos).
+2. Install Porter with `composer global require "linc/nitro-porter:dev-main"`.
+3. Go to `~/.composer/vendor/linc/nitro-porter`. Copy `config-sample.php` as `config.php` and add connections for your source and output.
+4. View Porter's options with `porter --help`.
 
 ## Contribute
 
@@ -48,4 +41,4 @@ Basically doing the above, but attached to a pull request with a proposed fix! I
 
 ### Add support for a new source
 
-To support a new forum source, copy "sample_package.php", rename it to your platform, put it in the `packages` folder, and follow its inline documentation. Document and test it thoroughly, including noting shortcuts taken or potential future improvements. Send us a pull request when it's ready!
+To support a new forum source, copy "src/Package/Example.php", rename it to your platform, and follow its inline documentation. Document and test it thoroughly, including noting shortcuts taken or potential future improvements. Send us a pull request when it's ready!
