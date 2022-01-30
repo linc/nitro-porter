@@ -95,7 +95,6 @@ class VBulletin5 extends VBulletin
             $this->param('db-files'),
             $this->param('db-avatars')
         );
-
         if ($this->param('noexport')) {
             $ex->comment('Skipping the export.');
             return;
@@ -106,289 +105,12 @@ class VBulletin5 extends VBulletin
         // Grab all of the ranks.
         $ranks = $ex->get("select * from :_usertitle order by minposts desc", 'usertitleid');
 
-        // Users
-        $user_Map = array(
-            'userid' => 'UserID',
-            'username' => 'Name',
-            'password2' => 'Password',
-            'email' => 'Email',
-            'referrerid' => 'InviteUserID',
-            'timezoneoffset' => 'HourOffset',
-            'ipaddress' => 'LastIPAddress',
-            'ipaddress2' => 'InsertIPAddress',
-            'usertitle' => 'Title',
-            'posts' => array(
-                'Column' => 'RankID',
-                'Filter' => function ($value) use ($ranks) {
-                    // Look  up the posts in the ranks table.
-                    foreach ($ranks as $rankID => $row) {
-                        if ($value >= $row['minposts']) {
-                            return $rankID;
-                        }
-                    }
+        $this->usersV5($ex, $ranks, $cdn);
+        $this->rolesV5($ex);
+        $this->permissionsV5($ex);
+        $this->ranksV5($ex);
 
-                    return null;
-                }
-            )
-        );
-
-        // Use file avatar or the result of our blob export?
-        if ($this->getConfig($ex, 'usefileavatar')) {
-            $user_Map['filephoto'] = 'Photo';
-        } else {
-            $user_Map['customphoto'] = 'Photo';
-        }
-
-        // vBulletin 5.1 changes the hash to crypt(md5(password), hash).
-        // Switches from password & salt to token (and scheme & secret).
-        // The scheme appears to be crypt()'s default and secret looks uselessly redundant.
-        if ($ex->exists('user', 'token') !== true) {
-            $passwordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
-        } else {
-            // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
-            $passwordSQL = "replace(token, ' ', '') as password2,
-                case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
-        }
-
-        $ex->exportTable(
-            'User',
-            "
-            select
-                u.*,
-                ipaddress as ipaddress2,
-                $passwordSQL
-                DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
-                FROM_UNIXTIME(joindate) as DateFirstVisit,
-                FROM_UNIXTIME(lastvisit) as DateLastActive,
-                FROM_UNIXTIME(joindate) as DateInserted,
-                FROM_UNIXTIME(lastactivity) as DateUpdated,
-                case when avatarrevision > 0 then
-                    concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
-                    when av.avatarpath is not null then av.avatarpath
-                    else null
-                end as filephoto,
-                {$this->avatarSelect},
-                case when ub.userid is not null then 1 else 0 end as Banned
-            from :_user u
-                left join :_customavatar a on u.userid = a.userid
-                left join :_avatar av on u.avatarid = av.avatarid
-                left join :_userban ub
-                    on u.userid = ub.userid
-                    and ub.liftdate <= now()
-         ;",
-            $user_Map
-        );  // ":_" will be replaced by database prefix
-        //ipdata - contains all IP records for user actions: view,visit,register,logon,logoff
-
-
-        // Roles
-        $role_Map = array(
-            'usergroupid' => 'RoleID',
-            'title' => 'Name',
-            'description' => 'Description'
-        );
-        $ex->exportTable('Role', 'select * from :_usergroup', $role_Map);
-
-
-        // UserRoles
-        $userRole_Map = array(
-            'userid' => 'UserID',
-            'usergroupid' => 'RoleID'
-        );
-        $ex->query("drop table if exists VbulletinRoles");
-        $ex->query("CREATE TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
-        // Put primary groups into tmp table
-        $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
-        // Put stupid CSV column into tmp table
-        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user", true);
-        if (is_resource($secondaryRoles)) {
-            while (($row = $secondaryRoles->nextResultRow()) !== false) {
-                if ($row['membergroupids'] != '') {
-                    $groups = explode(',', $row['membergroupids']);
-                    foreach ($groups as $groupID) {
-                        $ex->query(
-                            "insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})",
-                            true
-                        );
-                    }
-                }
-            }
-        }
-        // Export from our tmp table and drop
-        $ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
-        $ex->query("DROP TABLE IF EXISTS VbulletinRoles");
-
-
-        // Permissions.
-        $permissions_Map = array(
-            'usergroupid' => 'RoleID',
-            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
-            'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
-            'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
-        );
-        $this->addPermissionColumns(self::$permissions, $permissions_Map);
-        $ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
-
-
-        // UserMeta
-        /*$ex->Query("CREATE TEMPORARY TABLE VbulletinUserMeta
-            (`UserID` INT not null ,`Name` VARCHAR( 255 ) not null ,`Value` text not null)");
-        # Standard vB user data
-        $UserFields = array('usertitle' => 'Title', 'homepage' => 'Website',
-            'skype' => 'Skype', 'styleid' => 'StyleID');
-        foreach($UserFields as $Field => $InsertAs)
-           $ex->Query("insert into VbulletinUserMeta (UserID, Name, Value)
-            select userid, 'Profile.$InsertAs', $Field from :_user where $Field != ''");
-        # Dynamic vB user data (userfield)
-        $ProfileFields = $ex->Query("select varname, text
-            from :_phrase where product='vbulletin' and fieldname='cprofilefield' and varname like 'field%_title'");
-        if (is_resource($ProfileFields)) {
-           $ProfileQueries = array();
-           while ($Field = $ProfileFields->nextResultRow()) {
-              $Column = str_replace('_title', '', $Field['varname']);
-              $Name = preg_replace('/[^a-zA-Z0-9_-\s]/', '', $Field['text']);
-              $ProfileQueries[] = "insert into VbulletinUserMeta (UserID, Name, Value)
-                 select userid, 'Profile.".$Name."', ".$Column." from :_userfield where ".$Column." != ''";
-           }
-           foreach ($ProfileQueries as $Query) {
-              $ex->Query($Query);
-           }
-        }*/
-
-
-        // Ranks
-        $rank_Map = array(
-            'usertitleid' => 'RankID',
-            'title' => 'Name',
-            'title2' => 'Label',
-            'minposts' => array(
-                'Column' => 'Attributes',
-                'Filter' => function ($value) {
-                    $result = array(
-                        'Criteria' => array(
-                            'CountPosts' => $value
-                        )
-                    );
-
-                    return serialize($result);
-                }
-            ),
-            'level' => array(
-                'Column' => 'Level',
-                'Filter' => function ($value) {
-                    static $level = 1;
-
-                    return $level++;
-                }
-            )
-        );
-        $ex->exportTable(
-            'Rank',
-            "
-            select
-                ut.*,
-                ut.title as title2,
-                0 as level
-            from :_usertitle ut
-            order by ut.minposts
-         ;",
-            $rank_Map
-        );
-
-
-        /// Signatures
-        // usertextfields.signature
-
-        // Ignore
-        // usertextfields.ignorelist
-
-        /// Notes
-
-        /// Warnings
-
-        /// Activity (Wall)
-
-
-        // Category.
-        $channels = array();
-        $categoryIDs = array();
-        $homeID = 0;
-        $privateMessagesID = 0;
-
-        // Filter Channels down to Forum tree
-        $channelResult = $ex->query(
-            "
-            select
-                n.*
-            from :_node n
-                left join :_contenttype ct on n.contenttypeid = ct.contenttypeid
-            where ct.class = 'Channel'
-        ;"
-        );
-
-        while ($channel = $channelResult->nextResultRow()) {
-            $channels[$channel['nodeid']] = $channel;
-            if ($channel['title'] == 'Forum') {
-                $homeID = $channel['nodeid'];
-            }
-            if ($channel['title'] == 'Private Messages') {
-                $privateMessagesID = $channel['nodeid'];
-            }
-        }
-
-        if (!$homeID) {
-            exit("Missing node 'Forum'");
-        }
-
-        // Go through the category list 6 times to build a (up to) 6-deep hierarchy
-        $categoryIDs[] = $homeID;
-        for ($i = 0; $i < 6; $i++) {
-            foreach ($channels as $channel) {
-                if (in_array($channel['nodeid'], $categoryIDs)) {
-                    continue;
-                }
-                if (in_array($channel['parentid'], $categoryIDs)) {
-                    $categoryIDs[] = $channel['nodeid'];
-                }
-            }
-        }
-        // Drop 'Forum' from the tree
-        if (($key = array_search($homeID, $categoryIDs)) !== false) {
-            unset($categoryIDs[$key]);
-        }
-
-        $category_Map = array(
-            'nodeid' => 'CategoryID',
-            'title' => 'Name',
-            'description' => 'Description',
-            'userid' => 'InsertUserID',
-            'parentid' => 'ParentCategoryID',
-            'urlident' => 'UrlCode',
-            'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
-            'lastcontentid' => 'LastDiscussionID',
-            'textcount' => 'CountComments', // ???
-            'totalcount' => 'CountDiscussions', // ???
-        );
-
-        // Categories are Channels that were found in the Forum tree
-        // If parent was 'Forum' set the parent to Root instead (-1)
-        $ex->exportTable(
-            'Category',
-            "
-            select
-                n.*,
-                FROM_UNIXTIME(publishdate) as DateInserted,
-                if(parentid={$homeID},-1,parentid) as parentid
-            from :_node n
-            where nodeid in (" . implode(',', $categoryIDs) . ")
-        ;",
-            $category_Map
-        );
-
-
-        /// Permission
-        //permission - nodeid,(user)groupid, and it gets worse from there.
-
+        list($categoryIDs, $privateMessagesID) = $this->categoryV5($ex);
 
         // Discussion.
         $discussion_Map = array(
@@ -511,216 +233,9 @@ class VBulletin5 extends VBulletin
             $userDiscussion_Map
         );
 
-
-        // Comment.
-        // Detect inner comments (Can happen if a plugin is used)
-        $innerCommentQuery = "
-            select
-                node.nodeid,
-                nodePP.nodeid as parentid,
-                node.userid,
-                t.rawtext,
-                'BBCode' as Format,
-                FROM_UNIXTIME(node.publishdate) as DateInserted
-            from :_node as node
-                inner join :_contenttype as ct on ct.contenttypeid = node.contenttypeid
-                    and ct.class = 'Text' /*Inner Comment*/
-                inner join :_node as nodeP on nodeP.nodeid = node.parentid
-                inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid
-                    and ctP.class = 'Text'/*Comment*/
-                inner join :_node as nodePP on nodePP.nodeid = nodeP.parentid
-                inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid
-                    and ctPP.class = 'Text'/*Discussion*/
-                inner join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
-                inner join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid
-                    and ctPPP.class = 'Channel'/*Category*/
-                left join :_text t on t.nodeid = node.nodeid
-            where node.showpublished = 1
-        ";
-        $result = $ex->query($innerCommentQuery . ' limit 1', true);
-
-        $innerCommentSQLFix = null;
-        if ($result->nextResultRow()) {
-            $ex->query(
-                "
-                create table `vBulletinInnerCommentTable` (
-                    `nodeid` int(10) unsigned not null,
-                    `parentid` int(11) not null,
-                    `userid` int(10) unsigned default null,
-                    `rawtext` mediumtext,
-                    `Format` varchar(10) not null,
-                    `DateInserted` datetime not null,
-                    primary key (`nodeid`)
-                )
-            ;"
-            );
-            $ex->query("insert into vBulletinInnerCommentTable $innerCommentQuery");
-
-            $innerCommentSQLFix = "
-                and n.nodeid not in (select nodeid from vBulletinInnerCommentTable)
-
-            union all
-
-            select * from vBulletinInnerCommentTable
-            ";
-        }
-
-        $comment_Map = array(
-            'nodeid' => 'CommentID',
-            'rawtext' => 'Body',
-            'userid' => 'InsertUserID',
-            'parentid' => 'DiscussionID',
-        );
-
-        $ex->exportTable(
-            'Comment',
-            "
-            select
-                n.nodeid,
-                n.parentid,
-                n.userid,
-                t.rawtext,
-                'BBCode' as Format,
-                FROM_UNIXTIME(publishdate) as DateInserted
-            from :_node n
-                left join :_contenttype c on n.contenttypeid = c.contenttypeid
-                left join :_text t on t.nodeid = n.nodeid
-            where c.class = 'Text'
-                and n.showpublished = 1
-                and parentid not in (" . implode(',', $categoryIDs) . ")
-                $innerCommentSQLFix
-        ",
-            $comment_Map
-        );
-
-        if ($innerCommentSQLFix !== null) {
-            $ex->query("drop table if exists vBulletinInnerCommentTable");
-        }
-
-        /// Drafts
-        // autosavetext table
-
-        $instance = $this;
-        // Media
-        $media_Map = array(
-            'nodeid' => 'MediaID',
-            'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
-            'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
-            'ThumbPath2' => array(
-                'Column' => 'ThumbPath',
-                'Filter' => function ($value, $field, $row) use ($instance) {
-                    $filteredData = $this->filterThumbnailData($value, $field, $row);
-
-                    if ($filteredData) {
-                        return $instance->buildMediaPath($value, $field, $row);
-                    } else {
-                        return null;
-                    }
-                }
-            ),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
-            'width' => 'ImageWidth',
-            'height' => 'ImageHeight',
-            'filesize' => 'Size',
-        );
-        $ex->exportTable(
-            'Media',
-            "
-            select
-                a.*,
-                filename as Path2,
-                filename as ThumbPath2,
-                128 as thumb_width,
-                FROM_UNIXTIME(f.dateline) as DateInserted,
-                f.userid as userid,
-                f.userid as InsertUserID,
-                if (f.width,f.width,1) as width,
-                if (f.height,f.height,1) as height,
-                n.parentid as ForeignID,
-                f.extension,
-                f.filesize,
-                if(n2.parentid in (" . implode(',', $categoryIDs) . "),'discussion','comment') as ForeignTable
-            from :_attach a
-                left join :_node n on n.nodeid = a.nodeid
-                left join :_filedata f on f.filedataid = a.filedataid
-                left join :_node n2 on n.parentid = n2.nodeid
-            where a.visible = 1
-        ;",
-            $media_Map
-        );
-        // left join :_contenttype c on n.contenttypeid = c.contenttypeid
-
-
-        // Conversations.
-        $conversation_Map = array(
-            'nodeid' => 'ConversationID',
-            'userid' => 'InsertUserID',
-            'totalcount' => 'CountMessages',
-            'title' => 'Subject',
-        );
-        $ex->exportTable(
-            'Conversation',
-            "
-            select
-                n.*,
-                n.nodeid as FirstMessageID,
-                FROM_UNIXTIME(n.publishdate) as DateInserted
-            from :_node n
-                left join :_text t on t.nodeid = n.nodeid
-            where parentid = $privateMessagesID
-                and t.rawtext <> ''
-        ;",
-            $conversation_Map
-        );
-
-
-        // Conversation Messages.
-        $conversationMessage_Map = array(
-            'nodeid' => 'MessageID',
-            'rawtext' => 'Body',
-            'userid' => 'InsertUserID'
-        );
-        $ex->exportTable(
-            'ConversationMessage',
-            "
-            select
-                n.*,
-                t.rawtext,
-                'BBCode' as Format,
-                if(n.parentid<>$privateMessagesID,n.parentid,n.nodeid) as ConversationID,
-                FROM_UNIXTIME(n.publishdate) as DateInserted
-            from :_node n
-                left join :_contenttype c on n.contenttypeid = c.contenttypeid
-                left join :_text t on t.nodeid = n.nodeid
-            where c.class = 'PrivateMessage'
-                and t.rawtext <> ''
-        ;",
-            $conversationMessage_Map
-        );
-
-
-        // User Conversation.
-        $userConversation_Map = array(
-            'userid' => 'UserID',
-            'nodeid' => 'ConversationID',
-            'deleted' => 'Deleted'
-        );
-        // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
-        $ex->exportTable(
-            'UserConversation',
-            "
-            select
-                s.*
-            from :_sentto s
-        ;",
-            $userConversation_Map
-        );
-
-        /// Groups
-        // class='SocialGroup'
-        // class='SocialGroupDiscussion'
-        // class='SocialGroupMessage'
+        $this->commentsV5($ex, $categoryIDs);
+        $this->attachmentsV5($ex, $categoryIDs);
+        $this->conversationsV5($ex, $privateMessagesID);
     }
 
     /**
@@ -897,6 +412,497 @@ class VBulletin5 extends VBulletin
             from :_pollvote pv
         ;",
             $pollVote_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @param array $ranks
+     * @param $cdn
+     * @return void
+     */
+    public function usersV5(ExportModel $ex, array $ranks, $cdn): void
+    {
+        $user_Map = array(
+            'userid' => 'UserID',
+            'username' => 'Name',
+            'password2' => 'Password',
+            'email' => 'Email',
+            'referrerid' => 'InviteUserID',
+            'timezoneoffset' => 'HourOffset',
+            'ipaddress' => 'LastIPAddress',
+            'ipaddress2' => 'InsertIPAddress',
+            'usertitle' => 'Title',
+            'posts' => array(
+                'Column' => 'RankID',
+                'Filter' => function ($value) use ($ranks) {
+                    // Look  up the posts in the ranks table.
+                    foreach ($ranks as $rankID => $row) {
+                        if ($value >= $row['minposts']) {
+                            return $rankID;
+                        }
+                    }
+
+                    return null;
+                }
+            )
+        );
+
+        // Use file avatar or the result of our blob export?
+        if ($this->getConfig($ex, 'usefileavatar')) {
+            $user_Map['filephoto'] = 'Photo';
+        } else {
+            $user_Map['customphoto'] = 'Photo';
+        }
+
+        // vBulletin 5.1 changes the hash to crypt(md5(password), hash).
+        // Switches from password & salt to token (and scheme & secret).
+        // The scheme appears to be crypt()'s default and secret looks uselessly redundant.
+        if ($ex->exists('user', 'token') !== true) {
+            $passwordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
+        } else {
+            // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
+            $passwordSQL = "replace(token, ' ', '') as password2,
+                case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
+        }
+
+        $ex->exportTable(
+            'User',
+            "
+            select
+                u.*,
+                ipaddress as ipaddress2,
+                $passwordSQL
+                DATE_FORMAT(birthday_search,GET_FORMAT(DATE,'ISO')) as DateOfBirth,
+                FROM_UNIXTIME(joindate) as DateFirstVisit,
+                FROM_UNIXTIME(lastvisit) as DateLastActive,
+                FROM_UNIXTIME(joindate) as DateInserted,
+                FROM_UNIXTIME(lastactivity) as DateUpdated,
+                case when avatarrevision > 0 then
+                    concat('$cdn', 'userpics/avatar', u.userid, '_', avatarrevision, '.gif')
+                    when av.avatarpath is not null then av.avatarpath
+                    else null
+                end as filephoto,
+                {$this->avatarSelect},
+                case when ub.userid is not null then 1 else 0 end as Banned
+            from :_user u
+                left join :_customavatar a on u.userid = a.userid
+                left join :_avatar av on u.avatarid = av.avatarid
+                left join :_userban ub
+                    on u.userid = ub.userid
+                    and ub.liftdate <= now()
+         ;",
+            $user_Map
+        );  // ":_" will be replaced by database prefix
+        //ipdata - contains all IP records for user actions: view,visit,register,logon,logoff
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    public function rolesV5(ExportModel $ex)
+    {
+        $role_Map = array(
+            'usergroupid' => 'RoleID',
+            'title' => 'Name',
+            'description' => 'Description'
+        );
+        $ex->exportTable('Role', 'select * from :_usergroup', $role_Map);
+
+        // UserRoles
+        $userRole_Map = array(
+            'userid' => 'UserID',
+            'usergroupid' => 'RoleID'
+        );
+        $ex->query("drop table if exists VbulletinRoles");
+        $ex->query("CREATE TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
+        // Put primary groups into tmp table
+        $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
+        // Put stupid CSV column into tmp table
+        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user", true);
+        if (is_resource($secondaryRoles)) {
+            while (($row = $secondaryRoles->nextResultRow()) !== false) {
+                if ($row['membergroupids'] != '') {
+                    $groups = explode(',', $row['membergroupids']);
+                    foreach ($groups as $groupID) {
+                        $ex->query(
+                            "insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})",
+                            true
+                        );
+                    }
+                }
+            }
+        }
+        // Export from our tmp table and drop
+        $ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
+        $ex->query("DROP TABLE IF EXISTS VbulletinRoles");
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @return array
+     */
+    public function permissionsV5(ExportModel $ex): void
+    {
+        $permissions_Map = array(
+            'usergroupid' => 'RoleID',
+            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
+            'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
+            'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
+        );
+        $this->addPermissionColumns(self::$permissions, $permissions_Map);
+        $ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @return array|void
+     */
+    public function ranksV5(ExportModel $ex)
+    {
+        $rank_Map = array(
+            'usertitleid' => 'RankID',
+            'title' => 'Name',
+            'title2' => 'Label',
+            'minposts' => array(
+                'Column' => 'Attributes',
+                'Filter' => function ($value) {
+                    $result = array(
+                        'Criteria' => array(
+                            'CountPosts' => $value
+                        )
+                    );
+
+                    return serialize($result);
+                }
+            ),
+            'level' => array(
+                'Column' => 'Level',
+                'Filter' => function ($value) {
+                    static $level = 1;
+
+                    return $level++;
+                }
+            )
+        );
+        $ex->exportTable(
+            'Rank',
+            "
+            select
+                ut.*,
+                ut.title as title2,
+                0 as level
+            from :_usertitle ut
+            order by ut.minposts
+         ;",
+            $rank_Map
+        );
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @return array|void
+     */
+    public function categoryV5(ExportModel $ex)
+    {
+        $channels = array();
+        $categoryIDs = array();
+        $homeID = 0;
+        $privateMessagesID = 0;
+
+        // Filter Channels down to Forum tree
+        $channelResult = $ex->query(
+            "
+            select
+                n.*
+            from :_node n
+                left join :_contenttype ct on n.contenttypeid = ct.contenttypeid
+            where ct.class = 'Channel'
+        ;"
+        );
+
+        while ($channel = $channelResult->nextResultRow()) {
+            $channels[$channel['nodeid']] = $channel;
+            if ($channel['title'] == 'Forum') {
+                $homeID = $channel['nodeid'];
+            }
+            if ($channel['title'] == 'Private Messages') {
+                $privateMessagesID = $channel['nodeid'];
+            }
+        }
+
+        if (!$homeID) {
+            exit("Missing node 'Forum'");
+        }
+
+        // Go through the category list 6 times to build a (up to) 6-deep hierarchy
+        $categoryIDs[] = $homeID;
+        for ($i = 0; $i < 6; $i++) {
+            foreach ($channels as $channel) {
+                if (in_array($channel['nodeid'], $categoryIDs)) {
+                    continue;
+                }
+                if (in_array($channel['parentid'], $categoryIDs)) {
+                    $categoryIDs[] = $channel['nodeid'];
+                }
+            }
+        }
+        // Drop 'Forum' from the tree
+        if (($key = array_search($homeID, $categoryIDs)) !== false) {
+            unset($categoryIDs[$key]);
+        }
+
+        $category_Map = array(
+            'nodeid' => 'CategoryID',
+            'title' => 'Name',
+            'description' => 'Description',
+            'userid' => 'InsertUserID',
+            'parentid' => 'ParentCategoryID',
+            'urlident' => 'UrlCode',
+            'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
+            'lastcontentid' => 'LastDiscussionID',
+            'textcount' => 'CountComments', // ???
+            'totalcount' => 'CountDiscussions', // ???
+        );
+
+        // Categories are Channels that were found in the Forum tree
+        // If parent was 'Forum' set the parent to Root instead (-1)
+        $ex->exportTable(
+            'Category',
+            "
+            select
+                n.*,
+                FROM_UNIXTIME(publishdate) as DateInserted,
+                if(parentid={$homeID},-1,parentid) as parentid
+            from :_node n
+            where nodeid in (" . implode(',', $categoryIDs) . ")
+        ;",
+            $category_Map
+        );
+        return array($categoryIDs, $privateMessagesID);
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @param $categoryIDs
+     * @return string|void
+     */
+    public function commentsV5(ExportModel $ex, $categoryIDs): void
+    {
+        // Detect inner comments (Can happen if a plugin is used)
+        $innerCommentQuery = "
+            select
+                node.nodeid,
+                nodePP.nodeid as parentid,
+                node.userid,
+                t.rawtext,
+                'BBCode' as Format,
+                FROM_UNIXTIME(node.publishdate) as DateInserted
+            from :_node as node
+                inner join :_contenttype as ct on ct.contenttypeid = node.contenttypeid
+                    and ct.class = 'Text' /*Inner Comment*/
+                inner join :_node as nodeP on nodeP.nodeid = node.parentid
+                inner join :_contenttype as ctP on ctP.contenttypeid = nodeP.contenttypeid
+                    and ctP.class = 'Text'/*Comment*/
+                inner join :_node as nodePP on nodePP.nodeid = nodeP.parentid
+                inner join :_contenttype as ctPP on ctPP.contenttypeid = nodePP.contenttypeid
+                    and ctPP.class = 'Text'/*Discussion*/
+                inner join :_node as nodePPP on nodePPP.nodeid = nodePP.parentid
+                inner join :_contenttype as ctPPP on ctPPP.contenttypeid = nodePPP.contenttypeid
+                    and ctPPP.class = 'Channel'/*Category*/
+                left join :_text t on t.nodeid = node.nodeid
+            where node.showpublished = 1
+        ";
+        $result = $ex->query($innerCommentQuery . ' limit 1', true);
+
+        $innerCommentSQLFix = null;
+        if ($result->nextResultRow()) {
+            $ex->query(
+                "
+                create table `vBulletinInnerCommentTable` (
+                    `nodeid` int(10) unsigned not null,
+                    `parentid` int(11) not null,
+                    `userid` int(10) unsigned default null,
+                    `rawtext` mediumtext,
+                    `Format` varchar(10) not null,
+                    `DateInserted` datetime not null,
+                    primary key (`nodeid`)
+                )
+            ;"
+            );
+            $ex->query("insert into vBulletinInnerCommentTable $innerCommentQuery");
+
+            $innerCommentSQLFix = "
+                and n.nodeid not in (select nodeid from vBulletinInnerCommentTable)
+
+            union all
+
+            select * from vBulletinInnerCommentTable
+            ";
+        }
+
+        $comment_Map = array(
+            'nodeid' => 'CommentID',
+            'rawtext' => 'Body',
+            'userid' => 'InsertUserID',
+            'parentid' => 'DiscussionID',
+        );
+
+        $ex->exportTable(
+            'Comment',
+            "
+            select
+                n.nodeid,
+                n.parentid,
+                n.userid,
+                t.rawtext,
+                'BBCode' as Format,
+                FROM_UNIXTIME(publishdate) as DateInserted
+            from :_node n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+                left join :_text t on t.nodeid = n.nodeid
+            where c.class = 'Text'
+                and n.showpublished = 1
+                and parentid not in (" . implode(',', $categoryIDs) . ")
+                $innerCommentSQLFix
+        ",
+            $comment_Map
+        );
+
+        if ($innerCommentSQLFix !== null) {
+            $ex->query("drop table if exists vBulletinInnerCommentTable");
+        }
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @param $categoryIDs
+     * @return void
+     */
+    public function attachmentsV5(ExportModel $ex, $categoryIDs)
+    {
+        $instance = $this;
+        // Media
+        $media_Map = array(
+            'nodeid' => 'MediaID',
+            'filename' => 'Name',
+            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
+            'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
+            'ThumbPath2' => array(
+                'Column' => 'ThumbPath',
+                'Filter' => function ($value, $field, $row) use ($instance) {
+                    $filteredData = $this->filterThumbnailData($value, $field, $row);
+
+                    if ($filteredData) {
+                        return $instance->buildMediaPath($value, $field, $row);
+                    } else {
+                        return null;
+                    }
+                }
+            ),
+            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
+            'width' => 'ImageWidth',
+            'height' => 'ImageHeight',
+            'filesize' => 'Size',
+        );
+        $ex->exportTable(
+            'Media',
+            "
+            select
+                a.*,
+                filename as Path2,
+                filename as ThumbPath2,
+                128 as thumb_width,
+                FROM_UNIXTIME(f.dateline) as DateInserted,
+                f.userid as userid,
+                f.userid as InsertUserID,
+                if (f.width,f.width,1) as width,
+                if (f.height,f.height,1) as height,
+                n.parentid as ForeignID,
+                f.extension,
+                f.filesize,
+                if(n2.parentid in (" . implode(',', $categoryIDs) . "),'discussion','comment') as ForeignTable
+            from :_attach a
+                left join :_node n on n.nodeid = a.nodeid
+                left join :_filedata f on f.filedataid = a.filedataid
+                left join :_node n2 on n.parentid = n2.nodeid
+            where a.visible = 1
+        ;",
+            $media_Map
+        );
+        // left join :_contenttype c on n.contenttypeid = c.contenttypeid
+    }
+
+    /**
+     * @param ExportModel $ex
+     * @param $privateMessagesID
+     * @return void
+     */
+    public function conversationsV5(ExportModel $ex, $privateMessagesID): void
+    {
+// Conversations.
+        $conversation_Map = array(
+            'nodeid' => 'ConversationID',
+            'userid' => 'InsertUserID',
+            'totalcount' => 'CountMessages',
+            'title' => 'Subject',
+        );
+        $ex->exportTable(
+            'Conversation',
+            "
+            select
+                n.*,
+                n.nodeid as FirstMessageID,
+                FROM_UNIXTIME(n.publishdate) as DateInserted
+            from :_node n
+                left join :_text t on t.nodeid = n.nodeid
+            where parentid = $privateMessagesID
+                and t.rawtext <> ''
+        ;",
+            $conversation_Map
+        );
+
+
+        // Conversation Messages.
+        $conversationMessage_Map = array(
+            'nodeid' => 'MessageID',
+            'rawtext' => 'Body',
+            'userid' => 'InsertUserID'
+        );
+        $ex->exportTable(
+            'ConversationMessage',
+            "
+            select
+                n.*,
+                t.rawtext,
+                'BBCode' as Format,
+                if(n.parentid<>$privateMessagesID,n.parentid,n.nodeid) as ConversationID,
+                FROM_UNIXTIME(n.publishdate) as DateInserted
+            from :_node n
+                left join :_contenttype c on n.contenttypeid = c.contenttypeid
+                left join :_text t on t.nodeid = n.nodeid
+            where c.class = 'PrivateMessage'
+                and t.rawtext <> ''
+        ;",
+            $conversationMessage_Map
+        );
+
+
+        // User Conversation.
+        $userConversation_Map = array(
+            'userid' => 'UserID',
+            'nodeid' => 'ConversationID',
+            'deleted' => 'Deleted'
+        );
+        // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
+        $ex->exportTable(
+            'UserConversation',
+            "
+            select
+                s.*
+            from :_sentto s
+        ;",
+            $userConversation_Map
         );
     }
 }
