@@ -844,4 +844,36 @@ class PhpBb3 extends ExportController
             $media_Map
         );
     }
+
+    /**
+     * Add file extension to hashed phpBB3 attachment filenames.
+     *
+     * @todo Add access from CLI & UI
+     *
+     * @param string $directory
+     */
+    protected function exportBlobs(string $directory)
+    {
+        // Select attachments
+        $result = $this->query("select physical_filename as name, extension as ext from phpbb_attachments");
+
+        // Iterate thru files based on database results and rename.
+        $renamed = $failed = 0;
+        while ($row = $result->nextResultRow()) {
+            if (file_exists($directory . $row['name'])) {
+                rename($directory . $row['name'], $directory . $row['name'] . '.' . $row['ext']);
+                $renamed++;
+
+                if (file_exists($directory . 'thumb_' . $row['name'])) {
+                    rename(
+                        $directory . 'thumb_' . $row['name'],
+                        $directory . 'thumb_' . $row['name'] . '.' . $row['ext']
+                    );
+                }
+            } else {
+                $failed++;
+            }
+        }
+        $this->comment('Renamed ' . $renamed . ' files. ' . $failed . 'failures.');
+    }
 }
