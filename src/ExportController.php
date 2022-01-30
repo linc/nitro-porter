@@ -40,7 +40,7 @@ abstract class ExportController
     /**
      * Forum-specific export routine
      */
-    abstract protected function forumExport($ex);
+    abstract protected function forumExport(ExportModel $ex);
 
     /**
      * Register supported features.
