@@ -32,22 +32,6 @@ function getTestDatabaseCredentials(): array
 }
 
 /**
- * Get a cleaned up database source list for forms.
- *
- * @return array A list of connections in the config (id => name).
- */
-function getSourceConnections(): array
-{
-    $prepared_connections = [];
-    foreach (\Porter\Config::getInstance()->getConnections() as $c) {
-        if ($c['type'] === 'database') {
-            $prepared_connections[$c['alias']] = $c['alias'] . ' (' . $c['user'] . '@' . $c['name'] . ')';
-        }
-    }
-    return $prepared_connections;
-}
-
-/**
  * Get valid package class. Exit app if invalid package name is given.
  *
  * @param string $packageName

@@ -148,7 +148,7 @@ class Render
                     <label>Connection
                         <select name="source" >
                             <option disabled selected value> — selection required — </option>
-                            <?php foreach (getSourceConnections() as $id => $name) {
+                            <?php foreach (self::getFormattedConnectionList() as $id => $name) {
                                 echo '<option value="' . $id . '">' . $name . '</option>';
                             } ?>
                             <!--<option disabled>API</option>
@@ -193,7 +193,7 @@ class Render
                     <label>Connection
                         <select name="target" >
                             <option disabled selected value> — selection required — </option>
-                            <?php foreach (getSourceConnections() as $id => $name) {
+                            <?php foreach (self::getFormattedConnectionList() as $id => $name) {
                                 echo '<option value="' . $id . '">' . $name . '</option>';
                             } ?>
                         </select>
@@ -402,5 +402,17 @@ class Render
     public static function featureName($feature)
     {
         return ltrim(preg_replace('/[A-Z]/', ' $0', $feature));
+    }
+
+    /**
+     * Get connections list formatted for a dropdown.
+     */
+    public static function getFormattedConnectionList()
+    {
+        $prepared_connections = [];
+        foreach (\Porter\Config::getInstance()->getConnections() as $c) {
+            $prepared_connections[$c['alias']] = $c['alias'] . ' (' . $c['user'] . '@' . $c['name'] . ')';
+        }
+        return $prepared_connections;
     }
 }
