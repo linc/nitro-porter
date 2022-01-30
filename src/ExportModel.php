@@ -209,20 +209,16 @@ class ExportModel
     /**
      * Create the export file and begin the export.
      *
-     * @param  string $path   The path to the export file.
-     * @param  string $source What created the export. May be used by import routine to do additional processing.
-     * @param  array  $header
+     * @param string $source Package name.
      * @return resource Pointer to the file created.
      */
-    public function beginExport($path = '', $source = '', $header = array())
+    public function beginExport($source = '')
     {
         $this->comments = array();
         $this->beginTime = microtime(true);
 
         // Allow us to define where the output file goes.
-        if ($path) {
-            $this->path = $path;
-        } elseif (Request::instance()->get('destpath')) {
+        if (Request::instance()->get('destpath')) {
             $this->path = Request::instance()->get('destpath');
             if (strstr($this->path, '/') !== false && substr($this->path, 1, -1) != '/') {
                 // We're using slash paths but didn't include a final slash.
@@ -231,10 +227,7 @@ class ExportModel
         }
 
         // Allow the $path parameter to override this default naming.
-        if (!$path) {
-            $this->path .= 'export_'
-                 . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
-        }
+        $this->path .= 'export_' . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
 
         // Start the file pointer.
         $fp = $this->openFile();
@@ -243,9 +236,6 @@ class ExportModel
         $comment = 'Nitro Porter Export';
         if ($source) {
             $comment .= self::DELIM . ' Source: ' . $source;
-        }
-        foreach ($header as $key => $value) {
-            $comment .= self::DELIM . " $key: $value";
         }
 
         // Add meta info to the output.

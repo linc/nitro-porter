@@ -90,7 +90,7 @@ abstract class ExportController
         if (isset(self::SUPPORTED['charset_table'])) {
             $this->exportModel->setCharacterSet(self::SUPPORTED['charset_table']);
         }
-        $this->exportModel->beginExport('', self::SUPPORTED['name']);
+        $this->exportModel->beginExport(self::SUPPORTED['name']);
         $this->forumExport($this->exportModel);
         $this->exportModel->endExport();
 
