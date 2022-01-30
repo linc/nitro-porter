@@ -11,6 +11,7 @@ return [
     'Drupal7',
     'EsoTalk',
     'ExpressionEngine',
+    'Flarum',
     'FluxBb',
     'FuseTalk',
     'IpBoard3',
