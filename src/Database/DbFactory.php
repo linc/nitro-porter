@@ -38,15 +38,15 @@ class DbFactory
     public function getInstance()
     {
         $className = '\Porter\Database\\' . $this->extension . 'Db';
-        if (class_exists($className)) {
-            $dbFactory = new $className($this->dbInfo);
-            if ($dbFactory instanceof DbResource) {
-                return $dbFactory;
-            } else {
-                trigger_error($className . 'does not implement DbResource.');
-            }
-        } else {
+        if (!class_exists($className)) {
             trigger_error($this->extension . ' extension not found.');
         }
+
+        $dbFactory = new $className($this->dbInfo);
+        if (!($dbFactory instanceof DbResource)) {
+            trigger_error($className . 'does not implement DbResource.');
+        }
+
+        return $dbFactory;
     }
 }
