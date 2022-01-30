@@ -1,7 +1,10 @@
 assets/
+bin/
+data/
 src/
 vendor/
+bootstrap.php
 index.php
+config-sample.php
 LICENSE.txt
-phpbb.extensions.php
 README.md
