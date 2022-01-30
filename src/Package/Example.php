@@ -66,10 +66,8 @@ class Example extends ExportController
     {
         // Get the characterset for the comments.
         // Usually the comments table is the best target for this.
-        $characterSet = $ex->getCharacterSet('CommentsTableNameGoesHere');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('CommentsTableNameGoesHere');
+
 
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'Proper Platform Name Goes Here');

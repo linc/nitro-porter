@@ -67,10 +67,8 @@ class ModxDiscuss extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->beginExport('', 'MODX Discuss Extension', array('HashMethod' => 'Vanilla'));
 

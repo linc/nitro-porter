@@ -71,10 +71,8 @@ class FluxBb extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         //FluxBB is a fork of punbb and the password works
         $ex->beginExport('', 'FluxBB 1.*', array('HashMethod' => 'punbb'));

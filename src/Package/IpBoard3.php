@@ -186,10 +186,8 @@ class IpBoard3 extends ExportController
     {
         $ex->sourcePrefix = ':_';
 
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->beginExport('', 'IPB 3.*', array('HashMethod' => 'ipb'));
 

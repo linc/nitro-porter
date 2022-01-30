@@ -63,10 +63,8 @@ class Mvc extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         // Reiterate the platform name here to be included in the porter file header.
         $ex->beginExport('', 'MVC');

@@ -71,10 +71,8 @@ class PunBb extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->beginExport('', 'PunBB 1.*', array('HashMethod' => 'punbb'));
 

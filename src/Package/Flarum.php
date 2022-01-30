@@ -60,10 +60,8 @@ class Flarum extends ExportController
      */
     public function forumExport(ExportModel $ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->beginExport('', 'Flarum');
 

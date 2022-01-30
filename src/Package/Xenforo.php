@@ -227,10 +227,8 @@ class Xenforo extends ExportController
     {
         $cdn = $this->cdnPrefix();
 
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->sourcePrefix = 'xf_';
         //      $ex->UseCompression(FALSE);

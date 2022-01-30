@@ -91,10 +91,8 @@ class VBulletin5 extends VBulletin
     public function forumExport($ex)
     {
 
-        $characterSet = $ex->getCharacterSet('nodes');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('nodes');
+
 
         $ex->beginExport('', 'vBulletin 5 Connect');
 

@@ -47,10 +47,8 @@ class ExpressionEngine extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('topics');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('topics');
+
 
         $ex->beginExport('', 'Expression Engine');
         $ex->sourcePrefix = 'forum_';

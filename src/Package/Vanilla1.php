@@ -81,10 +81,8 @@ class Vanilla1 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('Comment');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('Comment');
+
 
         $ex->beginExport('', 'Vanilla 1.*');
 

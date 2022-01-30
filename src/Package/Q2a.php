@@ -51,10 +51,8 @@ class Q2a extends ExportController
 
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
         $ex->beginExport('', 'Questions2Answers');
 
         $this->users($ex);

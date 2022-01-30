@@ -47,10 +47,8 @@ class Toast extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('Post');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('Post');
+
 
         $ex->beginExport('', 'Toast Forum');
         $ex->sourcePrefix = 'tstdb_';

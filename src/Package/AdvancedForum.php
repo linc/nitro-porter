@@ -55,10 +55,8 @@ class AdvancedForum extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('node');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('node');
+
 
         $ex->beginExport('', 'Advanced Forum 7.x-2.*');
 

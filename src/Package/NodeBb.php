@@ -46,10 +46,8 @@ class NodeBb extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('topic');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('topic');
+
 
         $ex->beginExport('', 'NodeBB 0.*', array('HashMethod' => 'Vanilla'));
 

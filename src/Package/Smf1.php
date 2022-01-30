@@ -61,10 +61,8 @@ class Smf1 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('messages');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('messages');
+
 
         $ex->beginExport('', 'SMF 1.*', array('HashMethod' => 'Django'));
 

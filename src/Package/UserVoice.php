@@ -47,10 +47,8 @@ class UserVoice extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('Threads');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('Threads');
+
 
         $ex->beginExport('', 'User Voice');
         $ex->sourcePrefix = 'cs_';

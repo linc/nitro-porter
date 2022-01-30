@@ -46,10 +46,8 @@ class Kunena extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('mbox');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('mbox');
+
 
         $ex->destPrefix = 'jos';
 

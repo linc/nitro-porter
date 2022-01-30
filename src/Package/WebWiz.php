@@ -47,10 +47,8 @@ class WebWiz extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('Topic');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('Topic');
+
 
         $ex->beginExport('', 'Web Wiz Forums');
         $ex->sourcePrefix = 'tbl';

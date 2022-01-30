@@ -65,10 +65,8 @@ class FuseTalk extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('messages');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('messages');
+
 
         $ex->beginExport('', 'FuseTalk');
 

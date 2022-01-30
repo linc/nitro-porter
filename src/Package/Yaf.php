@@ -49,10 +49,8 @@ class Yaf extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('Topic');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('Topic');
+
 
         $ex->beginExport('', 'YAF.NET (Yet Another Forum)');
         $ex->sourcePrefix = 'yaf_';

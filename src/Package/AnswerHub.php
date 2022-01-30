@@ -58,10 +58,8 @@ class AnswerHub extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('nodes');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('nodes');
+
 
         $ex->beginExport('', 'AnswerHub');
 

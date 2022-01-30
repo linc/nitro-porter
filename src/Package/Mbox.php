@@ -69,10 +69,8 @@ class Mbox extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('mbox');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('mbox');
+
 
         $ex->beginExport('', 'Mbox', array());
 

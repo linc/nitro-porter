@@ -60,10 +60,8 @@ class CodoForum extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('codo_posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('codo_posts');
+
 
         $ex->beginExport('', 'CodoForum');
 

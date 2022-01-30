@@ -63,10 +63,8 @@ class SimplePress extends ExportController
     {
         $ex->sourcePrefix = 'wp_';
 
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->beginExport('', 'SimplePress 1.*', array('HashMethod' => 'Vanilla'));
 

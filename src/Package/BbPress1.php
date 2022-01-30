@@ -59,10 +59,8 @@ class BbPress1 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts');
+
 
         $ex->beginExport('', 'bbPress 1.*', array('HashMethod' => 'Vanilla'));
 

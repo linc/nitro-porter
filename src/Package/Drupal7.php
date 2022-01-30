@@ -62,10 +62,8 @@ class Drupal7 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('comment');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('comment');
+
 
         $this->path = $this->param('attach-target', null) . '/uploads/';
 

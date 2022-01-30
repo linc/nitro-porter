@@ -639,36 +639,42 @@ class ExportModel
     /**
      * Determine the character set of the origin database.
      *
-     * @param  string $table
-     * @return string|bool Character set name or false.
+     * @param string $table Table to derive charset from.
+     * @param string $default Default character set.
      */
-    public function getCharacterSet($table)
+    public function setCharacterSet($table, $default = 'utf8')
     {
+        $characterSet = $default;
+        $update = true;
+
         // First get the collation for the database.
         $data = $this->query("show table status like ':_{$table}';");
         if (!$data) {
-            return false;
+            $update = false;
         }
         if ($statusRow = $data->nextResultRow()) {
             $collation = $statusRow['Collation'];
         } else {
-            return false;
+            $update = false;
         }
         unset($data);
 
         // Grab the character set from the database.
         $data = $this->query("show collation like '$collation'");
         if (!$data) {
-            return false;
+            $update = false;
         }
         if ($collationRow = $data->nextResultRow()) {
             $characterSet = $collationRow['Charset'];
             if (!defined('PORTER_CHARACTER_SET')) {
                 define('PORTER_CHARACTER_SET', $characterSet);
             }
-            return $characterSet;
+            $update = false;
         }
-        return false;
+
+        if ($update) {
+            $this->characterSet = $characterSet;
+        }
     }
 
     /**

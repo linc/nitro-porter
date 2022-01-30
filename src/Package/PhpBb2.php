@@ -90,10 +90,8 @@ class PhpBb2 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('posts_text');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('posts_text');
+
 
         $ex->sourcePrefix = 'phpbb_';
 

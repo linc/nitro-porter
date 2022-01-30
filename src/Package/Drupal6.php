@@ -51,10 +51,8 @@ class Drupal6 extends ExportController
      */
     protected function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('comment');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('comment');
+
 
         $ex->beginExport('', 'Drupal');
 

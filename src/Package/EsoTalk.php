@@ -52,10 +52,8 @@ class EsoTalk extends ExportController
      */
     public function forumExport($ex)
     {
-        $characterSet = $ex->getCharacterSet('post');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('post');
+
 
         $ex->beginExport('', 'esotalk');
 

@@ -228,10 +228,8 @@ class VBulletin extends ExportController
             $forumWhere = '';
         }
 
-        $characterSet = $ex->getCharacterSet('post');
-        if ($characterSet) {
-            $ex->characterSet = $characterSet;
-        }
+        $ex->setCharacterSet('post');
+
 
         // Begin
         $ex->beginExport('', 'vBulletin 3.* and 4.*');
