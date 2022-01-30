@@ -2,6 +2,7 @@
 
 return [
     'debug' => false,
+    'test_alias' => 'test',
     'connections' => [
         [
             'alias' => 'source',
@@ -39,9 +40,7 @@ return [
             'type' => 'files',
             'path' => '',
         ],
-    ],
-    'test_connections' => [
-       [
+        [
            'alias' => 'test',
            'type' => 'database',
            'adapter' => 'mysql',
@@ -51,6 +50,6 @@ return [
            'user' => 'root',
            'pass' => 'password_here',
            'charset' => 'utf8',
-       ],
+        ],
     ],
 ];

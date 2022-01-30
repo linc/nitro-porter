@@ -10,10 +10,11 @@ if (ini_get('date.timezone') == '') {
     date_default_timezone_set('America/Detroit');
 }
 
-// Require config.
+// Require & load config.
 if (!file_exists(__DIR__ . '/config.php')) {
     die('Required file config.php missing');
 }
+\Porter\Config::getInstance()->set(loadConfig());
 
 // Load package manifest.
 \Porter\PackageSupport::getInstance()->set(loadManifest());

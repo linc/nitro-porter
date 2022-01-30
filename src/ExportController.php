@@ -109,14 +109,12 @@ abstract class ExportController
      * Set primary database connection data.
      * @deprecated
      */
-    public function loadPrimaryDatabase()
+    public function loadPrimaryDatabase($info)
     {
-        $config = loadConfig();
-        $primary_db = $config['connections']['databases'][0]; // @todo
-        $this->dbInfo['dbhost'] = $primary_db['host'];
-        $this->dbInfo['dbuser'] = $primary_db['user'];
-        $this->dbInfo['dbpass'] = $primary_db['pass'];
-        $this->dbInfo['dbname'] = $primary_db['name'];
+        $this->dbInfo['dbhost'] = $info['host'];
+        $this->dbInfo['dbuser'] = $info['user'];
+        $this->dbInfo['dbpass'] = $info['pass'];
+        $this->dbInfo['dbname'] = $info['name'];
     }
 
     /**

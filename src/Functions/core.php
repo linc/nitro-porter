@@ -27,7 +27,8 @@ function loadStructure(): array
  */
 function getTestDatabaseCredentials(): array
 {
-    return loadConfig()['test_connections']['databases'][0]; // @todo
+    $c = new \Porter\Connection();
+    return $c->getAllInfo();
 }
 
 /**
@@ -38,8 +39,10 @@ function getTestDatabaseCredentials(): array
 function getSourceConnections(): array
 {
     $prepared_connections = [];
-    foreach (loadConfig()['connections']['databases'] as $c) {
-        $prepared_connections[$c['alias']] = $c['alias'] . ' (' . $c['user'] . '@' . $c['name'] . ')';
+    foreach (\Porter\Config::getInstance()->getConnections() as $c) {
+        if ($c['type'] === 'database') {
+            $prepared_connections[$c['alias']] = $c['alias'] . ' (' . $c['user'] . '@' . $c['name'] . ')';
+        }
     }
     return $prepared_connections;
 }

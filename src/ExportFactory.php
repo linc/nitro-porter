@@ -9,16 +9,17 @@ class ExportFactory
     public static function build(): \Porter\ExportController
     {
         // Wire new database.
-        $config = loadConfig();
-        $dbConfig = $config['connections']['databases'][0]; // @todo
-        bootDatabase($dbConfig);
+        $source = \Porter\Request::instance()->get('source');
+        $connection = new Connection($source);
+        $info = $connection->getAllInfo();
+        bootDatabase($info);
 
         // Get the package controller.
         $package_name = \Porter\Request::instance()->get('package');
         $package = getValidPackage($package_name);
 
         // Wire old database / model mess.
-        $package->loadPrimaryDatabase();
+        $package->loadPrimaryDatabase($info);
         $package->handleInfoForm();
         $dbfactory = new DbFactory($package->getDbInfo(), 'pdo');
         $model = new ExportModel($dbfactory);
