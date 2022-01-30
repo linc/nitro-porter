@@ -54,8 +54,7 @@
        "files": [
             "src/Functions/core.php",
             "src/Functions/database.php",
-            "src/Functions/filter.php",
-            "src/Functions/structure.php"
+            "src/Functions/filter.php"
        ]
    }
 }

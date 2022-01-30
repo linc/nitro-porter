@@ -14,7 +14,12 @@ function loadConfig(): array
 
 function loadManifest(): array
 {
-    return include(ROOT_DIR . '/manifest.php');
+    return include(ROOT_DIR . '/data/manifest.php');
+}
+
+function loadStructure(): array
+{
+    return include(ROOT_DIR . '/data/structure.php');
 }
 
 /**

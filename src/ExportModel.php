@@ -203,7 +203,7 @@ class ExportModel
         );
 
         // Load structure.
-        $this->structures = vanillaStructure();
+        $this->structures = loadStructure();
     }
 
     /**
