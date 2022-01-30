@@ -850,9 +850,10 @@ class PhpBb3 extends ExportController
      *
      * @todo Add access from CLI & UI
      *
+     * @param ExportModel $ex
      * @param string $directory
      */
-    protected function exportBlobs($ex, string $directory)
+    protected function exportBlobs(ExportModel $ex, string $directory)
     {
         // Select attachments
         $result = $ex->query("select physical_filename as name, extension as ext from phpbb_attachments");
