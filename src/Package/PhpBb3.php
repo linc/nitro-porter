@@ -852,10 +852,10 @@ class PhpBb3 extends ExportController
      *
      * @param string $directory
      */
-    protected function exportBlobs(string $directory)
+    protected function exportBlobs($ex, string $directory)
     {
         // Select attachments
-        $result = $this->query("select physical_filename as name, extension as ext from phpbb_attachments");
+        $result = $ex->query("select physical_filename as name, extension as ext from phpbb_attachments");
 
         // Iterate thru files based on database results and rename.
         $renamed = $failed = 0;
@@ -874,6 +874,6 @@ class PhpBb3 extends ExportController
                 $failed++;
             }
         }
-        $this->comment('Renamed ' . $renamed . ' files. ' . $failed . 'failures.');
+        $ex->comment('Renamed ' . $renamed . ' files. ' . $failed . 'failures.');
     }
 }
