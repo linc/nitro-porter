@@ -173,7 +173,8 @@ class Example extends ExportController
         // This is an example of pulling Signatures into Vanilla's UserMeta table.
         // This is often a good place for any extraneous data on the User table too.
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
-        // You can add the appropriately-named fields after the migration and profiles will auto-populate with the migrated data.
+        // You can add the appropriately-named fields after the migration.
+        // Profiles will auto-populate with the migrated data.
         $ex->exportTable(
             'UserMeta',
             "select
