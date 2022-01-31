@@ -24,7 +24,7 @@
         "build": "cd build; ../vendor/bin/phing; cd ..",
         "phinx": "vendor/bin/phinx",
         "seed": "vendor/bin/phinx seed:run",
-        "stan": "vendor/bin/phpstan analyse src tests"
+        "stan": "vendor/bin/phpstan analyse src tests --memory-limit 1G"
     },
     "bin": [
         "bin/porter"
