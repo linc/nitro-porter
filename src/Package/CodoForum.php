@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class CodoForum extends ExportController
+class CodoForum extends Package
 {
     public const SUPPORTED = [
         'name' => 'CodoForum',
@@ -44,7 +44,7 @@ class CodoForum extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'users' => array('id', 'username', 'mail', 'user_status', 'pass', 'signature'),
         'roles' => array('rid', 'rname'),
         'user_roles' => array('uid', 'rid'),
@@ -59,7 +59,7 @@ class CodoForum extends ExportController
      * @param ExportModel $ex
      * @see   $_structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

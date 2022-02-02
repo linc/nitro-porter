@@ -4,19 +4,34 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
+use Porter\Connection;
+use Porter\Database\DbFactory;
+use Porter\ExportModel;
+use Porter\Request;
+use Porter\Package;
+use Porter\PackageSupport;
+
 /**
- * Retrieve settings from the config.
+ * Retrieve the config.
+ *
+ * @return array
  */
 function loadConfig(): array
 {
     return include(ROOT_DIR . '/config.php');
 }
 
+/**
+ * @return array
+ */
 function loadManifest(): array
 {
     return include(ROOT_DIR . '/data/manifest.php');
 }
 
+/**
+ * @return array
+ */
 function loadStructure(): array
 {
     return include(ROOT_DIR . '/data/structure.php');
@@ -24,6 +39,8 @@ function loadStructure(): array
 
 /**
  * Retrieve test db creds from main config for Phinx.
+ *
+ * @return array
  */
 function getTestDatabaseCredentials(): array
 {
@@ -35,13 +52,12 @@ function getTestDatabaseCredentials(): array
  * Get valid package class. Exit app if invalid package name is given.
  *
  * @param string $packageName
- * @return \Porter\ExportController
+ * @return Package
  */
-function getValidPackage(string $packageName): \Porter\ExportController
+function packageFactory(string $packageName): Package
 {
-    if (!array_key_exists($packageName, \Porter\PackageSupport::getInstance()->get())) {
-        echo 'Unsupported package: ' . $packageName;
-        exit();
+    if (!array_key_exists($packageName, PackageSupport::getInstance()->get())) {
+        exit('Unsupported package: ' . $packageName);
     }
 
     $class = '\Porter\Package\\' . ucwords($packageName);
@@ -49,22 +65,33 @@ function getValidPackage(string $packageName): \Porter\ExportController
 }
 
 /**
- * Provides a chained callable for the router.
- *
- * @param \Porter\Request $request
+ * @param Request $request
+ * @return ExportModel
  */
-function buildAndRun(\Porter\Request $request): void
+function modelFactory(Request $request, array $info): ExportModel
 {
-    \Porter\ExportFactory::build()->run($request);
+    // Wire old database / model mess.
+    $db = new DbFactory($info, 'pdo');
+    $model = new ExportModel($db);
+
+    // Set model properties.
+    $model->prefix = $request->get('src-prefix') ?? '';
+    $model->destination = $request->get('dest') ?? 'file';
+    $model->destDb = $request->get('destdb');
+    $model->testMode = $request->get('test') ?? false;
+    $model->loadTables((string) $request->get('tables'));
+
+    return $model;
 }
 
 /**
  * Error handler.
  *
- * @param $errno
- * @param $errstr
- * @param $errFile
- * @param $errLine
+ * @param int $level
+ * @param string $msg
+ * @param string $file
+ * @param int $line
+ * @param array $context
  */
 function errorHandler(int $level, string $msg, string $file, int $line, array $context = []): void
 {

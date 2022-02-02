@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class UserVoice extends ExportController
+class UserVoice extends Package
 {
     public const SUPPORTED = [
         'name' => 'User Voice',
@@ -47,7 +47,7 @@ class UserVoice extends ExportController
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

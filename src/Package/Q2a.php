@@ -9,9 +9,9 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 
-class Q2a extends ExportController
+class Q2a extends Package
 {
     public const SUPPORTED = [
         'name' => 'Questions2Answers',
@@ -44,7 +44,7 @@ class Q2a extends ExportController
     ];
 
     /** @var array[] List of required tables. */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'blobs' => array(),
         'categories' => array(),
         'posts' => array(),
@@ -56,7 +56,7 @@ class Q2a extends ExportController
      *
      * @param $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

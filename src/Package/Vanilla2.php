@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Vanilla2 extends ExportController
+class Vanilla2 extends Package
 {
     public const SUPPORTED = [
         'name' => 'Vanilla 2',
@@ -46,12 +46,12 @@ class Vanilla2 extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = array();
+    public $sourceTables = array();
 
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $tables = array(
             'Activity',

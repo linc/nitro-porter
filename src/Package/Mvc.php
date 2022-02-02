@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Mvc extends ExportController
+class Mvc extends Package
 {
     public const SUPPORTED = [
         'name' => 'MVC',
@@ -49,7 +49,7 @@ class Mvc extends ExportController
      *
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'MembershipUser' => array(),
         'Catagory' => array(),
         'Post' => array(),
@@ -62,7 +62,7 @@ class Mvc extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->createPrimaryKeys($ex);
         $this->createIndexesIfNotExists($ex);

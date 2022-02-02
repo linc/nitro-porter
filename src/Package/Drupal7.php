@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Drupal7 extends ExportController
+class Drupal7 extends Package
 {
     public const PATTERN = "~\"data:image/png;base64,(.*?)\"~";
 
@@ -61,7 +61,7 @@ class Drupal7 extends ExportController
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->path = $this->param('attach-target', null) . '/uploads/';
         $origin = $this->param('attach-source', null);

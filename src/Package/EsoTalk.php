@@ -10,10 +10,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class EsoTalk extends ExportController
+class EsoTalk extends Package
 {
     public const SUPPORTED = [
         'name' => 'esoTalk',
@@ -51,7 +51,7 @@ class EsoTalk extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

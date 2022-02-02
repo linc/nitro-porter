@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Yaf extends ExportController
+class Yaf extends Package
 {
     public const SUPPORTED = [
         'name' => 'YAF.NET',
@@ -49,7 +49,7 @@ class Yaf extends ExportController
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

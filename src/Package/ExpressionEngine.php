@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class ExpressionEngine extends ExportController
+class ExpressionEngine extends Package
 {
     public const SUPPORTED = [
         'name' => 'Expression Engine Discussion Forum',
@@ -46,7 +46,7 @@ class ExpressionEngine extends ExportController
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->conversations($ex);
         $this->permissions($ex);

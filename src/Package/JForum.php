@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class JForum extends ExportController
+class JForum extends Package
 {
     public const SUPPORTED = [
         'name' => 'jforum',
@@ -52,7 +52,7 @@ class JForum extends ExportController
      *
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'forums' => array(), // This just requires the 'forum' table without caring about columns.
         'posts' => array(),
         'topics' => array(),
@@ -65,7 +65,7 @@ class JForum extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

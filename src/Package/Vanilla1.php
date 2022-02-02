@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Vanilla1 extends ExportController
+class Vanilla1 extends Package
 {
     public const SUPPORTED = [
         'name' => 'Vanilla 1',
@@ -79,7 +79,7 @@ class Vanilla1 extends ExportController
      *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

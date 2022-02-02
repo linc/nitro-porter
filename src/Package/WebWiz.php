@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class WebWiz extends ExportController
+class WebWiz extends Package
 {
     public const SUPPORTED = [
         'name' => 'Web Wiz Forums',
@@ -46,7 +46,7 @@ class WebWiz extends ExportController
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

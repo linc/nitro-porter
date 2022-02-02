@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Toast extends ExportController
+class Toast extends Package
 {
     public const SUPPORTED = [
         'name' => 'Toast',
@@ -47,7 +47,7 @@ class Toast extends ExportController
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class SimplePress extends ExportController
+class SimplePress extends Package
 {
     public const SUPPORTED = [
         'name' => 'SimplePress 1',
@@ -48,7 +48,7 @@ class SimplePress extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'sfforums' => array(),
         'sfposts' => array(),
         'sftopics' => array(),
@@ -61,7 +61,7 @@ class SimplePress extends ExportController
      *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

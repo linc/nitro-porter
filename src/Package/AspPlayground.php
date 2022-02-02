@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class AspPlayground extends ExportController
+class AspPlayground extends Package
 {
     public const SUPPORTED = [
         'name' => 'ASP Playground',
@@ -47,7 +47,7 @@ class AspPlayground extends ExportController
     /**
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

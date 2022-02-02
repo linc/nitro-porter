@@ -7,10 +7,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Flarum extends ExportController
+class Flarum extends Package
 {
     public const SUPPORTED = [
         'name' => 'Flarum',
@@ -45,7 +45,7 @@ class Flarum extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = [
+    public $sourceTables = [
         'discussions' => [],
         'groups' => [],
         'posts' => [],
@@ -59,7 +59,7 @@ class Flarum extends ExportController
      * @param ExportModel $ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport(ExportModel $ex)
+    public function run(ExportModel $ex)
     {
         $this->users($ex);
         $this->roles($ex); // Groups

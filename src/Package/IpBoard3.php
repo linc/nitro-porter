@@ -11,10 +11,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class IpBoard3 extends ExportController
+class IpBoard3 extends Package
 {
     public const SUPPORTED = [
         'name' => 'IP.Board 3',
@@ -184,7 +184,7 @@ class IpBoard3 extends ExportController
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         // Export avatars
         if ($this->param('avatars')) {

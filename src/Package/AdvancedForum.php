@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class AdvancedForum extends ExportController
+class AdvancedForum extends Package
 {
     public const SUPPORTED = [
         'name' => 'Advanced Forum 7.x-2.*',
@@ -54,7 +54,7 @@ class AdvancedForum extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex, $this->param('avatars-prefix', ''));
         $this->roles($ex);

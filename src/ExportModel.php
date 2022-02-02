@@ -207,6 +207,30 @@ class ExportModel
     }
 
     /**
+     * Selective exports.
+     *
+     * 1. Get the comma-separated list of tables and turn it into an array
+     * 2. Trim off the whitespace
+     * 3. Normalize case to lower
+     * 4. Save to the ExportModel instance
+     *
+     * @param string $restrictedTables
+     */
+    public function loadTables(string $restrictedTables)
+    {
+        if (!empty($restrictedTables)) {
+            $restrictedTables = explode(',', $restrictedTables);
+
+            if (is_array($restrictedTables) && !empty($restrictedTables)) {
+                $restrictedTables = array_map('trim', $restrictedTables);
+                $restrictedTables = array_map('strtolower', $restrictedTables);
+
+                $this->restrictedTables = $restrictedTables;
+            }
+        }
+    }
+
+    /**
      * Create the export file and begin the export.
      *
      * @param string $source Package name.

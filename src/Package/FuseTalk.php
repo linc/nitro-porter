@@ -14,10 +14,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class FuseTalk extends ExportController
+class FuseTalk extends Package
 {
     public const SUPPORTED = [
         'name' => 'FuseTalk',
@@ -50,7 +50,7 @@ class FuseTalk extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'categories' => array(),
         'forums' => array(),
         'threads' => array(),
@@ -64,7 +64,7 @@ class FuseTalk extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->createIndices($ex); // Speed up the export.
 

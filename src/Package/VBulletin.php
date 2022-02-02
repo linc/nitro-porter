@@ -32,10 +32,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class VBulletin extends ExportController
+class VBulletin extends Package
 {
     public const SUPPORTED = [
         'name' => 'vBulletin 3 & 4',
@@ -158,7 +158,7 @@ class VBulletin extends ExportController
     /**
      * @var array Required tables => columns. Commented values are optional.
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         //'attachment'
         //'contenttype'
         //'customavatar'
@@ -219,7 +219,7 @@ class VBulletin extends ExportController
      *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         // Allow limited export of 1 category via ?forumid=ID
         $forumID = $this->param('forumid');

@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Kunena extends ExportController
+class Kunena extends Package
 {
     public const SUPPORTED = [
         'name' => 'Joomla Kunena',
@@ -46,7 +46,7 @@ class Kunena extends ExportController
     /**
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class ModxDiscuss extends ExportController
+class ModxDiscuss extends Package
 {
     public const SUPPORTED = [
         'name' => 'MODX Discuss Extension',
@@ -51,7 +51,7 @@ class ModxDiscuss extends ExportController
      *
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'categories' => array(), // This just requires the 'forum' table without caring about columns.
         'boards' => array(),
         'posts' => array(),
@@ -67,7 +67,7 @@ class ModxDiscuss extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

@@ -26,8 +26,8 @@ class PdoDB implements DbResource
             die('PDO extension not found. See config.php and make sure the necessary extensions are installed.');
         }
         try {
-            $this->link = new \PDO('mysql:host=' . $args['dbhost'] . ';dbname='
-                 . $args['dbname'] . ';charset=utf8mb4', $args['dbuser'], $args['dbpass']);
+            $this->link = new \PDO('mysql:host=' . $args['host'] . ';dbname='
+                 . $args['name'] . ';charset=utf8mb4', $args['user'], $args['pass']);
             $this->link->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         } catch (\Throwable $t) {
             // Executed only in PHP 7, will not match in PHP 5

@@ -7,10 +7,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Example extends ExportController
+class Example extends Package
 {
     public const SUPPORTED = [
         'name' => '_Example',
@@ -50,7 +50,7 @@ class Example extends ExportController
      *
      * @var array Required tables => columns
      */
-    protected $sourceTables = [
+    public $sourceTables = [
         'forums' => [], // This just requires the 'forum' table without caring about columns.
         'posts' => [],
         'topics' => [],
@@ -63,7 +63,7 @@ class Example extends ExportController
      * @param ExportModel $ex
      * @see $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport(ExportModel $ex)
+    public function run(ExportModel $ex)
     {
         // It's usually a good idea to do the porting in the approximate order laid out here.
         $this->users($ex); // Always pass $ex to these methods.

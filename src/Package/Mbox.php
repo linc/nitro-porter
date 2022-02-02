@@ -23,10 +23,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Mbox extends ExportController
+class Mbox extends Package
 {
     public const SUPPORTED = [
         'name' => '.mbox files',
@@ -58,7 +58,7 @@ class Mbox extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'mbox' => array('Subject', 'Sender', 'Date', 'Body', 'Folder')
     );
 
@@ -67,7 +67,7 @@ class Mbox extends ExportController
      *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->setup($ex); // Here be dragons.
 

@@ -14,7 +14,7 @@ class Router
             case $request->get('help'): // CLI help.
                 return '\Porter\Render::cliHelp';
             case $request->get('package'): // Main export process.
-                return 'buildAndRun';
+                return '\Porter\ExportController::run';
             default: // Starting Web UI (index).
                 return '\Porter\Render::viewForm';
         }

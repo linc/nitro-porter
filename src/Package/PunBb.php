@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class PunBb extends ExportController
+class PunBb extends Package
 {
     public const SUPPORTED = [
         'name' => 'PunBB 1',
@@ -67,11 +67,11 @@ class PunBb extends ExportController
     /**
      * Forum-specific export format
      *
-     * @todo Project file size / export time and possibly break into multiple files
-     *
      * @param ExportModel $ex
+     *@todo Project file size / export time and possibly break into multiple files
+     *
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->cdn = $this->param('cdn', '');
         if ($avatarPath = $this->param('avatars-source', false)) {

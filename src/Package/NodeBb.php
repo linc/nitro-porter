@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class NodeBb extends ExportController
+class NodeBb extends Package
 {
     public const SUPPORTED = [
         'name' => 'NodeBB 0.*',
@@ -46,7 +46,7 @@ class NodeBb extends ExportController
     /**
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

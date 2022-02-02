@@ -9,10 +9,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class BbPress2 extends ExportController
+class BbPress2 extends Package
 {
     public const SUPPORTED = [
         'name' => 'bbPress 2',
@@ -46,7 +46,7 @@ class BbPress2 extends ExportController
     /**
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'postmeta' => array(),
         'posts' => array(),
         'usermeta' => array(),
@@ -58,7 +58,7 @@ class BbPress2 extends ExportController
      *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);

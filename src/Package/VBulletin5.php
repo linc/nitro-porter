@@ -60,7 +60,7 @@ class VBulletin5 extends VBulletin
     /**
      * @var array Required tables => columns.
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'contenttype' => array('contenttypeid', 'class'),
         'node' => array('nodeid', 'description', 'title', 'description', 'userid', 'publishdate'),
         'text' => array('nodeid', 'rawtext'),
@@ -89,7 +89,7 @@ class VBulletin5 extends VBulletin
      *
      * @param ExportModel $ex
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->exportBlobs(
             $this->param('db-files'),

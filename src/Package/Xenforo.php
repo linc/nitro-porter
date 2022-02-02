@@ -11,10 +11,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class Xenforo extends ExportController
+class Xenforo extends Package
 {
     public const SUPPORTED = [
         'name' => 'Xenforo',
@@ -226,7 +226,7 @@ class Xenforo extends ExportController
      *
      * @param ExportModel $ex
      */
-    protected function forumExport($ex)
+    public function run($ex)
     {
         // Export avatars
         if ($this->param('avatars')) {

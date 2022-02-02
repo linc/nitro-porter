@@ -68,11 +68,11 @@ class Request
      * Get a single value from the request.
      *
      * @param string $name
-     * @return string
+     * @return ?string
      */
-    public function get(string $name): string
+    public function get(string $name): ?string
     {
-        $value = '';
+        $value = null;
 
         if (isset($this->request[$name])) {
             $value = $this->request[$name];
@@ -206,6 +206,8 @@ class Request
     }
 
     /**
+     * @todo Refactor logic.
+     *
      * @param array $values
      * @param array $options
      * @return array

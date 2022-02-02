@@ -11,10 +11,10 @@
 
 namespace Porter\Package;
 
-use Porter\ExportController;
+use Porter\Package;
 use Porter\ExportModel;
 
-class MyBb extends ExportController
+class MyBb extends Package
 {
     public const SUPPORTED = [
         'name' => 'MyBB',
@@ -49,7 +49,7 @@ class MyBb extends ExportController
      *
      * @var array Required tables => columns
      */
-    protected $sourceTables = array(
+    public $sourceTables = array(
         'forums' => array(),
         'posts' => array(),
         'threads' => array(),
@@ -62,7 +62,7 @@ class MyBb extends ExportController
      * @param ExportModel $ex
      * @see   $_Structures in ExportModel for allowed destination tables & columns.
      */
-    public function forumExport($ex)
+    public function run($ex)
     {
         $this->users($ex);
         $this->roles($ex);
