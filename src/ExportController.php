@@ -21,10 +21,10 @@ class ExportController
 
         // Start export.
         set_time_limit(0);
-        if (isset($package::SUPPORTED['charset_table'])) { // @todo Use a wrapper in Package
-            $model->setCharacterSet($package::SUPPORTED['charset_table']);
+        if (isset($package::getSupport()['charset_table'])) { // @todo Use a wrapper in Package
+            $model->setCharacterSet($package::getSupport()['charset_table']);
         }
-        $model->beginExport($package::SUPPORTED['name']);
+        $model->beginExport($package::getSupport()['name']);
         $package->exportModel = $model; // @todo
         $package->run($model);
         $model->endExport();
