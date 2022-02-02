@@ -85,27 +85,9 @@ class ExportModel
     public $file = null;
 
     /**
-     * @var string Database host. *
-     * @deprecated
-     */
-    public $host = 'localhost';
-
-    /**
      * @var bool Whether mb_detect_encoding() is available. *
      */
     public static $mb = false;
-
-    /**
-     * @var object PDO instance
-     * @deprecated
-     */
-    protected $pdo = null;
-
-    /**
-     * @var string Database password. *
-     * @deprecated
-     */
-    protected $password;
 
     /**
      * @var string The path to the export file.
@@ -126,31 +108,9 @@ class ExportModel
     public $queries = array();
 
     /**
-     * @var array *
-     */
-    protected $queryStructures = array();
-
-    /**
      * @var array Tables to limit the export to.  A full export is an empty array.
      */
     public $restrictedTables = array();
-
-    /**
-     * @var string The path to the source of the export in the case where a file is being converted.
-     * @deprecated
-     */
-    public $sourcePath = '';
-
-    /**
-     * @var string
-     * @deprecated
-     */
-    public $sourcePrefix = '';
-
-    /**
-     * @var bool *
-     */
-    public $scriptCreateTable = true;
 
     /**
      * @var array Structures that define the format of the export tables.
@@ -173,17 +133,10 @@ class ExportModel
     protected $useCompression = true;
 
     /**
-     * @var string Database username.
-     * @deprecated
-     */
-    protected $username;
-
-    /**
      * @var DbFactory Instance DbFactory
      * @deprecated
      */
     protected $dbFactory;
-
 
     /**
      * Setup.
@@ -519,10 +472,6 @@ class ExportModel
      */
     protected function createExportTable($tableName, $query, $mappings = [])
     {
-        if (!$this->scriptCreateTable) {
-            return;
-        }
-
         // Limit the query to grab any additional columns.
         $queryStruct = rtrim($query, ';') . ' limit 1';
         $structure = $this->structures[$tableName];
@@ -1249,9 +1198,6 @@ class ExportModel
     private function executeQuery($sql)
     {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
-        if ($this->sourcePrefix) {
-            $sql = preg_replace("`\b{$this->sourcePrefix}`", $this->prefix, $sql); // replace prefix.
-        }
 
         $sql = rtrim($sql, ';') . ';';
 
