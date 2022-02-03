@@ -141,13 +141,14 @@ class SimplePress extends Package
      */
     protected function permissions(ExportModel $ex): void
     {
+        $member = 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add';
         $ex->exportTable(
             'Permission',
             "select usergroup_id as RoleID,
                     case
                        when usergroup_name like 'Guest%' then 'View'
                        when usergroup_name like 'Member%'
-                            then 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
+                            then $member
                        when usergroup_name like 'Mod%'
                             then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
                                 'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')

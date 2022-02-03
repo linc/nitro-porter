@@ -198,7 +198,8 @@ class Drupal7 extends Package
                 left join :_forum f on f.vid = n.vid
                 left join :_field_revision_body r on r.revision_id = n.vid
                 left join ( select i.nid,
-                    concat('\n<img src=\"{$this->path}', replace(uri, 'public://', ''), ' alt=\"', fileName, '\">') as image
+                    concat('\n<img src=\"{$this->path}', replace(uri, 'public://', ''), ' alt=\"', fileName, '\">')
+                        as image
                         from :_image i
                         join :_file_managed fm on fm.fid = i.fid
                         where image_size not like '%thumbnail') i on i.nid = n.nid

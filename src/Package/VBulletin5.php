@@ -321,7 +321,7 @@ class VBulletin5 extends VBulletin
                     inner join :_node as n on n.nodeid = p.nodeid
                     inner join :_node as pn on pn.nodeid = n.parentid
                     inner join :_contenttype as pct on pct.contenttypeid = pn.contenttypeid
-                    /* by inner joining on this table we are only exporting polls that could be wrapped in a discussion */
+                    /* this join only exports polls that could be wrapped in a discussion */
                     inner join vBulletinDiscussionTable as vbdt on vbdt.PollID = p.nodeid;",
             $poll_Map
         );

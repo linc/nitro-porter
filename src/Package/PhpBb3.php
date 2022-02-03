@@ -336,6 +336,7 @@ class PhpBb3 extends Package
      */
     protected function permissions(ExportModel $ex): void
     {
+        $member = 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add';
         $ex->exportTable(
             'Permission',
             "select
@@ -346,7 +347,7 @@ class PhpBb3 extends Package
                             then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
                                 'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
                         when group_name like '%Admin%' then 'All'
-                        else 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
+                        else $member
                     end as _Permissions
                 from :_groups"
         );
@@ -751,8 +752,10 @@ class PhpBb3 extends Package
         $ex->exportTable(
             'Media',
             "select a.*,
-                    case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
-                    case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
+                    case when a.post_msg_id = t.topic_first_post_id
+                        then 'discussion' else 'comment' end as ForeignTable,
+                    case when a.post_msg_id = t.topic_first_post_id
+                        then a.topic_id else a.post_msg_id end as ForeignID,
                     concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as Path,
                     concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as thumb_path,
                     128 as thumb_width,

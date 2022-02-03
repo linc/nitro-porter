@@ -323,7 +323,8 @@ class JForum extends Package
                     p.privmsgs_subject as Subject,
                     c.ConversationID
                 from :_privmsgs as p
-                    left join z_conversation as c on c.HighUserID = greatest(p.privmsgs_from_userid, p.privmsgs_to_userid)
+                    left join z_conversation as c
+                        on c.HighUserID = greatest(p.privmsgs_from_userid, p.privmsgs_to_userid)
                         and c.LowUserID = least(p.privmsgs_from_userid, p.privmsgs_to_userid)
                 group by
                     least(privmsgs_from_userid, privmsgs_to_userid),
