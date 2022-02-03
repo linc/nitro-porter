@@ -44,8 +44,6 @@ class PunBb extends Package
             'Ranks' => 0,
             'Groups' => 0,
             'Tags' => 1,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -172,16 +170,14 @@ class PunBb extends Package
             );
             $ex->exportTable(
                 'Media',
-                "
-                select f.*,
-                    concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
-                    concat({$this->cdn}, 'FileUpload/', f.file_path) as thumb_path,
-                    128 as thumb_width,
-                    from_unixtime(f.uploaded_at) as DateInserted,
-                    case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
-                    coalesce(post_id, topic_id) as ForieignID
-                from :_attach_files f
-            ",
+                "select f.*,
+                        concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
+                        concat({$this->cdn}, 'FileUpload/', f.file_path) as thumb_path,
+                        128 as thumb_width,
+                        from_unixtime(f.uploaded_at) as DateInserted,
+                        case when post_id is null then 'Discussion' else 'Comment' end as ForeignTable,
+                        coalesce(post_id, topic_id) as ForieignID
+                    from :_attach_files f",
                 $media_Map
             );
         }
@@ -193,14 +189,12 @@ class PunBb extends Package
     protected function tags(ExportModel $ex): void
     {
         if ($ex->exists('tags')) {
-            // Tag.
             $tag_Map = array(
                 'id' => 'TagID',
                 'tag' => 'Name'
             );
             $ex->exportTable('Tag', "SELECT * FROM :_tags", $tag_Map);
 
-            // TagDisucssion.
             $tagDiscussionMap = array(
                 'topic_id' => 'DiscussionID',
                 'tag_id' => 'TagID'
@@ -223,18 +217,17 @@ class PunBb extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-            SELECT p.*,
-        'BBCode' AS Format,
-        from_unixtime(p.posted) AS DateInserted,
-        from_unixtime(p.edited) AS DateUpdated,
-        eu.id AS UpdateUserID
-      FROM :_topics t
-      JOIN :_posts p
-        ON t.id = p.topic_id
-      LEFT JOIN :_users eu
-        ON eu.username = p.edited_by
-      WHERE p.id <> t.first_post_id;",
+            "SELECT p.*,
+                    'BBCode' AS Format,
+                    from_unixtime(p.posted) AS DateInserted,
+                    from_unixtime(p.edited) AS DateUpdated,
+                    eu.id AS UpdateUserID
+                FROM :_topics t
+                JOIN :_posts p
+                    ON t.id = p.topic_id
+                LEFT JOIN :_users eu
+                    ON eu.username = p.edited_by
+                WHERE p.id <> t.first_post_id;",
             $comment_Map
         );
     }
@@ -257,20 +250,19 @@ class PunBb extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-      SELECT t.*,
-        from_unixtime(p.posted) AS DateInserted,
-        p.poster_id,
-        p.poster_ip,
-        p.message,
-        from_unixtime(p.edited) AS DateUpdated,
-        eu.id AS UpdateUserID,
-        'BBCode' AS Format
-      FROM :_topics t
-      LEFT JOIN :_posts p
-        ON t.first_post_id = p.id
-      LEFT JOIN :_users eu
-        ON eu.username = p.edited_by",
+            "SELECT t.*,
+                    from_unixtime(p.posted) AS DateInserted,
+                    p.poster_id,
+                    p.poster_ip,
+                    p.message,
+                    from_unixtime(p.edited) AS DateUpdated,
+                    eu.id AS UpdateUserID,
+                    'BBCode' AS Format
+                FROM :_topics t
+                LEFT JOIN :_posts p
+                    ON t.first_post_id = p.id
+                LEFT JOIN :_users eu
+                    ON eu.username = p.edited_by",
             $discussion_Map
         );
     }
@@ -289,23 +281,21 @@ class PunBb extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-      SELECT
-        id,
-        forum_name,
-        forum_desc,
-        disp_position,
-        cat_id * 1000 AS parent_id
-      FROM :_forums f
-      UNION
-
-      SELECT
-        id * 1000,
-        cat_name,
-        '',
-        disp_position,
-        NULL
-      FROM :_categories",
+            "SELECT
+                id,
+                forum_name,
+                forum_desc,
+                disp_position,
+                cat_id * 1000 AS parent_id
+            FROM :_forums f
+            UNION
+            SELECT
+                id * 1000,
+                cat_name,
+                '',
+                disp_position,
+                NULL
+            FROM :_categories",
             $category_Map
         );
     }
@@ -317,31 +307,21 @@ class PunBb extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-        select
-           u.id as UserID,
-           'Plugin.Signatures.Format' AS Name,
-           'BBCode' as Value
-        from
-           :_users u
-        where
-            u.signature is not null
-        and
-            u.signature != ''
-
-        union
-
-        select
-            u.id as UserID,
-            'Plugin.Signatures.Sig' AS Name,
-            signature as Value
-        from
-            :_users u
-        where
-            u.signature is not null
-        and
-            u.signature !=''
-        "
+            "select
+                   u.id as UserID,
+                   'Plugin.Signatures.Format' AS Name,
+                   'BBCode' as Value
+                from :_users u
+                where u.signature is not null
+                and u.signature != ''
+                union
+                select
+                    u.id as UserID,
+                    'Plugin.Signatures.Sig' AS Name,
+                    signature as Value
+                from :_users u
+                where u.signature is not null
+                and u.signature !=''"
         );
     }
 
@@ -364,9 +344,9 @@ class PunBb extends Package
         $ex->exportTable(
             'UserRole',
             "SELECT
-            CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
-            u.group_id
-          FROM :_users u",
+                    CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
+                    u.group_id
+                FROM :_users u",
             $userRole_Map
         );
     }
@@ -392,13 +372,12 @@ class PunBb extends Package
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
         $ex->exportTable(
             'Permission',
-            "
-      SELECT
-         g.*,
-         g_post_replies AS `Garden.SignIn.Allow`,
-         g_mod_edit_users AS `Garden.Users.Add`,
-         CASE WHEN g_title = 'Administrators' THEN 'All' ELSE NULL END AS _Permissions
-      FROM :_groups g",
+            "SELECT
+                    g.*,
+                    g_post_replies AS `Garden.SignIn.Allow`,
+                    g_mod_edit_users AS `Garden.Users.Add`,
+                    CASE WHEN g_title = 'Administrators' THEN 'All' ELSE NULL END AS _Permissions
+                FROM :_groups g",
             $permission_Map
         );
     }
@@ -419,14 +398,13 @@ class PunBb extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         SELECT
-             u.*, u.id AS AvatarID,
-             concat(u.password, '$', u.salt) AS PasswordHash,
-             from_unixtime(registered) AS DateInserted,
-             from_unixtime(last_visit) AS DateLastActive
-         FROM :_users u
-         WHERE group_id <> 2",
+            "SELECT
+                     u.*, u.id AS AvatarID,
+                     concat(u.password, '$', u.salt) AS PasswordHash,
+                     from_unixtime(registered) AS DateInserted,
+                     from_unixtime(last_visit) AS DateLastActive
+                FROM :_users u
+                WHERE group_id <> 2",
             $user_Map
         );
     }

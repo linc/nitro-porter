@@ -18,8 +18,7 @@ class Mvc extends Package
         'name' => 'MVC',
         'prefix' => '',
         'charset_table' => 'Post',
-        'options' => [
-        ],
+        'options' => [],
         'features' => [
             'Users' => 1,
             'Passwords' => 0,
@@ -39,8 +38,6 @@ class Mvc extends Package
             'Ranks' => 0,
             'Groups' => 0,
             'Tags' => 1,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -237,21 +234,18 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'User',
-            "
-            select
-                UserID,
-                UserName as Name,
-                'Reset' as HashMethod,
-                Email as Email,
-                Avatar as Photo,
-                CreateDate as DateInserted,
-                LastLoginDate as DateLastVisit,
-                LastActivityDate as DateLastActive,
-                IsBanned as Banned,
-                Location as Location
-            from
-                :_MembershipUser m
-         "
+            "select
+                    UserID,
+                    UserName as Name,
+                    'Reset' as HashMethod,
+                    Email as Email,
+                    Avatar as Photo,
+                    CreateDate as DateInserted,
+                    LastLoginDate as DateLastVisit,
+                    LastActivityDate as DateLastActive,
+                    IsBanned as Banned,
+                    Location as Location
+                from :_MembershipUser m"
         );
     }
 
@@ -262,27 +256,19 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-            select
-                UserID,
-                'Website' as `Name`,
-                Website as `Value`
-            from
-                :_MembershipUser m
-            where
-                m.Website <> ''
-
-            union
-
-            select
-                UserID,
-                'Signatures.Sig',
-                Signature
-            from
-                :_MembershipUser m
-            where
-                m.Signature <> ''
-        "
+            "select
+                    UserID,
+                    'Website' as `Name`,
+                    Website as `Value`
+                from :_MembershipUser m
+                where m.Website <> ''
+                union
+                select
+                    UserID,
+                    'Signatures.Sig',
+                    Signature
+                from :_MembershipUser m
+                where m.Signature <> ''"
         );
     }
 
@@ -293,25 +279,17 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'Role',
-            "
-            select
-                RoleID,
-                RoleName as Name
-            from
-                :_MembershipRole
-         "
+            "select RoleID, RoleName as Name from :_MembershipRole"
         );
 
         // User Role.
         $ex->exportTable(
             'UserRole',
-            "
-            select
-                u.UserID as UserID,
-                r.RoleID as RoleID
-            from :_MembershipUsersInRoles m,  :_MembershipRole r, :_MembershipUser u
-            where r.RoleID = m.RoleIdentifier and u.UserID = m.UserIdentifier
-        "
+            "select
+                    u.UserID as UserID,
+                    r.RoleID as RoleID
+                from :_MembershipUsersInRoles m,  :_MembershipRole r, :_MembershipUser u
+                where r.RoleID = m.RoleIdentifier and u.UserID = m.UserIdentifier"
         );
     }
 
@@ -322,30 +300,25 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'Badge',
-            "
-            select
-                BadgeID,
-                Type as Type,
-                DisplayName as Name,
-                Description as Body,
-                Image as Photo,
-                AwardsPoints as Points
-            from
-                :_Badge
-        "
+            "select
+                    BadgeID,
+                    Type as Type,
+                    DisplayName as Name,
+                    Description as Body,
+                    Image as Photo,
+                    AwardsPoints as Points
+                from :_Badge"
         );
 
         $ex->exportTable(
             'UserBadge',
-            "
-            select
-                u.UserID,
-                b.BadgeID,
-                '' as Status,
-                now() as DateInserted
-            from :_MembershipUser_Badge m, :_MembershipUser u, :_Badge b
-            where u.UserID = m.MembershipUser_Id and b.BadgeID = m.Badge_Id
-        "
+            "select
+                    u.UserID,
+                    b.BadgeID,
+                    '' as Status,
+                    now() as DateInserted
+                from :_MembershipUser_Badge m, :_MembershipUser u, :_Badge b
+                where u.UserID = m.MembershipUser_Id and b.BadgeID = m.Badge_Id"
         );
     }
 
@@ -356,29 +329,25 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'Category',
-            "
-            select
-                m.CategoryID,
-                p.CategoryID as ParentCategoryID,
-                m.Name as Name,
-                m.Description as Description,
-                m.DateCreated as DateInserted,
-                null as Sort
-            from Category m, Category p
-            where m.Category_Id <> '' and p.CategoryID = m.Category_Id
-
-            union
-
-            select
-                m.CategoryID,
-                '-1' as ParentCategoryID,
-                m.Name as Name,
-                m.Description as Description,
-                m.DateCreated as DateInserted,
-                null as Sort
-            from Category m
-            where m.Category_Id = ''
-        "
+            "select
+                    m.CategoryID,
+                    p.CategoryID as ParentCategoryID,
+                    m.Name as Name,
+                    m.Description as Description,
+                    m.DateCreated as DateInserted,
+                    null as Sort
+                from Category m, Category p
+                where m.Category_Id <> '' and p.CategoryID = m.Category_Id
+                union
+                select
+                    m.CategoryID,
+                    '-1' as ParentCategoryID,
+                    m.Name as Name,
+                    m.Description as Description,
+                    m.DateCreated as DateInserted,
+                    null as Sort
+                from Category m
+                where m.Category_Id = ''"
         );
     }
 
@@ -389,22 +358,17 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'Discussion',
-            "
-            select
-                m.TopicID as DiscussionID,
-                c.CategoryID as CategoryID,
-                u.UserID as InsertUserID,
-                m.CreateDate as DateInserted,
-                m.Name as Name,
-                m.Views as CountViews,
-                'Html' as Format
-            from
-                :_Topic m
-            left join
-                :_MembershipUser u on u.Id = m.MembershipUser_Id
-            left join
-                :_Category c on c.Id = m.Category_Id
-            "
+            "select
+                    m.TopicID as DiscussionID,
+                    c.CategoryID as CategoryID,
+                    u.UserID as InsertUserID,
+                    m.CreateDate as DateInserted,
+                    m.Name as Name,
+                    m.Views as CountViews,
+                    'Html' as Format
+                from :_Topic m
+                left join :_MembershipUser u on u.Id = m.MembershipUser_Id
+                left join :_Category c on c.Id = m.Category_Id"
         );
     }
 
@@ -415,22 +379,17 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'Comment',
-            "
-            select
-                m.PostID as CommentID,
-                d.TopicID as DiscussionID,
-                u.UserID as InsertUserID,
-                m.PostContent as Body,
-                m.DateCreated as DateInserted,
-                m.DateEdited as DateUpdated,
-                'Html' as Format
-            from
-                :_Post m
-            left join
-                :_Topic d on d.Id = m.Topic_Id
-            left join
-                :_MembershipUser u on u.Id = m.MembershipUser_Id
-         "
+            "select
+                    m.PostID as CommentID,
+                    d.TopicID as DiscussionID,
+                    u.UserID as InsertUserID,
+                    m.PostContent as Body,
+                    m.DateCreated as DateInserted,
+                    m.DateEdited as DateUpdated,
+                    'Html' as Format
+                from :_Post m
+                left join :_Topic d on d.Id = m.Topic_Id
+                left join :_MembershipUser u on u.Id = m.MembershipUser_Id"
         );
     }
 
@@ -441,14 +400,12 @@ class Mvc extends Package
     {
         $ex->exportTable(
             'Tag',
-            "
-            select
-                TagID,
-                Tag as Name,
-                Tag as FullName,
-                now() as DateInserted
-            from TopicTag
-         "
+            "select
+                    TagID,
+                    Tag as Name,
+                    Tag as FullName,
+                    now() as DateInserted
+                from TopicTag"
         );
     }
 
@@ -457,21 +414,20 @@ class Mvc extends Package
      */
     protected function attachments(ExportModel $ex): void
     {
-// Use of placeholder for Type and Size due to lack of data in db. Will require external script to get the info.
+        // Use of placeholder for Type and Size due to lack of data in db.
+        // Will require external script to get the info.
         $ex->exportTable(
             'Attachment',
-            "
-            select
-                MediaID,
-                Filename as Name,
-                concat('attachments/', u.Filename) as Path,
-                '' as Type,
-                0 as Size,
-                MembershipUser_Id InsertUserID,
-                u.DateCreated as DateInserted
-            from :_UploadedFile u
-            where u.Post_Id <> '' and m.Id = u.Id
-        "
+            "select
+                    MediaID,
+                    Filename as Name,
+                    concat('attachments/', u.Filename) as Path,
+                    '' as Type,
+                    0 as Size,
+                    MembershipUser_Id InsertUserID,
+                    u.DateCreated as DateInserted
+                from :_UploadedFile u
+                where u.Post_Id <> '' and m.Id = u.Id"
         );
     }
 }

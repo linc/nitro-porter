@@ -34,14 +34,6 @@ class EsoTalk extends Package
             'Signatures' => 0,
             'Attachments' => 0,
             'Bookmarks' => 1,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -59,10 +51,6 @@ class EsoTalk extends Package
         $this->discussions($ex);
         $this->comments($ex);
         $this->bookmarks($ex);
-        // Permission.
-        // :_channel_group
-        // Media.
-        // :_attachment
         $this->conversations($ex);
     }
 
@@ -80,12 +68,11 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select u.*, 'crypt' as HashMethod,
-            FROM_UNIXTIME(joinTime) as DateInserted,
-            FROM_UNIXTIME(lastActionTime) as DateLastActive,
-            if(account='suspended',1,0) as Banned
-         from :_member u",
+            "select u.*, 'crypt' as HashMethod,
+                    FROM_UNIXTIME(joinTime) as DateInserted,
+                    FROM_UNIXTIME(lastActionTime) as DateLastActive,
+                    if(account='suspended',1,0) as Banned
+                from :_member u",
             $user_Map
         );
     }
@@ -101,15 +88,12 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select groupId, name
-         from :_group
-         union select max(groupId)+1, 'Member' from :_group
-         union select max(groupId)+2, 'Administrator' from :_group
-         ",
+            "select groupId, name
+                from :_group
+                union select max(groupId)+1, 'Member' from :_group
+                union select max(groupId)+2, 'Administrator' from :_group",
             $role_Map
         );
-
 
         // User Role.
         $userRole_Map = array(
@@ -119,14 +103,12 @@ class EsoTalk extends Package
         // Create fake 'member' and 'administrator' roles to account for them being set separately on member table.
         $ex->exportTable(
             'UserRole',
-            "
-         select u.memberId, u.groupId
-         from :_member_group u
-         union all
-         select memberId, (select max(groupId)+1 from :_group) from :_member where account='member'
-         union all
-         select memberId, (select max(groupId)+2 from :_group) from :_member where account='administrator'
-         ",
+            "select u.memberId, u.groupId
+                from :_member_group u
+                union all
+                select memberId, (select max(groupId)+1 from :_group) from :_member where account='member'
+                union all
+                select memberId, (select max(groupId)+2 from :_group) from :_member where account='administrator'",
             $userRole_Map
         );
     }
@@ -147,9 +129,7 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select *
-         from :_channel c",
+            "select * from :_channel c",
             $category_Map
         );
     }
@@ -173,25 +153,24 @@ class EsoTalk extends Package
         // The body of the OP is in the post table.
         $ex->exportTable(
             'Discussion',
-            "
-			select
-				c.conversationId,
-				c.title,
-				c.channelId,
-				p.memberId,
-				c.sticky,
-				c.locked,
-				c.lastPostMemberId,
-				p.content,
-				'BBCode' as Format,
-				from_unixtime(startTime) as DateInserted,
-				from_unixtime(lastPostTime) as DateLastComment
-			from :_conversation c
-			left join :_post p
-				on p.conversationId = c.conversationId
-			where private = 0
-			group by c.conversationId
-			order by p.time",
+            "select
+                    c.conversationId,
+                    c.title,
+                    c.channelId,
+                    p.memberId,
+                    c.sticky,
+                    c.locked,
+                    c.lastPostMemberId,
+                    p.content,
+                    'BBCode' as Format,
+                    from_unixtime(startTime) as DateInserted,
+                    from_unixtime(lastPostTime) as DateLastComment
+                from :_conversation c
+                left join :_post p
+                    on p.conversationId = c.conversationId
+                where private = 0
+                group by c.conversationId
+                order by p.time",
             $discussion_Map
         );
     }
@@ -211,20 +190,19 @@ class EsoTalk extends Package
         // Now we need to omit the comments we used as the OP.
         $ex->exportTable(
             'Comment',
-            "
-		select p.*,
-				'BBCode' as Format,
-				from_unixtime(time) as DateInserted,
-				from_unixtime(editTime) as DateUpdated
-		from :_post p
-		inner join :_conversation c ON c.conversationId = p.conversationId
-		and c.private = 0
-		join
-			( select conversationId,
-				min(postId) as m
-			from :_post
-			group by conversationId) r on r.conversationId = c.conversationId
-		where p.postId<>r.m",
+            "select p.*,
+                    'BBCode' as Format,
+                    from_unixtime(time) as DateInserted,
+                    from_unixtime(editTime) as DateUpdated
+                from :_post p
+                inner join :_conversation c ON c.conversationId = p.conversationId
+                and c.private = 0
+                join
+                    ( select conversationId,
+                        min(postId) as m
+                    from :_post
+                    group by conversationId) r on r.conversationId = c.conversationId
+                where p.postId<>r.m",
             $comment_Map
         );
     }
@@ -240,10 +218,9 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'UserDiscussion',
-            "
-         select *
-         from :_member_conversation
-         where starred = 1",
+            "select *
+                from :_member_conversation
+                where starred = 1",
             $userDiscussion_Map
         );
     }
@@ -260,14 +237,13 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'Conversation',
-            "
-                select p.*,
-                'BBCode' as Format,
-                from_unixtime(time) as DateInserted,
-                from_unixtime(lastposttime) as DateUpdated
-        from :_post p
-        inner join :_conversation c on c.conversationId = p.conversationId
-        and c.private = 1",
+            "select p.*,
+                    'BBCode' as Format,
+                    from_unixtime(time) as DateInserted,
+                    from_unixtime(lastposttime) as DateUpdated
+                from :_post p
+                inner join :_conversation c on c.conversationId = p.conversationId
+                and c.private = 1",
             $conversation_map
         );
 
@@ -278,14 +254,13 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-        select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
-        inner join :_conversation c on c.conversationId = a.conversationId
-        and c.private = 1 and a.type = 'privateAdd'
-        union all
-        select distinct a.memberId as memberId, a.type, c.private, c.conversationId from :_activity a
-        inner join :_conversation c on c.conversationId = a.conversationId
-        and c.private = 1 and a.type = 'privateAdd'",
+            "select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
+                inner join :_conversation c on c.conversationId = a.conversationId
+                and c.private = 1 and a.type = 'privateAdd'
+                union all
+                select distinct a.memberId as memberId, a.type, c.private, c.conversationId from :_activity a
+                inner join :_conversation c on c.conversationId = a.conversationId
+                and c.private = 1 and a.type = 'privateAdd'",
             $userConversation_map
         );
 
@@ -298,12 +273,11 @@ class EsoTalk extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-                select p.*,
-                'BBCode' as Format,
-                from_unixtime(time) as DateInserted
-        from :_post p
-        inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1",
+            "select p.*,
+                    'BBCode' as Format,
+                    from_unixtime(time) as DateInserted
+                from :_post p
+                inner join :_conversation c on c.conversationId = p.conversationId and c.private = 1",
             $userConversationMessage_map
         );
     }

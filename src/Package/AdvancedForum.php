@@ -35,16 +35,6 @@ class AdvancedForum extends Package
             'Avatars' => 1,
             'PrivateMessages' => 0,
             'Signatures' => 1,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -88,16 +78,13 @@ class AdvancedForum extends Package
      */
     protected function users(ExportModel $ex, $filePath): void
     {
-        $user_Map = array();
         $ex->exportTable(
             'User',
-            "
-            select `u`.`uid` as `UserID`, `u`.`name` as `Name`, `u`.`mail` as `Email`, `u`.`pass` as `Password`,
-                'drupal' as `HashMethod`, from_unixtime(`created`) as `DateInserted`,
-                if(`fm`.`filename` is not null, concat('$filePath', `fm`.`filename`), NULL) as `Photo`
-            from `:_users` `u`
-              left join `:_file_managed` `fm` on `u`.`picture` = `fm`.`fid`",
-            $user_Map
+            "select `u`.`uid` as `UserID`, `u`.`name` as `Name`, `u`.`mail` as `Email`, `u`.`pass` as `Password`,
+                    'drupal' as `HashMethod`, from_unixtime(`created`) as `DateInserted`,
+                    if(`fm`.`filename` is not null, concat('$filePath', `fm`.`filename`), NULL) as `Photo`
+                from `:_users` `u`
+                left join `:_file_managed` `fm` on `u`.`picture` = `fm`.`fid`"
         );
     }
 
@@ -106,25 +93,18 @@ class AdvancedForum extends Package
      */
     protected function roles(ExportModel $ex): void
     {
-        $role_Map = array();
         $ex->exportTable(
             'Role',
-            "
-            SELECT `name` AS `Name`, `rid` AS `RoleID`
-            FROM `:_role` `r`
-            ORDER BY `weight` ASC",
-            $role_Map
+            "SELECT `name` AS `Name`, `rid` AS `RoleID`
+                FROM `:_role` `r`
+                ORDER BY `weight` ASC"
         );
 
-
         // User Role.
-        $userRole_Map = array();
         $ex->exportTable(
             'UserRole',
-            "
-         SELECT `rid` AS `RoleID`, `uid` AS `UserID`
-         FROM `:_users_roles` `ur`",
-            $userRole_Map
+            "SELECT `rid` AS `RoleID`, `uid` AS `UserID`
+                FROM `:_users_roles` `ur`"
         );
     }
 
@@ -133,18 +113,15 @@ class AdvancedForum extends Package
      */
     protected function categories(ExportModel $ex): void
     {
-        $category_Map = array();
         $ex->exportTable(
             'Category',
-            "
-            SELECT `ttd`.`tid` AS `CategoryID`, `tth`.`parent` AS `ParentCategoryID`,
-              `ttd`.`name` AS `Name`, `ttd`.`weight` AS `Sort`
-            FROM `:_taxonomy_term_data` `ttd`
-                LEFT JOIN `:_taxonomy_vocabulary` `tv` USING (`vid`)
-                LEFT JOIN `:_taxonomy_term_hierarchy` `tth` USING (`tid`)
-            WHERE `tv`.`name` = 'Forums'
-            ORDER BY `ttd`.`weight` ASC",
-            $category_Map
+            "SELECT `ttd`.`tid` AS `CategoryID`, `tth`.`parent` AS `ParentCategoryID`,
+                    `ttd`.`name` AS `Name`, `ttd`.`weight` AS `Sort`
+                FROM `:_taxonomy_term_data` `ttd`
+                    LEFT JOIN `:_taxonomy_vocabulary` `tv` USING (`vid`)
+                    LEFT JOIN `:_taxonomy_term_hierarchy` `tth` USING (`tid`)
+                WHERE `tv`.`name` = 'Forums'
+                ORDER BY `ttd`.`weight` ASC"
         );
     }
 
@@ -156,7 +133,6 @@ class AdvancedForum extends Package
         $discussion_Map = array(
             'body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'translateFormatType'))
         );
-
         $ex->exportTable(
             'Discussion',
             "
@@ -168,8 +144,7 @@ class AdvancedForum extends Package
                 `n`.`uid` AS `InsertUserID`, `fdb`.`body_format`
             FROM `:_forum_index` `fi`
                 JOIN `:_field_data_body` `fdb` ON (`fdb`.`bundle` = 'forum' AND `fi`.`nid`=`fdb`.`entity_id`)
-                LEFT JOIN `:_node` `n` USING (`nid`)
-        ",
+                LEFT JOIN `:_node` `n` USING (`nid`)",
             $discussion_Map
         );
     }
@@ -184,13 +159,12 @@ class AdvancedForum extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-            SELECT `c`.`cid` AS `CommentID`, `c`.`nid` AS `DiscussionID`, `c`.`uid` AS `InsertUserID`,
-            from_unixtime(`c`.`created`) AS `DateInserted`,
-            if(`c`.`created` < `c`.`changed`, from_unixtime(`c`.`changed`), NULL) AS `DateUpdated`,
-            `fdcb`.`comment_body_value` AS `Body`, `fdcb`.`comment_body_format`
-            FROM `:_comment` `c` JOIN `:_field_data_comment_body` `fdcb` ON (`c`.`cid` = `fdcb`.`entity_id`)
-            ORDER BY `cid` ASC",
+            "SELECT `c`.`cid` AS `CommentID`, `c`.`nid` AS `DiscussionID`, `c`.`uid` AS `InsertUserID`,
+                    from_unixtime(`c`.`created`) AS `DateInserted`,
+                    if(`c`.`created` < `c`.`changed`, from_unixtime(`c`.`changed`), NULL) AS `DateUpdated`,
+                    `fdcb`.`comment_body_value` AS `Body`, `fdcb`.`comment_body_format`
+                FROM `:_comment` `c` JOIN `:_field_data_comment_body` `fdcb` ON (`c`.`cid` = `fdcb`.`entity_id`)
+                ORDER BY `cid` ASC",
             $comment_Map
         );
     }

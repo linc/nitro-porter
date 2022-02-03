@@ -32,14 +32,6 @@ class Smf2 extends Package
             'Signatures' => 0,
             'Attachments' => 1,
             'Bookmarks' => 1,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -76,7 +68,6 @@ class Smf2 extends Package
     {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);
-
             return mb_decode_numericentity($text, $convmap, 'UTF-8');
         } else {
             return $text;
@@ -117,9 +108,8 @@ class Smf2 extends Package
         $mimeType = $this->getMimeTypeFromFileName($row['Path']);
         if ($mimeType && strpos($mimeType, 'image/') === 0) {
             return $value;
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -144,16 +134,15 @@ class Smf2 extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select m.*,
-            from_unixtime(date_registered) as DateInserted,
-            from_unixtime(date_registered) as DateFirstVisit,
-            from_unixtime(last_login) as DateLastActive,
-            from_unixtime(last_login) as DateUpdated,
-            concat('sha1$', lower(member_name), '$', passwd) as `password`,
-            if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
-         from :_members m
-         left join :_attachments a on a.id_member = m.id_member ",
+            " select m.*,
+                    from_unixtime(date_registered) as DateInserted,
+                    from_unixtime(date_registered) as DateFirstVisit,
+                    from_unixtime(last_login) as DateLastActive,
+                    from_unixtime(last_login) as DateUpdated,
+                    concat('sha1$', lower(member_name), '$', passwd) as `password`,
+                    if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
+                from :_members m
+                left join :_attachments a on a.id_member = m.id_member ",
             $user_Map
         );
     }
@@ -188,27 +177,21 @@ class Smf2 extends Package
 
         $ex->exportTable(
             'Category',
-            "
-            select
-              (`id_cat` + 1000000) as `CategoryID`,
-              `name` as `Name`,
-              '' as `Description`,
-              null as `ParentCategoryID`,
-              `cat_order` as `Sort`
-            from :_categories
-
-            union
-
-            select
-              b.`id_board` as `CategoryID`,
-
-              b.`name` as `Name`,
-                b.`description` as `Description`,
-              (CASE WHEN b.`id_parent` = 0 THEN (`id_cat` + 1000000) ELSE `id_parent` END) as `ParentCategoryID`,
-              b.`board_order` as `Sort`
-            from :_boards b
-
-            ",
+            "select
+                    (`id_cat` + 1000000) as `CategoryID`,
+                    `name` as `Name`,
+                    '' as `Description`,
+                    null as `ParentCategoryID`,
+                    `cat_order` as `Sort`
+                from :_categories
+                union
+                select
+                    b.`id_board` as `CategoryID`,
+                    b.`name` as `Name`,
+                    b.`description` as `Description`,
+                    (CASE WHEN b.`id_parent` = 0 THEN (`id_cat` + 1000000) ELSE `id_parent` END) as `ParentCategoryID`,
+                    b.`board_order` as `Sort`
+                from :_boards b",
             $category_Map
         );
     }
@@ -240,25 +223,21 @@ class Smf2 extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-      select t.*,
-         (t.num_replies + 1) as CountComments,
-         m.subject,
-         m.body,
-         from_unixtime(m.poster_time) as DateInserted,
-         from_unixtime(m.modified_time) as DateUpdated,
-         m.id_member,
-         from_unixtime(m_end.poster_time) AS DateLastComment,
-         m_end.id_member AS UpdateUserID,
-         m_end.id_member AS LastCommentUserID,
-         'BBCode' as Format
-       from :_topics t
-       join :_messages as m on t.id_first_msg = m.id_msg
-       join :_messages as m_end on t.id_last_msg = m_end.id_msg
-
-       -- where t.spam = 0 AND m.spam = 0;
-
-       ",
+            "select t.*,
+                    (t.num_replies + 1) as CountComments,
+                    m.subject,
+                    m.body,
+                    from_unixtime(m.poster_time) as DateInserted,
+                    from_unixtime(m.modified_time) as DateUpdated,
+                    m.id_member,
+                    from_unixtime(m_end.poster_time) AS DateLastComment,
+                    m_end.id_member AS UpdateUserID,
+                    m_end.id_member AS LastCommentUserID,
+                    'BBCode' as Format
+                from :_topics t
+                join :_messages as m on t.id_first_msg = m.id_msg
+                join :_messages as m_end on t.id_last_msg = m_end.id_msg
+                -- where t.spam = 0 AND m.spam = 0;",
             $discussion_Map
         );
     }
@@ -279,12 +258,11 @@ class Smf2 extends Package
         $ex->exportTable(
             'Comment',
             "select m.*,
-               from_unixtime(m.poster_time) AS DateInserted,
-               'BBCode' as Format
-             from :_messages m
-               join :_topics t on m.id_topic = t.id_topic
-               where m.id_msg <> t.id_first_msg;
-             ",
+                    from_unixtime(m.poster_time) AS DateInserted,
+                    'BBCode' as Format
+                from :_messages m
+                join :_topics t on m.id_topic = t.id_topic
+                where m.id_msg <> t.id_first_msg;",
             $comment_Map
         );
     }
@@ -311,19 +289,17 @@ class Smf2 extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-            select a.*,
-                concat('attachments/', a.filename) as Path,
-                IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
-                null as extract_mimetype,
-                b.width as thumb_width,
-                if(t.id_topic is null, 'Comment', 'Discussion') as ForeignTable
-            from :_attachments a
-                left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
-                left join :_topics t on a.id_msg = t.id_first_msg
-            where a.attachment_type = 0
-                and a.id_msg > 0
-        ",
+            "select a.*,
+                    concat('attachments/', a.filename) as Path,
+                    IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
+                    null as extract_mimetype,
+                    b.width as thumb_width,
+                    if(t.id_topic is null, 'Comment', 'Discussion') as ForeignTable
+                from :_attachments a
+                    left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+                    left join :_topics t on a.id_msg = t.id_first_msg
+                where a.attachment_type = 0
+                    and a.id_msg > 0",
             $media_Map
         );
     }
@@ -339,17 +315,13 @@ class Smf2 extends Package
             'id_member_from' => 'InsertUserID',
             'unixmsgtime' => 'DateInserted',
         );
-
         $ex->exportTable(
             'Conversation',
-            "select
-              pm.*,
-              from_unixtime(pm.msgtime) as unixmsgtime
-            from :_personal_messages pm
-            ",
+            "select pm.*,
+                    from_unixtime(pm.msgtime) as unixmsgtime
+                from :_personal_messages pm",
             $conversation_Map
         );
-
 
         $convMsg_Map = array(
             'id_pm' => 'MessageID',
@@ -359,40 +331,33 @@ class Smf2 extends Package
             'id_member_from' => 'InsertUserID',
             'unixmsgtime' => 'DateInserted',
         );
-
         $ex->exportTable(
             'ConversationMessage',
-            "select
-              pm.*,
-              from_unixtime(pm.msgtime) as unixmsgtime ,
-              'BBCode' as format
-            from :_personal_messages pm
-            ",
+            "select pm.*,
+                    from_unixtime(pm.msgtime) as unixmsgtime ,
+                    'BBCode' as format
+                from :_personal_messages pm",
             $convMsg_Map
         );
-
 
         $userConv_Map = array(
             'id_member2' => 'UserId',
             'id_pm_head' => 'ConversationID',
             'deleted2' => 'Deleted'
         );
-
         $ex->exportTable(
             'UserConversation',
             "(select
-              pm.id_member_from as id_member2,
-              pm.id_pm_head,
-              pm.deleted_by_sender as deleted2
-            from :_personal_messages pm )
+                    pm.id_member_from as id_member2,
+                    pm.id_pm_head,
+                    pm.deleted_by_sender as deleted2
+                from :_personal_messages pm )
             UNION ALL
             (select
-            pmr.id_member as id_member2,
-            pm.id_pm_head,
-            pmr.deleted as deleted2
-            from :_personal_messages pm join :_pm_recipients pmr on pmr.id_pm = pm.id_pm
-            )
-            ",
+                    pmr.id_member as id_member2,
+                    pm.id_pm_head,
+                    pmr.deleted as deleted2
+                from :_personal_messages pm join :_pm_recipients pmr on pmr.id_pm = pm.id_pm)",
             $userConv_Map
         );
     }

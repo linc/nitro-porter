@@ -31,14 +31,6 @@ class UserVoice extends Package
             'Signatures' => 1,
             'Attachments' => 0,
             'Bookmarks' => 1,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -124,9 +116,9 @@ class UserVoice extends Package
 
         $result = $ex->query(
             "select a.*, p.PostID
-         from :_PostAttachments a
-         left join :_Posts p on p.PostID = a.PostID
-         where IsRemote = 0"
+                from :_PostAttachments a
+                left join :_Posts p on p.PostID = a.PostID
+                where IsRemote = 0"
         );
         $path = '/www/porter/attach';
         $count = 0;
@@ -159,14 +151,13 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select u.*,
-         concat('sha1$', m.PasswordSalt, '$', m.Password) as Password,
-         'django' as HashMethod,
-         if(a.Content is not null, concat('import/userpics/avatar',u.UserID,'.jpg'), NULL) as Photo
-         from :_Users u
-         left join aspnet_Membership m on m.UserId = u.MembershipID
-         left join :_UserAvatar a on a.UserID = u.UserID",
+            "select u.*,
+                    concat('sha1$', m.PasswordSalt, '$', m.Password) as Password,
+                    'django' as HashMethod,
+                    if(a.Content is not null, concat('import/userpics/avatar',u.UserID,'.jpg'), NULL) as Photo
+                from :_Users u
+                left join aspnet_Membership m on m.UserId = u.MembershipID
+                left join :_UserAvatar a on a.UserID = u.UserID",
             $user_Map
         );
     }
@@ -182,9 +173,7 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select *
-         from aspnet_Roles",
+            "select * from aspnet_Roles",
             $role_Map
         );
 
@@ -194,11 +183,9 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         select u.UserID, ur.RoleId
-         from aspnet_UsersInRoles ur
-         left join :_Users u on ur.UserId = u.MembershipID
-         ",
+            "select u.UserID, ur.RoleId
+                from aspnet_UsersInRoles ur
+                left join :_Users u on ur.UserId = u.MembershipID",
             $userRole_Map
         );
     }
@@ -216,9 +203,7 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select s.*
-         from :_Sections s",
+            "select s.* from :_Sections s",
             $category_Map
         );
     }
@@ -245,16 +230,15 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select t.*,
-            p.Subject,
-            p.Body,
-            'Html' as Format,
-            p.IPAddress as InsertIPAddress,
-            if(t.IsSticky  > 0, 2, 0) as Announce
-         from :_Threads t
-         left join :_Posts p on p.ThreadID = t.ThreadID
-         where p.SortOrder = 1",
+            "select t.*,
+                    p.Subject,
+                    p.Body,
+                    'Html' as Format,
+                    p.IPAddress as InsertIPAddress,
+                    if(t.IsSticky  > 0, 2, 0) as Announce
+                from :_Threads t
+                left join :_Posts p on p.ThreadID = t.ThreadID
+                where p.SortOrder = 1",
             $discussion_Map
         );
     }
@@ -274,10 +258,7 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select p.*
-         from :_Posts p
-         where SortOrder > 1",
+            "select p.* from :_Posts p where SortOrder > 1",
             $comment_Map
         );
     }
@@ -292,11 +273,10 @@ class UserVoice extends Package
         );
         $ex->exportTable(
             'UserDiscussion',
-            "
-         select t.*,
-            '1' as Bookmarked,
-            NOW() as DateLastViewed
-         from :_TrackedThreads t",
+            "select t.*,
+                    '1' as Bookmarked,
+                    NOW() as DateLastViewed
+                from :_TrackedThreads t",
             $userDiscussion_Map
         );
     }
@@ -319,55 +299,4 @@ class UserVoice extends Package
            left join :_Posts p on p.PostID = a.PostID
            where IsRemote = 0", $Media_Map);
     }*/
-}
-
-/**
- * Get the file extension from a mime-type.
- *
- * @param  string $mime
- * @param  string $ext  If this argument is specified then this extension will be added to the list of known types.
- * @return string The file extension without the dot.
- */
-function mimeToExt($mime, $ext = null)
-{
-    static $known = array('text/plain' => 'txt', 'image/jpeg' => 'jpg');
-    $mime = strtolower($mime);
-
-    if ($ext !== null) {
-        $known[$mime] = ltrim($ext, '.');
-    }
-
-    if (array_key_exists($mime, $known)) {
-        return $known[$mime];
-    }
-
-    // We don't know the mime type so we need to just return the second part as the extension.
-    $result = trim(strrchr($mime, '/'), '/');
-
-    if (substr($result, 0, 2) === 'x-') {
-        $result = substr($result, 2);
-    }
-
-    return $result;
-}
-
-if (!function_exists('hex2bin')) {
-    function hex2bin($hexstr)
-    {
-        $n = strlen($hexstr);
-        $sbin = "";
-        $i = 0;
-        while ($i < $n) {
-            $a = substr($hexstr, $i, 2);
-            $c = pack("H*", $a);
-            if ($i == 0) {
-                $sbin = $c;
-            } else {
-                $sbin .= $c;
-            }
-            $i += 2;
-        }
-
-        return $sbin;
-    }
 }

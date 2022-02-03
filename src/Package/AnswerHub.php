@@ -39,15 +39,7 @@ class AnswerHub extends Package
             'PrivateMessages' => 0,
             'Signatures' => 0,
             'Attachments' => 1,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
             'Tags' => 1,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -79,7 +71,6 @@ class AnswerHub extends Package
     public function generateEmail($value, $field, $row)
     {
         $email = $value;
-
         if (empty($email)) {
             $domain = $this->param('noemaildomain');
             $slug = preg_replace('#[^a-z0-9-_.]#i', null, $row['Name']);
@@ -87,7 +78,6 @@ class AnswerHub extends Package
             if (!strlen($slug)) {
                 $slug = $row['UserID'];
             }
-
             $email = "$slug@$domain";
         }
 
@@ -113,7 +103,6 @@ class AnswerHub extends Package
      */
     public function buildMimeType($value, $field, $row)
     {
-
         if (preg_match('~.*\.(.*)~', $value, $matches) != false) {
             switch (strtolower($matches[1])) {
                 case 'jpg':
@@ -152,22 +141,20 @@ class AnswerHub extends Package
         );
         $ex->exportTable(
             'User',
-            "
-            select
-                user.c_id as UserID,
-                user.c_name as Name,
-                sha2(concat(user.c_name, now()), 256) as Password,
-                'Reset' as HashMethod,
-                user.c_creation_date as DateInserted,
-                user.c_birthday as DateOfBirth,
-                user.c_last_seen as DateLastActive,
-                user_email.c_email,
-                0 as Admin
-            from :_authoritables as user
-                 left join :_user_emails as user_email on user_email.c_user = user.c_id
-            where user.c_type = 'user'
-                and user.c_name != '\$\$ANON_USER\$\$'
-        ",
+            "select
+                    user.c_id as UserID,
+                    user.c_name as Name,
+                    sha2(concat(user.c_name, now()), 256) as Password,
+                    'Reset' as HashMethod,
+                    user.c_creation_date as DateInserted,
+                    user.c_birthday as DateOfBirth,
+                    user.c_last_seen as DateLastActive,
+                    user_email.c_email,
+                    0 as Admin
+                from :_authoritables as user
+                     left join :_user_emails as user_email on user_email.c_user = user.c_id
+                where user.c_type = 'user'
+                    and user.c_name != '\$\$ANON_USER\$\$'",
             $user_Map
         );
     }
@@ -178,7 +165,8 @@ class AnswerHub extends Package
     protected function roles(ExportModel $ex): void
     {
         $result = $ex->query("select c_reserved as lastID
-            from id_generators where c_identifier = 'AUTHORITABLE'");
+            from id_generators
+            where c_identifier = 'AUTHORITABLE'");
         if ($row = $result->nextResultRow()) {
             $lastID = $row['lastID'];
         }
@@ -194,26 +182,21 @@ class AnswerHub extends Package
                 groups.c_description as Description
             from :_authoritables as groups
             where groups.c_type = 'group'
-
             union all
-
             select
                 $lastID + 1,
                 'System Administrator',
                 'System users from AnswerHub'
-            from dual
-        "
+            from dual"
         );
 
         // User Role.
         $ex->exportTable(
             'UserRole',
-            "
-            select
-                user_role.c_groups as RoleID,
-                user_role.c_members as UserID
-            from :_authoritable_groups as user_role
-        "
+            "select
+                    user_role.c_groups as RoleID,
+                    user_role.c_members as UserID
+                from :_authoritable_groups as user_role"
         );
     }
 
@@ -225,19 +208,16 @@ class AnswerHub extends Package
         $category_Map = array();
         $ex->exportTable(
             'Category',
-            "
-            select
-                containers.c_id as CategoryID,
-                case
-                    when parents.c_type = 'space' then containers.c_parent
-                    else null
-                end as ParentCategoryID,
-                containers.c_name as Name
-            from containers as containers
-            left join containers as parents on parents.c_id = containers.c_parent
-            where containers.c_type = 'space'
-                and containers.c_active = 1
-        ",
+            "select containers.c_id as CategoryID,
+                    case
+                        when parents.c_type = 'space' then containers.c_parent
+                        else null
+                    end as ParentCategoryID,
+                    containers.c_name as Name
+                from containers as containers
+                left join containers as parents on parents.c_id = containers.c_parent
+                where containers.c_type = 'space'
+                    and containers.c_active = 1",
             $category_Map
         );
     }
@@ -251,8 +231,7 @@ class AnswerHub extends Package
         // The query works fine but it will probably be slow for big tables
         $ex->exportTable(
             'Discussion',
-            "
-                        select
+            "select
                 questions.c_id as DiscussionID,
                 if(questions.c_type = 'question', 'Question', NULL) as Type,
                 questions.c_primaryContainer as CategoryID,
@@ -260,9 +239,9 @@ class AnswerHub extends Package
                 questions.c_creation_date as DateInserted,
                 questions.c_title as Name,
                 case
-                	       			when nr.c_body is not null and nr.c_body <> '' then nr.c_body
-                	       			when questions.c_body is not null and questions.c_body <> '' then questions.c_body
-                	       			else questions.c_title
+                    when nr.c_body is not null and nr.c_body <> '' then nr.c_body
+                    when questions.c_body is not null and questions.c_body <> '' then questions.c_body
+                    else questions.c_title
                 end as Body,
                 'HTML' as Format,
                 if(locate('[closed]', questions.c_normalized_state) > 0, 1, 0) as Closed,
@@ -278,20 +257,18 @@ class AnswerHub extends Package
                     'Unanswered'
                 ), null) as QnA
             from :_nodes as questions
-            left join (select
-                        c_node, c_body
-                    from :_node_revisions nr
-                    where c_id in (
-                        select max(c_id) as id from :_node_revisions group by c_node)
-                )  nr on nr.c_node = questions.c_id
-	            left join :_nodes as answers on
-	                answers.c_parent = questions.c_id
-	                and answers.c_type = 'answer'
-	                and answers.c_visibility = 'full'
+            left join (select c_node, c_body
+                from :_node_revisions nr
+                where c_id in (
+                    select max(c_id) as id from :_node_revisions group by c_node)
+            )  nr on nr.c_node = questions.c_id
+	        left join :_nodes as answers on
+                answers.c_parent = questions.c_id
+                and answers.c_type = 'answer'
+                and answers.c_visibility = 'full'
             where questions.c_type in ('question', 'topic')
                 and questions.c_visibility = 'full'
-            group by questions.c_id
-        ",
+            group by questions.c_id",
             $discussion_Map
         );
     }
@@ -304,8 +281,7 @@ class AnswerHub extends Package
         $comment_Map = array();
         $ex->exportTable(
             'Comment',
-            "
-            select
+            "select
                 answers.c_id as CommentID,
                 answers.c_parent as DiscussionID,
                 answers.c_author as InsertUserID,
@@ -329,8 +305,7 @@ class AnswerHub extends Package
                 group by c_node)
                 )  nr on nr.c_id = answers.c_id
             where answers.c_type in ('answer', 'comment')
-                  and answers.c_visibility = 'full'
-        ",
+                  and answers.c_visibility = 'full'",
             $comment_Map
         );
     }
@@ -342,28 +317,24 @@ class AnswerHub extends Package
     {
         $ex->exportTable(
             'Tags',
-            "
-            select
-                c_id as TagID,
-                c_plug as Name,
-                c_title as FullName,
-                c_creation_date as DateInserted
-            from :_nodes
-            where n.c_type = 'topic'
-        "
+            "select
+                    c_id as TagID,
+                    c_plug as Name,
+                    c_title as FullName,
+                    c_creation_date as DateInserted
+                from :_nodes
+                where n.c_type = 'topic'"
         );
 
         $ex->exportTable(
             'TagDiscussion',
-            "
-            select
-                c_topics as TagID,
-                c_nodes as DiscussionID,
-                -1 as CategoryID,
-                now() as DateInserted
-            from :_node_topics
-            where c_nodes in (select c_nodes from :_nodes where c_type = 'question')
-        "
+            "select
+                    c_topics as TagID,
+                    c_nodes as DiscussionID,
+                    -1 as CategoryID,
+                    now() as DateInserted
+                from :_node_topics
+                where c_nodes in (select c_nodes from :_nodes where c_type = 'question')"
         );
     }
 
@@ -378,36 +349,32 @@ class AnswerHub extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-            select
-                  m.c_id as `MediaID`,
-                  m.c_name as `Name`,
-                  concat('attachments', m.c_name) as `Path`,
-                  m.c_mime_type as `Type`,
-                  m.c_size as `Size`,
-                  m.c_user as `InsertUserID`,
-                  m.c_creation_date as `DateInserted`,
-                  na.c_Node as `ForeignID`,
-                  if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
-            from :_managed_files as m
-            join :_node_attachments na on na.c_attachments = m.c_id
-            join :_nodes n on na.c_Node = n.c_id
-
-            union
-
-            select
-                  s.c_id as `MediaID`,
-                  s.c_url as `Name`,
-                  s.c_url as `Path`,
-                  s.c_url as `Type`,
-                  1 as `Size`,
-                  s.c_addedBy as `InsertUserID`,
-                  s.c_creation_date as `DateInserted`,
-                  s.c_node as `ForeignID`,
-                  if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
-            from :_sources s
-            join :_nodes n on s.c_node = n.c_id
-        ",
+            "select
+                    m.c_id as `MediaID`,
+                    m.c_name as `Name`,
+                    concat('attachments', m.c_name) as `Path`,
+                    m.c_mime_type as `Type`,
+                    m.c_size as `Size`,
+                    m.c_user as `InsertUserID`,
+                    m.c_creation_date as `DateInserted`,
+                    na.c_Node as `ForeignID`,
+                    if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
+                from :_managed_files as m
+                join :_node_attachments na on na.c_attachments = m.c_id
+                join :_nodes n on na.c_Node = n.c_id
+                union
+                select
+                    s.c_id as `MediaID`,
+                    s.c_url as `Name`,
+                    s.c_url as `Path`,
+                    s.c_url as `Type`,
+                    1 as `Size`,
+                    s.c_addedBy as `InsertUserID`,
+                    s.c_creation_date as `DateInserted`,
+                    s.c_node as `ForeignID`,
+                    if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
+                from :_sources s
+                join :_nodes n on s.c_node = n.c_id",
             $media_Map
         );
     }

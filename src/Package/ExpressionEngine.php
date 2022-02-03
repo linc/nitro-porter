@@ -32,13 +32,6 @@ class ExpressionEngine extends Package
             'Attachments' => 1,
             'Bookmarks' => 1,
             'Permissions' => 1,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -46,7 +39,7 @@ class ExpressionEngine extends Package
      *
      * @param ExportModel $ex
      */
-    public function run($ex)
+    public function run(ExportModel $ex)
     {
         $this->conversations($ex);
         $this->permissions($ex);
@@ -62,7 +55,7 @@ class ExpressionEngine extends Package
     /**
      * Private message conversion.
      */
-    public function conversations($ex)
+    public function conversations(ExportModel $ex)
     {
         $this->exportConversationTemps($ex);
 
@@ -75,13 +68,10 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'Conversation',
-            "
-         SELECT
-         pm.*,
-         g.title AS title2
-       FROM forum_message_data pm
-       JOIN z_pmgroup g
-         ON g.group_id = pm.message_id;",
+            "SELECT pm.*, g.title AS title2
+                FROM forum_message_data pm
+                JOIN z_pmgroup g
+                ON g.group_id = pm.message_id;",
             $conversation_Map
         );
 
@@ -92,13 +82,10 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-         SELECT
-         g.group_id,
-         t.userid
-       FROM z_pmto t
-       JOIN z_pmgroup g
-         ON g.group_id = t.message_id;",
+            "SELECT g.group_id, t.userid
+                FROM z_pmto t
+                JOIN z_pmgroup g
+                ON g.group_id = t.message_id;",
             $userConversation_Map
         );
 
@@ -112,14 +99,11 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-         SELECT
-            pm.*,
-            pm2.group_id,
-            'BBCode' AS Format
-          FROM forum_message_data pm
-          JOIN z_pmtext pm2
-            ON pm.message_id = pm2.message_id",
+            "SELECT pm.*, pm2.group_id,
+                    'BBCode' AS Format
+                FROM forum_message_data pm
+                JOIN z_pmtext pm2
+                ON pm.message_id = pm2.message_id",
             $message_Map
         );
     }
@@ -127,7 +111,7 @@ class ExpressionEngine extends Package
     /**
      * Create temporary tables for private message conversion.
      */
-    public function exportConversationTemps($ex)
+    public function exportConversationTemps(ExportModel $ex)
     {
         $ex->query('DROP TABLE IF EXISTS z_pmto;');
         $ex->query(
@@ -138,7 +122,6 @@ class ExpressionEngine extends Package
             PRIMARY KEY(message_id, userid)
             );'
         );
-
         $ex->query(
             "insert ignore z_pmto (
                 message_id,
@@ -202,7 +185,6 @@ class ExpressionEngine extends Package
         );
 
         $ex->query("DROP TABLE IF EXISTS z_pmto2;");
-
         $ex->query(
             "CREATE TABLE z_pmto2 (
             message_id INT UNSIGNED,
@@ -210,7 +192,6 @@ class ExpressionEngine extends Package
             PRIMARY KEY (message_id)
             );"
         );
-
         $ex->query(
             "insert z_pmto2 (
             message_id,
@@ -233,7 +214,6 @@ class ExpressionEngine extends Package
             group_id INT UNSIGNED
             );"
         );
-
         $ex->query(
             "insert z_pmtext (
             message_id,
@@ -249,7 +229,6 @@ class ExpressionEngine extends Package
         );
 
         $ex->query("CREATE INDEX z_idx_pmtext ON z_pmtext (message_id);");
-
         $ex->query(
             "UPDATE z_pmtext pm
             JOIN z_pmto2 t
@@ -265,7 +244,6 @@ class ExpressionEngine extends Package
             userids VARCHAR(250)
             );"
         );
-
         $ex->query(
             "insert z_pmgroup (
             group_id,
@@ -308,9 +286,8 @@ class ExpressionEngine extends Package
     {
         if (strpos(mimeTypeFromExtension(strtolower($row['extension'])), 'image/') === 0) {
             return $value;
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -343,17 +320,15 @@ class ExpressionEngine extends Package
 
         $ex->exportTable(
             'Permission',
-            "
-         SELECT
-            g.can_view_profiles AS can_view_profiles2,
-            g.can_view_profiles AS can_view_profiles3,
-            g.can_post_comments AS can_post_comments2,
-            g.can_post_comments AS can_sign_in,
-            CASE WHEN can_access_admin = 'y' THEN 'all'
-                WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
-            g.*
-         FROM forum_member_groups g
-      ",
+            "SELECT
+                    g.can_view_profiles AS can_view_profiles2,
+                    g.can_view_profiles AS can_view_profiles3,
+                    g.can_post_comments AS can_post_comments2,
+                    g.can_post_comments AS can_sign_in,
+                    CASE WHEN can_access_admin = 'y' THEN 'all'
+                        WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
+                    g.*
+                 FROM forum_member_groups g",
             $permission_Map
         );
         return $info;
@@ -378,16 +353,14 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         SELECT
-            'django' AS HashMethod,
-            concat('sha1$$', password) AS Password2,
-            CASE WHEN bday_y > 1900 THEN concat(bday_y, '-', bday_m, '-', bday_d) ELSE NULL END AS DateOfBirth,
-            from_unixtime(join_date) AS DateFirstVisit,
-            ip_address AS LastIPAddress,
-            CASE WHEN avatar_filename = '' THEN NULL ELSE concat('imported/', avatar_filename) END AS Photo,
-            u.*
-         FROM forum_members u",
+            "SELECT u.*,
+                    'django' AS HashMethod,
+                    concat('sha1$$', password) AS Password2,
+                    CASE WHEN bday_y > 1900 THEN concat(bday_y, '-', bday_m, '-', bday_d) ELSE NULL END AS DateOfBirth,
+                    from_unixtime(join_date) AS DateFirstVisit,
+                    ip_address AS LastIPAddress,
+                    CASE WHEN avatar_filename = '' THEN NULL ELSE concat('imported/', avatar_filename) END AS Photo
+                 FROM forum_members u",
             $user_Map
         );
     }
@@ -404,12 +377,9 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         SELECT *
-         FROM forum_member_groups",
+            "SELECT * FROM forum_member_groups",
             $role_Map
         );
-
 
         // User Role.
         $userRole_Map = array(
@@ -418,9 +388,7 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         SELECT *
-         FROM forum_members u",
+            "SELECT * FROM forum_members u",
             $userRole_Map
         );
     }
@@ -432,13 +400,12 @@ class ExpressionEngine extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-         SELECT
-            member_id AS UserID,
-            'Plugin.Signatures.Sig' AS Name,
-            signature AS Value
-         FROM forum_members
-         WHERE signature <> ''"
+            "SELECT
+                    member_id AS UserID,
+                    'Plugin.Signatures.Sig' AS Name,
+                    signature AS Value
+                FROM forum_members
+                WHERE signature <> ''"
         );
     }
 
@@ -456,8 +423,7 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         SELECT * FROM forum_forums",
+            "SELECT * FROM forum_forums",
             $category_Map
         );
     }
@@ -481,13 +447,11 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-          SELECT
-             CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
-             CASE WHEN status = 'c' THEN 1 ELSE 0 END AS Closed,
-             t.body AS body2,
-             t.*
-          FROM forum_forum_topics t",
+            "SELECT t.*,
+                    CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
+                    CASE WHEN status = 'c' THEN 1 ELSE 0 END AS Closed,
+                    t.body AS body2
+                FROM forum_forum_topics t",
             $discussion_Map
         );
     }
@@ -510,12 +474,10 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-      SELECT
-         'Html' AS Format,
-         p.body AS body2,
-         p.*
-      FROM forum_forum_posts p",
+            "SELECT p.*,
+                    'Html' AS Format,
+                    p.body AS body2
+                FROM forum_forum_posts p",
             $comment_Map
         );
     }
@@ -537,15 +499,13 @@ class ExpressionEngine extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-         SELECT
-            concat('imported/', filename) AS Path,
-            concat('imported/', filename) as thumb_path,
-            128 as thumb_width,
-            CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
-            CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable,
-            a.*
-         FROM forum_forum_attachments a",
+            "SELECT a.*,
+                concat('imported/', filename) AS Path,
+                concat('imported/', filename) as thumb_path,
+                128 as thumb_width,
+                CASE WHEN post_id > 0 THEN post_id ELSE topic_id END AS ForeignID,
+                CASE WHEN post_id > 0 THEN 'comment' ELSE 'discussion' END AS ForeignTable
+                FROM forum_forum_attachments a",
             $media_Map
         );
     }

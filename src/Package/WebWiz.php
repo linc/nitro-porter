@@ -29,16 +29,6 @@ class WebWiz extends Package
             'Avatars' => 1,
             'PrivateMessages' => 1,
             'Signatures' => 1,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -58,7 +48,10 @@ class WebWiz extends Package
         $this->conversations($ex);
     }
 
-    public function conversations($ex)
+    /**
+     * @param ExportModel $ex
+     */
+    public function conversations(ExportModel $ex)
     {
         $this->exportConversationTemps($ex);
 
@@ -71,13 +64,11 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'Conversation',
-            "
-         select
-            pm.*,
-            g.Title
-         from :_PMMessage pm
-         join z_pmgroup g
-            on pm.PM_ID = g.Group_ID;",
+            "select pm.*,
+                    g.Title
+                 from :_PMMessage pm
+                 join z_pmgroup g
+                    on pm.PM_ID = g.Group_ID;",
             $conversation_Map
         );
 
@@ -88,13 +79,12 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-         select
-            g.Group_ID,
-            t.User_ID
-         from z_pmto t
-         join z_pmgroup g
-            on g.Group_ID = t.PM_ID;",
+            "select
+                    g.Group_ID,
+                    t.User_ID
+                 from z_pmto t
+                 join z_pmgroup g
+                    on g.Group_ID = t.PM_ID;",
             $userConversation_Map
         );
 
@@ -109,14 +99,12 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-         select
-            pm.*,
-            pm2.Group_ID,
-            'Html' as Format
-          from :_PMMessage pm
-          join z_pmtext pm2
-            on pm.PM_ID = pm2.PM_ID;",
+            "select pm.*,
+                    pm2.Group_ID,
+                    'Html' as Format
+                from :_PMMessage pm
+                join z_pmtext pm2
+                    on pm.PM_ID = pm2.PM_ID;",
             $message_Map
         );
     }
@@ -124,105 +112,103 @@ class WebWiz extends Package
     protected function exportConversationTemps($ex)
     {
         $sql = "
-         drop table if exists z_pmto;
+            drop table if exists z_pmto;
+            create table z_pmto (
+                PM_ID int unsigned,
+                User_ID int,
+                primary key(PM_ID, User_ID)
+            );
+            insert ignore z_pmto (
+                PM_ID,
+                User_ID
+            )
+            select
+                PM_ID,
+                Author_ID
+            from :_PMMessage;
 
-         create table z_pmto (
-            PM_ID int unsigned,
-            User_ID int,
-            primary key(PM_ID, User_ID)
+            insert ignore z_pmto (
+                PM_ID,
+                User_ID
+            )
+            select
+                PM_ID,
+                From_ID
+            from :_PMMessage;
+
+            drop table if exists z_pmto2;
+            create table z_pmto2 (
+                PM_ID int unsigned,
+                UserIDs varchar(250),
+                primary key (PM_ID)
             );
 
-         insert ignore z_pmto (
-            PM_ID,
-            User_ID
-         )
-         select
-            PM_ID,
-            Author_ID
-         from :_PMMessage;
+            replace z_pmto2 (
+                PM_ID,
+                UserIDs
+            )
+            select
+                PM_ID,
+                group_concat(User_ID order by User_ID)
+            from z_pmto
+            group by PM_ID;
 
-         insert ignore z_pmto (
-            PM_ID,
-            User_ID
-         )
-         select
-            PM_ID,
-            From_ID
-         from :_PMMessage;
+            drop table if exists z_pmtext;
+            create table z_pmtext (
+                PM_ID int unsigned,
+                Title varchar(250),
+                Title2 varchar(250),
+                UserIDs varchar(250),
+                Group_ID int unsigned
+            );
 
-         drop table if exists z_pmto2;
-         create table z_pmto2 (
-            PM_ID int unsigned,
-             UserIDs varchar(250),
-             primary key (PM_ID)
-         );
+            insert z_pmtext (
+                PM_ID,
+                Title,
+                Title2
+            )
+            select
+                PM_ID,
+                PM_Tittle,
+                case when PM_Tittle like 'Re:%' then trim(substring(PM_Tittle, 4)) else PM_Tittle end as Title2
+            from :_PMMessage;
 
-         replace z_pmto2 (
-            PM_ID,
-            UserIDs
-         )
-         select
-            PM_ID,
-            group_concat(User_ID order by User_ID)
-         from z_pmto
-         group by PM_ID;
+            create index z_idx_pmtext on z_pmtext (PM_ID);
 
-         drop table if exists z_pmtext;
-         create table z_pmtext (
-            PM_ID int unsigned,
-            Title varchar(250),
-             Title2 varchar(250),
-             UserIDs varchar(250),
-             Group_ID int unsigned
-         );
+            update z_pmtext pm
+            join z_pmto2 t
+                on pm.PM_ID = t.PM_ID
+            set pm.UserIDs = t.UserIDs;
 
-         insert z_pmtext (
-            PM_ID,
-            Title,
-            Title2
-         )
-         select
-            PM_ID,
-            PM_Tittle,
-            case when PM_Tittle like 'Re:%' then trim(substring(PM_Tittle, 4)) else PM_Tittle end as Title2
-         from :_PMMessage;
+            drop table if exists z_pmgroup;
 
-         create index z_idx_pmtext on z_pmtext (PM_ID);
+            create table z_pmgroup (
+                Group_ID int unsigned,
+                Title varchar(250),
+                UserIDs varchar(250)
+            );
 
-         update z_pmtext pm
-         join z_pmto2 t
-            on pm.PM_ID = t.PM_ID
-         set pm.UserIDs = t.UserIDs;
+            insert z_pmgroup (
+                Group_ID,
+                Title,
+                UserIDs
+            )
+            select
+                min(pm.PM_ID),
+                pm.Title2,
+                t2.UserIDs
+            from z_pmtext pm
+            join z_pmto2 t2
+                on pm.PM_ID = t2.PM_ID
+            group by pm.Title2, t2.UserIDs;
 
-         drop table if exists z_pmgroup;
+            create index z_idx_pmgroup on z_pmgroup (Title, UserIDs);
+            create index z_idx_pmgroup2 on z_pmgroup (Group_ID);
 
-         create table z_pmgroup (
-                 Group_ID int unsigned,
-                 Title varchar(250),
-                 UserIDs varchar(250)
-               );
-
-         insert z_pmgroup (
-                 Group_ID,
-                 Title,
-                 UserIDs
-               )
-               select
-                 min(pm.PM_ID),
-                 pm.Title2,
-                 t2.UserIDs
-               from z_pmtext pm
-               join z_pmto2 t2
-                 on pm.PM_ID = t2.PM_ID
-               group by pm.Title2, t2.UserIDs;
-
-         create index z_idx_pmgroup on z_pmgroup (Title, UserIDs);
-         create index z_idx_pmgroup2 on z_pmgroup (Group_ID);
-
-         update z_pmtext pm
-               join z_pmgroup g
-                 on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
-               set pm.Group_ID = g.Group_ID;";
+            update z_pmtext pm
+            join z_pmgroup g
+                on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
+            set pm.Group_ID = g.Group_ID;";
 
         $ex->queryN($sql);
     }
@@ -255,17 +241,19 @@ class WebWiz extends Package
             }
         }
 
-        $ex->ExportTable('Permission', "
-                 select
+        $ex->ExportTable(
+            'Permission',
+            "select
                     g.can_view_profiles as can_view_profiles2,
                     g.can_view_profiles as can_view_profiles3,
                     g.can_post_comments as can_post_comments2,
                     g.can_post_comments as can_sign_in,
                     case when can_access_admin = 'y' then 'all'
-                      when can_view_online_system = 'y' then 'view' end as _Permissions,
+                        when can_view_online_system = 'y' then 'view' end as _Permissions,
                     g.*
-                 from forum_member_groups g
-              ", $Permission_Map);
+                from forum_member_groups g",
+            $Permission_Map
+        );
         return $Info;
     }
 
@@ -292,16 +280,14 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select
-            concat(Salt, '$', Password) as Password2,
-            case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
-         case when Avatar like 'http%' then Avatar when Avatar > ''
-            then concat('webwiz/', Avatar) else null end as Photo2,
-            'webwiz' as HashMethod,
-            u.*
-         from :_Author u
-         ",
+            "select
+                    concat(Salt, '$', Password) as Password2,
+                    case u.Gender when 'Male' then 'm' when 'Female' then 'f' else 'u' end as Gender2,
+                case when Avatar like 'http%' then Avatar when Avatar > ''
+                    then concat('webwiz/', Avatar) else null end as Photo2,
+                    'webwiz' as HashMethod,
+                    u.*
+                from :_Author u",
             $user_Map
         );
     }
@@ -317,9 +303,7 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select *
-         from :_Group",
+            "select * from :_Group",
             $role_Map
         );
 
@@ -330,9 +314,7 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         select u.*
-         from :_Author u",
+            "select u.* from :_Author u",
             $userRole_Map
         );
     }
@@ -344,13 +326,12 @@ class WebWiz extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-         select
-            Author_ID as UserID,
-            'Plugin.Signatures.Sig' as `Name`,
-            Signature as `Value`
-         from :_Author
-         where Signature <> ''"
+            "select
+                Author_ID as UserID,
+                'Plugin.Signatures.Sig' as `Name`,
+                Signature as `Value`
+            from :_Author
+            where Signature <> ''"
         );
     }
 
@@ -368,25 +349,21 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select
-            f.Forum_ID,
-            f.Cat_ID * 1000 as Parent_ID,
-            f.Forum_order,
-            f.Forum_name,
-            f.Forum_description
-         from :_Forum f
-
-         union all
-
-         select
-            c.Cat_ID * 1000,
-            null,
-            c.Cat_order,
-            c.Cat_name,
-            null
-         from :_Category c
-         ",
+            "select
+                    f.Forum_ID,
+                    f.Cat_ID * 1000 as Parent_ID,
+                    f.Forum_order,
+                    f.Forum_name,
+                    f.Forum_description
+                from :_Forum f
+                union all
+                select
+                    c.Cat_ID * 1000,
+                    null,
+                    c.Cat_order,
+                    c.Cat_name,
+                    null
+                from :_Category c",
             $category_Map
         );
     }
@@ -411,17 +388,16 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select
-            th.Author_ID,
-            th.Message,
-            th.Message_date,
-            th.IP_addr,
-            'Html' as Format,
-            t.*
-         from :_Topic t
-         join :_Thread th
-            on t.Start_Thread_ID = th.Thread_ID",
+            "select
+                    th.Author_ID,
+                    th.Message,
+                    th.Message_date,
+                    th.IP_addr,
+                    'Html' as Format,
+                    t.*
+                from :_Topic t
+                join :_Thread th
+                    on t.Start_Thread_ID = th.Thread_ID",
             $discussion_Map
         );
     }
@@ -442,14 +418,11 @@ class WebWiz extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-      select
-         th.*,
-         'Html' as Format
-      from :_Thread th
-      join :_Topic t
-         on t.Topic_ID = th.Topic_ID
-      where th.Thread_ID <> t.Start_Thread_ID",
+            "select th.*, 'Html' as Format
+                from :_Thread th
+                join :_Topic t
+                    on t.Topic_ID = th.Topic_ID
+                where th.Thread_ID <> t.Start_Thread_ID",
             $comment_Map
         );
     }

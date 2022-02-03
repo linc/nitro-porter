@@ -32,14 +32,6 @@ class Kunena extends Package
             'Signatures' => 0,
             'Attachments' => 1,
             'Bookmarks' => 1,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -50,16 +42,6 @@ class Kunena extends Package
     {
         $this->users($ex);
         $this->roles($ex);
-
-        // Permission.
-        //      $ex->ExportTable('Permission',
-        //      "select 2 as RoleID, 'View' as _Permissions
-        //      union
-        //      select 3 as RoleID, 'View' as _Permissions
-        //      union
-        //      select 16 as RoleID, 'All' as _Permissions",
-        //          array('_Permissions' => array('Column' => '_Permissions', 'Type' => 'varchar(20)')));
-
         $this->categories($ex);
         $this->discussions($ex);
         $this->comments($ex);
@@ -82,9 +64,8 @@ class Kunena extends Package
     {
         if (strpos(strtolower($row['filetype']), 'image/') === 0) {
             return $value;
-        } else {
-            return null;
         }
+        return null;
     }
 
     /**
@@ -108,17 +89,16 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         SELECT
-            u.*,
-            case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
-            case u.usertype when 'superadministrator' then 1 else 0 end as admin,
-            coalesce(ku.banned, 0) as banned,
-            ku.birthdate,
-            !ku.hideemail as showemail
-         FROM :_users u
-         left join :_kunena_users ku
-            on ku.userid = u.id",
+            "SELECT
+                    u.*,
+                    case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
+                    case u.usertype when 'superadministrator' then 1 else 0 end as admin,
+                    coalesce(ku.banned, 0) as banned,
+                    ku.birthdate,
+                    !ku.hideemail as showemail
+                FROM :_users u
+                left join :_kunena_users ku
+                    on ku.userid = u.id",
             $user_Map
         );
     }
@@ -141,9 +121,7 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         select *
-         from :_users u",
+            "select * from :_users u",
             $userRole_Map
         );
     }
@@ -163,8 +141,7 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select * from :_kunena_categories",
+            "select * from :_kunena_categories",
             $category_Map
         );
     }
@@ -190,15 +167,13 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select
-            t.*,
-            txt.message,
-            'BBCode' as Format
-         from :_kunena_messages t
-         left join :_kunena_messages_text txt
-            on t.id = txt.mesid
-         where t.thread = t.id",
+            "select t.*,
+                    txt.message,
+                    'BBCode' as Format
+                 from :_kunena_messages t
+                 left join :_kunena_messages_text txt
+                    on t.id = txt.mesid
+                 where t.thread = t.id",
             $discussion_Map
         );
     }
@@ -221,15 +196,13 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select
-            t.*,
-            txt.message,
-            'BBCode' as Format
-         from :_kunena_messages t
-         left join :_kunena_messages_text txt
-            on t.id = txt.mesid
-         where t.thread <> t.id",
+            "select t.*,
+                    txt.message,
+                    'BBCode' as Format
+                 from :_kunena_messages t
+                 left join :_kunena_messages_text txt
+                    on t.id = txt.mesid
+                 where t.thread <> t.id",
             $comment_Map
         );
     }
@@ -245,9 +218,7 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'UserDiscussion',
-            "
-         select t.*, 1 as Bookmarked
-         from :_kunena_subscriptions t",
+            "select t.*, 1 as Bookmarked from :_kunena_subscriptions t",
             $userDiscussion_Map
         );
     }
@@ -271,17 +242,15 @@ class Kunena extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-         select
-            a.*,
-            concat(a.folder, '/', a.filename) as path2,
-            case when m.id = m.thread then 'discussion' else 'comment' end as ForeignTable,
-            m.time,
-            concat(a.folder, '/', a.filename) as thumb_path,
-            128 as thumb_width
-         from :_kunena_attachments a
-         join :_kunena_messages m
-            on m.id = a.mesid",
+            "select a.*,
+                    concat(a.folder, '/', a.filename) as path2,
+                    case when m.id = m.thread then 'discussion' else 'comment' end as ForeignTable,
+                    m.time,
+                    concat(a.folder, '/', a.filename) as thumb_path,
+                    128 as thumb_width
+                 from :_kunena_attachments a
+                 join :_kunena_messages m
+                    on m.id = a.mesid",
             $media_Map
         );
     }

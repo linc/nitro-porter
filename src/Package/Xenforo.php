@@ -49,13 +49,6 @@ class Xenforo extends Package
             'Attachments' => 1,
             'Bookmarks' => 0,
             'Permissions' => 1,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -86,8 +79,7 @@ class Xenforo extends Package
         }
 
         $r = $ex->query(
-            "
-            select
+            "select
                 ad.data_id,
                 ad.filename,
                 ad.file_hash
@@ -96,8 +88,7 @@ class Xenforo extends Package
             join
                 :_attachment_data ad on a.data_id = ad.data_id
             where
-                a.content_type = 'post'
-        "
+                a.content_type = 'post'"
         );
 
         $found = 0;
@@ -123,7 +114,6 @@ class Xenforo extends Package
      */
     public function avatars()
     {
-
         // Check source folder
         $this->sourceFolder = $this->param('avatars-source');
         if (!is_dir($this->sourceFolder)) {
@@ -168,6 +158,12 @@ class Xenforo extends Package
         }
     }
 
+    /**
+     * @param $folder
+     * @param $type
+     * @param $errors
+     * @return void
+     */
     protected function avatarFolder($folder, $type, &$errors)
     {
         if (!is_dir($folder)) {
@@ -226,7 +222,7 @@ class Xenforo extends Package
      *
      * @param ExportModel $ex
      */
-    public function run($ex)
+    public function run(ExportModel $ex)
     {
         // Export avatars
         if ($this->param('avatars')) {
@@ -249,33 +245,29 @@ class Xenforo extends Package
         $this->conversations($ex);
     }
 
-    public function permissions($ex)
+    /**
+     * @param ExportModel $ex
+     */
+    public function permissions(ExportModel $ex)
     {
         $permissions = array();
 
         // Export the global permissions.
         $r = $ex->query(
-            "
-         select
-            pe.*,
-            g.title
-         from :_permission_entry pe
-         join :_user_group g
-            on pe.user_group_id = g.user_group_id"
+            "select pe.*, g.title
+            from :_permission_entry pe
+            join :_user_group g
+                on pe.user_group_id = g.user_group_id"
         );
         $this->exportPermissionsMap($r, $permissions);
 
         $r = $ex->query(
-            "
-          select
-            pe.*,
-            g.title
-         from :_permission_entry_content pe
-         join :_user_group g
-            on pe.user_group_id = g.user_group_id"
+            "select pe.*, g.title
+            from :_permission_entry_content pe
+            join :_user_group g
+                on pe.user_group_id = g.user_group_id"
         );
         $this->exportPermissionsMap($r, $permissions);
-
 
         if (count($permissions) == 0) {
             return;
@@ -302,30 +294,34 @@ class Xenforo extends Package
         }
         $ex->writeEndTable($ex->file);
         $ex->comment("Exported Table: Permission ($count rows)");
-
-        //       var_export($permissions);
     }
 
-    public function userMeta($ex)
+    /**
+     * @param ExportModel $ex
+     */
+    public function userMeta(ExportModel $ex)
     {
-        $sql = "
-         select
-           user_id as UserID,
-           'Plugin.Signatures.Sig' as Name,
-           signature as Value
-         from :_user_profile
-         where nullif(signature, '') is not null
-         union
-         select
-           user_id,
-           'Plugin.Signatures.Format',
-           'BBCode'
-         from :_user_profile
-         where nullif(signature, '') is not null";
-
+        $sql = "select
+                user_id as UserID,
+                'Plugin.Signatures.Sig' as Name,
+                signature as Value
+            from :_user_profile
+            where nullif(signature, '') is not null
+            union
+            select
+                user_id,
+                'Plugin.Signatures.Format',
+                'BBCode'
+            from :_user_profile
+            where nullif(signature, '') is not null";
         $ex->exportTable('UserMeta', $sql);
     }
 
+    /**
+     * @param $r
+     * @param $perms
+     * @return string[]|void
+     */
     protected function exportPermissionsMap($r, &$perms = null)
     {
         $map = array(
@@ -466,16 +462,14 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select
-            u.*,
-            ua.data as password,
-            'xenforo' as hash_method,
-            case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
-                else null end as avatar
-         from :_user u
-         left join :_user_authenticate ua
-            on u.user_id = ua.user_id",
+            "select u.*,
+                    ua.data as password,
+                    'xenforo' as hash_method,
+                    case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
+                        else null end as avatar
+                from :_user u
+                left join :_user_authenticate ua
+                    on u.user_id = ua.user_id",
             $user_Map
         );
     }
@@ -491,9 +485,7 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select *
-         from :_user_group",
+            "select * from :_user_group",
             $role_Map
         );
 
@@ -505,14 +497,13 @@ class Xenforo extends Package
 
         $ex->exportTable(
             'UserRole',
-            "
-         select user_id, user_group_id
-         from :_user
-         union all
-         select u.user_id, ua.user_group_id
-         from :_user u
-         join :_user_group ua
-            on find_in_set(ua.user_group_id, u.secondary_group_ids)",
+            "select user_id, user_group_id
+                from :_user
+                union all
+                select u.user_id, ua.user_group_id
+                from :_user u
+                join :_user_group ua
+                    on find_in_set(ua.user_group_id, u.secondary_group_ids)",
             $userRole_Map
         );
     }
@@ -537,10 +528,7 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select n.*
-         from :_node n
-         ",
+            "select n.* from :_node n",
             $category_Map
         );
     }
@@ -566,17 +554,15 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select
-            t.*,
-            p.message,
-            'BBCode' as format,
-            ip.ip
-         from :_thread t
-         join :_post p
-            on t.first_post_id = p.post_id
-         left join :_ip ip
-            on p.ip_id = ip.ip_id",
+            "select t.*,
+                p.message,
+                'BBCode' as format,
+                ip.ip
+            from :_thread t
+            join :_post p
+                on t.first_post_id = p.post_id
+            left join :_ip ip
+                on p.ip_id = ip.ip_id",
             $discussion_Map
         );
     }
@@ -597,65 +583,57 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select
-            p.*,
-            'BBCode' as format,
-            ip.ip
-         from :_post p
-         join :_thread t
-            on p.thread_id = t.thread_id
-         left join :_ip ip
-            on p.ip_id = ip.ip_id
-         where p.post_id <> t.first_post_id
-            and message_state = 'visible'",
+            "select p.*,
+                'BBCode' as format,
+                ip.ip
+            from :_post p
+            join :_thread t
+                on p.thread_id = t.thread_id
+            left join :_ip ip
+                on p.ip_id = ip.ip_id
+            where p.post_id <> t.first_post_id
+                and message_state = 'visible'",
             $comment_Map
         );
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
-    protected function attachments($ex): void
+    protected function attachments(ExportModel $ex): void
     {
         $ex->exportTable(
             'Media',
-            "
-            select
-                a.attachment_id as MediaID,
-                ad.filename as Name,
-                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as Path,
-                ad.file_size as Size,
-                ad.user_id as InsertUserID,
-                from_unixtime(ad.upload_date) as DateInserted,
-                p.ForeignID,
-                p.ForeignTable,
-                ad.width as ImageWidth,
-                ad.height as ImageHeight,
-                concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
-            from
-                xf_attachment a
-            join
-                (select
-                    p.post_id,
-                    if(p.post_id = t.first_post_id,t.thread_id, p.post_id)  as ForeignID,
-                    if(p.post_id = t.first_post_id, 'discussion', 'comment') as ForeignTable
-                from xf_post p
-                join xf_thread t on t.thread_id = p.thread_id
-                where p.message_state <> 'deleted'
-                ) p on p.post_id = a.content_id
-            join
-                xf_attachment_data ad on ad.data_id = a.data_id
-            where
-                a.content_type = 'post'
-        "
+            "select
+                    a.attachment_id as MediaID,
+                    ad.filename as Name,
+                    concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as Path,
+                    ad.file_size as Size,
+                    ad.user_id as InsertUserID,
+                    from_unixtime(ad.upload_date) as DateInserted,
+                    p.ForeignID,
+                    p.ForeignTable,
+                    ad.width as ImageWidth,
+                    ad.height as ImageHeight,
+                    concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
+                from xf_attachment a
+                join (select
+                        p.post_id,
+                        if(p.post_id = t.first_post_id,t.thread_id, p.post_id)  as ForeignID,
+                        if(p.post_id = t.first_post_id, 'discussion', 'comment') as ForeignTable
+                    from xf_post p
+                    join xf_thread t on t.thread_id = p.thread_id
+                    where p.message_state <> 'deleted'
+                    ) p on p.post_id = a.content_id
+                join xf_attachment_data ad on ad.data_id = a.data_id
+                where a.content_type = 'post'"
         );
     }
 
     /**
      * @param $ex
      */
-    protected function conversations($ex): void
+    protected function conversations(ExportModel $ex): void
     {
         $conversation_Map = array(
             'conversation_id' => 'ConversationID',
@@ -665,9 +643,7 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'Conversation',
-            "
-         select *
-         from :_conversation_master",
+            "select * from :_conversation_master",
             $conversation_Map
         );
 
@@ -682,14 +658,12 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-         select
-            m.*,
-            'BBCode' as format,
-            ip.ip
-         from :_conversation_message m
-         left join :_ip ip
-            on m.ip_id = ip.ip_id",
+            "select m.*,
+                    'BBCode' as format,
+                    ip.ip
+                from :_conversation_message m
+                left join :_ip ip
+                    on m.ip_id = ip.ip_id",
             $conversationMessage_Map
         );
 
@@ -700,19 +674,17 @@ class Xenforo extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-         select
-            r.conversation_id,
-            user_id,
-            case when r.recipient_state = 'deleted' then 1 else 0 end as Deleted
-         from :_conversation_recipient r
-         union all
-         select
-            cu.conversation_id,
-            cu.owner_user_id,
-            0
-         from :_conversation_user cu
-         ",
+            "select
+                    r.conversation_id,
+                    user_id,
+                    case when r.recipient_state = 'deleted' then 1 else 0 end as Deleted
+                from :_conversation_recipient r
+                union all
+                select
+                    cu.conversation_id,
+                    cu.owner_user_id,
+                    0
+                from :_conversation_user cu",
             $userConversation_Map
         );
     }

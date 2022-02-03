@@ -35,10 +35,6 @@ class Yaf extends Package
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 1,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -49,7 +45,7 @@ class Yaf extends Package
      *
      * @param ExportModel $ex
      */
-    public function run($ex)
+    public function run(ExportModel $ex)
     {
         $this->users($ex);
         $this->roles($ex);
@@ -89,18 +85,19 @@ class Yaf extends Package
         return $result;
     }
 
-    protected function exportConversationTemps($ex)
+    /**
+     * @param ExportModel $ex
+     */
+    protected function exportConversationTemps(ExportModel $ex)
     {
         $sql = "
          drop table if exists z_pmto;
-
          create table z_pmto (
             PM_ID int unsigned,
             User_ID int,
             Deleted tinyint,
             primary key(PM_ID, User_ID)
             );
-
          insert ignore z_pmto (
             PM_ID,
             User_ID,
@@ -221,17 +218,15 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select
-            u.*,
-            m.Password as Password2,
-            m.PasswordSalt,
-            m.PasswordFormat,
-            m.LastActivity,
-            'yaf' as HashMethod
-         from :_User u
-         left join :_prov_Membership m
-            on u.ProviderUserKey = m.UserID;",
+            "select u.*,
+                    m.Password as Password2,
+                    m.PasswordSalt,
+                    m.PasswordFormat,
+                    m.LastActivity,
+                    'yaf' as HashMethod
+                from :_User u
+                left join :_prov_Membership m
+                    on u.ProviderUserKey = m.UserID;",
             $user_Map
         );
     }
@@ -247,9 +242,7 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select *
-         from :_Group;",
+            "select * from :_Group;",
             $role_Map
         );
 
@@ -274,12 +267,10 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'Rank',
-            "
-         select
-            r.*,
-            RankID as Level,
-            Name as Label
-         from :_Rank r;",
+            "select r.*,
+                    RankID as Level,
+                    Name as Label
+                from :_Rank r;",
             $rank_Map
         );
     }
@@ -291,22 +282,19 @@ class Yaf extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-         select
-            UserID,
-            'Plugin.Signatures.Sig' as `Name`,
-            Signature as `Value`
-         from :_User
-         where Signature <> ''
-
-         union all
-
-         select
-            UserID,
-            'Plugin.Signatures.Format' as `Name`,
-            'BBCode' as `Value`
-         from :_User
-         where Signature <> '';"
+            "select
+                    UserID,
+                    'Plugin.Signatures.Sig' as `Name`,
+                    Signature as `Value`
+                from :_User
+                where Signature <> ''
+                union all
+                select
+                    UserID,
+                    'Plugin.Signatures.Format' as `Name`,
+                    'BBCode' as `Value`
+                from :_User
+                where Signature <> '';"
         );
     }
 
@@ -325,24 +313,21 @@ class Yaf extends Package
 
         $ex->exportTable(
             'Category',
-            "
-         select
-            f.ForumID,
-            case when f.ParentID = 0 then f.CategoryID * 1000 else f.ParentID end as ParentID,
-            f.Name,
-            f.Description,
-            f.SortOrder
-         from :_Forum f
-
-         union all
-
-         select
-            c.CategoryID * 1000,
-            null,
-            c.Name,
-            null,
-            c.SortOrder
-         from :_Category c;",
+            "select
+                    f.ForumID,
+                    case when f.ParentID = 0 then f.CategoryID * 1000 else f.ParentID end as ParentID,
+                    f.Name,
+                    f.Description,
+                    f.SortOrder
+                from :_Forum f
+                union all
+                select
+                    c.CategoryID * 1000,
+                    null,
+                    c.Name,
+                    null,
+                    c.SortOrder
+                from :_Category c;",
             $category_Map
         );
     }
@@ -363,13 +348,12 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select
-            case when t.Priority > 0 then 1 else 0 end as Announce,
-            t.Flags & 1 as Closed,
-            t.*
-         from :_Topic t
-         where t.IsDeleted = 0;",
+            "select
+                    case when t.Priority > 0 then 1 else 0 end as Announce,
+                    t.Flags & 1 as Closed,
+                    t.*
+                from :_Topic t
+                where t.IsDeleted = 0;",
             $discussion_Map
         );
     }
@@ -393,12 +377,10 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select
-            case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
-            m.*
-         from :_Message m
-         where IsDeleted = 0;",
+            "select m.*,
+                    case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format
+                from :_Message m
+                where IsDeleted = 0;",
             $comment_Map
         );
     }
@@ -418,13 +400,10 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'Conversation',
-            "
-         select
-            pm.*,
-            g.Title
-         from z_pmgroup g
-         join :_PMessage pm
-            on g.Group_ID = pm.PMessageID;",
+            "select pm.*, g.Title
+                from z_pmgroup g
+                join :_PMessage pm
+                    on g.Group_ID = pm.PMessageID;",
             $conversation_Map
         );
 
@@ -436,11 +415,10 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-         select pto.*
-         from z_pmto pto
-         join z_pmgroup g
-            on pto.PM_ID = g.Group_ID;",
+            "select pto.*
+                from z_pmto pto
+                join z_pmgroup g
+                on pto.PM_ID = g.Group_ID;",
             $userConversation_Map
         );
 
@@ -455,14 +433,12 @@ class Yaf extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-         select
-            pm.*,
-            case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
-            t.Group_ID
-         from :_PMessage pm
-         join z_pmtext t
-            on t.PM_ID = pm.PMessageID;",
+            "select pm.*,
+                    case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,
+                    t.Group_ID
+            from :_PMessage pm
+            join z_pmtext t
+                on t.PM_ID = pm.PMessageID;",
             $conversationMessage_Map
         );
     }

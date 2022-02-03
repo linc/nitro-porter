@@ -26,21 +26,6 @@ class AspPlayground extends Package
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 0,
-            'Roles' => 0,
-            'Avatars' => 0,
-            'PrivateMessages' => 0,
-            'Signatures' => 0,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -88,7 +73,7 @@ class AspPlayground extends Package
      */
     protected function roles(ExportModel $ex): void
     {
-// Make everyone a member since there's no used roles.
+        // Make everyone a member since there's no used roles.
         $userRole_Map = array(
             'Mem' => 'UserID'
         );
@@ -133,12 +118,10 @@ class AspPlayground extends Package
             'Sort' => 'Sort',
             'lastModTime' => 'DateUpdated'
         );
-
         $ex->exportTable(
             'Category',
-            "
-         select f.*
-         from :_Forums f;",
+            "select f.*
+                from :_Forums f;",
             $category_Map
         );
     }
@@ -159,13 +142,9 @@ class AspPlayground extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select
-            t.*,
-            m.Body
-         from :_Threads t
-         left join :_Messages m on m.messageID = t.messageID
-         ;",
+            "select t.*, m.Body
+                from :_Threads t
+                left join :_Messages m on m.messageID = t.messageID;",
             $discussion_Map
         );
     }
@@ -186,10 +165,8 @@ class AspPlayground extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select m.*,
-            'BBCode' as Format
-         from :_Messages m;",
+            "select m.*, 'BBCode' as Format
+                from :_Messages m;",
             $comment_Map
         );
     }

@@ -50,8 +50,6 @@ class IpBoard3 extends Package
             'Ranks' => 0,
             'Groups' => 0,
             'Tags' => 1,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -82,29 +80,27 @@ class IpBoard3 extends Package
             case 'profile_portal':
                 $userList = $ex->query(
                     "select
-                  pp_member_id as member_id,
-                  pp_main_photo as main_photo,
-                  pp_thumb_photo as thumb_photo,
-                  coalesce(pp_main_photo,pp_thumb_photo,0) as photo
-               from :_profile_portal
-               where length(coalesce(pp_main_photo,pp_thumb_photo,0)) > 3
-               order by pp_member_id asc"
+                        pp_member_id as member_id,
+                        pp_main_photo as main_photo,
+                        pp_thumb_photo as thumb_photo,
+                        coalesce(pp_main_photo,pp_thumb_photo,0) as photo
+                    from :_profile_portal
+                    where length(coalesce(pp_main_photo,pp_thumb_photo,0)) > 3
+                    order by pp_member_id asc"
                 );
-
                 break;
 
             case 'member_extra':
                 $userList = $ex->query(
                     "select
-                  id as member_id,
-                  avatar_location as photo
-               from :_member_extra
-               where
-                  length(avatar_location) > 3 and
-                  avatar_location <> 'noavatar'
-               order by id asc"
+                        id as member_id,
+                        avatar_location as photo
+                    from :_member_extra
+                    where
+                        length(avatar_location) > 3 and
+                        avatar_location <> 'noavatar'
+                    order by id asc"
                 );
-
                 break;
         }
 
@@ -115,7 +111,6 @@ class IpBoard3 extends Package
         while ($row = $userList->nextResultRow()) {
             $processed++;
             $error = false;
-
             $userID = $row['member_id'];
 
             // Determine target paths and name
@@ -184,7 +179,7 @@ class IpBoard3 extends Package
     /**
      * @param ExportModel $ex
      */
-    public function run($ex)
+    public function run(ExportModel $ex)
     {
         // Export avatars
         if ($this->param('avatars')) {
@@ -215,7 +210,10 @@ class IpBoard3 extends Package
         }
     }
 
-    protected function conversationsV2($ex)
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversationsV2(ExportModel $ex)
     {
         $sql = <<<EOT
             create table tmp_to (
@@ -223,9 +221,7 @@ class IpBoard3 extends Package
                userid int,
                primary key (id, userid)
             );
-
             truncate table tmp_to;
-
             insert ignore tmp_to (
                id,
                userid
@@ -249,7 +245,6 @@ class IpBoard3 extends Package
                userids varchar(255)
             );
             truncate table tmp_to2;
-
             insert tmp_to2 (
                id,
                userids
@@ -267,7 +262,6 @@ class IpBoard3 extends Package
                userids varchar(255),
                groupid int
             );
-
             replace tmp_conversation (
                id,
                title,
@@ -329,7 +323,6 @@ class IpBoard3 extends Package
                groupid int,
                primary key (title2, userids)
             );
-
             replace tmp_group (
                title2,
                userids,
@@ -360,13 +353,12 @@ EOT;
             'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'mt_from_id' => 'InsertUserID'
         );
-        $sql = "select
-               mt.*,
-               tc.title2,
-               tc.groupid
+        $sql = "select mt.*,
+                tc.title2,
+                tc.groupid
             from :_message_topics mt
             join tmp_conversation tc
-               on mt.mt_id = tc.id";
+                on mt.mt_id = tc.id";
         $this->clearFilters('Conversation', $conversation_Map, $sql);
         $ex->exportTable('Conversation', $sql, $conversation_Map);
 
@@ -380,16 +372,15 @@ EOT;
             'msg_author_id' => 'InsertUserID',
             'msg_ip_address' => 'InsertIPAddress'
         );
-        $sql = "select
-               tx.*,
-               tc.title2,
-               tc.groupid,
-               'IPB' as Format
+        $sql = "select tx.*,
+                tc.title2,
+                tc.groupid,
+                'IPB' as Format
             from :_message_text tx
             join :_message_topics mt
-               on mt.mt_msg_id = tx.msg_id
+                on mt.mt_msg_id = tx.msg_id
             join tmp_conversation tc
-               on mt.mt_id = tc.id";
+                on mt.mt_id = tc.id";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
         $ex->exportTable('ConversationMessage', $sql, $conversationMessage_Map);
 
@@ -399,24 +390,25 @@ EOT;
             'groupid' => 'ConversationID'
         );
         $sql = "select distinct
-               g.groupid,
-               t.userid
+                g.groupid,
+                t.userid
             from tmp_to t
             join tmp_group g
-               on g.groupid = t.id";
+                on g.groupid = t.id";
         $ex->exportTable('UserConversation', $sql, $userConversation_Map);
 
         $ex->queryN(
-            "
-            drop table tmp_conversation;
+            "drop table tmp_conversation;
             drop table tmp_to;
             drop table tmp_to2;
             drop table tmp_group;"
         );
     }
 
-
-    protected function conversations($ex)
+    /**
+     * @param ExportModel $ex
+     */
+    protected function conversations(ExportModel $ex)
     {
         // Conversations.
         $conversation_Map = array(
@@ -439,10 +431,7 @@ EOT;
             'msg_author_id' => 'InsertUserID',
             'msg_ip_address' => 'InsertIPAddress'
         );
-        $sql = "select
-            m.*,
-            'IPB' as Format
-         from :_message_posts m";
+        $sql = "select m.*, 'IPB' as Format from :_message_posts m";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
         $ex->exportTable('ConversationMessage', $sql, $conversationMessage_Map);
 
@@ -452,13 +441,17 @@ EOT;
             'map_topic_id' => 'ConversationID',
             'Deleted' => 'Deleted'
         );
-        $sql = "select
-             t.*,
-             !map_user_active as Deleted
-          from :_message_topic_user_map t";
+        $sql = "select t.*,
+            !map_user_active as Deleted
+            from :_message_topic_user_map t";
         $ex->exportTable('UserConversation', $sql, $userConversation_Map);
     }
 
+    /**
+     * @param $table
+     * @param $map
+     * @param $sql
+     */
     public function clearFilters($table, &$map, &$sql)
     {
         $PK = false;
@@ -506,7 +499,6 @@ EOT;
     /**
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
-     * @access public
      * @see    ExportModel::exportTableWrite
      *
      * @param  string $ralue Current value
@@ -566,40 +558,38 @@ EOT;
         $cdn = $this->cdnPrefix();
 
         if ($ex->exists('member_extra') === true) {
-            $sql = "select
-                  m.*,
-                  m.joined as firstvisit,
-                  'ipb' as HashMethod,
-                  $showEmail as ShowEmail,
-                  case when x.avatar_location in ('noavatar', '') then null
-                     when x.avatar_location like 'upload:%'
+            $sql = "select m.*,
+                m.joined as firstvisit,
+                'ipb' as HashMethod,
+                 $showEmail as ShowEmail,
+                case when x.avatar_location in ('noavatar', '') then null
+                    when x.avatar_location like 'upload:%'
                         then concat('{$cdn}ipb/', right(x.avatar_location, length(x.avatar_location) - 7))
-                     when x.avatar_type = 'upload' then concat('{$cdn}ipb/', x.avatar_location)
-                     when x.avatar_type = 'url' then x.avatar_location
-                     when x.avatar_type = 'local' then concat('{$cdn}style_avatars/', x.avatar_location)
-                     else null
-                  end as Photo,
-                  x.location
-                  $select
-                 from :_members m
-                 left join :_member_extra x
-                  on m.$memberID = x.id
-                 $from";
+                    when x.avatar_type = 'upload' then concat('{$cdn}ipb/', x.avatar_location)
+                    when x.avatar_type = 'url' then x.avatar_location
+                    when x.avatar_type = 'local' then concat('{$cdn}style_avatars/', x.avatar_location)
+                    else null
+                end as Photo,
+                x.location
+                $select
+            from :_members m
+            left join :_member_extra x
+                on m.$memberID = x.id
+                $from";
         } else {
-            $sql = "select
-                  m.*,
-                  joined as firstvisit,
-                  'ipb' as HashMethod,
-                  $showEmail as ShowEmail,
-                  case when length(p.pp_main_photo) <= 3 or p.pp_main_photo is null then null
-                     when p.pp_main_photo like '%//%' then p.pp_main_photo
-                     else concat('{$cdn}ipb/', p.pp_main_photo)
-                  end as Photo
-                 $select
-                 from :_members m
-                 left join :_profile_portal p
+            $sql = "select m.*,
+                joined as firstvisit,
+                'ipb' as HashMethod,
+                 $showEmail as ShowEmail,
+                case when length(p.pp_main_photo) <= 3 or p.pp_main_photo is null then null
+                    when p.pp_main_photo like '%//%' then p.pp_main_photo
+                    else concat('{$cdn}ipb/', p.pp_main_photo)
+                end as Photo
+                $select
+                from :_members m
+                left join :_profile_portal p
                     on m.$memberID = p.pp_member_id
-                 $from";
+                $from";
         }
         $this->clearFilters('members', $user_Map, $sql, 'm');
         $ex->exportTable('User', $sql, $user_Map);
@@ -628,12 +618,11 @@ EOT;
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
         $ex->exportTable(
             'Permission',
-            "
-         select r.*,
-            r.g_view_board as g_view_board2,
-            r.g_view_board as g_view_board3,
-            r.g_view_board as g_view_board4
-         from :_groups r",
+            "select r.*,
+                    r.g_view_board as g_view_board2,
+                    r.g_view_board as g_view_board3,
+                    r.g_view_board as g_view_board4
+                from :_groups r",
             $permission_Map
         );
     }
@@ -670,7 +659,6 @@ EOT;
         if ($ex->exists('members', 'mgroup_others')) {
             $sql .= "
             union all
-
             select m.$memberID, g.g_id
             from :_members m
             join :_groups g
@@ -700,9 +688,7 @@ EOT;
             signature as Value
          from :_profile_portal
          where length(signature) > 1
-
          union all
-
          select
             pp_member_id as UserID,
             'Plugin.Signatures.Format' as Name,
@@ -718,9 +704,7 @@ EOT;
             signature as Value
          from :_member_extra
          where length(signature) > 1
-
          union all
-
          select
             id as UserID,
             'Plugin.Signatures.Format' as Name,
@@ -762,11 +746,11 @@ EOT;
         if ($hasTopicDescription || $ex->exists('posts', array('description')) === true) {
             $description = ($hasTopicDescription) ? 't.description' : 'p.description';
             $descriptionSQL = "case
-            when $description <> '' and p.post is not null
-                then concat('<div class=\"IPBDescription\">', $description, '</div>', p.post)
-            when $description <> '' then $description
-            else p.post
-         end";
+                when $description <> '' and p.post is not null
+                    then concat('<div class=\"IPBDescription\">', $description, '</div>', p.post)
+                when $description <> '' then $description
+                else p.post
+            end";
         }
         $discussion_Map = array(
             'tid' => 'DiscussionID',
@@ -784,18 +768,16 @@ EOT;
             'post' => 'Body',
             'closed' => 'Closed'
         );
-        $sql = "
-      select
-         t.*,
-         $descriptionSQL as post,
-         case when t.state = 'closed' then 1 else 0 end as closed,
-         'BBCode' as Format,
-         p.ip_address,
-         p.edit_time
-      from :_topics t
-      left join :_posts p
-         on t.topic_firstpost = p.pid
-      where t.tid between {from} and {to}";
+        $sql = "select t.*,
+            $descriptionSQL as post,
+            case when t.state = 'closed' then 1 else 0 end as closed,
+            'BBCode' as Format,
+            p.ip_address,
+            p.edit_time
+        from :_topics t
+        left join :_posts p
+            on t.topic_firstpost = p.pid
+        where t.tid between {from} and {to}";
         $this->clearFilters('topics', $discussion_Map, $sql, 't');
         $ex->exportTable('Discussion', $sql, $discussion_Map);
     }
@@ -809,11 +791,11 @@ EOT;
         $ex->query("DROP TABLE IF EXISTS `z_tag` ");
         $ex->query(
             "CREATE TABLE `z_tag` (
-         `TagID` int(11) unsigned NOT NULL AUTO_INCREMENT,
-         `FullName` varchar(50) DEFAULT NULL,
-         PRIMARY KEY (`TagID`),
-         UNIQUE KEY `FullName` (`FullName`)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+                `TagID` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                `FullName` varchar(50) DEFAULT NULL,
+                PRIMARY KEY (`TagID`),
+                UNIQUE KEY `FullName` (`FullName`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
         );
         $ex->query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
 
@@ -821,16 +803,16 @@ EOT;
             'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
         $sql = "select TagID, '0' as CategoryID, tag_meta_id as DiscussionID, t.tag_added
-        from :_core_tags t
-        left join z_tag zt on t.tag_text = zt.FullName";
+            from :_core_tags t
+            left join z_tag zt
+                on t.tag_text = zt.FullName";
         $ex->exportTable('TagDiscussion', $sql, $tagDiscussion_Map);
 
         $tag_Map = array(
             'FullName' => 'FullName',
             'FullNameToName' => array('Column' => 'Name', 'Filter' => 'formatUrl')
         );
-        $sql = "select TagID, FullName, FullName as FullNameToName
-        from z_tag zt";
+        $sql = "select TagID, FullName, FullName as FullNameToName from z_tag zt";
         $ex->exportTable('Tag', $sql, $tag_Map);
         return $sql;
     }
@@ -849,15 +831,13 @@ EOT;
             'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
             'post' => 'Body'
         );
-        $sql = "
-      select
-         p.*,
-         'BBCode' as Format
-      from :_posts p
-      join :_topics t
-         on p.topic_id = t.tid
-      where p.pid between {from} and {to}
-         and p.pid <> t.topic_firstpost";
+        $sql = "select p.*,
+                'BBCode' as Format
+            from :_posts p
+            join :_topics t
+                on p.topic_id = t.tid
+            where p.pid between {from} and {to}
+                and p.pid <> t.topic_firstpost";
         $this->clearFilters('Comment', $comment_Map, $sql, 'p');
         $ex->exportTable('Comment', $sql, $comment_Map);
     }
@@ -882,8 +862,7 @@ EOT;
             'img_width' => 'ImageWidth',
             'img_height' => 'ImageHeight'
         );
-        $sql = "select
-               a.*,
+        $sql = "select a.*,
                concat('~cf/ipb/', a.attach_location) as attach_path,
                concat('~cf/ipb/', a.attach_location) as thumb_path,
                128 as thumb_width,

@@ -162,11 +162,11 @@ class Example extends Package
         $ex->exportTable(
             'UserMeta',
             "select
-                Author_ID as UserID,
-                'Plugin.Signatures.Sig' as `Name`,
-                Signature as `Value`
-             from :_tblAuthor
-             where Signature <> ''"
+                    Author_ID as UserID,
+                    'Plugin.Signatures.Sig' as `Name`,
+                    Signature as `Value`
+                from :_tblAuthor
+                where Signature <> ''"
         );
     }
 
@@ -206,8 +206,8 @@ class Example extends Package
         $ex->exportTable(
             'Discussion',
             "select *, FROM_UNIXTIME(Message_date) as Message_date
-                 from :_tblTopic t
-                 join :_tblThread th
+                from :_tblTopic t
+                join :_tblThread th
                     on t.Start_Thread_ID = th.Thread_ID",
             $discussion_Map
         );

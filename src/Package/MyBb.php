@@ -33,14 +33,6 @@ class MyBb extends Package
             'Signatures' => 0,
             'Attachments' => 1,
             'Bookmarks' => 1,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -88,15 +80,13 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select u.*,
-            FROM_UNIXTIME(regdate) as regdate2,
-            FROM_UNIXTIME(regdate) as regdate3,
-            FROM_UNIXTIME(lastactive) as DateLastActive,
-            concat(password, salt) as Password,
-            'mybb' as HashMethod
-         from :_users u
-         ",
+            "select u.*,
+                FROM_UNIXTIME(regdate) as regdate2,
+                FROM_UNIXTIME(regdate) as regdate3,
+                FROM_UNIXTIME(lastactive) as DateLastActive,
+                concat(password, salt) as Password,
+                'mybb' as HashMethod
+             from :_users u",
             $user_Map
         );
     }
@@ -113,9 +103,7 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select *
-         from :_usergroups",
+            "select * from :_usergroups",
             $role_Map
         );
 
@@ -126,9 +114,7 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         select u.uid, u.usergroup
-         from :_users u",
+            "select u.uid, u.usergroup from :_users u",
             $userRole_Map
         );
     }
@@ -147,10 +133,7 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select *
-         from :_forums f
-         ",
+            "select * from :_forums f",
             $category_Map
         );
     }
@@ -170,11 +153,10 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select *,
-            FROM_UNIXTIME(dateline) as DateInserted,
-            'BBCode' as Format
-         from :_threads t",
+            "select *,
+                    FROM_UNIXTIME(dateline) as DateInserted,
+                    'BBCode' as Format
+                from :_threads t",
             $discussion_Map
         );
     }
@@ -192,11 +174,10 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select p.*,
-            FROM_UNIXTIME(dateline) as DateInserted,
-            'BBCode' as Format
-         from :_posts p",
+            "select p.*,
+                    FROM_UNIXTIME(dateline) as DateInserted,
+                    'BBCode' as Format
+                from :_posts p",
             $comment_Map
         );
     }
@@ -219,15 +200,13 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-            select a.*,
-                600 as thumb_width,
-                concat('attachments/', a.thumbnail) as ThumbPath,
-                concat('attachments/', a.attachname) as Path,
-                'Comment' as ForeignTable
-            from :_attachments a
-            where a.pid > 0
-        ",
+            "select a.*,
+                    600 as thumb_width,
+                    concat('attachments/', a.thumbnail) as ThumbPath,
+                    concat('attachments/', a.attachname) as Path,
+                    'Comment' as ForeignTable
+                from :_attachments a
+                where a.pid > 0",
             $media_Map
         );
     }
@@ -243,10 +222,9 @@ class MyBb extends Package
         );
         $ex->exportTable(
             'UserDiscussion',
-            "
-         select *,
-            1 as Bookmarked
-         from :_threadsubscriptions t",
+            "select *,
+                    1 as Bookmarked
+                from :_threadsubscriptions t",
             $userDiscussion_Map
         );
     }

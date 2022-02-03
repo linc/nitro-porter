@@ -29,16 +29,6 @@ class Toast extends Package
             'Avatars' => 0,
             'PrivateMessages' => 0,
             'Signatures' => 1,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -71,11 +61,7 @@ class Toast extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select
-            *,
-            NOW() as DateInserted
-         from :_Member u",
+            "select *, NOW() as DateInserted from :_Member u",
             $user_Map
         );
     }
@@ -85,14 +71,13 @@ class Toast extends Package
      */
     protected function roles(ExportModel $ex): void
     {
-// Determine safe RoleID to use for non-existant Member role
+        // Determine safe RoleID to use for non-existant Member role
         $lastRoleID = 1001;
         $lastRoleResult = $ex->query("select max(ID) as LastID from :_Group");
         if ($lastRole = $lastRoleResult->nextResultRow()) {
             $lastRoleID = $lastRole['LastID'] + 1;
         }
 
-        // Role.
         // Add default Member role.
         $role_Map = array(
             'ID' => 'RoleID',
@@ -100,18 +85,9 @@ class Toast extends Package
         );
         $ex->exportTable(
             'Role',
-            "
-         select
-            ID,
-            Name
-         from :_Group
-
-         union all
-
-         select
-            $lastRoleID as ID,
-            'Member' as Name
-         from :_Group;",
+            " select ID, Name from :_Group
+                union all
+                select $lastRoleID as ID, 'Member' as Name from :_Group;",
             $role_Map
         );
 
@@ -123,21 +99,15 @@ class Toast extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         select
-            GroupID,
-            MemberID
-         from :_MemberGroupLink
-
-         union all
-
-         select
-            $lastRoleID as GroupID,
-            m.ID as MemberID
-         from :_Member m
-         left join :_MemberGroupLink l
-            on l.MemberID = m.ID
-         where l.GroupID is null",
+            " select GroupID, MemberID from :_MemberGroupLink
+                 union all
+                 select
+                    $lastRoleID as GroupID,
+                    m.ID as MemberID
+                 from :_Member m
+                 left join :_MemberGroupLink l
+                    on l.MemberID = m.ID
+                 where l.GroupID is null",
             $userRole_Map
         );
     }
@@ -149,22 +119,19 @@ class Toast extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-         select
-            ID as UserID,
-            'Plugin.Signatures.Sig' as `Name`,
-            Signature as `Value`
-         from :_Member
-         where Signature <> ''
-
-         union all
-
-         select
-            ID as UserID,
-            'Plugin.Signatures.Format' as `Name`,
-            'BBCode' as `Value`
-         from :_Member
-         where Signature <> '';"
+            " select
+                    ID as UserID,
+                    'Plugin.Signatures.Sig' as `Name`,
+                    Signature as `Value`
+                 from :_Member
+                 where Signature <> ''
+                 union all
+                 select
+                    ID as UserID,
+                    'Plugin.Signatures.Format' as `Name`,
+                    'BBCode' as `Value`
+                 from :_Member
+                 where Signature <> '';"
         );
     }
 
@@ -179,25 +146,21 @@ class Toast extends Package
             'ForumName' => 'Name',
             'Description' => 'Description'
         );
-
         $ex->exportTable(
             'Category',
-            "
-         select
-            f.ID,
-            f.CategoryID * 1000 as CategoryID,
-            f.ForumName,
-            f.Description
-         from :_Forum f
-
-         union all
-
-         select
-            c.ID * 1000 as ID,
-            -1 as CategoryID,
-            c.Name as ForumName,
-            null as Description
-         from :_Category c;",
+            "select
+                    f.ID,
+                    f.CategoryID * 1000 as CategoryID,
+                    f.ForumName,
+                    f.Description
+                from :_Forum f
+                union all
+                select
+                    c.ID * 1000 as ID,
+                    -1 as CategoryID,
+                    c.Name as ForumName,
+                    null as Description
+                from :_Category c;",
             $category_Map
         );
     }
@@ -221,12 +184,11 @@ class Toast extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select p.*,
+            "select p.*,
             'Html' as Format
-         from :_Post p
-         where p.Topic = 1
-            and p.Deleted = 0;",
+                from :_Post p
+                where p.Topic = 1
+                    and p.Deleted = 0;",
             $discussion_Map
         );
     }
@@ -246,11 +208,10 @@ class Toast extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select *,
-            'Html' as Format
-         from :_Post p
-         where Topic = 0 and Deleted = 0;",
+            "select *,
+                    'Html' as Format
+                from :_Post p
+                where Topic = 0 and Deleted = 0;",
             $comment_Map
         );
     }

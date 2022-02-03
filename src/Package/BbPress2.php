@@ -29,17 +29,6 @@ class BbPress2 extends Package
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 0,
-            'Signatures' => 0,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -75,8 +64,7 @@ class BbPress2 extends Package
     {
         $ex->query("drop table if exists z_user;");
         $ex->query(
-            "
-            create table `z_user` (
+            "create table `z_user` (
                 `ID` bigint(20) unsigned not null AUTO_INCREMENT,
                 `user_login` varchar(60) NOT NULL DEFAULT '',
                 `user_pass` varchar(255) NOT NULL DEFAULT '',
@@ -88,21 +76,16 @@ class BbPress2 extends Package
             );"
         );
 
-        $userQuery = "
-            select
-                ID,
+        $userQuery = "select ID,
                 user_login,
                 user_pass,
                 'Vanilla' AS hash_method,
                 user_email,
                 user_registered
             from :_users";
-
         $ex->query("insert into z_user $userQuery");
 
-        $guestUserQuery = "
-            select
-                user_login,
+        $guestUserQuery = "select user_login,
                 'JL2AC3ORF2ZHDU00Z8V0Z1LFC58TY6NWA6IC5M1MIGGDCHNE7K' AS user_pass,
                 'Random' AS hash_method,
                 user_email,
@@ -122,17 +105,14 @@ class BbPress2 extends Package
             where user_email not in (select user_email from z_user group by user_email)
             group by user_email";
 
-        $ex->query(
-            "
-            insert into z_user(
+        $ex->query("insert into z_user(
                 /* ID auto_increment yay! */
                 user_login,
                 user_pass,
                 hash_method,
                 user_email,
                 user_registered
-            ) $guestUserQuery"
-        );
+            ) $guestUserQuery");
 
         $user_Map = array(
             'ID' => 'UserID',
@@ -153,13 +133,13 @@ class BbPress2 extends Package
         $ex->exportTable(
             'Role',
             "
-            select
-                1 as RoleID,
-                'Guest' as Name
-            union select 2, 'Administrator'
-            union select 3, 'Moderator'
-            union select 4, 'Member'
-            union select 5, 'Blocked';"
+                select
+                    1 as RoleID,
+                    'Guest' as Name
+                union select 2, 'Administrator'
+                union select 3, 'Moderator'
+                union select 4, 'Member'
+                union select 5, 'Blocked';"
         );
 
         // UserRoles
@@ -168,25 +148,22 @@ class BbPress2 extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-            select
-                distinct(user_id) as user_id,
-                case
-                    when locate('bbp_keymaster', meta_value) != 0 then 2
-                    when locate('bbp_moderator', meta_value) != 0 then 3
-                    when locate('bbp_participant', meta_value) != 0 then 4
-                    when locate('bbp_blocked', meta_value) != 0 then 5
-                    else 1 /* should be bbp_spectator or non-handled roles if that's even possible */
-                end as RoleID
-            from :_usermeta
-            where meta_key = 'wp_capabilities'
-
-            union all
-            select
-                ID as user_id,
-                1 as RoleID
-            from z_user
-            where hash_method = 'Random';",
+            "select distinct(user_id) as user_id,
+                    case
+                        when locate('bbp_keymaster', meta_value) != 0 then 2
+                        when locate('bbp_moderator', meta_value) != 0 then 3
+                        when locate('bbp_participant', meta_value) != 0 then 4
+                        when locate('bbp_blocked', meta_value) != 0 then 5
+                        else 1 /* should be bbp_spectator or non-handled roles if that's even possible */
+                    end as RoleID
+                from :_usermeta
+                where meta_key = 'wp_capabilities'
+                union all
+                select
+                    ID as user_id,
+                    1 as RoleID
+                from z_user
+                where hash_method = 'Random';",
             $userRole_Map
         );
     }
@@ -205,13 +182,11 @@ class BbPress2 extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-            select
-                *,
-                lower(post_name) as forum_slug,
-                nullif(post_parent, 0) as ParentCategoryID
-            from :_posts
-            where post_type = 'forum';",
+            "select *,
+                    lower(post_name) as forum_slug,
+                    nullif(post_parent, 0) as ParentCategoryID
+                from :_posts
+                where post_type = 'forum';",
             $category_Map
         );
     }
@@ -232,17 +207,15 @@ class BbPress2 extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-            select
-                p.*,
-                /* override post_author value from p.* */
-                if (p.post_author > 0, p.post_author, z_user.ID) as post_author,
-                'Html' as Format,
-                0 as Closed
-            from :_posts as p
-                left join :_postmeta as pm on pm.post_id = p.ID AND pm.meta_key = '_bbp_anonymous_email'
-                left join z_user on z_user.user_email = pm.meta_value
-            where post_type = 'topic';",
+            "select p.*,
+                    /* override post_author value from p.* */
+                    if (p.post_author > 0, p.post_author, z_user.ID) as post_author,
+                    'Html' as Format,
+                    0 as Closed
+                from :_posts as p
+                    left join :_postmeta as pm on pm.post_id = p.ID AND pm.meta_key = '_bbp_anonymous_email'
+                    left join z_user on z_user.user_email = pm.meta_value
+                where post_type = 'topic';",
             $discussion_Map
         );
     }
@@ -262,9 +235,7 @@ class BbPress2 extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-            select
-                p.*,
+            "select p.*,
                 /* override post_author value from p.* */
                 if (p.post_author > 0, p.post_author, z_user.ID) as post_author,
                 case

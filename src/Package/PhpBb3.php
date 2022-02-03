@@ -38,10 +38,6 @@ class PhpBb3 extends Package
             'Badges' => 0,
             'UserNotes' => 1,
             'Ranks' => 1,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -112,7 +108,11 @@ class PhpBb3 extends Package
         $this->banList($ex);
     }
 
-    protected function userNotes($ex)
+    /**
+     * @param ExportModel $ex
+     * @return void
+     */
+    protected function userNotes(ExportModel $ex)
     {
         $corruptedRecords = [];
 
@@ -153,9 +153,9 @@ class PhpBb3 extends Package
         $ex->exportTable(
             'UserNote',
             "select l.*, 'Text' as format
-            from :_log l
-            where reportee_id > 0
-                and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')",
+                from :_log l
+                where reportee_id > 0
+                    and log_operation in ('LOG_USER_GENERAL', 'LOG_USER_WARNING_BODY')",
             $userNote_Map
         );
 
@@ -168,22 +168,28 @@ class PhpBb3 extends Package
     /**
      * Export email and ip ban list.
      */
-    public function banList($ex)
+    public function banList(ExportModel $ex)
     {
         $ex->exportTable(
             'Ban',
             "select bl.*,
-                ban_id as BanID,
-                if (ban_ip='', 'Email', 'IpAddress') as BanType,
-                if(ban_ip='', ban_email, ban_ip) as BanValue,
-                Concat('Imported ban. ', ban_give_reason) as Notes,
-                NOW() as DateInserted
-            from :_banlist bl
-            where bl.ban_userid = 0
-                and (ban_ip!='' or ban_email!='')"
+                    ban_id as BanID,
+                    if (ban_ip='', 'Email', 'IpAddress') as BanType,
+                    if(ban_ip='', ban_email, ban_ip) as BanValue,
+                    Concat('Imported ban. ', ban_give_reason) as Notes,
+                    NOW() as DateInserted
+                from :_banlist bl
+                where bl.ban_userid = 0
+                    and (ban_ip!='' or ban_email!='')"
         );
     }
 
+    /**
+     * @param $r
+     * @param $field
+     * @param $row
+     * @return array|string|string[]|null
+     */
     public function removeBBCodeUIDs($r, $field = '', $row = '')
     {
         if (!$r) {
@@ -259,20 +265,19 @@ class PhpBb3 extends Package
         $ex->exportTable(
             'User',
             "select *,
-            case user_avatar_type
-               when 1 then concat('$cdn', 'phpbb/', '$px', '_', user_id,
-                    substr(user_avatar from locate('.', user_avatar)))
-               when 'avatar.driver.upload' then concat('$cdn', 'phpbb/', '$px', '_', user_id,
-                    substr(user_avatar from locate('.', user_avatar)))
-               when 2 then user_avatar
-               else null end as photo,
-            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
-            FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
-            FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted,
-            ban_userid is not null as Banned
-         from :_users
-            left join :_banlist bl ON (ban_userid = user_id)
-         ",
+                    case user_avatar_type
+                       when 1 then concat('$cdn', 'phpbb/', '$px', '_', user_id,
+                            substr(user_avatar from locate('.', user_avatar)))
+                       when 'avatar.driver.upload' then concat('$cdn', 'phpbb/', '$px', '_', user_id,
+                            substr(user_avatar from locate('.', user_avatar)))
+                       when 2 then user_avatar
+                       else null end as photo,
+                    FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
+                    FROM_UNIXTIME(nullif(user_lastvisit, 0)) as DateLastActive,
+                    FROM_UNIXTIME(nullif(user_regdate, 0)) as DateInserted,
+                    ban_userid is not null as Banned
+                from :_users
+                    left join :_banlist bl ON (ban_userid = user_id)",
             $user_Map
         );
     }
@@ -314,16 +319,14 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'Rank',
-            "
-             select
-                r.*,
-                r.rank_title as title2,
-                0 as level
-             from :_ranks r
-             order by
-                rank_special,
-                rank_min
-        ;",
+            "select
+                    r.*,
+                    r.rank_title as title2,
+                    0 as level
+                from :_ranks r
+                order by
+                    rank_special,
+                    rank_min;",
             $rank_Map
         );
     }
@@ -335,19 +338,17 @@ class PhpBb3 extends Package
     {
         $ex->exportTable(
             'Permission',
-            "
-            select
-                group_id as RoleID,
-                case
-                    when group_name like '%Guest%' or group_name like 'BOTS' then 'View'
-                    when group_name like '%Mod%'
-                        then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
-                            'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
-                    when group_name like '%Admin%' then 'All'
-                    else 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
-                end as _Permissions
-            from :_groups
-        "
+            "select
+                    group_id as RoleID,
+                    case
+                        when group_name like '%Guest%' or group_name like 'BOTS' then 'View'
+                        when group_name like '%Mod%'
+                            then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
+                                'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
+                        when group_name like '%Admin%' then 'All'
+                        else 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add'
+                    end as _Permissions
+                from :_groups"
         );
     }
 
@@ -370,19 +371,9 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'UserRole',
-            '
-            select
-                user_id,
-                group_id
-            from :_users
-
-            union
-
-            select
-                user_id,
-                group_id
-            from :_user_group
-         ',
+            'select user_id, group_id from :_users
+                union
+                select user_id, group_id from :_user_group',
             $userRole_Map
         );
     }
@@ -399,25 +390,21 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'UserMeta',
-            "
-            select
-                user_id,
-                'Plugin.Signatures.Sig' as name,
-                user_sig,
-                user_sig_bbcode_uid as bbcode_uid
-            from :_users
-            where length(user_sig) > 1
-
-            union
-
-            select
-                user_id,
-                'Plugin.Signatures.Format',
-                'BBCode',
-                null
-            from :_users
-            where length(user_sig) > 1
-         ",
+            "select
+                    user_id,
+                    'Plugin.Signatures.Sig' as name,
+                    user_sig,
+                    user_sig_bbcode_uid as bbcode_uid
+                from :_users
+                where length(user_sig) > 1
+                union
+                select
+                    user_id,
+                    'Plugin.Signatures.Format',
+                    'BBCode',
+                    null
+                from :_users
+                where length(user_sig) > 1",
             $userMeta_Map
         );
     }
@@ -435,12 +422,9 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-            select
-                *,
-                nullif(parent_id,0) as ParentCategoryID
-            from :_forums
-        ",
+            "select *,
+                    nullif(parent_id,0) as ParentCategoryID
+                from :_forums",
             $category_Map
         );
     }
@@ -462,17 +446,15 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-            select t.*,
-                'BBCode' as Format,
-                case t.topic_status when 1 then 1 else 0 end as Closed,
-                case t.topic_type when 1 then 2 when 2 then 2 else 0 end as Announce,
-                case when t.poll_start > 0 then 'poll' else null end as type,
-                FROM_UNIXTIME(t.topic_time) as DateInserted,
-                FROM_UNIXTIME(t.topic_last_post_time) as DateUpdated,
-                FROM_UNIXTIME(t.topic_last_post_time) as DateLastComment
-            from :_topics t
-         ",
+            "select t.*,
+                    'BBCode' as Format,
+                    case t.topic_status when 1 then 1 else 0 end as Closed,
+                    case t.topic_type when 1 then 2 when 2 then 2 else 0 end as Announce,
+                    case when t.poll_start > 0 then 'poll' else null end as type,
+                    FROM_UNIXTIME(t.topic_time) as DateInserted,
+                    FROM_UNIXTIME(t.topic_last_post_time) as DateUpdated,
+                    FROM_UNIXTIME(t.topic_last_post_time) as DateLastComment
+                from :_topics t",
             $discussion_Map
         );
     }
@@ -493,14 +475,11 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-            select
-                p.*,
-                'BBCode' as Format,
-                FROM_UNIXTIME(p.post_time) as DateInserted,
-                FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
-            from :_posts p
-        ",
+            "select p.*,
+                    'BBCode' as Format,
+                    FROM_UNIXTIME(p.post_time) as DateInserted,
+                    FROM_UNIXTIME(nullif(p.post_edit_time,0)) as DateUpdated
+                from :_posts p",
             $comment_Map
         );
     }
@@ -512,15 +491,13 @@ class PhpBb3 extends Package
     {
         $ex->exportTable(
             'UserDiscussion',
-            "
-            select
-                tt.user_id as UserID,
-                tt.topic_id as DiscussionID,
-                 FROM_UNIXTIME(tt.mark_time) as DateLastViewed,
-                if(b.topic_id is null, 0, 1) as Bookmarked
-            from :_topics_track tt
-            left join :_bookmarks b on b.user_id = tt.user_id and b.topic_id = tt.topic_id
-        "
+            "select
+                    tt.user_id as UserID,
+                    tt.topic_id as DiscussionID,
+                     FROM_UNIXTIME(tt.mark_time) as DateLastViewed,
+                    if(b.topic_id is null, 0, 1) as Bookmarked
+                from :_topics_track tt
+                left join :_bookmarks b on b.user_id = tt.user_id and b.topic_id = tt.topic_id"
         );
     }
 
@@ -532,85 +509,70 @@ class PhpBb3 extends Package
         $ex->query("drop table if exists z_pmto;");
 
         $ex->query(
-            "
-            create table z_pmto(
+            "create table z_pmto(
                 id int unsigned,
                 userid int unsigned,
                 primary key(id, userid)
-            );
-        "
+            );"
         );
 
         $ex->query(
-            "
-            insert ignore into z_pmto(id, userid)
+            "insert ignore into z_pmto(id, userid)
                 select
                     msg_id,
                     author_id
-                from :_privmsgs
-        "
+                from :_privmsgs"
         );
 
         $ex->query(
-            "
-            insert ignore into z_pmto(id, userid)
+            "insert ignore into z_pmto(id, userid)
                 select
                     msg_id,
                     user_id
-                from :_privmsgs_to;
-        "
+                from :_privmsgs_to;"
         );
 
         $ex->query(
-            "
-            insert ignore into z_pmto(id, userid)
+            "insert ignore into z_pmto(id, userid)
                 select
                     msg_id,
                     author_id
-                from :_privmsgs_to
-        "
+                from :_privmsgs_to"
         );
 
         $ex->query("drop table if exists z_pmto2;");
 
         $ex->query(
-            "
-            create table z_pmto2 (
+            "create table z_pmto2 (
                 id int unsigned,
                 userids varchar(250),
                 primary key (id)
-            );
-        "
+            );"
         );
 
         $ex->query(
-            "
-            insert ignore into z_pmto2(id, userids)
+            "insert ignore into z_pmto2(id, userids)
                 select
                     id,
                     group_concat(userid order by userid)
                 from z_pmto
-                group by id;
-        "
+                group by id;"
         );
 
         $ex->query("drop table if exists z_pm;");
 
         $ex->query(
-            "
-            create table z_pm(
+            "create table z_pm(
                 id int unsigned,
                 subject varchar(255),
                 subject2 varchar(255),
                 userids varchar(250),
                 groupid int unsigned
-            );
-        "
+            );"
         );
 
         $ex->query(
-            "
-            insert into z_pm(id, subject, subject2, userids)
+            "insert into z_pm(id, subject, subject2, userids)
                 select
                     pm.msg_id,
                     pm.message_subject,
@@ -620,8 +582,7 @@ class PhpBb3 extends Package
                     end as subject2,
                     t.userids
                 from :_privmsgs pm
-                    join z_pmto2 t on t.id = pm.msg_id;
-        "
+                    join z_pmto2 t on t.id = pm.msg_id;"
         );
 
         $ex->query("create index z_idx_pm on z_pm(id);");
@@ -629,38 +590,32 @@ class PhpBb3 extends Package
         $ex->query("drop table if exists z_pmgroup;");
 
         $ex->query(
-            "
-            create table z_pmgroup(
+            "create table z_pmgroup(
                 groupid int unsigned,
                 subject varchar(255),
                 userids varchar(250)
-            );
-        "
+            );"
         );
 
         $ex->query(
-            "
-            insert into z_pmgroup(groupid, subject, userids)
+            "insert into z_pmgroup(groupid, subject, userids)
                 select
                     min(pm.id),
                     pm.subject2,
                     pm.userids
                 from z_pm pm
                 group by
-                    pm.subject2, pm.userids;
-        "
+                    pm.subject2, pm.userids;"
         );
 
         $ex->query("create index z_idx_pmgroup on z_pmgroup (subject, userids);");
         $ex->query("create index z_idx_pmgroup2 on z_pmgroup (groupid);");
 
         $ex->query(
-            "
-            update z_pm pm
+            "update z_pm pm
                 join z_pmgroup g on pm.subject2 = g.subject
                     and pm.userids = g.userids
-            set pm.groupid = g.groupid;
-        "
+            set pm.groupid = g.groupid;"
         );
 
         $conversation_Map = array(
@@ -672,17 +627,13 @@ class PhpBb3 extends Package
                 'Filter' => array('Phpbb2', 'EntityDecode')
             )
         );
-
         $ex->exportTable(
             'Conversation',
-            "
-            select
-                g.subject as RealSubject,
-                pm.*,
-                from_unixtime(pm.message_time) as DateInserted
-            from :_privmsgs pm
-                join z_pmgroup g on g.groupid = pm.msg_id
-        ",
+            "select pm.*,
+                    g.subject as RealSubject,
+                    from_unixtime(pm.message_time) as DateInserted
+                from :_privmsgs pm
+                    join z_pmgroup g on g.groupid = pm.msg_id",
             $conversation_Map
         );
 
@@ -695,15 +646,12 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-            select
-                pm.*,
-                pm2.groupid,
-                'BBCode' as Format,
-                FROM_UNIXTIME(pm.message_time) as DateInserted
-            from :_privmsgs pm
-                join z_pm pm2 on pm.msg_id = pm2.id
-        ",
+            "select pm.*,
+                    pm2.groupid,
+                    'BBCode' as Format,
+                    FROM_UNIXTIME(pm.message_time) as DateInserted
+                from :_privmsgs pm
+                    join z_pm pm2 on pm.msg_id = pm2.id",
             $conversationMessage_Map
         );
 
@@ -714,13 +662,9 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-            select
-                g.groupid,
-                t.userid
-            from z_pmto t
-                join z_pmgroup g on g.groupid = t.id;
-        ",
+            "select g.groupid, t.userid
+                from z_pmto t
+                join z_pmgroup g on g.groupid = t.id;",
             $userConversation_Map
         );
 
@@ -745,14 +689,12 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'Poll',
-            "
-            select distinct
-                t.*,
-                t.topic_id as poll_id,
-                1 as anonymous
-            from :_poll_options po
-                join :_topics t on po.topic_id = t.topic_id
-        ",
+            "select distinct
+                    t.*,
+                    t.topic_id as poll_id,
+                    1 as anonymous
+                from :_poll_options po
+                    join :_topics t on po.topic_id = t.topic_id",
             $poll_Map
         );
 
@@ -768,16 +710,13 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'PollOption',
-            "
-            select
-                po.*,
-                po.poll_option_id * 1000000 + po.topic_id as id,
-                'Html' as format,
-                t.topic_time,
-                t.topic_poster
-            from :_poll_options po
-                join :_topics t on po.topic_id = t.topic_id
-        ",
+            "select po.*,
+                    po.poll_option_id * 1000000 + po.topic_id as id,
+                    'Html' as format,
+                    t.topic_time,
+                    t.topic_poster
+                from :_poll_options po
+                    join :_topics t on po.topic_id = t.topic_id",
             $pollOption_Map
         );
 
@@ -787,12 +726,9 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'PollVote',
-            "
-            select
-                v.*,
-                v.poll_option_id * 1000000 + v.topic_id as id
-            from :_poll_votes v
-        ",
+            "select v.*,
+                    v.poll_option_id * 1000000 + v.topic_id as id
+                from :_poll_votes v",
             $pollVote_Map
         );
     }
@@ -814,18 +750,15 @@ class PhpBb3 extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-            select
-                case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
-                case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
-                concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as Path,
-                concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as thumb_path,
-                128 as thumb_width,
-                FROM_UNIXTIME(a.filetime) as DateInserted,
-                a.*
-            from :_attachments a
-                join :_topics t on a.topic_id = t.topic_id
-        ",
+            "select a.*,
+                    case when a.post_msg_id = t.topic_first_post_id then 'discussion' else 'comment' end as ForeignTable,
+                    case when a.post_msg_id = t.topic_first_post_id then a.topic_id else a.post_msg_id end as ForeignID,
+                    concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as Path,
+                    concat('$cdn','FileUpload/', a.physical_filename, '.', a.extension) as thumb_path,
+                    128 as thumb_width,
+                    FROM_UNIXTIME(a.filetime) as DateInserted
+                from :_attachments a
+                    join :_topics t on a.topic_id = t.topic_id",
             $media_Map
         );
     }

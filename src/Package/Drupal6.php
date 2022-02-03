@@ -29,16 +29,6 @@ class Drupal6 extends Package
             'Avatars' => 1,
             'PrivateMessages' => 1,
             'Signatures' => 1,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -77,13 +67,12 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select u.*,
-            nullif(concat('drupal/', u.picture), 'drupal/') as photo,
-            concat('md5$$', u.pass) as Password,
-            'Django' as HashMethod
-         from :_users u
-         where uid > 0",
+            "select u.*,
+                    nullif(concat('drupal/', u.picture), 'drupal/') as photo,
+                    concat('md5$$', u.pass) as Password,
+                    'Django' as HashMethod
+                from :_users u
+                where uid > 0",
             $user_Map
         );
     }
@@ -100,10 +89,9 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'UserMeta',
-            "
-         select u.*, 'Plugins.Signatures.Sig' as Name
-         from :_users u
-         where uid > 0",
+            "select u.*, 'Plugins.Signatures.Sig' as Name
+                from :_users u
+                where uid > 0",
             $userMeta_Map
         );
     }
@@ -126,8 +114,7 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'UserRole',
-            "
-         select * from :_users_roles",
+            "select * from :_users_roles",
             $userRole_Map
         );
     }
@@ -145,11 +132,10 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'Category',
-            "
-         select t.*, nullif(h.parent, 0) as parent
-         from :_term_data t
-         join :_term_hierarchy h
-            on t.tid = h.tid",
+            "select t.*, nullif(h.parent, 0) as parent
+                 from :_term_data t
+                 join :_term_hierarchy h
+                    on t.tid = h.tid",
             $category_Map
         );
     }
@@ -171,13 +157,12 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-         select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
-         from nodeforum f
-         left join node n
-            on f.nid = n.nid
-         left join node_revisions r
-            on r.nid = n.nid",
+            "select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
+                 from nodeforum f
+                 left join node n
+                    on f.nid = n.nid
+                 left join node_revisions r
+                    on r.nid = n.nid",
             $discussion_Map
         );
     }
@@ -196,21 +181,20 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'Comment',
-            "
-         select
-            n.created,
-            n.uid,
-            r.body,
-            c.nid as DiscussionID,
-            n.title,
-            'Html' as Format,
-            nullif(n.changed, n.created) as DateUpdated
-         from node n
-         left join node_comments c
-            on c.cid = n.nid
-         left join node_revisions r
-            on r.nid = n.nid
-         where n.type = 'forum_reply'",
+            "select
+                    n.created,
+                    n.uid,
+                    r.body,
+                    c.nid as DiscussionID,
+                    n.title,
+                    'Html' as Format,
+                    nullif(n.changed, n.created) as DateUpdated
+                 from node n
+                 left join node_comments c
+                    on c.cid = n.nid
+                 left join node_revisions r
+                    on r.nid = n.nid
+                 where n.type = 'forum_reply'",
             $comment_Map
         );
     }
@@ -227,17 +211,15 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'Conversation',
-            "
-            select
-                pmi.thread_id,
-                pmm.author,
-                pmm.subject as title,
-                FROM_UNIXTIME(pmm.timestamp) as DateInserted
-            from pm_message as pmm
-                inner join pm_index as pmi on pmi.mid = pmm.mid
-                    and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
-            group by pmi.thread_id
-        ;",
+            "select
+                    pmi.thread_id,
+                    pmm.author,
+                    pmm.subject as title,
+                    FROM_UNIXTIME(pmm.timestamp) as DateInserted
+                from pm_message as pmm
+                    inner join pm_index as pmi on pmi.mid = pmm.mid
+                        and pmm.author = pmi.uid and pmi.deleted = 0 and pmi.uid > 0
+                group by pmi.thread_id;",
             $conversation_Map
         );
 
@@ -249,17 +231,15 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-            select
-                pmm.mid,
-                pmi.thread_id,
-                pmm.author,
-                FROM_UNIXTIME(pmm.timestamp) as DateInserted,
-                pmm.body as Body,
-                'Html' as Format
-            from pm_message as pmm
-                inner join pm_index as pmi on pmi.mid = pmm.mid AND pmi.deleted = 0 and pmi.uid > 0
-        ;",
+            "select
+                    pmm.mid,
+                    pmi.thread_id,
+                    pmm.author,
+                    FROM_UNIXTIME(pmm.timestamp) as DateInserted,
+                    pmm.body as Body,
+                    'Html' as Format
+                from pm_message as pmm
+                    inner join pm_index as pmi on pmi.mid = pmm.mid AND pmi.deleted = 0 and pmi.uid > 0;",
             $conversationMessage_Map
         );
 
@@ -270,19 +250,17 @@ class Drupal6 extends Package
         );
         $ex->exportTable(
             'UserConversation',
-            "
-            select
-                pmi.uid,
-                pmi.thread_id,
-                0 as Deleted
-            from pm_index as pmi
-                inner join pm_message as pmm ON pmm.mid = pmi.mid
-            where pmi.deleted = 0
-                and pmi.uid > 0
-            group by
-                pmi.uid,
-                pmi.thread_id
-        ;",
+            "select
+                    pmi.uid,
+                    pmi.thread_id,
+                    0 as Deleted
+                from pm_index as pmi
+                    inner join pm_message as pmm ON pmm.mid = pmi.mid
+                where pmi.deleted = 0
+                    and pmi.uid > 0
+                group by
+                    pmi.uid,
+                    pmi.thread_id;",
             $userConversation_Map
         );
     }

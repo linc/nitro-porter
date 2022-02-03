@@ -477,3 +477,49 @@ function cleanBodyBrackets($value)
 
     return $value;
 }
+
+/**
+ * @param $text
+ * @return string
+ */
+function bbPressTrim($text)
+{
+    return rtrim(bb_Code_Trick_Reverse($text));
+}
+
+/**
+ * @param $text
+ * @return array|string|string[]
+ */
+function bb_Code_Trick_Reverse($text)
+{
+    $text = preg_replace_callback("!(<pre><code>|<code>)(.*?)(</code></pre>|</code>)!s", 'bb_decodeit', $text);
+    $text = str_replace(array('<p>', '<br />'), '', $text);
+    $text = str_replace('</p>', "\n", $text);
+    $text = str_replace('<coded_br />', '<br />', $text);
+    $text = str_replace('<coded_p>', '<p>', $text);
+    $text = str_replace('</coded_p>', '</p>', $text);
+
+    return $text;
+}
+
+/**
+ * @param $matches
+ * @return string
+ */
+function bb_Decodeit($matches)
+{
+    $text = $matches[2];
+    $trans_table = array_flip(get_html_translation_table(HTML_ENTITIES));
+    $text = strtr($text, $trans_table);
+    $text = str_replace('<br />', '<coded_br />', $text);
+    $text = str_replace('<p>', '<coded_p>', $text);
+    $text = str_replace('</p>', '</coded_p>', $text);
+    $text = str_replace(array('&#38;', '&amp;'), '&', $text);
+    $text = str_replace('&#39;', "'", $text);
+    if ('<pre><code>' == $matches[1]) {
+        $text = "\n$text\n";
+    }
+
+    return "`$text`";
+}

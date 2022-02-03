@@ -37,21 +37,6 @@ class Mbox extends Package
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 0,
-            'Roles' => 0,
-            'Avatars' => 0,
-            'PrivateMessages' => 0,
-            'Signatures' => 0,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -70,17 +55,10 @@ class Mbox extends Package
     public function run($ex)
     {
         $this->setup($ex); // Here be dragons.
-
         $this->users($ex);
-
         $this->categories($ex);
         $this->discussions($ex);
         $this->comments($ex);
-
-        // Remove Temporary tables
-        //$ex->Query('drop table :_mbox_post');
-        //$ex->Query('drop table :_mbox_category');
-        //$ex->Query('drop table :_mbox_user');
     }
 
     /**
@@ -123,8 +101,7 @@ class Mbox extends Package
         $user_Map = array();
         $ex->exportTable(
             'User',
-            "
-                select u.*,
+            "select u.*,
                     NOW() as DateInserted,
                     'Reset' as HashMethod
                 from :_mbox_user u",
@@ -140,9 +117,7 @@ class Mbox extends Package
         $category_Map = array();
         $ex->exportTable(
             'Category',
-            "
-                select *
-                from :_mbox_category",
+            "select * from :_mbox_category",
             $category_Map
         );
     }
@@ -157,9 +132,8 @@ class Mbox extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-            select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID, 'Html' as Format
-            from :_mbox_post p where IsDiscussion = 1",
+            "select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID, 'Html' as Format
+                from :_mbox_post p where IsDiscussion = 1",
             $discussion_Map
         );
     }

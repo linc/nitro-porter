@@ -16,8 +16,7 @@ class Flarum extends Package
         'name' => 'Flarum',
         'prefix' => 'FLA_',
         'charset_table' => 'posts',
-        'options' => [
-        ],
+        'options' => [],
         'features' => [  // Set features you support to 1 or a string (for support notes).
             'Users' => 1,
             'Passwords' => 1,
@@ -28,17 +27,6 @@ class Flarum extends Package
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 0,
-            'Signatures' => 0,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 

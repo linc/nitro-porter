@@ -143,16 +143,15 @@ class Smf1 extends Package
         );
         $ex->exportTable(
             'User',
-            "
-         select m.*,
-            from_unixtime(dateRegistered) as DateInserted,
-            from_unixtime(dateRegistered) as DateFirstVisit,
-            from_unixtime(lastLogin) as DateLastActive,
-            from_unixtime(lastLogin) as DateUpdated,
-            concat('sha1$', lower(memberName), '$', passwd) as `password`,
-            if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
-         from :_members m
-         left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ",
+            "select m.*,
+                    from_unixtime(dateRegistered) as DateInserted,
+                    from_unixtime(dateRegistered) as DateFirstVisit,
+                    from_unixtime(lastLogin) as DateLastActive,
+                    from_unixtime(lastLogin) as DateUpdated,
+                    concat('sha1$', lower(memberName), '$', passwd) as `password`,
+                    if(m.avatar <> '', m.avatar, concat('attachments/', a.filename)) as Photo
+                from :_members m
+                left join :_attachments a on a.ID_MEMBER = m.ID_MEMBER ",
             $user_Map
         );
     }
@@ -184,30 +183,23 @@ class Smf1 extends Package
         $category_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
-
         $ex->exportTable(
             'Category',
-            "
-      select
-        (`ID_CAT` + 1000000) as `CategoryID`,
-        `name` as `Name`,
-      '' as `Description`,
-      null as `ParentCategoryID`,
-        `catOrder` as `Sort`
-      from :_categories
-
-     union
-
-      select
-        b.`ID_BOARD` as `CategoryID`,
-
-        b.`name` as `Name`,
-        b.`description` as `Description`,
-      (CASE WHEN b.`ID_PARENT` = 0 THEN (`ID_CAT` + 1000000) ELSE `ID_PARENT` END) as `ParentCategoryID`,
-        b.`boardOrder` as `Sort`
-      from :_boards b
-
-     ",
+            "select
+                    (`ID_CAT` + 1000000) as `CategoryID`,
+                    `name` as `Name`,
+                    '' as `Description`,
+                    null as `ParentCategoryID`,
+                    `catOrder` as `Sort`
+                from :_categories
+                union
+                select
+                    b.`ID_BOARD` as `CategoryID`,
+                    b.`name` as `Name`,
+                    b.`description` as `Description`,
+                    (CASE WHEN b.`ID_PARENT` = 0 THEN (`ID_CAT` + 1000000) ELSE `ID_PARENT` END) as `ParentCategoryID`,
+                    b.`boardOrder` as `Sort`
+                from :_boards b",
             $category_Map
         );
     }
@@ -239,25 +231,21 @@ class Smf1 extends Package
         );
         $ex->exportTable(
             'Discussion',
-            "
-      select t.*,
-         (t.numReplies + 1) as CountComments,
-         m.subject,
-         m.body,
-         from_unixtime(m.posterTime) as DateInserted,
-         from_unixtime(m.modifiedTime) as DateUpdated,
-         m.ID_MEMBER,
-         from_unixtime(m_end.posterTime) AS DateLastComment,
-         m_end.ID_MEMBER AS UpdateUserID,
-         m_end.ID_MEMBER AS LastCommentUserID,
-         'BBCode' as Format
-       from :_topics t
-       join :_messages as m on t.ID_FIRST_MSG = m.ID_MSG
-       join :_messages as m_end on t.ID_LAST_MSG = m_end.ID_MSG
-
-       -- where t.spam = 0 AND m.spam = 0;
-
-       ",
+            "select t.*,
+                    (t.numReplies + 1) as CountComments,
+                    m.subject,
+                    m.body,
+                    from_unixtime(m.posterTime) as DateInserted,
+                    from_unixtime(m.modifiedTime) as DateUpdated,
+                    m.ID_MEMBER,
+                    from_unixtime(m_end.posterTime) AS DateLastComment,
+                    m_end.ID_MEMBER AS UpdateUserID,
+                    m_end.ID_MEMBER AS LastCommentUserID,
+                    'BBCode' as Format
+                from :_topics t
+                join :_messages as m on t.ID_FIRST_MSG = m.ID_MSG
+                join :_messages as m_end on t.ID_LAST_MSG = m_end.ID_MSG
+                -- where t.spam = 0 AND m.spam = 0;",
             $discussion_Map
         );
     }
@@ -278,12 +266,11 @@ class Smf1 extends Package
         $ex->exportTable(
             'Comment',
             "select m.*,
-         from_unixtime(m.posterTime) AS DateInserted,
-         'BBCode' as Format
-       from :_messages m
-       join :_topics t on m.ID_TOPIC = t.ID_TOPIC
-       where m.ID_MSG <> t.ID_FIRST_MSG;
-       ",
+                    from_unixtime(m.posterTime) AS DateInserted,
+                    'BBCode' as Format
+                from :_messages m
+                join :_topics t on m.ID_TOPIC = t.ID_TOPIC
+                where m.ID_MSG <> t.ID_FIRST_MSG;",
             $comment_Map
         );
     }
@@ -310,20 +297,17 @@ class Smf1 extends Package
         );
         $ex->exportTable(
             'Media',
-            "
-            select
-                a.*,
-                concat('attachments/', a.filename) as Path,
-                IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
-                null as extract_mimetype,
-                b.width as thumb_width,
-                if(t.ID_TOPIC is null, 'Comment', 'Discussion') as ForeignTable
-            from :_attachments a
-                left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
-                left join :_topics t on a.ID_MSG = t.ID_FIRST_MSG
-            where a.attachmentType = 0
-                and a.ID_MSG > 0
-        ",
+            "select a.*,
+                    concat('attachments/', a.filename) as Path,
+                    IF(b.filename is not null, concat('attachments/', b.filename), null) as thumb_path,
+                    null as extract_mimetype,
+                    b.width as thumb_width,
+                    if(t.ID_TOPIC is null, 'Comment', 'Discussion') as ForeignTable
+                from :_attachments a
+                    left join :_attachments b on b.ID_ATTACH = a.ID_THUMB
+                    left join :_topics t on a.ID_MSG = t.ID_FIRST_MSG
+                where a.attachmentType = 0
+                    and a.ID_MSG > 0",
             $media_Map
         );
     }
@@ -336,67 +320,67 @@ class Smf1 extends Package
 // Conversations need a bit more conversion so execute a series of queries for that.
         $ex->query(
             'create table :_smfpmto (
-  id int,
-  to_id int,
-  deleted tinyint,
-  primary key(id, to_id)
-)'
+                id int,
+                to_id int,
+                deleted tinyint,
+                primary key(id, to_id)
+            )'
         );
-
         $ex->query(
             'insert :_smfpmto (
-  id,
-  to_id,
-  deleted
-)
-select
-  ID_PM,
-  ID_MEMBER_FROM,
-  deletedBySender
-from :_personal_messages'
+                id,
+                to_id,
+                deleted
+            )
+            select
+                ID_PM,
+                ID_MEMBER_FROM,
+                deletedBySender
+            from :_personal_messages'
         );
-
         $ex->query(
             'insert ignore :_smfpmto (
-  id,
-  to_id,
-  deleted
-)
-select
-  ID_PM,
-  ID_MEMBER,
-  deleted
-from :_pm_recipients'
+                id,
+                to_id,
+                deleted
+            )
+            select
+                ID_PM,
+                ID_MEMBER,
+                deleted
+            from :_pm_recipients'
         );
 
         $ex->query(
             'create table :_smfpmto2 (
-  id int,
-  to_ids varchar(255),
-  primary key(id)
-)'
+                id int,
+                to_ids varchar(255),
+                primary key(id)
+            )'
         );
 
         $ex->query(
             'insert :_smfpmto2 (
-  id,
-  to_ids
-)
-select
-  id,
-  group_concat(to_id order by to_id)
-from :_smfpmto
-group by id'
+                id,
+                to_ids
+            )
+            select
+                id,
+                group_concat(to_id order by to_id
+            )
+            from :_smfpmto
+            group by id'
         );
 
         $ex->query(
             'create table :_smfpm (
-  id int,
-  group_id int,
-  subject varchar(200),
-  subject2 varchar(200),
-  from_id int,
-  to_ids varchar(255))'
+                id int,
+                group_id int,
+                subject varchar(200),
+                subject2 varchar(200),
+                from_id int,
+                to_ids varchar(255)
+            )'
         );
 
         $ex->query('create index :_idx_smfpm2 on :_smfpm (subject2, from_id)');
@@ -404,46 +388,46 @@ group by id'
 
         $ex->query(
             'insert :_smfpm (
-  id,
-  subject,
-  subject2,
-  from_id,
-  to_ids
-)
-select
-  ID_PM,
-  subject,
-  case when subject like \'Re: %\' then trim(substring(subject, 4)) else subject end as subject2,
-  ID_MEMBER_FROM,
-  to2.to_ids
-from :_personal_messages pm
-join :_smfpmto2 to2
-  on pm.ID_PM = to2.id'
+                id,
+                subject,
+                subject2,
+                from_id,
+                to_ids
+            )
+            select
+                ID_PM,
+                subject,
+                case when subject like \'Re: %\' then trim(substring(subject, 4)) else subject end as subject2,
+                ID_MEMBER_FROM,
+                to2.to_ids
+            from :_personal_messages pm
+            join :_smfpmto2 to2
+                on pm.ID_PM = to2.id'
         );
 
         $ex->query(
             'create table :_smfgroups (
-  id int primary key,
-  subject2 varchar(200),
-  to_ids varchar(255)
-)'
+              id int primary key,
+              subject2 varchar(200),
+              to_ids varchar(255)
+            )'
         );
 
         $ex->query(
             'insert :_smfgroups
-select
-  min(id) as group_id, subject2, to_ids
-from :_smfpm
-group by subject2, to_ids'
+            select
+                min(id) as group_id, subject2, to_ids
+            from :_smfpm
+            group by subject2, to_ids'
         );
 
         $ex->query('create index :_idx_smfgroups on :_smfgroups (subject2, to_ids)');
 
         $ex->query(
             'update :_smfpm pm
-join :_smfgroups g
-  on pm.subject2 = g.subject2 and pm.to_ids = g.to_ids
-set pm.group_id = g.id'
+                join :_smfgroups g
+                    on pm.subject2 = g.subject2 and pm.to_ids = g.to_ids
+                set pm.group_id = g.id'
         );
 
         // Conversation.
@@ -456,14 +440,14 @@ set pm.group_id = g.id'
         $ex->exportTable(
             'Conversation',
             "select
-  pm.group_id,
-  pm.from_id,
-  pm.subject2,
-  from_unixtime(pm2.msgtime) as DateInserted
-from :_smfpm pm
-join :_personal_messages pm2
-  on pm.id = pm2.ID_PM
-where pm.id = pm.group_id",
+                    pm.group_id,
+                    pm.from_id,
+                    pm.subject2,
+                    from_unixtime(pm2.msgtime) as DateInserted
+                from :_smfpm pm
+                join :_personal_messages pm2
+                    on pm.id = pm2.ID_PM
+                where pm.id = pm.group_id",
             $conv_Map
         );
 
@@ -478,15 +462,15 @@ where pm.id = pm.group_id",
         $ex->exportTable(
             'ConversationMessage',
             "select
-  pm.id,
-  pm.group_id,
-  from_unixtime(pm2.msgtime) as DateInserted,
-  pm.from_id,
-  'BBCode' as Format,
-  case when pm.subject = pm.subject2 then concat(pm.subject, '\n\n', pm2.body) else pm2.body end as body
-from :_smfpm pm
-join :_personal_messages pm2
-  on pm.id = pm2.ID_PM",
+                pm.id,
+                pm.group_id,
+                from_unixtime(pm2.msgtime) as DateInserted,
+                pm.from_id,
+                'BBCode' as Format,
+                case when pm.subject = pm.subject2 then concat(pm.subject, '\n\n', pm2.body) else pm2.body end as body
+            from :_smfpm pm
+            join :_personal_messages pm2
+                on pm.id = pm2.ID_PM",
             $convMessage_Map
         );
 
@@ -499,12 +483,12 @@ join :_personal_messages pm2
         $ex->exportTable(
             'UserConversation',
             "select
-   pm.group_id,
-   t.to_id,
-   t.deleted
- from :_smfpmto t
- join :_smfpm pm
-   on t.id = pm.group_id",
+                    pm.group_id,
+                    t.to_id,
+                    t.deleted
+                from :_smfpmto t
+                join :_smfpm pm
+                    on t.id = pm.group_id",
             $userConv_Map
         );
 

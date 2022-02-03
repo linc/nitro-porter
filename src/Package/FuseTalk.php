@@ -34,16 +34,6 @@ class FuseTalk extends Package
             'Avatars' => 0,
             'PrivateMessages' => 1,
             'Signatures' => 1,
-            'Attachments' => 0,
-            'Bookmarks' => 0,
-            'Permissions' => 0,
-            'Badges' => 0,
-            'UserNotes' => 0,
-            'Ranks' => 0,
-            'Groups' => 0,
-            'Tags' => 0,
-            'Reactions' => 0,
-            'Articles' => 0,
         ]
     ];
 
@@ -67,7 +57,6 @@ class FuseTalk extends Package
     public function run($ex)
     {
         $this->createIndices($ex); // Speed up the export.
-
         $this->users($ex);
         $this->signatures($ex);
         $this->roles($ex);
@@ -141,28 +130,26 @@ class FuseTalk extends Package
         $user_Map = array();
         $ex->exportTable(
             'User',
-            "
-            select
-                user.iuserid as UserID,
-                user.vchnickname as Name,
-                user.vchemailaddress as Email,
-                user.vchpassword as Password,
-                'md5' as HashMethod,
-                if (forumusers.vchauthoricon is not null,
-                    concat('authoricons/', forumusers.vchauthoricon), null) as Photo,
-                user.dtinsertdate as DateInserted,
-                user.dtlastvisiteddate as DateLastActive,
-                user.bapproved as Confirmed,
-                if (user.iuserlevel = 0, 1, 0) as Admin,
-                if (coalesce(bemail.vchbanstring, bname.vchbanstring, 0) != 0, 1, 0) as Banned
-            from :_users as user
-                left join :_forumusers as forumusers using (iuserid)
-                left join :_banning as bemail on b.vchbanstring = user.vchemailaddress
-                left join :_banning as bname on b.vchbanstring = user.vchnickname
-            group by user.iuserid
-         ;",
+            "select
+                    user.iuserid as UserID,
+                    user.vchnickname as Name,
+                    user.vchemailaddress as Email,
+                    user.vchpassword as Password,
+                    'md5' as HashMethod,
+                    if (forumusers.vchauthoricon is not null,
+                        concat('authoricons/', forumusers.vchauthoricon), null) as Photo,
+                    user.dtinsertdate as DateInserted,
+                    user.dtlastvisiteddate as DateLastActive,
+                    user.bapproved as Confirmed,
+                    if (user.iuserlevel = 0, 1, 0) as Admin,
+                    if (coalesce(bemail.vchbanstring, bname.vchbanstring, 0) != 0, 1, 0) as Banned
+                from :_users as user
+                    left join :_forumusers as forumusers using (iuserid)
+                    left join :_banning as bemail on b.vchbanstring = user.vchemailaddress
+                    left join :_banning as bname on b.vchbanstring = user.vchnickname
+                group by user.iuserid;",
             $user_Map
-        );  // ":_" will be replaced by database prefix
+        );
     }
 
     /**
@@ -172,23 +159,19 @@ class FuseTalk extends Package
     {
         $ex->exportTable(
             'UserMeta',
-            "
-            select
-                user.iuserid as UserID,
-                'Plugin.Signatures.Sig' as Name,
-                user.txsignature as Value
-            from :_users as user
-            where nullif(nullif(user.txsignature, ''), char(0)) is not null
-
-            union all
-
-            select
-                user.iuserid,
-                'Plugin.Signatures.Format',
-                'Html'
-            from :_users as user
-            where nullif(nullif(user.txsignature, ''), char(0)) is not null
-        "
+            "select
+                    user.iuserid as UserID,
+                    'Plugin.Signatures.Sig' as Name,
+                    user.txsignature as Value
+                from :_users as user
+                where nullif(nullif(user.txsignature, ''), char(0)) is not null
+                union all
+                select
+                    user.iuserid,
+                    'Plugin.Signatures.Format',
+                    'Html'
+                from :_users as user
+                where nullif(nullif(user.txsignature, ''), char(0)) is not null"
         );
     }
 
@@ -204,37 +187,27 @@ class FuseTalk extends Package
         }
 
         // Role.
-        $role_Map = array();
         $ex->exportTable(
             'Role',
-            "
-            select
-                groups.igroupid as RoleID,
-                groups.vchgroupname as Name
-            from :_groups as groups
-
-            union all
-
-            select
-                $memberRoleID as RoleID,
-                'Members'
-            from dual
-        ",
-            $role_Map
+            "select
+                    groups.igroupid as RoleID,
+                    groups.vchgroupname as Name
+                from :_groups as groups
+                union all
+                select
+                    $memberRoleID as RoleID,
+                    'Members'
+                from dual"
         );
 
         // User Role.
-        $userRole_Map = array();
         $ex->exportTable(
             'UserRole',
-            "
-            select
-                user.iuserid as UserID,
-                ifnull (user_role.igroupid, $memberRoleID) as RoleID
-            from :_users as user
-                left join :_groupusers as user_role using (iuserid)
-        ",
-            $userRole_Map
+            "select
+                    user.iuserid as UserID,
+                    ifnull (user_role.igroupid, $memberRoleID) as RoleID
+                from :_users as user
+                    left join :_groupusers as user_role using (iuserid)"
         );
     }
 
@@ -257,8 +230,7 @@ class FuseTalk extends Package
         "
         );
         $ex->query(
-            "
-            insert into zConversations(`User1`, `User2`, `DateInserted`)
+            "insert into zConversations(`User1`, `User2`, `DateInserted`)
                 select
                     if (pm.iuserid < pm.iownerid, pm.iuserid, pm.iownerid) as User1,
                     if (pm.iuserid < pm.iownerid, pm.iownerid, pm.iuserid) as User2,
@@ -266,22 +238,17 @@ class FuseTalk extends Package
                 from :_privatemessages as pm
                 group by
                     User1,
-                    User2
-        "
+                    User2"
         );
 
         // Conversations.
-        $conversation_Map = array();
         $ex->exportTable(
             'Conversation',
-            "
-            select
-                c.ConversationID as ConversationID,
-                c.User1 as InsertUserID,
-                c.DateInserted as DateInserted
-            from zConversations as c
-        ;",
-            $conversation_Map
+            "select
+                    c.ConversationID as ConversationID,
+                    c.User1 as InsertUserID,
+                    c.DateInserted as DateInserted
+                from zConversations as c;"
         );
 
         // Conversation Messages.
@@ -290,54 +257,44 @@ class FuseTalk extends Package
         );
         $ex->exportTable(
             'ConversationMessage',
-            "
-            select
-                pm.imessageid as MessageID,
-                c.ConversationID,
-                pm.txmessage,
-                'Html' as Format,
-                pm.iownerid as InsertUserID,
-                pm.dtinsertdate as DateInserted
-            from zConversations as c
-                inner join :_privatemessages as pm on pm.iuserid = c.User1 and pm.iownerid = c.User2
-            where vchusagestatus = 'sent'
-
-            union all
-
-            select
-                pm.imessageid as MessageID,
-                c.ConversationID,
-                pm.txmessage,
-                'Html' as Format,
-                pm.iownerid as InsertUserID,
-                pm.dtinsertdate as DateInserted
-            from zConversations as c
-                inner join :_privatemessages as pm on pm.iuserid = c.User2 and pm.iownerid = c.User1
-            where vchusagestatus = 'sent'
-        ;",
+            "select
+                    pm.imessageid as MessageID,
+                    c.ConversationID,
+                    pm.txmessage,
+                    'Html' as Format,
+                    pm.iownerid as InsertUserID,
+                    pm.dtinsertdate as DateInserted
+                from zConversations as c
+                    inner join :_privatemessages as pm on pm.iuserid = c.User1 and pm.iownerid = c.User2
+                where vchusagestatus = 'sent'
+                union all
+                select
+                    pm.imessageid as MessageID,
+                    c.ConversationID,
+                    pm.txmessage,
+                    'Html' as Format,
+                    pm.iownerid as InsertUserID,
+                    pm.dtinsertdate as DateInserted
+                from zConversations as c
+                    inner join :_privatemessages as pm on pm.iuserid = c.User2 and pm.iownerid = c.User1
+                where vchusagestatus = 'sent';",
             $conversationMessage_Map
         );
 
         // User Conversation.
-        $userConversation_Map = array();
         $ex->exportTable(
             'UserConversation',
-            "
-            select
-                c.ConversationID,
-                c.User1 as UserID,
-                now() as DateLastViewed
-            from zConversations as c
-
-            union all
-
-            select
-                c.ConversationID,
-                c.User2 as UserID,
-                now() as DateLastViewed
-            from zConversations as c
-        ;",
-            $userConversation_Map
+            "select
+                    c.ConversationID,
+                    c.User1 as UserID,
+                    now() as DateLastViewed
+                from zConversations as c
+                union all
+                select
+                    c.ConversationID,
+                    c.User2 as UserID,
+                    now() as DateLastViewed
+                from zConversations as c;"
         );
     }
 
@@ -346,18 +303,14 @@ class FuseTalk extends Package
      */
     protected function categories(ExportModel $ex): void
     {
-        $category_Map = array();
         $ex->exportTable(
             'Category',
-            "
-            select
-                categories.icategoryid as CategoryID,
-                categories.vchcategoryname as Name,
-                categories.vchdescription as Description,
-                -1 as ParentCategoryID
-            from :_categories as categories
-        ",
-            $category_Map
+            "select
+                    categories.icategoryid as CategoryID,
+                    categories.vchcategoryname as Name,
+                    categories.vchdescription as Description,
+                    -1 as ParentCategoryID
+                from :_categories as categories"
         );
     }
 
@@ -366,25 +319,20 @@ class FuseTalk extends Package
      */
     protected function discussions(ExportModel $ex): void
     {
-        /* Skip "Body". It will be fixed at import.
-                 * The first comment is going to be used to fill the missing data and will then be deleted
-                 */
-        $discussion_Map = array();
+        // Skip "Body". It will be fixed at import.
+        // The first comment is going to be used to fill the missing data and will then be deleted
         $ex->exportTable(
             'Discussion',
-            "
-            select
-                threads.ithreadid as DiscussionID,
-                threads.vchthreadname as Name,
-                threads.icategoryid as CategoryID,
-                threads.iuserid as InsertUserID,
-                threads.dtinsertdate as DateInserted,
-                'HTML' as Format,
-                if (threads.vchalertthread = 'Yes' and threads.dtstaydate > now(), 2, 0) as Announce,
-                if (threads.vchthreadlock = 'Locked', 1, 0) as Closed
-            from :_threads as threads
-        ",
-            $discussion_Map
+            "select
+                    threads.ithreadid as DiscussionID,
+                    threads.vchthreadname as Name,
+                    threads.icategoryid as CategoryID,
+                    threads.iuserid as InsertUserID,
+                    threads.dtinsertdate as DateInserted,
+                    'HTML' as Format,
+                    if (threads.vchalertthread = 'Yes' and threads.dtstaydate > now(), 2, 0) as Announce,
+                    if (threads.vchthreadlock = 'Locked', 1, 0) as Closed
+                from :_threads as threads"
         );
     }
 
@@ -393,25 +341,21 @@ class FuseTalk extends Package
      */
     protected function comments(ExportModel $ex): void
     {
-        /*
-                 * The iparentid column doesn't make any sense since the display is
-                 * ordered by date only (there are no "sub" comment)
-                 */
+        // The iparentid column doesn't make any sense since the display is ordered by date only
+        // (there are no "sub" comment)
         $comment_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
         $ex->exportTable(
             'Comment',
-            "
-            select
-                messages.imessageid as CommentID,
-                messages.ithreadid as DiscussionID,
-                messages.iuserid as InsertUserID,
-                messages.txmessage,
-                'Html' as Format,
-                messages.dtmessagedate as DateInserted
-            from :_messages as messages
-        ",
+            "select
+                    messages.imessageid as CommentID,
+                    messages.ithreadid as DiscussionID,
+                    messages.iuserid as InsertUserID,
+                    messages.txmessage,
+                    'Html' as Format,
+                    messages.dtmessagedate as DateInserted
+                from :_messages as messages",
             $comment_Map
         );
     }

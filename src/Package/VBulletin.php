@@ -486,9 +486,7 @@ class VBulletin extends Package
                 from :_thread t
                     left join :_attachment a ON a.postid = t.firstpostid
                 where a.attachmentid > 0
-
                 union all
-
                 select
                     a.attachmentid,
                     a.filename,
@@ -576,13 +574,12 @@ class VBulletin extends Package
         $ex->exportTable(
             'Poll',
             "select
-                p.*,
-                t.threadid,
-                t.postuserid,
-                !p.public as anonymous
-            from :_poll p
-                join :_thread t on p.pollid = t.pollid
-            ",
+                    p.*,
+                    t.threadid,
+                    t.postuserid,
+                    !p.public as anonymous
+                from :_poll p
+                    join :_thread t on p.pollid = t.pollid",
             $poll_Map
         );
 
@@ -601,9 +598,7 @@ class VBulletin extends Package
             );"
         );
 
-        $sql = "select
-                p.*,
-                t.postuserid
+        $sql = "select p.*, t.postuserid
             from :_poll p
             join :_thread t on p.pollid = t.pollid";
 
@@ -717,8 +712,7 @@ class VBulletin extends Package
 
             $ex->exportTable(
                 'Rank',
-                "select
-                        ut.*,
+                "select ut.*,
                         ut.title as title2,
                         0 as level
                     from :_usertitle as ut
@@ -939,12 +933,20 @@ class VBulletin extends Package
         self::$permissions2 = $permissions2;
     }
 
+    /**
+     * @param $value
+     * @return mixed
+     */
     public function htmlDecode($value)
     {
         return ($value);
     }
 
-    protected function tags($ex): void
+    /**
+     * @param ExportModel $ex
+     * @return void
+     */
+    protected function tags(ExportModel $ex): void
     {
         $ex->exportTable(
             'Tag',
@@ -960,20 +962,21 @@ class VBulletin extends Package
 
         $ex->exportTable(
             'TagDiscussion',
-            "
-            select
-                tagid as TagID,
-                threadid as DiscussionID,
-                -1 as CategoryID,
-                from_unixtime(dateline) as DateInserted
-            from :_tagthread
-        "
+            "select
+                    tagid as TagID,
+                    threadid as DiscussionID,
+                    -1 as CategoryID,
+                    from_unixtime(dateline) as DateInserted
+                from :_tagthread"
         );
     }
 
-    protected function conversations($ex): void
+    /**
+     * @param ExportModel $ex
+     * @return void
+     */
+    protected function conversations(ExportModel $ex): void
     {
-        $conversation_Map = array();
         $ex->exportTable(
             'Conversation',
             "select
@@ -982,42 +985,35 @@ class VBulletin extends Package
                 t.fromuserid as InsertUserID,
                 from_unixtime(t.dateline),
                 t.pmtextid as FirstMessageID
-            from
-            (select
+            from (select
                 parentpmid,
                 min(p.pmtextid) as pmtextid
             from (
                 select pmtextid, parentpmid from :_pm where parentpmid <> 0 group by pmtextid having count(pmtextid) > 1
             ) p
             group by parentpmid)	p
-            join :_pmtext t on t.pmtextid = p.pmtextid",
-            $conversation_Map
+            join :_pmtext t on t.pmtextid = p.pmtextid"
         );
 
-        $conversationMessage_Map = array();
         $ex->exportTable(
             'ConversationMessage',
-            "
-            select distinct
-                t.pmtextid,
-                p.parentpmid as ConversationID,
-                t.message as Body,
-                'BBCode' as Format,
-                t.fromuserid as InsertUserID,
-                from_unixtime(t.dateline) as DateInserted
-            from :_pmtext t
-            join (
-                select pmtextid, parentpmid
-                from :_pm
-                where parentpmid > 0
-                group by pmtextid having count(pmtextid) > 1
-            ) p on t.pmtextid = p.pmtextid
-        ",
-            $conversationMessage_Map
+            "select distinct
+                    t.pmtextid,
+                    p.parentpmid as ConversationID,
+                    t.message as Body,
+                    'BBCode' as Format,
+                    t.fromuserid as InsertUserID,
+                    from_unixtime(t.dateline) as DateInserted
+                from :_pmtext t
+                join (
+                    select pmtextid, parentpmid
+                    from :_pm
+                    where parentpmid > 0
+                    group by pmtextid having count(pmtextid) > 1
+                ) p on t.pmtextid = p.pmtextid"
         );
 
         // User Conversation.
-        $userConversation_Map = array();
         $ex->exportTable(
             'UserConversation',
             "
@@ -1027,20 +1023,21 @@ class VBulletin extends Package
                 messageread as CountReadMessages
                 from :_pm
                 where parentpmid > 0
-            	group by userid, parentpmid
-            ",
-            $userConversation_Map
+            	group by userid, parentpmid"
         );
     }
 
-    protected function ipbans($ex): void
+    /**
+     * @param ExportModel $ex
+     * @return void
+     */
+    protected function ipbans(ExportModel $ex): void
     {
         $ipBanlist = $this->param('ipbanlist');
         if ($ipBanlist) {
             $ex->query("drop table if exists z_ipbanlist");
             $ex->query(
-                "
-                create table z_ipbanlist(
+                "create table z_ipbanlist(
                     id int(11) unsigned not null auto_increment,
                     ipaddress varchar(50) default null,
                     primary key (id),
@@ -1065,53 +1062,47 @@ class VBulletin extends Package
                 $insertSql = substr($insertSql, 0, -2);
                 $ex->query($insertSql);
 
-                $ban_Map = array();
-
                 $ex->exportTable(
                     'Ban',
-                    "
-                    select
-                        'IPAddress' as BanType,
-                        ipaddress as BanValue,
-                        'Imported ban' as Notes,
-                        NOW() as DateInserted
-                    from z_ipbanlist
-                    ",
-                    $ban_Map
+                    "select
+                            'IPAddress' as BanType,
+                            ipaddress as BanValue,
+                            'Imported ban' as Notes,
+                            NOW() as DateInserted
+                        from z_ipbanlist"
                 );
-
                 //$ex->query('drop table if exists z_ipbanlist');
             }
         }
     }
 
-    protected function reactions($ex): void
+    /**
+     * @param ExportModel $ex
+     * @return void
+     */
+    protected function reactions(ExportModel $ex): void
     {
         $ex->exportTable(
             'UserTag',
-            "
-            select
-                if(t.threadid is not null, 'Discussion', 'Comment') as RecordType,
-                if(t.threadid is not null, t.threadid, p.postid) as RecordID,
-                -1 as TagID,
-                p.userid as UserID,
-                from_unixtime(p.date) as DateInserted,
-                1 as Total
-            from :_post_thanks p
-            left join :_thread t on p.postid = t.firstpostid
-
-            union
-
-            select
-                concat(if(t.threadid is not null, 'Discussion', 'Comment'), '-Total') as RecordType,
-                if(t.threadid is not null, t.threadid, p.postid) as RecordID,
-                -1 as TagID,
-                p.userid as UserID,
-                now() as DateInserted,
-                p.total as Total
-            from (select postid, count(postid) as total, min(userid) as userid from :_post_thanks group by postid) p
-            left join :_thread t on p.postid = t.firstpostid
-        "
+            "select
+                    if(t.threadid is not null, 'Discussion', 'Comment') as RecordType,
+                    if(t.threadid is not null, t.threadid, p.postid) as RecordID,
+                    -1 as TagID,
+                    p.userid as UserID,
+                    from_unixtime(p.date) as DateInserted,
+                    1 as Total
+                from :_post_thanks p
+                left join :_thread t on p.postid = t.firstpostid
+                union
+                select
+                    concat(if(t.threadid is not null, 'Discussion', 'Comment'), '-Total') as RecordType,
+                    if(t.threadid is not null, t.threadid, p.postid) as RecordID,
+                    -1 as TagID,
+                    p.userid as UserID,
+                    now() as DateInserted,
+                    p.total as Total
+                from (select postid, count(postid) as total, min(userid) as userid from :_post_thanks group by postid) p
+                left join :_thread t on p.postid = t.firstpostid"
         );
     }
 
@@ -1127,13 +1118,13 @@ class VBulletin extends Package
         $ex->exportTable(
             'Category',
             "select
-                f.forumid as CategoryID,
-                f.description as Description,
-                f.parentid as ParentCategoryID,
-                f.title,
-                f.displayorder
-            from :_forum as f
-            where 1 = 1
+                    f.forumid as CategoryID,
+                    f.description as Description,
+                    f.parentid as ParentCategoryID,
+                    f.title,
+                    f.displayorder
+                from :_forum as f
+                where 1 = 1
                 $forumWhere",
             $category_Map
         );
@@ -1250,7 +1241,7 @@ class VBulletin extends Package
                 left join :_avatar av on u.avatarid = av.avatarid
                 left join :_userban ub on u.userid = ub.userid and ub.liftdate <= now()",
             $user_Map
-        );  // ":_" will be replace by database prefix
+        );
     }
 
     /**
@@ -1260,7 +1251,6 @@ class VBulletin extends Package
     protected function userMeta($ex, string $forumWhere, $minDate): void
     {
         $ex->query("drop table if exists VbulletinUserMeta");
-        // UserMeta
         $ex->query(
             "
             create table VbulletinUserMeta(
@@ -1283,8 +1273,7 @@ class VBulletin extends Package
 
         foreach ($userFields as $field => $insertAs) {
             $ex->query(
-                "
-                insert into VbulletinUserMeta (UserID, Name, Value)
+                "insert into VbulletinUserMeta (UserID, Name, Value)
                     select
                         userid,
                         'Profile.$insertAs',
@@ -1309,15 +1298,13 @@ class VBulletin extends Package
         if ($ex->exists('phrase', array('product', 'fieldname')) === true) {
             // Dynamic vB user data (userfield)
             $profileFields = $ex->query(
-                "
-                select distinct
+                "select distinct
                     varname,
                     text
                 from :_phrase
                 where product='vbulletin'
                     and fieldname='cprofilefield'
-                    and varname like 'field%_title'
-            "
+                    and varname like 'field%_title'"
             );
 
             if (is_resource($profileFields)) {
@@ -1344,22 +1331,20 @@ class VBulletin extends Package
         $ex->exportTable(
             'UserMeta',
             "select
-                userid as UserID,
-                'Plugin.Signatures.Sig' as Name,
-                signature as Value
-            from :_usertextfield
-            where nullif(signature, '') is not null
-
-            union
-            select
-                userid,
-                'Plugin.Signatures.Format',
-                'BBCode'
-            from :_usertextfield
-            where nullif(signature, '') is not null
-
-            union
-            select * from VbulletinUserMeta"
+                    userid as UserID,
+                    'Plugin.Signatures.Sig' as Name,
+                    signature as Value
+                from :_usertextfield
+                where nullif(signature, '') is not null
+                union
+                select
+                    userid,
+                    'Plugin.Signatures.Format',
+                    'BBCode'
+                from :_usertextfield
+                where nullif(signature, '') is not null
+                union
+                select * from VbulletinUserMeta"
         );
         $this->categories($ex, $forumWhere);
 
@@ -1392,7 +1377,6 @@ class VBulletin extends Package
      */
     protected function comments($ex, $minDiscussionID, string $forumWhere): void
     {
-// Comments
         $comment_Map = array(
             'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
                 return $value;
@@ -1408,22 +1392,22 @@ class VBulletin extends Package
         $ex->exportTable(
             'Comment',
             "select
-                p.postid as CommentID,
-                p.threadid as DiscussionID,
-                p.pagetext,
-                p.ipaddress as InsertIPAddress,
-                'BBCode' as Format,
-                p.userid as InsertUserID,
-                p.userid as UpdateUserID,
-                from_unixtime(p.dateline) as DateInserted
-            from :_post as p
-                inner join :_thread as t on p.threadid = t.threadid
-                left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
-            where p.postid <> t.firstpostid
-                and d.primaryid is null
-                and p.visible = 1
-                $minDiscussionWhere
-                $forumWhere",
+                    p.postid as CommentID,
+                    p.threadid as DiscussionID,
+                    p.pagetext,
+                    p.ipaddress as InsertIPAddress,
+                    'BBCode' as Format,
+                    p.userid as InsertUserID,
+                    p.userid as UpdateUserID,
+                    from_unixtime(p.dateline) as DateInserted
+                from :_post as p
+                    inner join :_thread as t on p.threadid = t.threadid
+                    left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
+                where p.postid <> t.firstpostid
+                    and d.primaryid is null
+                    and p.visible = 1
+                    $minDiscussionWhere
+                    $forumWhere",
             $comment_Map
         );
     }
@@ -1433,13 +1417,12 @@ class VBulletin extends Package
      */
     protected function wallPosts($ex, $minDiscussionID): void
     {
-// Activity (from visitor messages in vBulletin 3.8+)
+        // Activity (from visitor messages in vBulletin 3.8+)
         $minDiscussionWhere = '';
         if ($ex->exists('visitormessage') === true) {
             if ($minDiscussionID) {
                 $minDiscussionWhere = "and dateline > $minDiscussionID";
             }
-
 
             $activity_Map = array(
                 'postuserid' => 'RegardingUserID',
@@ -1469,13 +1452,12 @@ class VBulletin extends Package
     }
 
     /**
+     * @param ExportModel $ex
      * @param $minDiscussionID
      * @param string $forumWhere
-     * @return string
      */
-    protected function discussions($ex, $minDiscussionID, string $forumWhere): void
+    protected function discussions(ExportModel $ex, $minDiscussionID, string $forumWhere): void
     {
-// Discussions
         $discussion_Map = array(
             'title' => array('Column' => 'Name', 'Filter' => array($this, 'htmlDecode')),
             'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
@@ -1498,30 +1480,30 @@ class VBulletin extends Package
         $ex->exportTable(
             'Discussion',
             "select
-                t.threadid as DiscussionID,
-                t.forumid as CategoryID,
-                t.postuserid as InsertUserID,
-                t.postuserid as UpdateUserID,
-                t.views as CountViews,
-                t.sticky as Announce,
-                t.title,
-                p.postid as ForeignID,
-                p.ipaddress as InsertIPAddress,
-                p.pagetext,
-                'BBCode' as Format,
-                replycount+1 as CountComments,
-                convert(ABS(open-1), char(1)) as Closed,
-                if(convert(sticky, char(1)) > 0, 2, 0) as Announce,
-                from_unixtime(t.dateline) as DateInserted,
-                from_unixtime(lastpost) as DateLastComment,
-                if (t.pollid > 0, 'Poll', null) as Type
-            from :_thread as t
-                left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
-                left join :_post as p on p.postid = t.firstpostid
-            where d.primaryid is null
-                and t.visible = 1
-            $minDiscussionWhere
-            $forumWhere",
+                    t.threadid as DiscussionID,
+                    t.forumid as CategoryID,
+                    t.postuserid as InsertUserID,
+                    t.postuserid as UpdateUserID,
+                    t.views as CountViews,
+                    t.sticky as Announce,
+                    t.title,
+                    p.postid as ForeignID,
+                    p.ipaddress as InsertIPAddress,
+                    p.pagetext,
+                    'BBCode' as Format,
+                    replycount+1 as CountComments,
+                    convert(ABS(open-1), char(1)) as Closed,
+                    if(convert(sticky, char(1)) > 0, 2, 0) as Announce,
+                    from_unixtime(t.dateline) as DateInserted,
+                    from_unixtime(lastpost) as DateLastComment,
+                    if (t.pollid > 0, 'Poll', null) as Type
+                from :_thread as t
+                    left join :_deletionlog as d on d.type='thread' and d.primaryid=t.threadid
+                    left join :_post as p on p.postid = t.firstpostid
+                where d.primaryid is null
+                    and t.visible = 1
+                $minDiscussionWhere
+                $forumWhere",
             $discussion_Map
         );
     }
