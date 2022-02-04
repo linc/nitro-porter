@@ -886,17 +886,6 @@ class ExportModel
     }
 
     /**
-     * Using RestrictedTables, determine if a table should be exported or not
-     *
-     * @param  string $tableName Name of the table to check
-     * @return bool True if table should be exported, false otherwise
-     */
-    public function shouldExport($tableName)
-    {
-        return empty($this->restrictedTables) || in_array(strtolower($tableName), $this->restrictedTables);
-    }
-
-    /**
      * Echo a status message to the console.
      *
      * @param string $msg
@@ -906,23 +895,6 @@ class ExportModel
         if (defined('CONSOLE')) {
             echo $msg;
         }
-    }
-
-    /**
-     * Returns an array of all the expected export tables and expected columns in the exports.
-     *
-     * When exporting tables using ExportTable() all of the columns in this structure will always be exported
-     * in the order here, regardless of how their order in the query.
-     *
-     * @return array
-     */
-    public function structures($newStructures = false)
-    {
-        if (is_array($newStructures)) {
-            $this->structures = $newStructures;
-        }
-
-        return $this->structures;
     }
 
     /**
