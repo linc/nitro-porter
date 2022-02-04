@@ -32,7 +32,8 @@
     "require": {
         "php": ">=7.4",
         "monolog/monolog": "^2",
-        "illuminate/database": "^8.0"
+        "illuminate/database": "^8.0",
+        "ext-zlib": "*"
     },
     "suggest": {
         "ext-gd": "For transforming image attachments.",
