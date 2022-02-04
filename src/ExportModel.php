@@ -186,7 +186,7 @@ class ExportModel
     /**
      * Create the export file and begin the export.
      *
-     * @param string $source Package name.
+     * @param string $source Source name.
      * @return resource Pointer to the file created.
      */
     public function beginExport($source = '')

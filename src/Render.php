@@ -104,7 +104,7 @@ class Render
      */
     public static function viewForm(\Porter\Request $request)
     {
-        $forums = \Porter\PackageSupport::getInstance()->get();
+        $forums = \Porter\Support::getInstance()->get();
         $msg = getValue('Msg', $request->getAll(), '');
         $canWrite = testWrite();
 
@@ -157,7 +157,7 @@ class Render
                     </label>
                 </li>
                 <li>
-                    <label>Package
+                    <label>Format
                         <select name="package" id="ForumType" onchange="setPrefix()">
                             <option disabled selected value> — selection required — </option>
                             <?php foreach ($forums as $forumClass => $forumInfo) : ?>
@@ -329,8 +329,8 @@ class Render
     public static function viewFeatureList($request)
     {
         $platform = $request->get('list');
-        $supported = \Porter\PackageSupport::getInstance()->get();
-        $features = \Porter\PackageSupport::getInstance()->getAllFeatures();
+        $supported = \Porter\Support::getInstance()->get();
+        $features = \Porter\Support::getInstance()->getAllFeatures();
         self::pageHeader();
 
         echo '<p class="Info"><a href="/?features=1">&larr; Back</a></p>';
@@ -341,7 +341,7 @@ class Render
         foreach ($features as $feature => $trash) {
             echo '
           <dt>' . self::featureName($feature) . '</dt>
-          <dd>' . \Porter\PackageSupport::getInstance()->getFeatureStatusHtml($platform, $feature) . '</dd>';
+          <dd>' . \Porter\Support::getInstance()->getFeatureStatusHtml($platform, $feature) . '</dd>';
         }
         echo '</dl>';
 
@@ -355,8 +355,8 @@ class Render
      */
     public static function viewFeatureTable()
     {
-        $features = \Porter\PackageSupport::getInstance()->getAllFeatures();
-        $supported = \Porter\PackageSupport::getInstance()->get();
+        $features = \Porter\Support::getInstance()->getAllFeatures();
+        $supported = \Porter\Support::getInstance()->get();
         $packages = array_keys($supported);
 
         self::pageHeader();
@@ -382,7 +382,7 @@ class Render
             // Status per platform.
             foreach ($features as $feature => $trash) {
                 echo '<td>' .
-                    \Porter\PackageSupport::getInstance()->getFeatureStatusHtml($package, $feature, false) .
+                    \Porter\Support::getInstance()->getFeatureStatusHtml($package, $feature, false) .
                 '</td>';
             }
 

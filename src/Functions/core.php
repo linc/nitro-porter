@@ -8,8 +8,8 @@ use Porter\Connection;
 use Porter\Database\DbFactory;
 use Porter\ExportModel;
 use Porter\Request;
-use Porter\Package;
-use Porter\PackageSupport;
+use Porter\Source;
+use Porter\Support;
 
 /**
  * Retrieve the config.
@@ -49,18 +49,18 @@ function getTestDatabaseCredentials(): array
 }
 
 /**
- * Get valid package class. Exit app if invalid package name is given.
+ * Get valid source class. Exit app if invalid package name is given.
  *
- * @param string $packageName
- * @return Package
+ * @param string $source
+ * @return Source
  */
-function packageFactory(string $packageName): Package
+function sourceFactory(string $source): Source
 {
-    if (!array_key_exists($packageName, PackageSupport::getInstance()->get())) {
-        exit('Unsupported package: ' . $packageName);
+    if (!array_key_exists($source, Support::getInstance()->get())) {
+        exit('Unsupported package: ' . $source);
     }
 
-    $class = '\Porter\Package\\' . ucwords($packageName);
+    $class = '\Porter\Source\\' . ucwords($source);
     return new $class();
 }
 

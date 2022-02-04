@@ -14,19 +14,19 @@ class ExportController
     /**
      * Export workflow.
      */
-    public static function doExport(Package $package, ExportModel $model)
+    public static function doExport(Source $source, ExportModel $model)
     {
         // Test src tables' existence & structure.
-        $model->verifySource($package->sourceTables);
+        $model->verifySource($source->sourceTables);
 
         // Start export.
         set_time_limit(0);
-        if (isset($package::getSupport()['charset_table'])) { // @todo Use a wrapper in Package
-            $model->setCharacterSet($package::getSupport()['charset_table']);
+        if (isset($source::getSupport()['charset_table'])) { // @todo Use a wrapper in Source
+            $model->setCharacterSet($source::getSupport()['charset_table']);
         }
-        $model->beginExport($package::getSupport()['name']);
-        $package->exportModel = $model; // @todo
-        $package->run($model);
+        $model->beginExport($source::getSupport()['name']);
+        $source->exportModel = $model; // @todo
+        $source->run($model);
         $model->endExport();
     }
 
@@ -46,7 +46,7 @@ class ExportController
 
         // Get package.
         $package_name = $request->get('package');
-        $package = packageFactory($package_name);
+        $package = sourceFactory($package_name);
 
         // Main process.
         self::doExport($package, $model);

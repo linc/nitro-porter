@@ -97,7 +97,7 @@ class Request
     public function getGlobalOptions(): array
     {
         $options = self::RUN_OPTIONS;
-        $options['package']['Values'] = array_keys(PackageSupport::getInstance()->get());
+        $options['package']['Values'] = array_keys(Support::getInstance()->get());
         return $options;
     }
 
@@ -108,7 +108,7 @@ class Request
     public function getAllOptions($sections = false): array
     {
         $globalOptions = $this->getGlobalOptions();
-        $supported = PackageSupport::getInstance()->get();
+        $supported = Support::getInstance()->get();
         $result = [];
 
         if ($sections) {

@@ -41,4 +41,4 @@ Basically doing the above, but attached to a pull request with a proposed fix! I
 
 ### Add support for a new source
 
-To support a new forum source, copy "src/Package/Example.php", rename it to your platform, and follow its inline documentation. Document and test it thoroughly, including noting shortcuts taken or potential future improvements. Send us a pull request when it's ready!
+To support a new forum source, copy "src/Source/Example.php", rename it to your platform, and follow its inline documentation. Document and test it thoroughly, including noting shortcuts taken or potential future improvements. Send us a pull request when it's ready!

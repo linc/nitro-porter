@@ -17,4 +17,4 @@ if (!file_exists(__DIR__ . '/config.php')) {
 \Porter\Config::getInstance()->set(loadConfig());
 
 // Load package manifest.
-\Porter\PackageSupport::getInstance()->set(loadManifest());
+\Porter\Support::getInstance()->set(loadManifest());
