@@ -44,12 +44,11 @@ class Controller
         // Get model.
         $model = modelFactory($request, $info); // @todo Pass options not Request
 
-        // Get package.
-        $package_name = $request->get('package');
-        $package = sourceFactory($package_name);
+        // Get source.
+        $source = sourceFactory($request->get('package'));
 
         // Main process.
-        self::doExport($package, $model);
+        self::doExport($source, $model);
 
         // Write the results.  Send no path if we don't know where it went.
         $relativePath = $request->get('destpath') ?? $model->path;
