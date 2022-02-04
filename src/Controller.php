@@ -41,13 +41,13 @@ class Controller
         bootDatabase($info);
 
         // Export.
-        $model = modelFactory($request, $info); // @todo Pass options not Request
+        $exportModel = exportModelFactory($request, $info); // @todo Pass options not Request
         $source = sourceFactory($request->get('package'));
-        self::doExport($source, $model);
+        self::doExport($source, $exportModel);
 
         // Write the results (web only).
         if (!defined('CONSOLE')) {
-            Render::viewResult($model->comments);
+            Render::viewResult($exportModel->comments);
         }
     }
 }

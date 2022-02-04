@@ -68,7 +68,7 @@ function sourceFactory(string $source): Source
  * @param Request $request
  * @return ExportModel
  */
-function modelFactory(Request $request, array $info): ExportModel
+function exportModelFactory(Request $request, array $info): ExportModel
 {
     // Wire old database / model mess.
     $db = new DbFactory($info, 'pdo');
