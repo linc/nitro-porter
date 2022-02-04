@@ -9,7 +9,7 @@ namespace Porter;
 /**
  * Generic controller implemented by forum-specific ones.
  */
-class ExportController
+class Controller
 {
     /**
      * Export workflow.
