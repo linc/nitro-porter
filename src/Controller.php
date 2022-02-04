@@ -16,16 +16,13 @@ class Controller
      */
     public static function doExport(Source $source, ExportModel $model)
     {
-        // Test src tables' existence & structure.
         $model->verifySource($source->sourceTables);
 
-        // Start export.
-        set_time_limit(0);
-        if (isset($source::getSupport()['charset_table'])) { // @todo Use a wrapper in Source
-            $model->setCharacterSet($source::getSupport()['charset_table']);
+        if ($source::getCharSetTable()) {
+            $model->setCharacterSet($source::getCharSetTable());
         }
-        $model->beginExport($source::getSupport()['name']);
-        $source->exportModel = $model; // @todo
+
+        $model->beginExport();
         $source->run($model);
         $model->endExport();
     }
@@ -35,6 +32,9 @@ class Controller
      */
     public static function run(Request $request)
     {
+        // Remove time limit.
+        set_time_limit(0);
+
         // Wire new database.
         $connection = new Connection($request->get('source'));
         $info = $connection->getAllInfo();

@@ -185,11 +185,8 @@ class ExportModel
 
     /**
      * Create the export file and begin the export.
-     *
-     * @param string $source Source name.
-     * @return resource Pointer to the file created.
      */
-    public function beginExport($source = '')
+    public function beginExport()
     {
         $this->comments = array();
         $this->beginTime = microtime(true);
@@ -211,9 +208,6 @@ class ExportModel
 
         // Build meta info about where this file came from.
         $comment = 'Nitro Porter Export';
-        if ($source) {
-            $comment .= self::DELIM . ' Source: ' . $source;
-        }
 
         // Add meta info to the output.
         if ($this->captureOnly) {
@@ -223,8 +217,6 @@ class ExportModel
         }
 
         $this->comment('Export Started: ' . date('Y-m-d H:i:s'));
-
-        return $fp;
     }
 
     /**
@@ -603,11 +595,10 @@ class ExportModel
      * Determine the character set of the origin database.
      *
      * @param string $table Table to derive charset from.
-     * @param string $default Default character set.
      */
-    public function setCharacterSet($table, $default = 'utf8')
+    public function setCharacterSet(string $table)
     {
-        $characterSet = $default;
+        $characterSet = 'utf8'; // Default.
         $update = true;
 
         // First get the collation for the database.

@@ -74,6 +74,7 @@ class Vanilla1 extends Source
      */
     public function run($ex)
     {
+        $this->exportModel = $ex; // @todo
         $this->users($ex);
         $this->roles($ex);
         $this->categories($ex);

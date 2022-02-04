@@ -221,6 +221,8 @@ class VBulletin extends Source
      */
     public function run($ex)
     {
+        $this->exportModel = $ex; // @todo
+
         // Allow limited export of 1 category via ?forumid=ID
         $forumID = $this->param('forumid');
         if ($forumID) {

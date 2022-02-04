@@ -39,6 +39,18 @@ abstract class Source
     }
 
     /**
+     * @return string
+     */
+    public static function getCharSetTable(): string
+    {
+        $charset = '';
+        if (isset(self::getSupport()['charset_table'])) {
+            $charset = self::getSupport()['charset_table'];
+        }
+        return $charset;
+    }
+
+    /**
      * Set CDN file prefix if one is given.
      *
      * @deprecated
