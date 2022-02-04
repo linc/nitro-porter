@@ -28,6 +28,14 @@ class Controller
     }
 
     /**
+     * Import workflow.
+     */
+    public static function doImport(Target $target, ImportModel $model)
+    {
+        $target->run($model);
+    }
+
+    /**
      * Called by router to setup and run main export process.
      */
     public static function run(Request $request)
@@ -44,6 +52,13 @@ class Controller
         $exportModel = exportModelFactory($request, $info); // @todo Pass options not Request
         $source = sourceFactory($request->get('package'));
         self::doExport($source, $exportModel);
+
+        // Import.
+        if ($request->get('output') !== '') {
+            $importModel = importModelFactory();
+            $target = targetFactory($request->get('output'));
+            self::doImport($target, $importModel);
+        }
 
         // Write the results (web only).
         if (!defined('CONSOLE')) {

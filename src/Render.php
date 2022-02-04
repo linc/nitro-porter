@@ -104,7 +104,8 @@ class Render
      */
     public static function viewForm(\Porter\Request $request)
     {
-        $forums = \Porter\Support::getInstance()->get();
+        $sources = \Porter\Support::getInstance()->getSources();
+        $targets = \Porter\Support::getInstance()->getTargets();
         $msg = getValue('Msg', $request->getAll(), '');
         $canWrite = testWrite();
 
@@ -160,11 +161,8 @@ class Render
                     <label>Format
                         <select name="package" id="ForumType" onchange="setPrefix()">
                             <option disabled selected value> — selection required — </option>
-                            <?php foreach ($forums as $forumClass => $forumInfo) : ?>
-                                <option value="<?php echo $forumClass; ?>"<?php
-                                if (getValue('package') == $forumClass) {
-                                    echo ' selected="selected"';
-                                } ?>><?php echo $forumInfo['name']; ?></option>
+                            <?php foreach ($sources as $alias => $info) : ?>
+                                <option value="<?php echo $alias; ?>"><?php echo $info['name']; ?></option>
                             <?php endforeach; ?>
                         </select>
                     </label>
@@ -184,8 +182,10 @@ class Render
                     <label>Output
                         <select name="output" id="TargetType" onchange="setTarget()">
                             <option disabled selected value> — selection required — </option>
-                            <option value="Flarum">Flarum (MySQL)</option>
-                            <option value="Vanilla">Vanilla Forums (custom CSV)</option>
+                            <?php foreach ($targets as $alias => $info) : ?>
+                                <option value="<?php echo $alias; ?>"><?php echo $info['name']; ?></option>
+                            <?php endforeach; ?>
+                            <option value="">Vanilla Forums (files)</option>
                         </select>
                     </label>
                 </li>
@@ -207,7 +207,7 @@ class Render
                     </label>
                 </li>
             </ul>
-            <h2>Transfer</h2>
+            <!--<h2>Transfer</h2>
             <ul>
                 <li>
                     <label>Data
@@ -226,7 +226,7 @@ class Render
                         Attachments in database
                     </label>
                 </li>
-            </ul>
+            </ul>-->
             <div class="Button">
                 <input class="Button" type="submit" value="Start"/>
             </div>
@@ -237,7 +237,7 @@ class Render
         let type = document.getElementById('ForumType').value;
         switch (type) {
         <?php
-        foreach ($forums as $forumClass => $forumInfo) {
+        foreach ($sources as $forumClass => $forumInfo) {
             $hasAvatars = !empty($forumInfo['features']['Avatars']);
             $hasAttachments = !empty($forumInfo['features']['Attachments']);
             $spacer = "\n                "; // Makes the JS legible in Inpsector.
@@ -318,7 +318,7 @@ class Render
     public static function viewFeatureList($request)
     {
         $platform = $request->get('list');
-        $supported = \Porter\Support::getInstance()->get();
+        $supported = \Porter\Support::getInstance()->getSources();
         $features = \Porter\Support::getInstance()->getAllFeatures();
         self::pageHeader();
 
@@ -345,7 +345,7 @@ class Render
     public static function viewFeatureTable()
     {
         $features = \Porter\Support::getInstance()->getAllFeatures();
-        $supported = \Porter\Support::getInstance()->get();
+        $supported = \Porter\Support::getInstance()->getSources();
         $packages = array_keys($supported);
 
         self::pageHeader();

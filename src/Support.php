@@ -38,7 +38,9 @@ class Support
 
     private static $instance = null;
 
-    private $packages = [];
+    private $sources = [];
+
+    private $targets = [];
 
     public static function getInstance(): self
     {
@@ -49,27 +51,47 @@ class Support
         return self::$instance;
     }
 
-    public function register(string $name, array $meta)
+    /**
+     * @return array
+     */
+    public function getSources(): array
     {
-        $this->packages[$name] = $meta;
+        return $this->sources;
     }
 
-    public function get(): array
+    /**
+     * @return array
+     */
+    public function getTargets(): array
     {
-        return $this->packages;
+        return $this->targets;
     }
 
     /**
      * Accepts the `SUPPORTED` array from each package to build a list.
      *
-     * @param array $packages
+     * @param array $sources
      * @return void
      */
-    public function set(array $packages): void
+    public function setSources(array $sources): void
     {
-        foreach ($packages as $name) {
+        foreach ($sources as $name) {
             $classname = '\Porter\Source\\' . $name;
-            $this->packages[$name] = $classname::getSupport();
+            $this->sources[$name] = $classname::getSupport();
+        }
+    }
+
+    /**
+     * Accepts the `SUPPORTED` array from each package to build a list.
+     *
+     * @param array $targets
+     * @return void
+     */
+    public function setTargets(array $targets): void
+    {
+        foreach ($targets as $name) {
+            $classname = '\Porter\Target\\' . $name;
+            $this->targets[$name] = $classname::getSupport();
         }
     }
 
@@ -82,7 +104,7 @@ class Support
      */
     public function getFeatureStatusHtml(string $package, string $feature, bool $notes = true): string
     {
-        $supported = $this->get();
+        $supported = $this->getSources();
 
         if (!isset($supported[$package]['features'])) {
             return '<span class="No">No</span>';

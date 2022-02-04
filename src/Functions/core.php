@@ -7,8 +7,10 @@
 use Porter\Connection;
 use Porter\Database\DbFactory;
 use Porter\ExportModel;
+use Porter\ImportModel;
 use Porter\Request;
 use Porter\Source;
+use Porter\Target;
 use Porter\Support;
 
 /**
@@ -24,9 +26,17 @@ function loadConfig(): array
 /**
  * @return array
  */
-function loadManifest(): array
+function loadSources(): array
 {
-    return include(ROOT_DIR . '/data/manifest.php');
+    return include(ROOT_DIR . '/data/sources.php');
+}
+
+/**
+ * @return array
+ */
+function loadTargets(): array
+{
+    return include(ROOT_DIR . '/data/targets.php');
 }
 
 /**
@@ -49,19 +59,43 @@ function getTestDatabaseCredentials(): array
 }
 
 /**
- * Get valid source class. Exit app if invalid package name is given.
+ * Get valid source class. Exit app if invalid name is given.
  *
  * @param string $source
  * @return Source
  */
 function sourceFactory(string $source): Source
 {
-    if (!array_key_exists($source, Support::getInstance()->get())) {
-        exit('Unsupported package: ' . $source);
+    $class = '\Porter\Source\\' . ucwords($source);
+    if (!class_exists($class)) {
+        exit('Unsupported source: ' . $source);
     }
 
-    $class = '\Porter\Source\\' . ucwords($source);
     return new $class();
+}
+
+/**
+ * Get valid target class. Exit app if invalid name is given.
+ *
+ * @param string $target
+ * @return Target
+ */
+function targetFactory(string $target): Target
+{
+    $class = '\Porter\Target\\' . ucwords($target);
+    if (!class_exists($class)) {
+        exit('Unsupported target: ' . $target);
+    }
+
+    return new $class();
+}
+
+/**
+ * @return ImportModel
+ */
+function importModelFactory(): ImportModel
+{
+    return new ImportModel();
 }
 
 /**
