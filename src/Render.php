@@ -286,31 +286,20 @@ class Render
     }
 
     /**
-     * Message: Result of export.
+     * Result of export.
      *
-     * @param array       $msgs  Comments / logs from the export.
-     * @param string      $class CSS class for wrapper.
-     * @param string|bool $path  Path to file for download, or false.
+     * @param array $comments Log of the export.
      */
-    public static function viewExportResult($msgs = array(), $class = 'Info', $path = false)
+    public static function viewResult(array $comments)
     {
-        if (defined('CONSOLE')) {
-            return;
-        }
-
         self::pageHeader();
+        echo "<p class=\"DownloadLink\">Success!</p>";
 
-        echo "<p class=\"DownloadLink\">Success!";
-        if ($path) {
-            " <a href=\"$path\"><b>Download exported file</b></a>";
-        }
-        echo "</p>";
-
-        if (count($msgs)) {
-            echo "<div class=\"$class\">";
+        if (count($comments)) {
+            echo "<div class=\"Info\">";
             echo "<p>Really boring export logs follow:</p>\n";
             echo '<ol>';
-            foreach ($msgs as $msg) {
+            foreach ($comments as $msg) {
                 echo "<li>$msg</li>\n";
             }
             echo '</ol>';

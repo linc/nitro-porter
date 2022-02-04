@@ -36,22 +36,18 @@ class Controller
     public static function run(Request $request)
     {
         // Wire new database.
-        $source = $request->get('source');
-        $connection = new Connection($source);
+        $connection = new Connection($request->get('source'));
         $info = $connection->getAllInfo();
         bootDatabase($info);
 
-        // Get model.
+        // Export.
         $model = modelFactory($request, $info); // @todo Pass options not Request
-
-        // Get source.
         $source = sourceFactory($request->get('package'));
-
-        // Main process.
         self::doExport($source, $model);
 
-        // Write the results.  Send no path if we don't know where it went.
-        $relativePath = $request->get('destpath') ?? $model->path;
-        Render::viewExportResult($model->comments, 'Info', $relativePath);
+        // Write the results (web only).
+        if (!defined('CONSOLE')) {
+            Render::viewResult($model->comments);
+        }
     }
 }
