@@ -31,14 +31,12 @@
     ],
     "require": {
         "php": ">=7.4",
-        "monolog/monolog": "^2",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "ext-zlib": "*",
         "illuminate/database": "^8.0",
-        "ext-zlib": "*"
-    },
-    "suggest": {
-        "ext-gd": "For transforming image attachments.",
-        "ext-json": "Using a JSON data source.",
-        "ext-pdo": "Using a MySQL data source."
+        "monolog/monolog": "^2"
     },
     "require-dev": {
         "phing/phing": "^2.0",
