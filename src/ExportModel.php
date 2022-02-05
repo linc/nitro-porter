@@ -161,7 +161,13 @@ class ExportModel
         $this->path .= 'export_' . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
 
         // Start the file pointer.
-        $fp = $this->openFile();
+        $this->path = str_replace(' ', '_', $this->path);
+        if ($this->useCompression()) {
+            $fp = gzopen($this->path, 'wb');
+        } else {
+            $fp = fopen($this->path, 'wb');
+        }
+        $this->file = $fp;
 
         // Add meta info to the output.
         if (!$this->captureOnly) {
@@ -609,25 +615,6 @@ class ExportModel
     }
 
     /**
-     *
-     *
-     * @return resource
-     */
-    protected function openFile()
-    {
-        $this->path = str_replace(' ', '_', $this->path);
-        if ($this->useCompression()) {
-            $fp = gzopen($this->path, 'wb');
-        } else {
-            $fp = fopen($this->path, 'wb');
-        }
-
-        $this->file = $fp;
-
-        return $fp;
-    }
-
-    /**
      * Execute a SQL query on the current connection.
      *
      * Wrapper for _Query().
@@ -834,8 +821,7 @@ class ExportModel
      */
     public function writeEndTable($fp)
     {
-        fwrite($fp, self::NEWLINE);
-        fwrite($fp, self::NEWLINE);
+        fwrite($fp, self::NEWLINE . self::NEWLINE);
     }
 
     /**
