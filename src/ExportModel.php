@@ -1066,6 +1066,4 @@ class ExportModel
         );
         return $result->nextResultRow() !== false;
     }
-
-
 }
