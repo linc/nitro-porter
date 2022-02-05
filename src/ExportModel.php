@@ -58,12 +58,6 @@ class ExportModel
 
     public $destDb;
 
-    public $beginTime;
-
-    public $endTime;
-
-    public $totalTime;
-
     /**
      * @var array *
      */
@@ -178,7 +172,6 @@ class ExportModel
     public function beginExport()
     {
         $this->comments = array();
-        $this->beginTime = microtime(true);
 
         // Allow us to define where the output file goes.
         if (Request::instance()->get('destpath')) {
@@ -237,14 +230,11 @@ class ExportModel
      *
      * This method must be called if BeginExport() has been called or else the export file will not be closed.
      */
-    public function endExport()
+    public function endExport($time)
     {
-        $this->endTime = microtime(true);
-        $this->totalTime = $this->endTime - $this->beginTime;
-
         $this->comment($this->path);
         $this->comment('Export Completed: ' . date('Y-m-d H:i:s'));
-        $this->comment(sprintf('Elapsed Time: %s', formatElapsed($this->totalTime)));
+        $this->comment(sprintf('Elapsed Time: %s', formatElapsed($time)));
 
         if ($this->testMode || Request::instance()->get('dumpsql') || $this->captureOnly) {
             $queries = implode("\n\n", $this->queries);

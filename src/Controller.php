@@ -22,9 +22,10 @@ class Controller
             $model->setCharacterSet($source::getCharSetTable());
         }
 
+        $start = microtime(true);
         $model->beginExport();
         $source->run($model);
-        $model->endExport();
+        $model->endExport(microtime(true) - $start);
     }
 
     /**
