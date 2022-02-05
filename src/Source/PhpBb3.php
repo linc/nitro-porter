@@ -249,7 +249,7 @@ class PhpBb3 extends Source
     {
         // Grab the avatar salt.
         $px = '';
-        $data = $this->get("select config_value from :_config where config_name = 'avatar_salt'");
+        $data = $ex->get("select config_value from :_config where config_name = 'avatar_salt'");
         if (count($data) > 0) {
             $data = array_shift($data); // first row
             $px = array_shift($data); // first column
