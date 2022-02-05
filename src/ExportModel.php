@@ -51,11 +51,6 @@ class ExportModel
     public $currentRow = null;
 
     /**
-     * @var string Where we are sending this export: 'file' or 'database'. *
-     */
-    public $destination = 'file';
-
-    /**
      * @var string *
      * @deprecated
      */
@@ -227,13 +222,7 @@ class ExportModel
      */
     public function comment($message, $echo = true)
     {
-        if ($this->destination == 'file') {
-            $char = self::COMMENT;
-        } else {
-            $char = '--';
-        }
-
-        $comment = $char . ' ' . str_replace(
+        $comment = self::COMMENT . ' ' . str_replace(
             self::NEWLINE,
             self::NEWLINE . self::COMMENT . ' ',
             $message
@@ -265,11 +254,7 @@ class ExportModel
 
         if ($this->testMode || Request::instance()->get('dumpsql') || $this->captureOnly) {
             $queries = implode("\n\n", $this->queries);
-            if ($this->destination == 'database') {
-                fwrite($this->file, $queries);
-            } else {
-                $this->comment($queries, true);
-            }
+            $this->comment($queries, true);
         }
 
         if ($this->useCompression() && function_exists('gzopen')) {
@@ -364,7 +349,6 @@ class ExportModel
 
             fwrite($fp, $row[$blobColumn]);
             fclose($fp);
-            $this->status('.');
 
             if ($thumbnail) {
                 if ($thumbnail === true) {
@@ -372,11 +356,10 @@ class ExportModel
                 }
 
                 $thumbPath = str_replace('/avat', '/navat', $path);
-                $this->generateThumbnail($picPath, $thumbPath, $thumbnail, $thumbnail);
+                generateThumbnail($picPath, $thumbPath, $thumbnail, $thumbnail);
             }
             $count++;
         }
-        $this->status("$count Blobs.\n");
         $this->comment("$count Blobs.", false);
     }
 
@@ -401,11 +384,6 @@ class ExportModel
                 . " The valid tables for export are " . implode(", ", array_keys($this->structures))
             );
             fwrite($fp, self::NEWLINE);
-
-            return;
-        }
-        if ($this->destination == 'database') {
-            //$this->_exportTableDB($tableName, $query, $mappings);
 
             return;
         }
@@ -634,49 +612,6 @@ class ExportModel
     /**
      *
      *
-     * @return array
-     */
-    public function getDatabasePrefixes()
-    {
-        // Grab all of the tables.
-        $data = $this->query('show tables');
-        if ($data === false) {
-            return array();
-        }
-
-        // Get the names in an array for easier parsing.
-        $tables = array();
-        while ($row = $data->nextResultRow(false)) {
-            $tables[] = $row[0];
-        }
-        sort($tables);
-
-        $prefixes = array();
-
-        // Loop through each table and get its prefixes.
-/*        foreach ($tables as $table) {
-            $pxFound = false;
-            foreach ($prefixes as $pxIndex => $px) {
-                $newPx = $this->getPrefix($table, $px);
-                if (strlen($newPx) > 0) {
-                    $pxFound = true;
-                    if ($newPx != $px) {
-                        $prefixes[$pxIndex] = $newPx;
-                    }
-                    break;
-                }
-            }
-            if (!$pxFound) {
-                $prefixes[] = $table;
-            }
-        }*/
-
-        return $prefixes;
-    }
-
-    /**
-     *
-     *
      * @param  $row
      * @param  $tableOrStructure
      * @param  $mappings
@@ -797,25 +732,6 @@ class ExportModel
     }
 
     /**
-     * @param  $sql
-     * @param  $default
-     * @return mixed
-     * @deprecated
-     */
-    public function getValue($sql, $default)
-    {
-        $data = $this->get($sql);
-        if (count($data) > 0) {
-            $data = array_shift($data); // first row
-            $result = array_shift($data); // first column
-
-            return $result;
-        } else {
-            return $default;
-        }
-    }
-
-    /**
      *
      *
      * @return resource
@@ -847,13 +763,6 @@ class ExportModel
         if (!preg_match('`limit 1;$`', $query)) {
             $this->queries[] = $query;
         }
-
-        if ($this->destination == 'database' && $this->captureOnly) {
-            if (!preg_match('`^\s*select|show|describe|create`', $query)) {
-                return 'SKIPPED';
-            }
-        }
-
         return $this->executeQuery($query);
     }
 
@@ -877,18 +786,6 @@ class ExportModel
     }
 
     /**
-     * Echo a status message to the console.
-     *
-     * @param string $msg
-     */
-    public function status($msg)
-    {
-        if (defined('CONSOLE')) {
-            echo $msg;
-        }
-    }
-
-    /**
      * Whether or not to use compression on the output file.
      *
      * @param  bool $value The value to set or NULL to just return the value.
@@ -900,7 +797,7 @@ class ExportModel
             $this->useCompression = $value;
         }
 
-        return $this->useCompression && $this->destination == 'file' && function_exists('gzopen');
+        return $this->useCompression && function_exists('gzopen');
     }
 
     /**
@@ -1012,15 +909,6 @@ class ExportModel
             $error = 'The required tables are not present in the database.
                 Make sure you entered the correct database name and prefix and try again.';
 
-            // Guess the prefixes to notify the user.
-            $prefixes = $this->getDatabasePrefixes();
-            if (count($prefixes) == 1) {
-                $error .= ' Based on the database you provided,
-                    your database prefix is probably ' . implode(', ', $prefixes);
-            } elseif (count($prefixes) > 0) {
-                $error .= ' Based on the database you provided,
-                    your database prefix is probably one of the following: ' . implode(', ', $prefixes);
-            }
             trigger_error($error);
         } else {
             trigger_error('Missing required database tables: ' . $missingTables);
@@ -1228,85 +1116,5 @@ class ExportModel
         return $result->nextResultRow() !== false;
     }
 
-    /**
-     * Create a thumbnail from an image file.
-     *
-     * @param string $path
-     * @param string $thumbPath
-     * @param  int $height
-     * @param  int $width
-     * @return void
-     */
-    public function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
-    {
-        list($widthSource, $heightSource, $type) = getimagesize($path);
 
-        $XCoord = 0;
-        $YCoord = 0;
-        $heightDiff = $heightSource - $height;
-        $widthDiff = $widthSource - $width;
-        if ($widthDiff > $heightDiff) {
-            // Crop the original width down
-            $newWidthSource = round(($width * $heightSource) / $height);
-
-            // And set the original x position to the cropped start point.
-            $XCoord = round(($widthSource - $newWidthSource) / 2);
-            $widthSource = $newWidthSource;
-        } else {
-            // Crop the original height down
-            $newHeightSource = round(($height * $widthSource) / $width);
-
-            // And set the original y position to the cropped start point.
-            $YCoord = round(($heightSource - $newHeightSource) / 2);
-            $heightSource = $newHeightSource;
-        }
-
-        try {
-            switch ($type) {
-                case 1:
-                    $sourceImage = imagecreatefromgif($path);
-                    break;
-                case 2:
-                    $sourceImage = @imagecreatefromjpeg($path);
-                    if (!$sourceImage) {
-                        $sourceImage = imagecreatefromstring(file_get_contents($path));
-                    }
-                    break;
-                case 3:
-                    $sourceImage = imagecreatefrompng($path);
-                    imagealphablending($sourceImage, true);
-                    break;
-            }
-
-            $targetImage = imagecreatetruecolor($width, $height);
-            imagecopyresampled(
-                $targetImage,
-                $sourceImage,
-                0,
-                0,
-                $XCoord,
-                $YCoord,
-                $width,
-                $height,
-                $widthSource,
-                $heightSource
-            );
-            imagedestroy($sourceImage);
-
-            switch ($type) {
-                case 1:
-                    imagegif($targetImage, $thumbPath);
-                    break;
-                case 2:
-                    imagejpeg($targetImage, $thumbPath);
-                    break;
-                case 3:
-                    imagepng($targetImage, $thumbPath);
-                    break;
-            }
-            imagedestroy($targetImage);
-        } catch (\Exception $e) {
-            echo "Could not generate a thumnail for " . $targetImage;
-        }
-    }
 }

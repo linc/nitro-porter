@@ -1468,12 +1468,6 @@ class VBulletin extends Source
             ),
         );
 
-        if ($ex->destination == 'database') {
-            // Remove the filter from the title so that this doesn't take too long.
-            $ex->HTMLDecoderDb('thread', 'title', 'threadid');
-            unset($discussion_Map['title']['Filter']);
-        }
-
         $minDiscussionWhere = '';
         if ($minDiscussionID) {
             $minDiscussionWhere = "and t.threadid > $minDiscussionID";

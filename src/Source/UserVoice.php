@@ -99,7 +99,7 @@ class UserVoice extends Source
 
                 //$PicPath = str_replace('/avat', '/pavat', $photoPath);
                 $thumbPath = str_replace('/pavat', '/navat', $photoPath);
-                $ex->generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
+                generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
             }
             $count++;
         }

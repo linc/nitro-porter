@@ -248,7 +248,13 @@ class PhpBb3 extends Source
     protected function users(ExportModel $ex)
     {
         // Grab the avatar salt.
-        $px = $ex->getValue("select config_value from :_config where config_name = 'avatar_salt'", '');
+        $px = '';
+        $data = $this->get("select config_value from :_config where config_name = 'avatar_salt'");
+        if (count($data) > 0) {
+            $data = array_shift($data); // first row
+            $px = array_shift($data); // first column
+        }
+
         $cdn = $this->param('cdn', '');
 
         $user_Map = array(
