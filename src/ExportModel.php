@@ -250,7 +250,7 @@ class ExportModel
 
         $this->comment($this->path);
         $this->comment('Export Completed: ' . date('Y-m-d H:i:s'));
-        $this->comment(sprintf('Elapsed Time: %s', self::formatElapsed($this->totalTime)));
+        $this->comment(sprintf('Elapsed Time: %s', formatElapsed($this->totalTime)));
 
         if ($this->testMode || Request::instance()->get('dumpsql') || $this->captureOnly) {
             $queries = implode("\n\n", $this->queries);
@@ -290,7 +290,7 @@ class ExportModel
             $rowCount = $this->exportTableWrite($tableName, $query, $mappings);
 
             $endTime = microtime(true);
-            $elapsed = self::formatElapsed($beginTime, $endTime);
+            $elapsed = formatElapsed($beginTime, $endTime);
             $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
             fwrite($this->file, self::NEWLINE);
         }
@@ -520,28 +520,6 @@ class ExportModel
                 $result[$col] = $mapping;
             }
         }
-
-        return $result;
-    }
-
-    /**
-     * For outputting how long the export took.
-     *
-     * @param  int $start
-     * @param  int $end
-     * @return string
-     */
-    public static function formatElapsed($start, $end = null)
-    {
-        if ($end === null) {
-            $elapsed = $start;
-        } else {
-            $elapsed = $end - $start;
-        }
-
-        $m = floor($elapsed / 60);
-        $s = $elapsed - $m * 60;
-        $result = sprintf('%02d:%05.2f', $m, $s);
 
         return $result;
     }

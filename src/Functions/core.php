@@ -215,6 +215,28 @@ function combinePaths($paths, string $delimiter = '/'): string
 }
 
 /**
+ * For outputting how long the export took.
+ *
+ * @param  int $start
+ * @param  int $end
+ * @return string
+ */
+function formatElapsed($start, $end = null)
+{
+    if ($end === null) {
+        $elapsed = $start;
+    } else {
+        $elapsed = $end - $start;
+    }
+
+    $m = floor($elapsed / 60);
+    $s = $elapsed - $m * 60;
+    $result = sprintf('%02d:%05.2f', $m, $s);
+
+    return $result;
+}
+
+/**
  * Create a thumbnail from an image file.
  *
  * @param string $path
