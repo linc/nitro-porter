@@ -91,14 +91,6 @@ function targetFactory(string $target): Target
 }
 
 /**
- * @return ImportModel
- */
-function importModelFactory(): ImportModel
-{
-    return new ImportModel();
-}
-
-/**
  * @param Request $request
  * @param array $info
  * @param Target $target
