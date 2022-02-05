@@ -341,35 +341,26 @@ class ExportModel
     /**
      *
      *
-     * @param $tableName
-     * @param $query
-     * @param array $mappings
+     * @param string $tableName
+     * @param string $query
+     * @param array $map
      */
-    protected function createExportTable($tableName, $query, $mappings = [])
+    protected function createExportTable(string $tableName, string $query, array $map = [])
     {
         // Limit the query to grab any additional columns.
         $queryStruct = rtrim($query, ';') . ' limit 1';
         $structure = $this->mapStructure[$tableName];
 
         $data = $this->query($queryStruct, true);
-        //      $mb = function_exists('mb_detect_encoding');
-
-        // Loop through the data and write it to the file.
         if ($data === false) {
             return;
         }
 
         // Get the export structure.
-        while (($row = $data->nextResultRow()) !== false) {
-            $row = (array)$row;
+        $row = (array)$data->nextResultRow();
+        $exportStructure = $this->getExportStructure($row, $structure, $map, $tableName);
 
-            // Get the export structure.
-            $exportStructure = $this->getExportStructure($row, $structure, $mappings, $tableName);
-
-            break;
-        }
-
-        // Build the create table statement.
+        // Build the `create table` statement.
         $columnDefs = array();
         foreach ($exportStructure as $columnName => $type) {
             $columnDefs[] = "`$columnName` $type";
@@ -380,12 +371,9 @@ class ExportModel
         }
 
         $this->query("drop table if exists {$destDb}{$this->destPrefix}$tableName");
-        $createSql = "create table {$destDb}{$this->destPrefix}$tableName (\n  " . implode(
-            ",\n  ",
-            $columnDefs
-        ) . "\n) engine=innodb";
 
-        $this->query($createSql);
+        $this->query("create table {$destDb}{$this->destPrefix}$tableName (\n  " .
+            implode(",\n  ", $columnDefs) . "\n) engine=innodb");
     }
 
     /**
@@ -495,15 +483,15 @@ class ExportModel
     /**
      *
      *
-     * @param  $row
-     * @param  $tableOrStructure
-     * @param  $mappings
-     * @param  string $tableName
+     * @param array $row
+     * @param mixed $tableOrStructure
+     * @param array $map
+     * @param string $tableName
      * @return array
      */
-    public function getExportStructure($row, $tableOrStructure, &$mappings, $tableName = '_')
+    public function getExportStructure(array $row, $tableOrStructure, array &$map, string $tableName = '_')
     {
-        $exportStructure = array();
+        $exportStructure = [];
 
         if (is_string($tableOrStructure)) {
             $structure = $this->mapStructure[$tableOrStructure];
@@ -513,8 +501,10 @@ class ExportModel
 
         // See what columns to add to the end of the structure.
         foreach ($row as $column => $x) {
-            if (array_key_exists($column, $mappings)) {
-                $mapping = $mappings[$column];
+            $destColumn = '';
+            $destType = '';
+            if (array_key_exists($column, $map)) {
+                $mapping = $map[$column];
                 if (is_string($mapping)) {
                     if (array_key_exists($mapping, $structure)) {
                         // This an existing column.
@@ -539,7 +529,6 @@ class ExportModel
                     } else {
                         $destType = 'varchar(255)';
                     }
-                    //               $mappings[$column] = $destColumn;
                 }
             } elseif (array_key_exists($column, $structure)) {
                 $destColumn = $column;
@@ -547,7 +536,7 @@ class ExportModel
 
                 // Verify column doesn't exist in Mapping array's Column element
                 $mappingExists = false;
-                foreach ($mappings as $testMapping) {
+                foreach ($map as $testMapping) {
                     if ($testMapping == $column) {
                         $mappingExists = true;
                     } elseif (
@@ -561,11 +550,8 @@ class ExportModel
 
                 // Also add the column to the mapping.
                 if (!$mappingExists) {
-                    $mappings[$column] = $destColumn;
+                    $map[$column] = $destColumn;
                 }
-            } else {
-                $destColumn = '';
-                $destType = '';
             }
 
             // Check to see if we have to add the column to the export structure.
@@ -576,10 +562,10 @@ class ExportModel
         }
 
         // Add filtered mappings since filters can add new columns.
-        foreach ($mappings as $source => $options) {
+        foreach ($map as $source => $options) {
             if (!is_array($options)) {
                 // Force the mappings into the expanded array syntax for easier processing later.
-                $mappings[$source] = array('Column' => $options);
+                $map[$source] = array('Column' => $options);
                 continue;
             }
 
@@ -608,7 +594,7 @@ class ExportModel
             }
 
             $exportStructure[$destColumn] = $destType;
-            $mappings[$source] = $destColumn;
+            $map[$source] = $destColumn;
         }
 
         return $exportStructure;
