@@ -59,16 +59,6 @@ class ExportModel
     public $destDb;
 
     /**
-     * @var array *
-     */
-    public static $escapeSearch = array();
-
-    /**
-     * @var array *
-     */
-    public static $escapeReplace = array();
-
-    /**
      * @var resource File pointer
      */
     public $file = null;
@@ -128,15 +118,6 @@ class ExportModel
     public function __construct($dbFactory)
     {
         $this->dbFactory = $dbFactory;
-
-        // Set the search and replace to escape strings.
-        self::$escapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
-        self::$escapeReplace = array(
-            self::ESCAPE . self::ESCAPE,
-            self::ESCAPE . self::DELIM,
-            self::ESCAPE . self::NEWLINE,
-            self::ESCAPE . self::QUOTE
-        );
 
         // Load structure.
         $this->structures = loadStructure();
@@ -415,6 +396,31 @@ class ExportModel
         }
 
         return $rowCount;
+    }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    public function escapedValue($value): string
+    {
+        // Set the search and replace to escape strings.
+        $escapeSearch = [
+            self::ESCAPE, // escape must go first
+            self::DELIM,
+            self::NEWLINE,
+            self::QUOTE
+        ];
+        $escapeReplace = [
+            self::ESCAPE . self::ESCAPE,
+            self::ESCAPE . self::DELIM,
+            self::ESCAPE . self::NEWLINE,
+            self::ESCAPE . self::QUOTE
+        ];
+
+        return self::QUOTE
+            . str_replace($escapeSearch, $escapeReplace, $value)
+            . self::QUOTE;
     }
 
     /**
@@ -973,9 +979,7 @@ class ExportModel
                 }
 
                 $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
-                $value = self::QUOTE
-                    . str_replace(self::$escapeSearch, self::$escapeReplace, $value)
-                    . self::QUOTE;
+                $value = $this->escapedValue($value);
             } elseif (is_bool($value)) {
                 $value = $value ? 1 : 0;
             } else {
