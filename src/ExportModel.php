@@ -246,12 +246,9 @@ class ExportModel
         if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
         } else {
-            $beginTime = microtime(true);
-
+            $start = microtime(true);
             $rowCount = $this->exportTableWrite($tableName, $query, $mappings);
-
-            $endTime = microtime(true);
-            $elapsed = formatElapsed($beginTime, $endTime);
+            $elapsed = formatElapsed($start - microtime(true));
             $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
         }
     }
