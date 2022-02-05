@@ -106,7 +106,8 @@ function exportModelFactory(Request $request, array $info): ExportModel
 {
     // Wire old database / model mess.
     $db = new DbFactory($info, 'pdo');
-    $model = new ExportModel($db);
+    $map = loadStructure();
+    $model = new ExportModel($db, $map);
 
     // Set model properties.
     $model->prefix = $request->get('src-prefix') ?? '';

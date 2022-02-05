@@ -6,8 +6,8 @@
 
 namespace Porter;
 
+use Porter\Database\DbResource;
 use Porter\Database\ResultSet;
-use Porter\Database\DbFactory;
 use Porter\Log;
 
 /**
@@ -26,35 +26,45 @@ class ExportModel
     public const QUOTE = '"';
 
     /**
-     * @var bool
+     * @var bool Whether to capture SQL without executing.
      */
-    public $captureOnly = false;
+    public bool $captureOnly = false;
+
+    /**
+     * @var bool Whether to limit results to the $testLimit.
+     */
+    public bool $testMode = false;
+
+    /**
+     * @var int How many records to limit when $testMode is enabled.
+     */
+    public int $testLimit = 10;
 
     /**
      * @var array Any comments that have been written during the export.
      */
-    public $comments = array();
+    public array $comments = [];
 
     /**
      * @var string The charcter set to set as the connection anytime the database connects.
      */
-    public $characterSet = 'utf8';
+    public string $characterSet = 'utf8';
 
     /**
-     * @var array *
-     */
-    public $currentRow = null;
-
-    /**
-     * @var string *
+     * @var array Storage for sloppy data passing.
      * @deprecated
      */
-    public $destPrefix = 'GDN_z';
+    public array $currentRow = [];
+
+    /**
+     * @var string Prefix for the target database.
+     */
+    public string $destPrefix = 'PORT_';
 
     /**
      * @var string Name of target database.
      */
-    public $destDb = '';
+    public string $destDb = '';
 
     /**
      * @var resource File pointer
@@ -65,60 +75,48 @@ class ExportModel
      * @var string The path to the export file.
      * @deprecated
      */
-    public $path = '';
+    public string $path = '';
 
     /**
      * @var string DB prefix. SQL strings passed to ExportTable() will replace occurances of :_ with this.
      * @see ExportModel::ExportTable()
      * @deprecated
      */
-    public $prefix = '';
+    public string $prefix = '';
 
     /**
-     * @var array *
+     * @var array Log of all queries done in this run for debugging / test mode.
      */
-    public $queries = array();
+    public array $queryRecord = [];
 
     /**
-     * @var array Tables to limit the export to.  A full export is an empty array.
+     * @var array Table names to limit the export to. Full export is an empty array.
      */
-    public $restrictedTables = array();
+    public array $limitedTables = [];
 
     /**
-     * @var array Structures that define the format of the export tables.
+     * @var array Table structures that define the format of the intermediary export tables.
      */
-    protected $structures = array();
-
-    /**
-     * @var bool Whether to limit results to the $testLimit.
-     */
-    public $testMode = false;
-
-    /**
-     * @var int How many records to limit when $testMode is enabled.
-     */
-    public $testLimit = 10;
+    protected array $mapStructure = [];
 
     /**
      * @var bool Whether or not to use compression when creating the file.
      */
-    protected $useCompression = true;
+    protected bool $useCompression = true;
 
     /**
-     * @var DbFactory Instance DbFactory
+     * @var DbResource Instance DbFactory
      * @deprecated
      */
-    protected $dbFactory;
+    protected DbResource $database;
 
     /**
      * Setup.
      */
-    public function __construct($dbFactory)
+    public function __construct($db, $map)
     {
-        $this->dbFactory = $dbFactory;
-
-        // Load structure.
-        $this->structures = loadStructure();
+        $this->database = $db;
+        $this->mapStructure = $map;
     }
 
     /**
@@ -140,7 +138,7 @@ class ExportModel
                 $restrictedTables = array_map('trim', $restrictedTables);
                 $restrictedTables = array_map('strtolower', $restrictedTables);
 
-                $this->restrictedTables = $restrictedTables;
+                $this->limitedTables = $restrictedTables;
             }
         }
     }
@@ -216,7 +214,7 @@ class ExportModel
         $this->comment(sprintf('Elapsed Time: %s', formatElapsed($time)));
 
         if ($this->testMode || Request::instance()->get('dumpsql') || $this->captureOnly) {
-            $queries = implode("\n\n", $this->queries);
+            $queries = implode("\n\n", $this->queryRecord);
             $this->comment($queries, true);
         }
 
@@ -245,7 +243,7 @@ class ExportModel
      */
     public function exportTable($tableName, $query, $mappings = [])
     {
-        if (!empty($this->restrictedTables) && !in_array(strtolower($tableName), $this->restrictedTables)) {
+        if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
         } else {
             $beginTime = microtime(true);
@@ -274,10 +272,10 @@ class ExportModel
         $fp = $this->file;
 
         // Make sure the table is valid for export.
-        if (!array_key_exists($tableName, $this->structures)) {
+        if (!array_key_exists($tableName, $this->mapStructure)) {
             $this->comment(
                 "Error: $tableName is not a valid export."
-                . " The valid tables for export are " . implode(", ", array_keys($this->structures))
+                . " The valid tables for export are " . implode(", ", array_keys($this->mapStructure))
             );
             fwrite($fp, self::NEWLINE);
 
@@ -296,7 +294,7 @@ class ExportModel
             }
         }
 
-        $structure = $this->structures[$tableName];
+        $structure = $this->mapStructure[$tableName];
 
         $firstQuery = true;
 
@@ -365,7 +363,7 @@ class ExportModel
     {
         // Limit the query to grab any additional columns.
         $queryStruct = rtrim($query, ';') . ' limit 1';
-        $structure = $this->structures[$tableName];
+        $structure = $this->mapStructure[$tableName];
 
         $data = $this->query($queryStruct, true);
         //      $mb = function_exists('mb_detect_encoding');
@@ -522,7 +520,7 @@ class ExportModel
         $exportStructure = array();
 
         if (is_string($tableOrStructure)) {
-            $structure = $this->structures[$tableOrStructure];
+            $structure = $this->mapStructure[$tableOrStructure];
         } else {
             $structure = $tableOrStructure;
         }
@@ -660,7 +658,7 @@ class ExportModel
     public function query($query)
     {
         if (!preg_match('`limit 1;$`', $query)) {
-            $this->queries[] = $query;
+            $this->queryRecord[] = $query;
         }
         return $this->executeQuery($query);
     }
@@ -938,7 +936,7 @@ class ExportModel
 
         $sql = rtrim($sql, ';') . ';';
 
-        $dbResource = $this->dbFactory->getInstance();
+        $dbResource = $this->database->getInstance();
         return $dbResource->query($sql);
     }
 
@@ -950,7 +948,7 @@ class ExportModel
      */
     public function escape($string)
     {
-        $dbResource = $this->dbFactory->getInstance();
+        $dbResource = $this->database->getInstance();
         return $dbResource->escape($string);
     }
 
