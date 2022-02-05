@@ -80,11 +80,6 @@ class ExportModel
     public $file = null;
 
     /**
-     * @var bool Whether mb_detect_encoding() is available. *
-     */
-    public static $mb = false;
-
-    /**
      * @var string The path to the export file.
      * @deprecated
      */
@@ -139,7 +134,6 @@ class ExportModel
     public function __construct($dbFactory)
     {
         $this->dbFactory = $dbFactory;
-        self::$mb = function_exists('mb_detect_encoding');
 
         // Set the search and replace to escape strings.
         self::$escapeSearch = array(self::ESCAPE, self::DELIM, self::NEWLINE, self::QUOTE); // escape must go first
@@ -257,7 +251,7 @@ class ExportModel
             $this->comment($queries, true);
         }
 
-        if ($this->useCompression() && function_exists('gzopen')) {
+        if ($this->useCompression()) {
             gzclose($this->file);
         } else {
             fclose($this->file);
@@ -983,7 +977,7 @@ class ExportModel
                 if (!isset($revMappings[$field])) {
                     //$value = call_user_func($Filters[$field], $value, $field, $row);
                 } else {
-                    if (self::$mb && mb_detect_encoding($value) != 'UTF-8') {
+                    if (function_exists('mb_detect_encoding') && mb_detect_encoding($value) != 'UTF-8') {
                         $value = utf8_encode($value);
                     }
                 }
