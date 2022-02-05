@@ -243,12 +243,13 @@ class ExportModel
     {
         if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
-        } else {
-            $start = microtime(true);
-            $rowCount = $this->exportTableWrite($tableName, $query, $map);
-            $elapsed = formatElapsed($start - microtime(true));
-            $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
+            return;
         }
+
+        $start = microtime(true);
+        $rowCount = $this->exportTableWrite($tableName, $query, $map);
+        $elapsed = formatElapsed($start - microtime(true));
+        $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
     }
 
     /**
@@ -256,43 +257,23 @@ class ExportModel
      *
      * @param  string $tableName
      * @param  string $query
-     * @param  array $mappings
-     * @param  array $options
-     * @return int|void
-     *@see    export()
+     * @param  array $map
+     * @return int
      */
-    protected function exportTableWrite($tableName, $query, $mappings = [], $options = [])
+    protected function exportTableWrite(string $tableName, string $query, array $map = []): int
     {
-        $fp = $this->file;
-
         // Make sure the table is valid for export.
         if (!array_key_exists($tableName, $this->mapStructure)) {
-            $this->comment(
-                "Error: $tableName is not a valid export."
-                . " The valid tables for export are " . implode(", ", array_keys($this->mapStructure))
-            );
-            fwrite($fp, self::NEWLINE);
-
-            return;
+            $this->comment("Error: $tableName is not a valid export.");
+            return 0;
         }
 
-        // Check for a chunked query.
-        $query = str_replace('{from}', -2000000000, $query);
-        $query = str_replace('{to}', 2000000000, $query);
-
-        // If we are in test mode then limit the query.
-        if ($this->testMode && $this->testLimit) {
-            $query = rtrim($query, ';');
-            if (stripos($query, 'select') !== false && stripos($query, 'limit') === false) {
-                $query .= " limit {$this->testLimit}";
-            }
-        }
+        $query = $this->processQuery($query);
+        $data = $this->executeQuery($query);
 
         $structure = $this->mapStructure[$tableName];
-
         $firstQuery = true;
-
-        $data = $this->executeQuery($query);
+        $fp = $this->file;
 
         // Loop through the data and write it to the file.
         $rowCount = 0;
@@ -304,8 +285,8 @@ class ExportModel
 
                 if ($firstQuery) {
                     // Get the export structure.
-                    $exportStructure = $this->getExportStructure($row, $structure, $mappings, $tableName);
-                    $revMappings = $this->flipMappings($mappings);
+                    $exportStructure = $this->getExportStructure($row, $structure, $map, $tableName);
+                    $revMappings = $this->flipMappings($map);
                     $this->writeBeginTable($fp, $tableName, $exportStructure);
 
                     $firstQuery = false;
@@ -317,6 +298,27 @@ class ExportModel
         $this->writeEndTable($fp);
 
         return $rowCount;
+    }
+
+
+    /**
+     * @param string $query
+     * @return string
+     */
+    protected function processQuery(string $query): string
+    {
+        // Check for a chunked query.
+        $query = str_replace('{from}', -2000000000, $query);
+        $query = str_replace('{to}', 2000000000, $query);
+
+        // If we are in test mode then limit the query.
+        if ($this->testMode && $this->testLimit) {
+            $query = rtrim($query, ';');
+            if (stripos($query, 'select') !== false && stripos($query, 'limit') === false) {
+                $query .= " limit {$this->testLimit}";
+            }
+        }
+        return $query;
     }
 
     /**
