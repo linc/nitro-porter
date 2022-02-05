@@ -312,6 +312,17 @@ class VBulletin extends Source
     }
 
     /**
+     * SQL to get the file extension from a string.
+     *
+     * @param  string $columnName
+     * @return string SQL.
+     */
+    public static function fileExtension($columnName)
+    {
+        return "right($columnName, instr(reverse($columnName), '.') - 1)";
+    }
+
+    /**
      * Converts database blobs into files.
      *
      * Creates /attachments and /customavatars folders in the same directory as the export file.
@@ -325,12 +336,12 @@ class VBulletin extends Source
             $identity = 'f.attachmentid';
 
             if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true) {
-                $extension = ExportModel::fileExtension('a.filename');
+                $extension = self::fileExtension('a.filename');
                 $identity = 'f.filedataid';
             } elseif ($ex->exists('attach') === true) {
                 $identity = 'f.filedataid';
             } else {
-                $extension = ExportModel::fileExtension('filename');
+                $extension = self::fileExtension('filename');
             }
 
             $sql = "select
@@ -471,7 +482,7 @@ class VBulletin extends Source
             // Do NOT grab every field to avoid 'filedata' blob in 3.x.
             // Left join 'attachment' because we can't left join 'thread' on firstpostid (not an index).
             // Lie about the height & width to spoof FileUpload serving generic thumbnail if they aren't set.
-            $extension = ExportModel::fileExtension('a.filename');
+            $extension = self::fileExtension('a.filename');
             $mediaSql = "select
                     a.attachmentid,
                     a.filename,

@@ -992,17 +992,6 @@ class ExportModel
     }
 
     /**
-     * SQL to get the file extension from a string.
-     *
-     * @param  string $columnName
-     * @return string SQL.
-     */
-    public static function fileExtension($columnName)
-    {
-        return "right($columnName, instr(reverse($columnName), '.') - 1)";
-    }
-
-    /**
      * Execute a SQL query on the current connection.
      *
      * @param string $sql
