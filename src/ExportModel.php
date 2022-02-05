@@ -6,7 +6,7 @@
 
 namespace Porter;
 
-use Porter\Database\DbResource;
+use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
 use Porter\Log;
 
@@ -51,12 +51,6 @@ class ExportModel
     public string $characterSet = 'utf8';
 
     /**
-     * @var array Storage for sloppy data passing.
-     * @deprecated
-     */
-    public array $currentRow = [];
-
-    /**
      * @var string Prefix for the target database.
      */
     public string $destPrefix = 'PORT_';
@@ -67,18 +61,7 @@ class ExportModel
     public string $destDb = '';
 
     /**
-     * @var resource File pointer
-     */
-    public $file = null;
-
-    /**
-     * @var string The path to the export file.
-     * @deprecated
-     */
-    public string $path = '';
-
-    /**
-     * @var string DB prefix. SQL strings passed to ExportTable() will replace occurances of :_ with this.
+     * @var string DB prefix. SQL strings passed to export() will replace occurances of :_ with this.
      * @see ExportModel::export()
      * @deprecated
      */
@@ -97,26 +80,27 @@ class ExportModel
     /**
      * @var array Table structures that define the format of the intermediary export tables.
      */
-    protected array $mapStructure = [];
+    public array $mapStructure = [];
 
     /**
-     * @var bool Whether or not to use compression when creating the file.
-     */
-    protected bool $useCompression = true;
-
-    /**
-     * @var DbResource Instance DbFactory
+     * @var DbFactory Instance DbFactory
      * @deprecated
      */
-    protected DbResource $database;
+    protected DbFactory $database;
+
+    /**
+     * @var Target Where the data is being sent.
+     */
+    protected Target $target;
 
     /**
      * Setup.
      */
-    public function __construct($db, $map)
+    public function __construct($db, $map, $target)
     {
         $this->database = $db;
         $this->mapStructure = $map;
+        $this->target = $target;
     }
 
     /**
@@ -144,35 +128,25 @@ class ExportModel
     }
 
     /**
-     * Create the export file and begin the export.
+     * Prepare the target.
      */
-    public function beginFileExport()
+    public function begin()
     {
-        // Define where output file goes.
-        if (Request::instance()->get('destpath')) {
-            $this->path = Request::instance()->get('destpath');
-            if (strstr($this->path, '/') !== false && substr($this->path, 1, -1) != '/') {
-                // We're using slash paths but didn't include a final slash.
-                $this->path .= '/';
-            }
+        if ($this->captureOnly) {
+            return;
         }
+        $this->target->begin();
+    }
 
-        // Build file name.
-        $this->path .= 'export_' . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
-
-        // Start the file pointer.
-        $this->path = str_replace(' ', '_', $this->path);
-        if ($this->useCompression()) {
-            $fp = gzopen($this->path, 'wb');
-        } else {
-            $fp = fopen($this->path, 'wb');
+    /**
+     * Cleanup the target.
+     */
+    public function end()
+    {
+        if ($this->captureOnly) {
+            return;
         }
-        $this->file = $fp;
-
-        // Add meta info to the output.
-        if (!$this->captureOnly) {
-            fwrite($fp, 'Nitro Porter Export' . self::NEWLINE . self::NEWLINE);
-        }
+        $this->target->end();
     }
 
     /**
@@ -196,20 +170,6 @@ class ExportModel
             } else {
                 $this->comments[] = $message;
             }
-        }
-    }
-
-    /**
-     * End the export and close the export file.
-     *
-     * This method must be called if BeginExport() has been called or else the export file will not be closed.
-     */
-    public function endFileExport()
-    {
-        if ($this->useCompression()) {
-            gzclose($this->file);
-        } else {
-            fclose($this->file);
         }
     }
 
@@ -250,46 +210,13 @@ class ExportModel
             return;
         }
 
-        $rowCount = $this->writeTableToFile($tableName, $data, $map);
-        $elapsed = formatElapsed($start - microtime(true));
+        $rowCount = $this->target->import($tableName, $this->mapStructure[$tableName], $data, $map);
+
+        $elapsed = formatElapsed(microtime(true) - $start);
         $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
     }
 
-    /**
-     * Process for writing an entire single table to file.
-     *
-     * @param string $tableName
-     * @param object $data
-     * @param array $map
-     * @return int
-     */
-    protected function writeTableToFile(string $tableName, object $data, array $map = []): int
-    {
-        $structure = $this->mapStructure[$tableName];
-        $firstQuery = true;
-        $fp = $this->file;
 
-        // Loop through the data and write it to the file.
-        $rowCount = 0;
-        while ($row = $data->nextResultRow()) {
-            $row = (array)$row; // export%202010-05-06%20210937.txt
-            $this->currentRow =& $row;
-            $rowCount++;
-
-            if ($firstQuery) {
-                // Get the export structure.
-                $exportStructure = $this->getExportStructure($row, $structure, $map, $tableName);
-                $revMappings = $this->flipMappings($map);
-                $this->writeBeginTable($fp, $tableName, $exportStructure);
-
-                $firstQuery = false;
-            }
-            $this->writeRow($fp, $row, $exportStructure, $revMappings);
-        }
-        $this->writeEndTable($fp);
-
-        return $rowCount;
-    }
 
     /**
      * Do preprocessing on the database query.
@@ -313,30 +240,6 @@ class ExportModel
         return $query;
     }
 
-    /**
-     * @param $value
-     * @return string
-     */
-    public function escapedValue($value): string
-    {
-        // Set the search and replace to escape strings.
-        $escapeSearch = [
-            self::ESCAPE, // escape must go first
-            self::DELIM,
-            self::NEWLINE,
-            self::QUOTE
-        ];
-        $escapeReplace = [
-            self::ESCAPE . self::ESCAPE,
-            self::ESCAPE . self::DELIM,
-            self::ESCAPE . self::NEWLINE,
-            self::ESCAPE . self::QUOTE
-        ];
-
-        return self::QUOTE
-            . str_replace($escapeSearch, $escapeReplace, $value)
-            . self::QUOTE;
-    }
 
     /**
      *
@@ -358,7 +261,7 @@ class ExportModel
 
         // Get the export structure.
         $row = (array)$data->nextResultRow();
-        $exportStructure = $this->getExportStructure($row, $structure, $map, $tableName);
+        $exportStructure = getExportStructure($row, $structure, $map, $tableName);
 
         // Build the `create table` statement.
         $columnDefs = array();
@@ -390,28 +293,6 @@ class ExportModel
                 $value = array('Column' => $value, 'Type' => 'tinyint(1)');
             }
             $result[$index] = $value;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Flip keys and values of associative array.
-     *
-     * @param  $mappings
-     * @return array
-     */
-    public function flipMappings($mappings)
-    {
-        $result = array();
-        foreach ($mappings as $column => $mapping) {
-            if (is_string($mapping)) {
-                $result[$mapping] = array('Column' => $column);
-            } else {
-                $col = $mapping['Column'];
-                $mapping['Column'] = $column;
-                $result[$col] = $mapping;
-            }
         }
 
         return $result;
@@ -481,126 +362,6 @@ class ExportModel
     }
 
     /**
-     *
-     *
-     * @param array $row
-     * @param mixed $tableOrStructure
-     * @param array $map
-     * @param string $tableName
-     * @return array
-     */
-    public function getExportStructure(array $row, $tableOrStructure, array &$map, string $tableName = '_')
-    {
-        $exportStructure = [];
-
-        if (is_string($tableOrStructure)) {
-            $structure = $this->mapStructure[$tableOrStructure];
-        } else {
-            $structure = $tableOrStructure;
-        }
-
-        // See what columns to add to the end of the structure.
-        foreach ($row as $column => $x) {
-            $destColumn = '';
-            $destType = '';
-            if (array_key_exists($column, $map)) {
-                $mapping = $map[$column];
-                if (is_string($mapping)) {
-                    if (array_key_exists($mapping, $structure)) {
-                        // This an existing column.
-                        $destColumn = $mapping;
-                        $destType = $structure[$destColumn];
-                    } else {
-                        // This is a created column.
-                        $destColumn = $column;
-                        $destType = $mapping;
-                    }
-                } elseif (is_array($mapping)) {
-                    if (!isset($mapping['Column'])) {
-                        trigger_error("Mapping for $column does not have a 'Column' defined.", E_USER_ERROR);
-                    }
-
-                    $destColumn = $mapping['Column'];
-
-                    if (isset($mapping['Type'])) {
-                        $destType = $mapping['Type'];
-                    } elseif (isset($structure[$destColumn])) {
-                        $destType = $structure[$destColumn];
-                    } else {
-                        $destType = 'varchar(255)';
-                    }
-                }
-            } elseif (array_key_exists($column, $structure)) {
-                $destColumn = $column;
-                $destType = $structure[$column];
-
-                // Verify column doesn't exist in Mapping array's Column element
-                $mappingExists = false;
-                foreach ($map as $testMapping) {
-                    if ($testMapping == $column) {
-                        $mappingExists = true;
-                    } elseif (
-                        is_array($testMapping)
-                        && array_key_exists('Column', $testMapping)
-                        && ($testMapping['Column'] == $column)
-                    ) {
-                        $mappingExists = true;
-                    }
-                }
-
-                // Also add the column to the mapping.
-                if (!$mappingExists) {
-                    $map[$column] = $destColumn;
-                }
-            }
-
-            // Check to see if we have to add the column to the export structure.
-            if ($destColumn && !array_key_exists($destColumn, $exportStructure)) {
-                // TODO: Make sure $destType is a valid MySQL type.
-                $exportStructure[$destColumn] = $destType;
-            }
-        }
-
-        // Add filtered mappings since filters can add new columns.
-        foreach ($map as $source => $options) {
-            if (!is_array($options)) {
-                // Force the mappings into the expanded array syntax for easier processing later.
-                $map[$source] = array('Column' => $options);
-                continue;
-            }
-
-            if (!isset($options['Column'])) {
-                trigger_error("No column for $tableName(source).$source.", E_USER_NOTICE);
-                continue;
-            }
-
-            $destColumn = $options['Column'];
-
-            if (!array_key_exists($source, $row) && !isset($options['Type'])) {
-                trigger_error("No column for $tableName(source).$source.", E_USER_NOTICE);
-            }
-
-            if (isset($exportStructure[$destColumn])) {
-                continue;
-            }
-
-            if (isset($structure[$destColumn])) {
-                $destType = $structure[$destColumn];
-            } elseif (isset($options['Type'])) {
-                $destType = $options['Type'];
-            } else {
-                trigger_error("No column for $tableName.$destColumn.", E_USER_NOTICE);
-                continue;
-            }
-
-            $exportStructure[$destColumn] = $destType;
-            $map[$source] = $destColumn;
-        }
-
-        return $exportStructure;
-    }
-
-    /**
      * Execute a SQL query on the current connection.
      *
      * Wrapper for _Query().
@@ -633,21 +394,6 @@ class ExportModel
                 $this->query($sql);
             }
         }
-    }
-
-    /**
-     * Whether or not to use compression on the output file.
-     *
-     * @param  bool $value The value to set or NULL to just return the value.
-     * @return bool
-     */
-    public function useCompression($value = null)
-    {
-        if ($value !== null) {
-            $this->useCompression = $value;
-        }
-
-        return $this->useCompression && function_exists('gzopen');
     }
 
     /**
@@ -763,118 +509,6 @@ class ExportModel
         } else {
             trigger_error('Missing required database tables: ' . $missingTables);
         }
-    }
-
-    /**
-     * Start table write to file.
-     *
-     * @param resource $fp
-     * @param string $tableName
-     * @param array $exportStructure
-     */
-    public function writeBeginTable($fp, $tableName, $exportStructure)
-    {
-        $tableHeader = '';
-
-        foreach ($exportStructure as $key => $value) {
-            if (is_numeric($key)) {
-                $column = $value;
-                $type = '';
-            } else {
-                $column = $key;
-                $type = $value;
-            }
-
-            if (strlen($tableHeader) > 0) {
-                $tableHeader .= self::DELIM;
-            }
-
-            if ($type) {
-                $tableHeader .= $column . ':' . $type;
-            } else {
-                $tableHeader .= $column;
-            }
-        }
-
-        fwrite($fp, 'Table: ' . $tableName . self::NEWLINE);
-        fwrite($fp, $tableHeader . self::NEWLINE);
-    }
-
-    /**
-     * End table write to file.
-     *
-     * @param resource $fp
-     */
-    public function writeEndTable($fp)
-    {
-        fwrite($fp, self::NEWLINE . self::NEWLINE);
-    }
-
-    /**
-     * Write a table's row to file.
-     *
-     * @param resource $fp
-     * @param array $row
-     * @param array $exportStructure
-     * @param array $revMappings
-     */
-    public function writeRow($fp, $row, $exportStructure, $revMappings)
-    {
-        $this->currentRow =& $row;
-
-        // Loop through the columns in the export structure and grab their values from the row.
-        $exRow = array();
-        foreach ($exportStructure as $field => $type) {
-            // Get the value of the export.
-            $value = null;
-            if (isset($revMappings[$field]) && isset($row[$revMappings[$field]['Column']])) {
-                // The column is mapped.
-                $value = $row[$revMappings[$field]['Column']];
-            } elseif (array_key_exists($field, $row)) {
-                // The column has an exact match in the export.
-                $value = $row[$field];
-            }
-
-            // Check to see if there is a callback filter.
-            if (isset($revMappings[$field]['Filter'])) {
-                $callback = $revMappings[$field]['Filter'];
-
-                $row2 =& $row;
-                $value = call_user_func($callback, $value, $field, $row2, $field);
-                $row = $this->currentRow;
-            }
-
-            // Format the value for writing.
-            if (is_null($value)) {
-                $value = self::NULL;
-            } elseif (is_integer($value)) {
-                // Do nothing, formats as is.
-                // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
-            } elseif (is_string($value) || is_numeric($value)) {
-                // Check to see if there is a callback filter.
-                if (!isset($revMappings[$field])) {
-                    //$value = call_user_func($Filters[$field], $value, $field, $row);
-                } else {
-                    if (function_exists('mb_detect_encoding') && mb_detect_encoding($value) != 'UTF-8') {
-                        $value = utf8_encode($value);
-                    }
-                }
-
-                $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
-                $value = $this->escapedValue($value);
-            } elseif (is_bool($value)) {
-                $value = $value ? 1 : 0;
-            } else {
-                // Unknown format.
-                $value = self::NULL;
-            }
-
-            $exRow[] = $value;
-        }
-        // Write the data.
-        fwrite($fp, implode(self::DELIM, $exRow));
-        // End the record.
-        fwrite($fp, self::NEWLINE);
     }
 
     /**

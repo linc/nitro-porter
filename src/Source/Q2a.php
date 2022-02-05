@@ -79,14 +79,14 @@ class Q2a extends Source
     /**
      * @param $ex
      */
-    protected function roles($ex): void
+    protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select 1 as RolesID, 'Member' as Name"
         );
 
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     ur.userid as UserID,

@@ -192,7 +192,7 @@ class VBulletin5 extends VBulletin
             $ex->export('Discussion', $sql, $discussion_Map);
 
             // Export polls
-            $this->polls($ex);
+            $this->pollsV5($ex);
 
             // Cleanup tmp table
             $ex->query("drop table vBulletinDiscussionTable;");
@@ -296,7 +296,7 @@ class VBulletin5 extends VBulletin
         $ex->query($sql);
     }
 
-    protected function polls($ex)
+    protected function pollsV5(ExportModel $ex)
     {
         $fp = $ex->file;
 
@@ -308,7 +308,7 @@ class VBulletin5 extends VBulletin
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'userid' => 'InsertUserId',
         );
-        $ex->exportTable(
+        $ex->export(
             'Poll',
             "select
                     p.nodeid,
@@ -347,8 +347,8 @@ class VBulletin5 extends VBulletin
                 left join :_node as n on n.nodeid = po.nodeid;";
 
         // We have to generate a sort order so let's do the exportation manually line by line....
-        $exportStructure = $ex->getExportStructure($pollOption_Map, 'PollOption', $pollOption_Map);
-        $revMappings = $ex->flipMappings($pollOption_Map);
+        $exportStructure = getExportStructure($pollOption_Map, $ex->mapStructure['PollOption'], $pollOption_Map);
+        $revMappings = flipMappings($pollOption_Map);
 
         $ex->writeBeginTable($fp, 'PollOption', $exportStructure);
 
@@ -375,7 +375,7 @@ class VBulletin5 extends VBulletin
             'polloptionid' => 'PollOptionID',
             'votedate' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable(
+        $ex->export(
             'PollVote',
             "select
                     pv.userid,

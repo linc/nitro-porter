@@ -467,7 +467,7 @@ class VBulletin extends Source
      *
      * In vBulletin 4.x, the filedata table was introduced.
      */
-    public function attachments($ex, $minDiscussionID = false)
+    public function attachments(ExportModel $ex, $minDiscussionID = false)
     {
         $instance = $this;
 
@@ -544,7 +544,7 @@ class VBulletin extends Source
                     left join :_thread t on t.firstpostid = a.contentid and a.contenttypeid = 1
                 where a.contentid > 0
                     $discussionWhere";
-            $ex->exportTable('Media', $mediaSql, $media_Map);
+            $ex->export('Media', $mediaSql, $media_Map);
         } else {
             // Exporting 3.x without 'filedata' table.
             // Do NOT grab every field to avoid 'filedata' blob in 3.x.
@@ -585,7 +585,7 @@ class VBulletin extends Source
                     inner join :_thread t ON p.threadid = t.threadid
                     left join :_attachment a ON a.postid = p.postid
                 where p.postid <> t.firstpostid and a.attachmentid > 0";
-            $ex->exportTable('Media', $mediaSql, $media_Map);
+            $ex->export('Media', $mediaSql, $media_Map);
         }
 
         // files named .attach need to be named properly.
@@ -642,7 +642,7 @@ class VBulletin extends Source
         }
     }
 
-    protected function polls($ex)
+    protected function polls(ExportModel $ex)
     {
         $poll_Map = array(
             'pollid' => 'PollID',
@@ -652,7 +652,7 @@ class VBulletin extends Source
             'dateline' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'postuserid' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Poll',
             "select
                     p.*,
@@ -715,7 +715,7 @@ class VBulletin extends Source
             $ex->query(substr($sql, 0, -1));
         }
 
-        $ex->exportTable(
+        $ex->export(
             'PollOption',
             "select
                 PollOptionID,
@@ -728,7 +728,7 @@ class VBulletin extends Source
             from zPollOptions"
         );
 
-        $ex->exportTable(
+        $ex->export(
             'PollVote',
             "select
                 pv.userid as UserID,
@@ -739,7 +739,7 @@ class VBulletin extends Source
         );
     }
 
-    public function ranks($ex): array
+    public function ranks(ExportModel $ex): array
     {
         $rank = $ex->query("select count(*) from :_ranks");
 
@@ -751,7 +751,7 @@ class VBulletin extends Source
                    order by minposts desc"
             );
 
-            $ex->exportTable(
+            $ex->export(
                 'Rank',
                 "select
                     rankid as RankID,
@@ -791,7 +791,7 @@ class VBulletin extends Source
                 )
             );
 
-            $ex->exportTable(
+            $ex->export(
                 'Rank',
                 "select ut.*,
                         ut.title as title2,
@@ -1190,13 +1190,13 @@ class VBulletin extends Source
     /**
      * @param string $forumWhere
      */
-    protected function categories($ex, string $forumWhere): void
+    protected function categories(ExportModel $ex, string $forumWhere): void
     {
         $category_Map = array(
             'title' => array('Column' => 'Name', 'Filter' => array($this, 'htmlDecode')),
             'displayorder' => array('Column' => 'Sort', 'Type' => 'int'),
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     f.forumid as CategoryID,
@@ -1211,14 +1211,14 @@ class VBulletin extends Source
         );
     }
 
-    protected function roles($ex): void
+    protected function roles(ExportModel $ex): void
     {
         $role_Map = array(
             'usergroupid' => 'RoleID',
             'title' => 'Name',
             'description' => 'Description'
         );
-        $ex->exportTable('Role', 'select * from :_usergroup', $role_Map);
+        $ex->export('Role', 'select * from :_usergroup', $role_Map);
 
         // UserRoles
         $userRole_Map = array(
@@ -1251,7 +1251,7 @@ class VBulletin extends Source
             }
         }
         // Export from our tmp table and drop
-        $ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
+        $ex->export('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
         $ex->query("drop table if exists VbulletinRoles");
     }
 
@@ -1259,7 +1259,7 @@ class VBulletin extends Source
      * @param array $ranks
      * @param $cdn
      */
-    protected function users($ex, array $ranks, $cdn): void
+    protected function users(ExportModel $ex, array $ranks, $cdn): void
     {
         $user_Map = array(
             'usertitle' => array(
@@ -1290,7 +1290,7 @@ class VBulletin extends Source
             $user_Map['customphoto'] = 'Photo';
         }
 
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                 u.userid as UserID,
@@ -1329,7 +1329,7 @@ class VBulletin extends Source
      * @param string $forumWhere
      * @param $minDate
      */
-    protected function userMeta($ex, string $forumWhere, $minDate): void
+    protected function userMeta(ExportModel $ex, string $forumWhere, $minDate): void
     {
         $ex->query("drop table if exists VbulletinUserMeta");
         $ex->query(
@@ -1409,7 +1409,7 @@ class VBulletin extends Source
         }
 
         // Users meta informations
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     userid as UserID,
@@ -1456,7 +1456,7 @@ class VBulletin extends Source
      * @param string $forumWhere
      * @return string
      */
-    protected function comments($ex, $minDiscussionID, string $forumWhere): void
+    protected function comments(ExportModel $ex, $minDiscussionID, string $forumWhere): void
     {
         $comment_Map = array(
             'pagetext' => array('Column' => 'Body', 'Filter' => function ($value) {
@@ -1470,7 +1470,7 @@ class VBulletin extends Source
             $minDiscussionWhere = "and p.threadid > $minDiscussionID";
         }
 
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     p.postid as CommentID,
@@ -1496,7 +1496,7 @@ class VBulletin extends Source
     /**
      * @param $minDiscussionID
      */
-    protected function wallPosts($ex, $minDiscussionID): void
+    protected function wallPosts(ExportModel $ex, $minDiscussionID): void
     {
         // Activity (from visitor messages in vBulletin 3.8+)
         $minDiscussionWhere = '';
@@ -1512,7 +1512,7 @@ class VBulletin extends Source
                 'NotifyUserID' => 'NotifyUserID',
                 'Format' => 'Format'
             );
-            $ex->exportTable(
+            $ex->export(
                 'Activity',
                 "select
                     vm.*,
@@ -1586,7 +1586,7 @@ class VBulletin extends Source
     /**
      * @return array
      */
-    protected function permissions($ex): void
+    protected function permissions(ExportModel $ex): void
     {
         $permissions_Map = array(
             'usergroupid' => 'RoleID',
@@ -1595,6 +1595,6 @@ class VBulletin extends Source
             'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
         );
         $this->addPermissionColumns(self::$permissions, $permissions_Map);
-        $ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
+        $ex->export('Permission', 'select * from :_usergroup', $permissions_Map);
     }
 }

@@ -283,8 +283,8 @@ class Xenforo extends Source
                 $columns[$index] = array('Column' => $column, 'Type' => 'tinyint');
             }
         }
-        $structure = $ex->getExportStructure($columns, 'Permission', $columns, 'Permission');
-        $revMappings = $ex->flipMappings($columns);
+        $structure = getExportStructure($columns, $ex->mapStructure['Permission'], $columns, 'Permission');
+        $revMappings = flipMappings($columns);
 
         $ex->writeBeginTable($ex->file, 'Permission', $structure);
         $count = 0;
@@ -432,7 +432,7 @@ class Xenforo extends Source
      * @param $ex
      * @param string $cdn
      */
-    protected function users($ex, string $cdn): void
+    protected function users(ExportModel $ex, string $cdn): void
     {
         $user_Map = array(
             'user_id' => 'UserID',
@@ -460,7 +460,7 @@ class Xenforo extends Source
             'hash_method' => 'HashMethod',
             'avatar' => 'Photo'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                     ua.data as password,
@@ -477,13 +477,13 @@ class Xenforo extends Source
     /**
      * @param $ex
      */
-    protected function roles($ex): void
+    protected function roles(ExportModel $ex): void
     {
         $role_Map = array(
             'user_group_id' => 'RoleID',
             'title' => 'Name'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from :_user_group",
             $role_Map
@@ -495,7 +495,7 @@ class Xenforo extends Source
             'user_group_id' => 'RoleID'
         );
 
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select user_id, user_group_id
                 from :_user
@@ -511,7 +511,7 @@ class Xenforo extends Source
     /**
      * @param $ex
      */
-    protected function categories($ex): void
+    protected function categories(ExportModel $ex): void
     {
         $category_Map = array(
             'node_id' => 'CategoryID',
@@ -526,7 +526,7 @@ class Xenforo extends Source
             'display_order' => 'Sort',
             'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select n.* from :_node n",
             $category_Map
@@ -536,7 +536,7 @@ class Xenforo extends Source
     /**
      * @param $ex
      */
-    protected function discussions($ex): void
+    protected function discussions(ExportModel $ex): void
     {
         $discussion_Map = array(
             'thread_id' => 'DiscussionID',
@@ -552,7 +552,7 @@ class Xenforo extends Source
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                 p.message,
@@ -570,7 +570,7 @@ class Xenforo extends Source
     /**
      * @param $ex
      */
-    protected function comments($ex): void
+    protected function comments(ExportModel $ex): void
     {
         $comment_Map = array(
             'post_id' => 'CommentID',
@@ -581,7 +581,7 @@ class Xenforo extends Source
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                 'BBCode' as format,

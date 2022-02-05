@@ -23,29 +23,19 @@ class Controller
         }
 
         $start = microtime(true);
-        $model->beginFileExport();
         $model->comment('Export Started: ' . date('Y-m-d H:i:s'));
 
+        $model->begin();
         $source->run($model);
+        $model->end();
 
-        $model->comment($model->path);
         $model->comment('Export Completed: ' . date('Y-m-d H:i:s'));
         $model->comment(sprintf('Elapsed Time: %s', formatElapsed(microtime(true) - $start)));
 
-        if ($model->testMode || Request::instance()->get('dumpsql') || $model->captureOnly) {
+        if ($model->testMode || $model->captureOnly) {
             $queries = implode("\n\n", $model->queryRecord);
             $model->comment($queries, true);
         }
-
-        $model->endFileExport();
-    }
-
-    /**
-     * Import workflow.
-     */
-    public static function doImport(Target $target, ImportModel $model)
-    {
-        $target->run($model);
     }
 
     /**
@@ -62,16 +52,10 @@ class Controller
         bootDatabase($info);
 
         // Export.
-        $exportModel = exportModelFactory($request, $info); // @todo Pass options not Request
         $source = sourceFactory($request->get('package'));
+        $target = targetFactory($request->get('output'));
+        $exportModel = exportModelFactory($request, $info, $target); // @todo Pass options not Request
         self::doExport($source, $exportModel);
-
-        // Import.
-        if ($request->get('output') !== '') {
-            $importModel = importModelFactory();
-            $target = targetFactory($request->get('output'));
-            self::doImport($target, $importModel);
-        }
 
         // Write the results (web only).
         if (!defined('CONSOLE')) {

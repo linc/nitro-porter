@@ -25,15 +25,24 @@ class Flarum extends Target
 
     /**
      * Main import process.
-     *
-     * @param ImportModel $im
      */
-    public function run(ImportModel $im)
+    public function import(string $tableName, array $structure, object $data, array $map = []): int
     {
-        //$this->users($im);
-        //$this->roles($im); // Groups
-        //$this->categories($im); // Tags
-        //$this->discussions($im);
-        //$this->comments($im); // Posts
+        //$this->users();
+        //$this->roles(); // Groups
+        //$this->categories(); // Tags
+        //$this->discussions();
+        //$this->comments(); // Posts
+        return 0;
+    }
+
+    public function begin()
+    {
+        //
+    }
+
+    public function end()
+    {
+        //
     }
 }
