@@ -79,7 +79,7 @@ class SimplePress extends Source
             'user_registered' => 'DateInserted',
             'lastvisit' => 'DateLastActive'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select m.*, u.user_pass, u.user_email, u.user_registered
                 from :_users u
@@ -99,7 +99,7 @@ class SimplePress extends Source
             'usergroup_name' => 'Name',
             'usergroup_desc' => 'Description'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select
                 usergroup_id,
@@ -119,7 +119,7 @@ class SimplePress extends Source
             'user_id' => 'UserID',
             'usergroup_id' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     m.user_id,
@@ -142,7 +142,7 @@ class SimplePress extends Source
     protected function permissions(ExportModel $ex): void
     {
         $member = 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add';
-        $ex->exportTable(
+        $ex->export(
             'Permission',
             "select usergroup_id as RoleID,
                     case
@@ -172,7 +172,7 @@ class SimplePress extends Source
             'form_slug' => 'UrlCode',
             'parent_id' => 'ParentCategoryID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     f.forum_id,
@@ -206,14 +206,14 @@ class SimplePress extends Source
                 'tag_id' => 'TagID',
                 'tag_name' => 'Name'
             );
-            $ex->exportTable('Tag', "select * from :_sftags", $tag_Map);
+            $ex->export('Tag', "select * from :_sftags", $tag_Map);
 
             if ($ex->exists('sftagmeta')) {
                 $tagDiscussion_Map = array(
                     'tag_id' => 'TagID',
                     'topic_id' => 'DiscussionID'
                 );
-                $ex->exportTable('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
+                $ex->export('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
             }
         }
     }
@@ -233,7 +233,7 @@ class SimplePress extends Source
             'topic_pinned' => 'Announce',
             'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*, 'Html' as Format from :_sftopics t",
             $discussion_Map
@@ -254,7 +254,7 @@ class SimplePress extends Source
             'post_date' => 'DateInserted',
             'poster_ip' => 'InsertIPAddress'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*, 'Html' as Format from :_sfposts p",
             $comment_Map
@@ -271,7 +271,7 @@ class SimplePress extends Source
             'from_id' => 'InsertUserID',
             'sent_date' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select * from :_sfmessages where is_reply = 0",
             $conv_Map
@@ -283,7 +283,7 @@ class SimplePress extends Source
             'from_id' => 'InsertUserID',
             'message' => array('Column' => 'Body')
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             'select c.message_id as ConversationID, m.*
                 from :_sfmessages c
@@ -299,7 +299,7 @@ class SimplePress extends Source
             'message_id' => 'ConversationID',
             'from_id' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             'select message_id, from_id
                 from :_sfmessages

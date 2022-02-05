@@ -128,7 +128,7 @@ class FuseTalk extends Source
     protected function users(ExportModel $ex): void
     {
         $user_Map = array();
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     user.iuserid as UserID,
@@ -157,7 +157,7 @@ class FuseTalk extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     user.iuserid as UserID,
@@ -187,7 +187,7 @@ class FuseTalk extends Source
         }
 
         // Role.
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select
                     groups.igroupid as RoleID,
@@ -201,7 +201,7 @@ class FuseTalk extends Source
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     user.iuserid as UserID,
@@ -242,7 +242,7 @@ class FuseTalk extends Source
         );
 
         // Conversations.
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select
                     c.ConversationID as ConversationID,
@@ -255,7 +255,7 @@ class FuseTalk extends Source
         $conversationMessage_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select
                     pm.imessageid as MessageID,
@@ -282,7 +282,7 @@ class FuseTalk extends Source
         );
 
         // User Conversation.
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     c.ConversationID,
@@ -303,7 +303,7 @@ class FuseTalk extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     categories.icategoryid as CategoryID,
@@ -321,7 +321,7 @@ class FuseTalk extends Source
     {
         // Skip "Body". It will be fixed at import.
         // The first comment is going to be used to fill the missing data and will then be deleted
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     threads.ithreadid as DiscussionID,
@@ -346,7 +346,7 @@ class FuseTalk extends Source
         $comment_Map = array(
             'txmessage' => array('Column' => 'Body', 'Filter' => array($this, 'fixSmileysURL')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     messages.imessageid as CommentID,

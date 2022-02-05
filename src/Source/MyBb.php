@@ -78,7 +78,7 @@ class MyBb extends Source
             'regdate3' => 'DateFirstVisit',
             'email' => 'Email',
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                 FROM_UNIXTIME(regdate) as regdate2,
@@ -101,7 +101,7 @@ class MyBb extends Source
             'title' => 'Name',
             'description' => 'Description',
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from :_usergroups",
             $role_Map
@@ -112,7 +112,7 @@ class MyBb extends Source
             'uid' => 'UserID',
             'usergroup' => 'RoleID',
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select u.uid, u.usergroup from :_users u",
             $userRole_Map
@@ -131,7 +131,7 @@ class MyBb extends Source
             'name' => 'Name',
             'description' => 'Description',
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_forums f",
             $category_Map
@@ -151,7 +151,7 @@ class MyBb extends Source
             'views' => 'CountViews',
             'replies' => 'CountComments',
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select *,
                     FROM_UNIXTIME(dateline) as DateInserted,
@@ -172,7 +172,7 @@ class MyBb extends Source
             'uid' => 'InsertUserID',
             'message' => array('Column' => 'Body'),
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                     FROM_UNIXTIME(dateline) as DateInserted,
@@ -198,7 +198,7 @@ class MyBb extends Source
             'filetype' => 'Type',
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select a.*,
                     600 as thumb_width,
@@ -220,7 +220,7 @@ class MyBb extends Source
             'tid' => 'DiscussionID',
             'uid' => 'UserID',
         );
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select *,
                     1 as Bookmarked

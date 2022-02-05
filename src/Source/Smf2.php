@@ -132,7 +132,7 @@ class Smf2 extends Source
             'DateLastActive' => 'DateLastActive',
             'DateUpdated' => 'DateUpdated'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             " select m.*,
                     from_unixtime(date_registered) as DateInserted,
@@ -156,14 +156,14 @@ class Smf2 extends Source
             'id_group' => 'RoleID',
             'group_name' => 'Name'
         );
-        $ex->exportTable('Role', "select * from :_membergroups", $role_Map);
+        $ex->export('Role', "select * from :_membergroups", $role_Map);
 
         // UserRoles
         $userRole_Map = array(
             'id_member' => 'UserID',
             'id_group' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "select * from :_members", $userRole_Map);
+        $ex->export('UserRole', "select * from :_members", $userRole_Map);
     }
 
     /**
@@ -175,7 +175,7 @@ class Smf2 extends Source
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
 
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     (`id_cat` + 1000000) as `CategoryID`,
@@ -221,7 +221,7 @@ class Smf2 extends Source
             'LastCommentUserID' => 'LastCommentUserID',
             'id_last_msg' => 'LastCommentID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     (t.num_replies + 1) as CountComments,
@@ -255,7 +255,7 @@ class Smf2 extends Source
             'id_member' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select m.*,
                     from_unixtime(m.poster_time) AS DateInserted,
@@ -287,7 +287,7 @@ class Smf2 extends Source
             'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select a.*,
                     concat('attachments/', a.filename) as Path,
@@ -315,7 +315,7 @@ class Smf2 extends Source
             'id_member_from' => 'InsertUserID',
             'unixmsgtime' => 'DateInserted',
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select pm.*,
                     from_unixtime(pm.msgtime) as unixmsgtime
@@ -331,7 +331,7 @@ class Smf2 extends Source
             'id_member_from' => 'InsertUserID',
             'unixmsgtime' => 'DateInserted',
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select pm.*,
                     from_unixtime(pm.msgtime) as unixmsgtime ,
@@ -345,7 +345,7 @@ class Smf2 extends Source
             'id_pm_head' => 'ConversationID',
             'deleted2' => 'Deleted'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "(select
                     pm.id_member_from as id_member2,

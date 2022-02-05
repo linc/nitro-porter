@@ -168,7 +168,7 @@ class PunBb extends Source
                 'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
                 'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
-            $ex->exportTable(
+            $ex->export(
                 'Media',
                 "select f.*,
                         concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
@@ -193,13 +193,13 @@ class PunBb extends Source
                 'id' => 'TagID',
                 'tag' => 'Name'
             );
-            $ex->exportTable('Tag', "SELECT * FROM :_tags", $tag_Map);
+            $ex->export('Tag', "SELECT * FROM :_tags", $tag_Map);
 
             $tagDiscussionMap = array(
                 'topic_id' => 'DiscussionID',
                 'tag_id' => 'TagID'
             );
-            $ex->exportTable('TagDiscussion', "SELECT * FROM :_topic_tags", $tagDiscussionMap);
+            $ex->export('TagDiscussion', "SELECT * FROM :_topic_tags", $tagDiscussionMap);
         }
     }
 
@@ -215,7 +215,7 @@ class PunBb extends Source
             'poster_ip' => 'InsertIPAddress',
             'message' => 'Body'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "SELECT p.*,
                     'BBCode' AS Format,
@@ -248,7 +248,7 @@ class PunBb extends Source
             'message' => 'Body'
 
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "SELECT t.*,
                     from_unixtime(p.posted) AS DateInserted,
@@ -279,7 +279,7 @@ class PunBb extends Source
             'disp_position' => 'Sort',
             'parent_id' => 'ParentCategoryID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "SELECT
                 id,
@@ -305,7 +305,7 @@ class PunBb extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                    u.id as UserID,
@@ -334,14 +334,14 @@ class PunBb extends Source
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $ex->exportTable('Role', "SELECT * FROM :_groups", $role_Map);
+        $ex->export('Role', "SELECT * FROM :_groups", $role_Map);
 
         // UserRole.
         $userRole_Map = array(
             'id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "SELECT
                     CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
@@ -370,7 +370,7 @@ class PunBb extends Source
 
         );
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        $ex->exportTable(
+        $ex->export(
             'Permission',
             "SELECT
                     g.*,
@@ -396,7 +396,7 @@ class PunBb extends Source
             'registration_ip' => 'InsertIPAddress',
             'PasswordHash' => 'Password'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "SELECT
                      u.*, u.id AS AvatarID,

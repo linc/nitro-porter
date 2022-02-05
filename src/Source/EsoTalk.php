@@ -66,7 +66,7 @@ class EsoTalk extends Source
             'confirmed' => 'Verified',
             'password' => 'Password',
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*, 'crypt' as HashMethod,
                     FROM_UNIXTIME(joinTime) as DateInserted,
@@ -86,7 +86,7 @@ class EsoTalk extends Source
             'groupId' => 'RoleID',
             'name' => 'Name',
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select groupId, name
                 from :_group
@@ -101,7 +101,7 @@ class EsoTalk extends Source
             'groupId' => 'RoleID',
         );
         // Create fake 'member' and 'administrator' roles to account for them being set separately on member table.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select u.memberId, u.groupId
                 from :_member_group u
@@ -127,7 +127,7 @@ class EsoTalk extends Source
             'countConversations' => 'CountDiscussions',
             //'countPosts' => 'CountComments',
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_channel c",
             $category_Map
@@ -151,7 +151,7 @@ class EsoTalk extends Source
             'content' => 'Body',
         );
         // The body of the OP is in the post table.
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     c.conversationId,
@@ -188,7 +188,7 @@ class EsoTalk extends Source
             'editMemberId' => 'UpdateUserID',
         );
         // Now we need to omit the comments we used as the OP.
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                     'BBCode' as Format,
@@ -216,7 +216,7 @@ class EsoTalk extends Source
             'id' => 'UserID',
             'conversationId' => 'DiscussionID',
         );
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select *
                 from :_member_conversation
@@ -235,7 +235,7 @@ class EsoTalk extends Source
             'countPosts' => 'CountMessages',
             'startMemberId' => 'InsertUserID',
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select p.*,
                     'BBCode' as Format,
@@ -252,7 +252,7 @@ class EsoTalk extends Source
             'memberId' => 'UserID',
 
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select distinct a.fromMemberId as memberId, a.type, c.private, c.conversationId from :_activity a
                 inner join :_conversation c on c.conversationId = a.conversationId
@@ -271,7 +271,7 @@ class EsoTalk extends Source
             'memberId' => 'InsertUserID',
 
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select p.*,
                     'BBCode' as Format,

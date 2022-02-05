@@ -72,7 +72,7 @@ class ModxDiscuss extends Source
      */
     protected function users(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     u.user as UserID,
@@ -102,7 +102,7 @@ class ModxDiscuss extends Source
         // Roles do not exist in Discuss. Really simple matchup.
         // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
         // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     u.user as UserID,
@@ -117,7 +117,7 @@ class ModxDiscuss extends Source
      */
     protected function userMeta(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     user as UserID,
@@ -154,7 +154,7 @@ class ModxDiscuss extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     id as CategoryID,
@@ -185,7 +185,7 @@ class ModxDiscuss extends Source
             'title2' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     t.id as `DiscussionID`,
@@ -213,7 +213,7 @@ class ModxDiscuss extends Source
      */
     protected function comments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             'select
                     p.id as CommentID,

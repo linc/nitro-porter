@@ -279,7 +279,7 @@ class VBulletin extends Source
             $threadReadJoin = null;
         }
 
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "
             select
@@ -1029,7 +1029,7 @@ class VBulletin extends Source
      */
     protected function tags(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Tag',
             "
             select
@@ -1041,7 +1041,7 @@ class VBulletin extends Source
         "
         );
 
-        $ex->exportTable(
+        $ex->export(
             'TagDiscussion',
             "select
                     tagid as TagID,
@@ -1058,7 +1058,7 @@ class VBulletin extends Source
      */
     protected function conversations(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select
                 p.parentpmid as ConversationID,
@@ -1076,7 +1076,7 @@ class VBulletin extends Source
             join :_pmtext t on t.pmtextid = p.pmtextid"
         );
 
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select distinct
                     t.pmtextid,
@@ -1095,7 +1095,7 @@ class VBulletin extends Source
         );
 
         // User Conversation.
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "
                 select
@@ -1143,7 +1143,7 @@ class VBulletin extends Source
                 $insertSql = substr($insertSql, 0, -2);
                 $ex->query($insertSql);
 
-                $ex->exportTable(
+                $ex->export(
                     'Ban',
                     "select
                             'IPAddress' as BanType,
@@ -1163,7 +1163,7 @@ class VBulletin extends Source
      */
     protected function reactions(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserTag',
             "select
                     if(t.threadid is not null, 'Discussion', 'Comment') as RecordType,
@@ -1552,7 +1552,7 @@ class VBulletin extends Source
             $minDiscussionWhere = "and t.threadid > $minDiscussionID";
         }
 
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     t.threadid as DiscussionID,

@@ -216,7 +216,7 @@ class Yaf extends Source
             'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'convertPassword')),
             'HashMethod' => 'HashMethod'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                     m.Password as Password2,
@@ -240,7 +240,7 @@ class Yaf extends Source
             'GroupID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from :_Group;",
             $role_Map
@@ -251,7 +251,7 @@ class Yaf extends Source
             'UserID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $ex->exportTable('UserRole', 'select * from :_UserGroup', $userRole_Map);
+        $ex->export('UserRole', 'select * from :_UserGroup', $userRole_Map);
     }
 
     /**
@@ -265,7 +265,7 @@ class Yaf extends Source
             'Name' => 'Name',
             'Label' => 'Label'
         );
-        $ex->exportTable(
+        $ex->export(
             'Rank',
             "select r.*,
                     RankID as Level,
@@ -280,7 +280,7 @@ class Yaf extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     UserID,
@@ -311,7 +311,7 @@ class Yaf extends Source
             'SortOrder' => 'Sort'
         );
 
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     f.ForumID,
@@ -346,7 +346,7 @@ class Yaf extends Source
             'Views' => 'CountViews',
             'Announce' => 'Announce'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     case when t.Priority > 0 then 1 else 0 end as Announce,
@@ -375,7 +375,7 @@ class Yaf extends Source
             'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'cleanDate')),
             'EditedBy' => 'UpdateUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select m.*,
                     case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format
@@ -398,7 +398,7 @@ class Yaf extends Source
             'Created' => 'DateInserted',
             'Title' => array('Column' => 'Subject', 'Type' => 'varchar(512)')
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select pm.*, g.Title
                 from z_pmgroup g
@@ -413,7 +413,7 @@ class Yaf extends Source
             'User_ID' => 'UserID',
             'Deleted' => 'Deleted'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select pto.*
                 from z_pmto pto
@@ -431,7 +431,7 @@ class Yaf extends Source
             'Body' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select pm.*,
                     case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,

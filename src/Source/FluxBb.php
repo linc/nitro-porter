@@ -155,7 +155,7 @@ class FluxBb extends Source
         $user_Map = array(
             'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'getAvatarByID')),
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     u.id as UserID,
@@ -178,7 +178,7 @@ class FluxBb extends Source
      */
     protected function permissions(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Permission',
             "select
                     g_id,
@@ -203,12 +203,12 @@ class FluxBb extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select g_id as RoleID, g_title as Name from :_groups"
         );
         // UserRole
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select u.id as UserID, u.group_id as RoleID from :_users u"
         );
@@ -219,7 +219,7 @@ class FluxBb extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     u.id as UserID,
@@ -235,7 +235,7 @@ class FluxBb extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     id as CategoryID,
@@ -260,7 +260,7 @@ class FluxBb extends Source
      */
     protected function discussions(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     t.id as DiscussionID,
@@ -286,7 +286,7 @@ class FluxBb extends Source
      */
     protected function comments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     p.*,
@@ -311,11 +311,11 @@ class FluxBb extends Source
     protected function tags(ExportModel $ex): void
     {
         if ($ex->exists('tags')) {
-            $ex->exportTable(
+            $ex->export(
                 'Tag',
                 "select id as TagID, tag as Name from :_tags"
             );
-            $ex->exportTable(
+            $ex->export(
                 'TagDiscussion',
                 "select topic_id as DiscussionID, tag_id as TagID from :_topic_tags"
             );
@@ -333,7 +333,7 @@ class FluxBb extends Source
                 'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
                 'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
-            $ex->exportTable(
+            $ex->export(
                 'Media',
                 "select f.*,
                         f.id as MediaID,

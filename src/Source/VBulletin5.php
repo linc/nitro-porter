@@ -189,7 +189,7 @@ class VBulletin5 extends VBulletin
                     Closed,
                     Announce
                 from vBulletinDiscussionTable;";
-            $ex->exportTable('Discussion', $sql, $discussion_Map);
+            $ex->export('Discussion', $sql, $discussion_Map);
 
             // Export polls
             $this->polls($ex);
@@ -197,7 +197,7 @@ class VBulletin5 extends VBulletin
             // Cleanup tmp table
             $ex->query("drop table vBulletinDiscussionTable;");
         } else {
-            $ex->exportTable('Discussion', $discussionQuery, $discussion_Map);
+            $ex->export('Discussion', $discussionQuery, $discussion_Map);
         }
 
         // UserDiscussion
@@ -207,7 +207,7 @@ class VBulletin5 extends VBulletin
         );
         // Should be able to inner join `discussionread` for DateLastViewed
         // but it's blank in my sample data so I don't trust it.
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select s.*,
                     1 as Bookmarked,
@@ -437,7 +437,7 @@ class VBulletin5 extends VBulletin
                 case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
         }
 
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                     ipaddress as ipaddress2,
@@ -475,7 +475,7 @@ class VBulletin5 extends VBulletin
             'title' => 'Name',
             'description' => 'Description'
         );
-        $ex->exportTable('Role', 'select * from :_usergroup', $role_Map);
+        $ex->export('Role', 'select * from :_usergroup', $role_Map);
 
         // UserRoles
         $userRole_Map = array(
@@ -502,7 +502,7 @@ class VBulletin5 extends VBulletin
             }
         }
         // Export from our tmp table and drop
-        $ex->exportTable('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
+        $ex->export('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
         $ex->query("DROP TABLE IF EXISTS VbulletinRoles");
     }
 
@@ -519,7 +519,7 @@ class VBulletin5 extends VBulletin
             'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
         );
         $this->addPermissionColumns(self::$permissions, $permissions_Map);
-        $ex->exportTable('Permission', 'select * from :_usergroup', $permissions_Map);
+        $ex->export('Permission', 'select * from :_usergroup', $permissions_Map);
     }
 
     /**
@@ -553,7 +553,7 @@ class VBulletin5 extends VBulletin
                 }
             )
         );
-        $ex->exportTable(
+        $ex->export(
             'Rank',
             "select ut.*,
                     ut.title as title2,
@@ -629,7 +629,7 @@ class VBulletin5 extends VBulletin
 
         // Categories are Channels that were found in the Forum tree
         // If parent was 'Forum' set the parent to Root instead (-1)
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select n.*,
                     FROM_UNIXTIME(publishdate) as DateInserted,
@@ -701,7 +701,7 @@ class VBulletin5 extends VBulletin
             'parentid' => 'DiscussionID',
         );
 
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     n.nodeid,
@@ -755,7 +755,7 @@ class VBulletin5 extends VBulletin
             'height' => 'ImageHeight',
             'filesize' => 'Size',
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select a.*,
                     filename as Path2,
@@ -793,7 +793,7 @@ class VBulletin5 extends VBulletin
             'totalcount' => 'CountMessages',
             'title' => 'Subject',
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select n.*,
                     n.nodeid as FirstMessageID,
@@ -811,7 +811,7 @@ class VBulletin5 extends VBulletin
             'rawtext' => 'Body',
             'userid' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select n.*,
                     t.rawtext,
@@ -833,7 +833,7 @@ class VBulletin5 extends VBulletin
             'deleted' => 'Deleted'
         );
         // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select s.* from :_sentto s ;",
             $userConversation_Map

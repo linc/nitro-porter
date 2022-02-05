@@ -58,7 +58,7 @@ class AspPlayground extends Source
             'dateSignUp' => 'DateInserted',
             'lastLogin' => 'DateLastActive',
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "
          select m.*,
@@ -77,7 +77,7 @@ class AspPlayground extends Source
         $userRole_Map = array(
             'Mem' => 'UserID'
         );
-        $ex->exportTable('UserRole', 'select Mem, 8 as RoleID from :_Members', $userRole_Map);
+        $ex->export('UserRole', 'select Mem, 8 as RoleID from :_Members', $userRole_Map);
     }
 
     /**
@@ -85,7 +85,7 @@ class AspPlayground extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "
          select
@@ -118,7 +118,7 @@ class AspPlayground extends Source
             'Sort' => 'Sort',
             'lastModTime' => 'DateUpdated'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select f.*
                 from :_Forums f;",
@@ -140,7 +140,7 @@ class AspPlayground extends Source
             'hits' => 'CountViews',
             'lastupdate' => 'DateLastComment'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*, m.Body
                 from :_Threads t
@@ -163,7 +163,7 @@ class AspPlayground extends Source
             'Body' => 'Body',
             'ip' => 'InsertIPAddress'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select m.*, 'BBCode' as Format
                 from :_Messages m;",

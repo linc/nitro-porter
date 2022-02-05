@@ -122,7 +122,7 @@ class BbPress2 extends Source
             'user_email' => 'Email',
             'user_registered' => 'DateInserted',
         );
-        $ex->exportTable('User', "select * from z_user;", $user_Map);
+        $ex->export('User', "select * from z_user;", $user_Map);
     }
 
     /**
@@ -130,7 +130,7 @@ class BbPress2 extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "
                 select
@@ -146,7 +146,7 @@ class BbPress2 extends Source
         $userRole_Map = array(
             'user_id' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select distinct(user_id) as user_id,
                     case
@@ -180,7 +180,7 @@ class BbPress2 extends Source
             'post_name' => 'UrlCode',
             'menu_order' => 'Sort',
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select *,
                     lower(post_name) as forum_slug,
@@ -205,7 +205,7 @@ class BbPress2 extends Source
             'post_date' => 'DateInserted',
             'menu_order' => 'Announce',
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select p.*,
                     /* override post_author value from p.* */
@@ -233,7 +233,7 @@ class BbPress2 extends Source
             'post_author' => 'InsertUserID',
             'post_date' => 'DateInserted',
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                 /* override post_author value from p.* */

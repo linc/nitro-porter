@@ -360,7 +360,7 @@ EOT;
             join tmp_conversation tc
                 on mt.mt_id = tc.id";
         $this->clearFilters('Conversation', $conversation_Map, $sql);
-        $ex->exportTable('Conversation', $sql, $conversation_Map);
+        $ex->export('Conversation', $sql, $conversation_Map);
 
         // Conversation Message.
         $conversationMessage_Map = array(
@@ -382,7 +382,7 @@ EOT;
             join tmp_conversation tc
                 on mt.mt_id = tc.id";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
-        $ex->exportTable('ConversationMessage', $sql, $conversationMessage_Map);
+        $ex->export('ConversationMessage', $sql, $conversationMessage_Map);
 
         // User Conversation.
         $userConversation_Map = array(
@@ -395,7 +395,7 @@ EOT;
             from tmp_to t
             join tmp_group g
                 on g.groupid = t.id";
-        $ex->exportTable('UserConversation', $sql, $userConversation_Map);
+        $ex->export('UserConversation', $sql, $userConversation_Map);
 
         $ex->queryN(
             "drop table tmp_conversation;
@@ -419,7 +419,7 @@ EOT;
         );
         $sql = "select * from :_message_topics where mt_is_deleted = 0";
         $this->clearFilters('Conversation', $conversation_Map, $sql);
-        $ex->exportTable('Conversation', $sql, $conversation_Map);
+        $ex->export('Conversation', $sql, $conversation_Map);
 
         // Conversation Message.
         $conversationMessage_Map = array(
@@ -433,7 +433,7 @@ EOT;
         );
         $sql = "select m.*, 'IPB' as Format from :_message_posts m";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
-        $ex->exportTable('ConversationMessage', $sql, $conversationMessage_Map);
+        $ex->export('ConversationMessage', $sql, $conversationMessage_Map);
 
         // User Conversation.
         $userConversation_Map = array(
@@ -444,7 +444,7 @@ EOT;
         $sql = "select t.*,
             !map_user_active as Deleted
             from :_message_topic_user_map t";
-        $ex->exportTable('UserConversation', $sql, $userConversation_Map);
+        $ex->export('UserConversation', $sql, $userConversation_Map);
     }
 
     /**
@@ -592,7 +592,7 @@ EOT;
                 $from";
         }
         $this->clearFilters('members', $user_Map, $sql, 'm');
-        $ex->exportTable('User', $sql, $user_Map);
+        $ex->export('User', $sql, $user_Map);
     }
 
     /**
@@ -616,7 +616,7 @@ EOT;
             //          'g_edit_topic' => 'Vanilla.Discussions.Edit'
         );
         $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        $ex->exportTable(
+        $ex->export(
             'Permission',
             "select r.*,
                     r.g_view_board as g_view_board2,
@@ -637,7 +637,7 @@ EOT;
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $ex->exportTable('Role', "select * from :_groups", $role_Map);
+        $ex->export('Role', "select * from :_groups", $role_Map);
 
         // User Role.
         if ($ex->exists('members', 'member_group_id') === true) {
@@ -665,7 +665,7 @@ EOT;
                on find_in_set(g.g_id, m.mgroup_others)";
         }
 
-        $ex->exportTable('UserRole', $sql, $userRole_Map);
+        $ex->export('UserRole', $sql, $userRole_Map);
     }
 
     /**
@@ -715,7 +715,7 @@ EOT;
             $sql = false;
         }
         if ($sql) {
-            $ex->exportTable('UserMeta', $sql, $userMeta_Map);
+            $ex->export('UserMeta', $sql, $userMeta_Map);
         }
         return $sql;
     }
@@ -733,7 +733,7 @@ EOT;
             'parent_id' => 'ParentCategoryID',
             'position' => 'Sort'
         );
-        $ex->exportTable('Category', "select * from :_forums", $category_Map);
+        $ex->export('Category', "select * from :_forums", $category_Map);
     }
 
     /**
@@ -779,7 +779,7 @@ EOT;
             on t.topic_firstpost = p.pid
         where t.tid between {from} and {to}";
         $this->clearFilters('topics', $discussion_Map, $sql, 't');
-        $ex->exportTable('Discussion', $sql, $discussion_Map);
+        $ex->export('Discussion', $sql, $discussion_Map);
     }
 
     /**
@@ -806,14 +806,14 @@ EOT;
             from :_core_tags t
             left join z_tag zt
                 on t.tag_text = zt.FullName";
-        $ex->exportTable('TagDiscussion', $sql, $tagDiscussion_Map);
+        $ex->export('TagDiscussion', $sql, $tagDiscussion_Map);
 
         $tag_Map = array(
             'FullName' => 'FullName',
             'FullNameToName' => array('Column' => 'Name', 'Filter' => 'formatUrl')
         );
         $sql = "select TagID, FullName, FullName as FullNameToName from z_tag zt";
-        $ex->exportTable('Tag', $sql, $tag_Map);
+        $ex->export('Tag', $sql, $tag_Map);
         return $sql;
     }
 
@@ -839,7 +839,7 @@ EOT;
             where p.pid between {from} and {to}
                 and p.pid <> t.topic_firstpost";
         $this->clearFilters('Comment', $comment_Map, $sql, 'p');
-        $ex->exportTable('Comment', $sql, $comment_Map);
+        $ex->export('Comment', $sql, $comment_Map);
     }
 
     /**
@@ -879,6 +879,6 @@ EOT;
             left join :_attachments_type ty
                on a.attach_ext = ty.atype_extension";
         $this->clearFilters('Media', $media_Map, $sql);
-        $ex->exportTable('Media', $sql, $media_Map);
+        $ex->export('Media', $sql, $media_Map);
     }
 }

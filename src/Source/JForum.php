@@ -82,7 +82,7 @@ class JForum extends Source
      */
     protected function users(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     u.user_id as UserID,
@@ -105,7 +105,7 @@ class JForum extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "
             select
@@ -116,7 +116,7 @@ class JForum extends Source
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "
             select
@@ -131,7 +131,7 @@ class JForum extends Source
      */
     protected function userMeta(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     user_id as UserID,
@@ -177,7 +177,7 @@ class JForum extends Source
     {
 // _categories is tier 1, _forum is tier 2.
         // Overlapping IDs, so fast-forward _categories by 1000.
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     c.categories_id+1000 as CategoryID,
@@ -210,7 +210,7 @@ class JForum extends Source
             'topic_title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     t.topic_id as DiscussionID,
@@ -238,7 +238,7 @@ class JForum extends Source
      */
     protected function comments(ExportModel $ex, string $postTextColumm, string $postTextSource): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     p.post_id as CommentID,
@@ -266,7 +266,7 @@ class JForum extends Source
             'topic_id' => 'DiscussionID',
             'user_id' => 'UserID',
         );
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select
                     w.topic_id as DiscussionID,
@@ -315,7 +315,7 @@ class JForum extends Source
             'privmsgs_date' => 'DateInserted',
             'privmsgs_subject' => 'Subject',
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select
                     p.privmsgs_from_userid as InsertUserID,
@@ -341,7 +341,7 @@ class JForum extends Source
             'privmsgs_date' => 'DateInserted',
             'privmsgs_text' => 'Body',
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select
                     p.privmsgs_id as MessageID,
@@ -360,7 +360,7 @@ class JForum extends Source
 
 
         // UserConversation
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     ConversationID,

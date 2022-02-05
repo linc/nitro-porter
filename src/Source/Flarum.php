@@ -72,7 +72,7 @@ class Flarum extends Source
             'discussion_count' => 'CountDiscussions',
             'comment_count' => 'CountComments',
         ];
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select *, 'phpass' as HashMethod from :_users",
             $user_Map
@@ -88,7 +88,7 @@ class Flarum extends Source
             'id' => 'RoleID',
             'name_singular' => 'Name',
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from :_groups",
             $role_Map
@@ -99,7 +99,7 @@ class Flarum extends Source
             'user_id' => 'UserID',
             'group_id' => 'RoleID',
         ];
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select * from :_group_user",
             $userRole_Map
@@ -120,7 +120,7 @@ class Flarum extends Source
             'position' => 'Sort',
             'discussion_count' => 'CountDiscussions',
         ];
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_tags",
             $category_Map
@@ -137,7 +137,7 @@ class Flarum extends Source
             'user_id' => 'InsertUserID',
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select *, p.content as Body, dt.tag_id as CategoryID
                  from :_discussions d
@@ -162,7 +162,7 @@ class Flarum extends Source
             'edited_at' => 'LastUpdated',
             'edited_user_id' => 'UpdateUserID',
         ];
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select *, 'Html' as Format
                 from :_posts

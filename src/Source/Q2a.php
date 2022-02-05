@@ -60,7 +60,7 @@ class Q2a extends Source
      */
     protected function users(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "SELECT
                     u.userid as UserID,
@@ -101,14 +101,14 @@ class Q2a extends Source
      */
     protected function discussions(ExportModel $ex): void
     {
-        $ex->exportTable('Category', "select 1 as CategoryID, 'Legacy' as Name");
+        $ex->export('Category', "select 1 as CategoryID, 'Legacy' as Name");
         $discussion_Map = array(
             'postid' => 'DiscussionID',
             'categoryid' => 'CategoryID',
             'userid' => 'InsertUserID',
             'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     'Question' as Type,
@@ -134,7 +134,7 @@ class Q2a extends Source
      */
     protected function comments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     p.postid as CommentID,

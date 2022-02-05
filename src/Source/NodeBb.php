@@ -217,7 +217,7 @@ class NodeBb extends Source
             'admin' => 'Admin',
             'hm' => 'HashMethod'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select uid, username, password, email, `email:confirmed` as confirmed,
                     showemail, joindate, lastonline, lastposttime, banned, 0 as admin, 'crypt' as hm
@@ -236,7 +236,7 @@ class NodeBb extends Source
             '_key' => array('Column' => 'Name', 'Filter' => array($this, 'roleNameFromKey')),
             'description' => 'Description'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select gm._key as _key, gm._num as _num, g.description as description
                 from :_group_members gm left join :_group g
@@ -248,7 +248,7 @@ class NodeBb extends Source
             'id' => 'RoleID',
             'members' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select *, g._num as id
                 from :_group_members g join :_group_members__members m
@@ -267,7 +267,7 @@ class NodeBb extends Source
             'name' => 'Name',
             'signature' => 'Value'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select uid, 'Plugin.Signatures.Sig' as name, signature
                 from :_user
@@ -303,7 +303,7 @@ class NodeBb extends Source
             'image' => 'Photo',
             'disabled' => 'Archived'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_category",
             $category_Map
@@ -423,7 +423,7 @@ class NodeBb extends Source
             'poll' => array('Column' => 'Type', 'Filter' => array($this, 'isPoll'))
         );
 
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select p.tid, cid, title, content, p.uid, locked, pinned, p.timestamp,
                     p.edited, p.editor, viewcount, votes, poll._id as poll, 'Markdown' as format,
@@ -502,7 +502,7 @@ class NodeBb extends Source
             'attributes' => array('Column' => 'Attributes', 'Filter' => array($this, 'serializeReactions'))
         );
 
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select content, uid, tid, timestamp, edited, editor, votes, 'Markdown' as format,
                     concat(ifnull(upvote, 0), ':', ifnull(downvote, 0)) as attributes
@@ -524,7 +524,7 @@ class NodeBb extends Source
             'uid' => 'InsertUserID',
             'timestamp' => array('Column' => 'DateInserted', 'Filter' => array($this, 'tsToDate'))
         );
-        $ex->exportTable(
+        $ex->export(
             'Poll',
             "select *
                 from :_poll p left join :_poll_settings ps
@@ -540,7 +540,7 @@ class NodeBb extends Source
             'votecount' => array('Column' => 'CountVotes', 'Filter' => array($this, 'makeNullZero')),
             'format' => 'Format'
         );
-        $ex->exportTable(
+        $ex->export(
             'PollOption',
             "select _num, _key, title, id+1 as sort, votecount, 'Html' as format
                 from :_poll_options
@@ -552,7 +552,7 @@ class NodeBb extends Source
             'userid' => 'UserID',
             'poll_option_id' => 'PollOptionID'
         );
-        $ex->exportTable(
+        $ex->export(
             'PollVote',
             "select povm.members as userid, po._num as poll_option_id
                 from :_poll_options_votes__members povm
@@ -587,7 +587,7 @@ class NodeBb extends Source
 
         $ex->query("set @rownr=1000;");
 
-        $ex->exportTable(
+        $ex->export(
             'Tag',
             "select @rownr:=@rownr+1 as tagid, members as fullname, members as slug,
                     '' as type, count, timestamp, uid, cid
@@ -612,7 +612,7 @@ class NodeBb extends Source
 
         $ex->query("set @rownr=1000;");
 
-        $ex->exportTable(
+        $ex->export(
             'TagDiscussion',
             "select tagid, cid, tid, timestamp
                 from :_topic_tags__members two
@@ -728,7 +728,7 @@ class NodeBb extends Source
             'countparticipants' => 'CountParticipants',
             'countmessages' => 'CountMessages'
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select *, firstmessageid as conversationid, 2 as countparticipants
             from z_pmgroup
@@ -745,7 +745,7 @@ class NodeBb extends Source
             'fromuid' => 'InsertUserID',
             'timestamp' => array('Column' => 'DateInserted', 'Filter' => array($this, 'tsToDate'))
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select groupid as conversationid, pmid as messageid, content, 'Text' as format, fromuid, timestamp
                 from z_pmto2
@@ -759,7 +759,7 @@ class NodeBb extends Source
             'userid' => 'UserID',
             'lastmessageid' => 'LastMessageID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select p.groupid as conversationid, userid, lastmessageid
                 from z_pmto p
@@ -780,7 +780,7 @@ class NodeBb extends Source
             'bookmarked' => 'Bookmarked'
         );
 
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select members, _key, 1 as bookmarked
                 from :_tid_followers__members
@@ -813,7 +813,7 @@ class NodeBb extends Source
             'score' => array('Column' => 'DateInserted', 'Filter' => array($this, 'tsToDate')),
             'total' => 'Total'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserTag',
             "select 11 as tagid, 'Discussion' as recordtype, u._key, u.value, score, total
                 from :_uid_upvote u

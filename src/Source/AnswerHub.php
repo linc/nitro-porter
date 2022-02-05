@@ -139,7 +139,7 @@ class AnswerHub extends Source
         $user_Map = array(
             'c_email' => array('Column' => 'Email', 'Filter' => array($this, 'generateEmail')),
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     user.c_id as UserID,
@@ -173,7 +173,7 @@ class AnswerHub extends Source
         if (!isset($lastID)) {
             die('Something went wrong :S' . PHP_EOL);
         }
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "
             select
@@ -191,7 +191,7 @@ class AnswerHub extends Source
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     user_role.c_groups as RoleID,
@@ -206,7 +206,7 @@ class AnswerHub extends Source
     protected function categories(ExportModel $ex): void
     {
         $category_Map = array();
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select containers.c_id as CategoryID,
                     case
@@ -229,7 +229,7 @@ class AnswerHub extends Source
     {
         $discussion_Map = array();
         // The query works fine but it will probably be slow for big tables
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                 questions.c_id as DiscussionID,
@@ -279,7 +279,7 @@ class AnswerHub extends Source
     protected function comments(ExportModel $ex): void
     {
         $comment_Map = array();
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                 answers.c_id as CommentID,
@@ -315,7 +315,7 @@ class AnswerHub extends Source
      */
     protected function tags(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Tags',
             "select
                     c_id as TagID,
@@ -326,7 +326,7 @@ class AnswerHub extends Source
                 where n.c_type = 'topic'"
         );
 
-        $ex->exportTable(
+        $ex->export(
             'TagDiscussion',
             "select
                     c_topics as TagID,
@@ -347,7 +347,7 @@ class AnswerHub extends Source
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'getFileName')),
             'Type' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select
                     m.c_id as `MediaID`,

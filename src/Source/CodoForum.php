@@ -65,7 +65,7 @@ class CodoForum extends Source
      */
     protected function users(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                 u.id as UserID,
@@ -84,7 +84,7 @@ class CodoForum extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select
                     r.rid as RolesID,
@@ -93,7 +93,7 @@ class CodoForum extends Source
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     ur.uid as UserID,
@@ -108,7 +108,7 @@ class CodoForum extends Source
      */
     protected function userMeta(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     u.id as UserID,
@@ -124,7 +124,7 @@ class CodoForum extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     c.cat_id as CategoryID,
@@ -138,7 +138,7 @@ class CodoForum extends Source
      */
     protected function discussions(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                 t.topic_id as DiscussionID,
@@ -156,7 +156,7 @@ class CodoForum extends Source
      */
     protected function comments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     p.post_id as CommentID,

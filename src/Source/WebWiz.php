@@ -62,7 +62,7 @@ class WebWiz extends Source
             'Author_ID' => 'InsertUserID',
             'PM_Message_Date' => array('Column' => 'DateInserted')
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select pm.*,
                     g.Title
@@ -77,7 +77,7 @@ class WebWiz extends Source
             'Group_ID' => 'ConversationID',
             'User_ID' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     g.Group_ID,
@@ -97,7 +97,7 @@ class WebWiz extends Source
             'PM_Message_Date' => array('Column' => 'DateInserted'),
             'Author_ID' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select pm.*,
                     pm2.Group_ID,
@@ -241,7 +241,7 @@ class WebWiz extends Source
             }
         }
 
-        $ex->ExportTable(
+        $ex->export(
             'Permission',
             "select
                     g.can_view_profiles as can_view_profiles2,
@@ -278,7 +278,7 @@ class WebWiz extends Source
             'DOB' => 'DateOfBirth',
             'Show_email' => 'ShowEmail'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     concat(Salt, '$', Password) as Password2,
@@ -301,7 +301,7 @@ class WebWiz extends Source
             'Group_ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from :_Group",
             $role_Map
@@ -312,7 +312,7 @@ class WebWiz extends Source
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select u.* from :_Author u",
             $userRole_Map
@@ -324,7 +324,7 @@ class WebWiz extends Source
      */
     protected function usermeta(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                 Author_ID as UserID,
@@ -347,7 +347,7 @@ class WebWiz extends Source
             'Parent_ID' => 'ParentCategoryID',
             'Forum_order' => 'Sort'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     f.Forum_ID,
@@ -386,7 +386,7 @@ class WebWiz extends Source
             'Locked' => 'Closed',
 
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     th.Author_ID,
@@ -416,7 +416,7 @@ class WebWiz extends Source
             'Format' => 'Format',
             'Message_date' => array('Column' => 'DateInserted')
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select th.*, 'Html' as Format
                 from :_Thread th

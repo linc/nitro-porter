@@ -65,7 +65,7 @@ class Drupal6 extends Source
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'login' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                     nullif(concat('drupal/', u.picture), 'drupal/') as photo,
@@ -87,7 +87,7 @@ class Drupal6 extends Source
             'Name' => 'Name',
             'signature' => 'Value'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select u.*, 'Plugins.Signatures.Sig' as Name
                 from :_users u
@@ -105,14 +105,14 @@ class Drupal6 extends Source
             'rid' => 'RoleID',
             'name' => 'Name'
         );
-        $ex->exportTable('Role', "select r.* from :_role r", $role_Map);
+        $ex->export('Role', "select r.* from :_role r", $role_Map);
 
         // User Role.
         $userRole_Map = array(
             'uid' => 'UserID',
             'rid' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select * from :_users_roles",
             $userRole_Map
@@ -130,7 +130,7 @@ class Drupal6 extends Source
             'description' => 'description',
             'parent' => 'ParentCategoryID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select t.*, nullif(h.parent, 0) as parent
                  from :_term_data t
@@ -155,7 +155,7 @@ class Drupal6 extends Source
             'sticky' => 'Announce',
             'tid' => 'CategoryID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select n.*, nullif(n.changed, n.created) as DateUpdated, f.tid, r.body
                  from nodeforum f
@@ -179,7 +179,7 @@ class Drupal6 extends Source
             'hostname' => 'InsertIPAddress',
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     n.created,
@@ -209,7 +209,7 @@ class Drupal6 extends Source
             'author' => 'InsertUserID',
             'title' => 'Subject',
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select
                     pmi.thread_id,
@@ -229,7 +229,7 @@ class Drupal6 extends Source
             'thread_id' => 'ConversationID',
             'author' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select
                     pmm.mid,
@@ -248,7 +248,7 @@ class Drupal6 extends Source
             'uid' => 'UserID',
             'thread_id' => 'ConversationID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     pmi.uid,

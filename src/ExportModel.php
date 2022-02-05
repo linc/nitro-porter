@@ -79,7 +79,7 @@ class ExportModel
 
     /**
      * @var string DB prefix. SQL strings passed to ExportTable() will replace occurances of :_ with this.
-     * @see ExportModel::ExportTable()
+     * @see ExportModel::export()
      * @deprecated
      */
     public string $prefix = '';
@@ -226,28 +226,26 @@ class ExportModel
     }
 
     /**
-     * Export a table to the export file.
+     * Export a collection of data, usually a table.
      *
-     * @param string $tableName Name of table to export. This must correspond to one of the accepted Vanilla tables.
-     * @param mixed  $query     The query that will fetch the data for the export this can be one of the following:
-     *      <b>String</b>: Represents a string of SQL to execute.
-     *      <b>PDOStatement</b>: Represents an already executed query result set.
-     *      <b>Array</b>: Represents an array of associative arrays or objects containing the data in the export.
-     * @param array  $mappings Specifies mappings, if any, between source and export where keys represent source columns
+     * @param string $tableName Name of table to export. This must correspond to one of the accepted map tables.
+     * @param string $query The SQL query that will fetch the data for the export.
+     * @param array $map Specifies mappings, if any, between source and export where keys represent source columns
      *   and values represent Vanilla columns.
      *   If you specify a Vanilla column then it must be in the export structure contained in this class.
      *   If you specify a MySQL type then the column will be added.
-     *   If you specify an array you can have the following keys: Column,
-     *   and Type where Column represents the new column name and Type
-     *   represents the MySQL type. For a list of the export tables and columns see $this->Structure().
+     *   If you specify an array you can have the following keys:
+     *      Column (the new column name)
+     *      Filter (the callable function name to process the data with)
+     *      Type (the MySQL type)
      */
-    public function exportTable($tableName, $query, $mappings = [])
+    public function export(string $tableName, string $query, array $map = [])
     {
         if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
         } else {
             $start = microtime(true);
-            $rowCount = $this->exportTableWrite($tableName, $query, $mappings);
+            $rowCount = $this->exportTableWrite($tableName, $query, $map);
             $elapsed = formatElapsed($start - microtime(true));
             $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
         }
@@ -256,12 +254,12 @@ class ExportModel
     /**
      * Process for writing an entire single table to file.
      *
-     * @see    ExportTable()
      * @param  string $tableName
      * @param  string $query
      * @param  array $mappings
      * @param  array $options
      * @return int|void
+     *@see    export()
      */
     protected function exportTableWrite($tableName, $query, $mappings = [], $options = [])
     {

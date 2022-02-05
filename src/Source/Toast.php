@@ -59,7 +59,7 @@ class Toast extends Source
             'LastLoginDate' => array('Column' => 'DateLastActive', 'Type' => 'datetime'),
             'IP' => 'LastIPAddress'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select *, NOW() as DateInserted from :_Member u",
             $user_Map
@@ -83,7 +83,7 @@ class Toast extends Source
             'ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             " select ID, Name from :_Group
                 union all
@@ -97,7 +97,7 @@ class Toast extends Source
             'MemberID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             " select GroupID, MemberID from :_MemberGroupLink
                  union all
@@ -117,7 +117,7 @@ class Toast extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             " select
                     ID as UserID,
@@ -146,7 +146,7 @@ class Toast extends Source
             'ForumName' => 'Name',
             'Description' => 'Description'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     f.ID,
@@ -182,7 +182,7 @@ class Toast extends Source
             'Hits' => 'CountViews',
             'ReplyCount' => 'CountComments'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select p.*,
             'Html' as Format
@@ -206,7 +206,7 @@ class Toast extends Source
             'ModifyDate' => 'DateUpdated',
             'Message' => 'Body'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select *,
                     'Html' as Format

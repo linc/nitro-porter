@@ -314,7 +314,7 @@ class Xenforo extends Source
                 'BBCode'
             from :_user_profile
             where nullif(signature, '') is not null";
-        $ex->exportTable('UserMeta', $sql);
+        $ex->export('UserMeta', $sql);
     }
 
     /**
@@ -602,7 +602,7 @@ class Xenforo extends Source
      */
     protected function attachments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select
                     a.attachment_id as MediaID,
@@ -641,7 +641,7 @@ class Xenforo extends Source
             'user_id' => 'InsertUserID',
             'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select * from :_conversation_master",
             $conversation_Map
@@ -656,7 +656,7 @@ class Xenforo extends Source
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select m.*,
                     'BBCode' as format,
@@ -672,7 +672,7 @@ class Xenforo extends Source
             'user_id' => 'UserID',
             'Deleted' => 'Deleted'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     r.conversation_id,

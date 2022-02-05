@@ -107,7 +107,7 @@ class PhpBb2 extends Source
      */
     protected function attachments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select
                     ad.attach_id as MediaID,
@@ -139,7 +139,7 @@ class PhpBb2 extends Source
             'user_timezone' => 'HourOffset',
             'user_posts' => array('Column' => 'CountComments', 'Type' => 'int')
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select *,
                     FROM_UNIXTIME(nullif(user_regdate, 0)) as DateFirstVisit,
@@ -161,7 +161,7 @@ class PhpBb2 extends Source
             'group_description' => 'Description'
         );
         // Skip single-user groups
-        $ex->exportTable('Role', 'select * from :_groups where group_single_user = 0', $role_Map);
+        $ex->export('Role', 'select * from :_groups where group_single_user = 0', $role_Map);
 
         // UserRoles
         $userRole_Map = array(
@@ -169,7 +169,7 @@ class PhpBb2 extends Source
             'group_id' => 'RoleID'
         );
         // Skip pending memberships
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             'select
                     user_id,
@@ -191,7 +191,7 @@ class PhpBb2 extends Source
             'description' => 'Description',
             'parentid' => 'ParentCategoryID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     c.cat_id * 1000 as id,
@@ -227,7 +227,7 @@ class PhpBb2 extends Source
             'Format' => 'Format',
             'topic_views' => 'CountViews'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     'BBCode' as Format,
@@ -251,7 +251,7 @@ class PhpBb2 extends Source
             'Format' => 'Format',
             'poster_id' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                     pt.post_text,
@@ -372,7 +372,7 @@ class PhpBb2 extends Source
             )
         );
 
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select pm.*,
                     g.subject as RealSubject,
@@ -390,7 +390,7 @@ class PhpBb2 extends Source
             'privmsgs_text' => array('Column' => 'Body', 'Filter' => array($this, 'removeBBCodeUIDs')),
             'privmsgs_from_userid' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select pm.*,
                     txt.*,
@@ -411,7 +411,7 @@ class PhpBb2 extends Source
             'userid' => 'UserID',
             'groupid' => 'ConversationID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     g.groupid,

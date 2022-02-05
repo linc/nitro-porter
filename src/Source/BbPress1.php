@@ -69,7 +69,7 @@ class BbPress1 extends Source
             'user_email' => 'Email',
             'user_registered' => 'DateInserted'
         );
-        $ex->exportTable('User', "select * from :_users", $user_Map);
+        $ex->export('User', "select * from :_users", $user_Map);
     }
 
     /**
@@ -77,7 +77,7 @@ class BbPress1 extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select 1 as RoleID, 'Guest' as Name
                  union select 2, 'Key Master'
@@ -92,7 +92,7 @@ class BbPress1 extends Source
         $userRole_Map = array(
             'user_id' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select distinct user_id,
                 case when locate('keymaster', meta_value) <> 0 then 2
@@ -120,7 +120,7 @@ class BbPress1 extends Source
             'forum_slug' => 'UrlCode',
             'left_order' => 'Sort'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select *,
                     lower(forum_slug) as forum_slug,
@@ -144,7 +144,7 @@ class BbPress1 extends Source
             'topic_start_time' => 'DateInserted',
             'topic_sticky' => 'Announce'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     'Html' as Format,
@@ -168,7 +168,7 @@ class BbPress1 extends Source
             'poster_id' => 'InsertUserID',
             'post_time' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                     'Html' as Format
@@ -204,7 +204,7 @@ class BbPress1 extends Source
                 'pm_thread' => 'ConversationID',
                 'pm_from' => 'InsertUserID'
             );
-            $ex->exportTable(
+            $ex->export(
                 'Conversation',
                 "select *, from_unixtime(sent_on) as DateInserted
             from :_bbpm
@@ -219,7 +219,7 @@ class BbPress1 extends Source
                 'pm_from' => 'InsertUserID',
                 'pm_text' => array('Column' => 'Body', 'Filter' => 'bbPressTrim')
             );
-            $ex->exportTable(
+            $ex->export(
                 'ConversationMessage',
                 'select *, from_unixtime(sent_on) as DateInserted
                     from :_bbpm',
@@ -249,14 +249,14 @@ class BbPress1 extends Source
                         $ex->query("insert bbpmto (UserID, ConversationID) values $toIns", true);
                     }
 
-                    $ex->exportTable('UserConversation', 'select * from bbpmto');
+                    $ex->export('UserConversation', 'select * from bbpmto');
                 }
             } else {
                 $conUser_Map = array(
                     'pm_thread' => 'ConversationID',
                     'pm_from' => 'UserID'
                 );
-                $ex->exportTable(
+                $ex->export(
                     'UserConversation',
                     'select distinct
                             pm_thread,

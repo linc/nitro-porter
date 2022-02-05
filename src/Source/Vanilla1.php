@@ -151,7 +151,7 @@ class Vanilla1 extends Source
             'CountComments' => 'CountComments',
             'Discovery' => 'DiscoveryText'
         );
-        $ex->exportTable('User', "SELECT * FROM :_User", $user_Map);  // ":_" will be replaced by database prefix
+        $ex->export('User', "SELECT * FROM :_User", $user_Map);  // ":_" will be replaced by database prefix
     }
 
     /**
@@ -174,7 +174,7 @@ class Vanilla1 extends Source
             'Name' => 'Name',
             'Description' => 'Description'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select RoleID, Name, Description
                 from :_Role
@@ -188,7 +188,7 @@ class Vanilla1 extends Source
             'UserID' => 'UserID',
             'RoleID' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select UserID, case RoleID when 0 then $zeroRoleID else RoleID end as RoleID from :_User",
             $userRole_Map
@@ -205,7 +205,7 @@ class Vanilla1 extends Source
             'Name' => 'Name',
             'Description' => 'Description'
         );
-        $ex->exportTable('Category', "select CategoryID, Name, Description from :_Category", $category_Map);
+        $ex->export('Category', "select CategoryID, Name, Description from :_Category", $category_Map);
     }
 
     /**
@@ -228,7 +228,7 @@ class Vanilla1 extends Source
             'Sink' => 'Sink',
             'LastUserID' => 'LastCommentUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "SELECT d.*,
                     d.LastUserID as LastCommentUserID,
@@ -242,7 +242,7 @@ class Vanilla1 extends Source
             $discussion_Map
         );
 
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "SELECT
                     w.UserID,
@@ -271,7 +271,7 @@ class Vanilla1 extends Source
             'Body' => 'Body',
             'FormatType' => 'Format'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "SELECT c.*
                  FROM :_Comment c
@@ -416,7 +416,7 @@ class Vanilla1 extends Source
             'CommentID' => 'ConversationID',
             'Name' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select c.*, d.Name
                 from :_Comment c
@@ -436,7 +436,7 @@ class Vanilla1 extends Source
             'AuthUserID' => 'InsertUserID',
             'DateCreated' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select c.*, pm.GroupID
                 from z_pm pm
@@ -450,7 +450,7 @@ class Vanilla1 extends Source
             'UserID' => 'UserID',
             'GroupID' => 'ConversationID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select distinct
                     pm.GroupID,
@@ -484,7 +484,7 @@ class Vanilla1 extends Source
                 'CommentID' => 'ForeignID'
                 //'ForeignTable'
             );
-            $ex->exportTable(
+            $ex->export(
                 'Media',
                 "select a.*, 'comment' as ForeignTable from :_Attachment a",
                 $media_Map
@@ -551,6 +551,6 @@ class Vanilla1 extends Source
                 'Filter' => array($this, 'forceBool')
             )
         );
-        $ex->exportTable('Permission', "select * from :_Role", $permission_Map);
+        $ex->export('Permission', "select * from :_Role", $permission_Map);
     }
 }

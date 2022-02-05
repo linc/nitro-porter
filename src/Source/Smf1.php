@@ -141,7 +141,7 @@ class Smf1 extends Source
             'DateLastActive' => 'DateLastActive',
             'DateUpdated' => 'DateUpdated'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select m.*,
                     from_unixtime(dateRegistered) as DateInserted,
@@ -165,14 +165,14 @@ class Smf1 extends Source
             'ID_GROUP' => 'RoleID',
             'groupName' => 'Name'
         );
-        $ex->exportTable('Role', "select * from :_membergroups", $role_Map);
+        $ex->export('Role', "select * from :_membergroups", $role_Map);
 
         // UserRoles
         $userRole_Map = array(
             'ID_MEMBER' => 'UserID',
             'ID_GROUP' => 'RoleID'
         );
-        $ex->exportTable('UserRole', "select * from :_members", $userRole_Map);
+        $ex->export('UserRole', "select * from :_members", $userRole_Map);
     }
 
     /**
@@ -183,7 +183,7 @@ class Smf1 extends Source
         $category_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'decodeNumericEntity')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     (`ID_CAT` + 1000000) as `CategoryID`,
@@ -229,7 +229,7 @@ class Smf1 extends Source
             'LastCommentUserID' => 'LastCommentUserID',
             'ID_LAST_MSG' => 'LastCommentID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     (t.numReplies + 1) as CountComments,
@@ -263,7 +263,7 @@ class Smf1 extends Source
             'ID_MEMBER' => 'InsertUserID',
             'DateInserted' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select m.*,
                     from_unixtime(m.posterTime) AS DateInserted,
@@ -295,7 +295,7 @@ class Smf1 extends Source
             'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select a.*,
                     concat('attachments/', a.filename) as Path,
@@ -437,7 +437,7 @@ class Smf1 extends Source
             'DateInserted' => 'DateInserted',
             'subject2' => array('Column' => 'Subject', 'Type' => 'varchar(255)')
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select
                     pm.group_id,
@@ -459,7 +459,7 @@ class Smf1 extends Source
             'from_id' => 'InsertUserID',
             'body' => array('Column' => 'Body')
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select
                 pm.id,
@@ -480,7 +480,7 @@ class Smf1 extends Source
             'group_id' => 'ConversationID',
             'deleted' => 'Deleted'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select
                     pm.group_id,

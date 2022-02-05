@@ -99,7 +99,7 @@ class Mbox extends Source
     protected function users(ExportModel $ex): void
     {
         $user_Map = array();
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                     NOW() as DateInserted,
@@ -115,7 +115,7 @@ class Mbox extends Source
     protected function categories(ExportModel $ex): void
     {
         $category_Map = array();
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_mbox_category",
             $category_Map
@@ -130,7 +130,7 @@ class Mbox extends Source
         $discussion_Map = array(
             'PostID' => 'DiscussionID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select p.PostID, p.DateInserted, p.Name, p.Body, p.InsertUserID, p.CategoryID, 'Html' as Format
                 from :_mbox_post p where IsDiscussion = 1",
@@ -146,7 +146,7 @@ class Mbox extends Source
         $comment_Map = array(
             'PostID' => 'CommentID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*, 'Html' as Format
                 from :_mbox_post p

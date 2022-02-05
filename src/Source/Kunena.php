@@ -87,7 +87,7 @@ class Kunena extends Source
             'admin' => array('Column' => 'Admin', 'Type' => 'tinyint(1)'),
             'Photo' => 'Photo'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "SELECT
                     u.*,
@@ -112,14 +112,14 @@ class Kunena extends Source
             'rank_id' => 'RoleID',
             'rank_title' => 'Name',
         );
-        $ex->exportTable('Role', "select * from :_kunena_ranks", $role_Map);
+        $ex->export('Role', "select * from :_kunena_ranks", $role_Map);
 
         // UserRole.
         $userRole_Map = array(
             'id' => 'UserID',
             'rank' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select * from :_users u",
             $userRole_Map
@@ -139,7 +139,7 @@ class Kunena extends Source
             'description' => 'Description',
 
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_kunena_categories",
             $category_Map
@@ -165,7 +165,7 @@ class Kunena extends Source
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     txt.message,
@@ -194,7 +194,7 @@ class Kunena extends Source
             'message' => 'Body',
             'Format' => 'Format'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select t.*,
                     txt.message,
@@ -216,7 +216,7 @@ class Kunena extends Source
             'thread' => 'DiscussionID',
             'userid' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select t.*, 1 as Bookmarked from :_kunena_subscriptions t",
             $userDiscussion_Map
@@ -240,7 +240,7 @@ class Kunena extends Source
             'filename' => array('Column' => 'Name', 'Filter' => 'urlDecode'),
             'time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select a.*,
                     concat(a.folder, '/', a.filename) as path2,

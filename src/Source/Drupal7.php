@@ -97,7 +97,7 @@ class Drupal7 extends Source
      */
     protected function users(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     uid as UserID,
@@ -119,7 +119,7 @@ class Drupal7 extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     uid as UserID,
@@ -142,13 +142,13 @@ class Drupal7 extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select rid as RoleID, name as Name from :_role"
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select uid as UserID, rid as RoleID from :_users_roles"
         );
@@ -159,7 +159,7 @@ class Drupal7 extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     t.tid as CategoryID,
@@ -181,7 +181,7 @@ class Drupal7 extends Source
         $discussionMap = array(
             'Body' => array('Column' => 'Body', 'Filter' => array($this, 'convertBase64Attachments')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     n.nid as DiscussionID,
@@ -216,7 +216,7 @@ class Drupal7 extends Source
         $commentMap = array(
             'Body' => array('Column' => 'Body', 'Filter' => array($this, 'convertBase64Attachments')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     c.cid as CommentID,
@@ -248,7 +248,7 @@ class Drupal7 extends Source
      */
     protected function attachments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select
                     fm.fid as MediaID,

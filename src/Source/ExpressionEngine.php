@@ -66,7 +66,7 @@ class ExpressionEngine extends Source
             'sender_id' => 'InsertUserID',
             'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "SELECT pm.*, g.title AS title2
                 FROM forum_message_data pm
@@ -80,7 +80,7 @@ class ExpressionEngine extends Source
             'group_id' => 'ConversationID',
             'userid' => 'UserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "SELECT g.group_id, t.userid
                 FROM z_pmto t
@@ -97,7 +97,7 @@ class ExpressionEngine extends Source
             'message_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
             'sender_id' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "SELECT pm.*, pm2.group_id,
                     'BBCode' AS Format
@@ -318,7 +318,7 @@ class ExpressionEngine extends Source
             }
         }
 
-        $ex->exportTable(
+        $ex->export(
             'Permission',
             "SELECT
                     g.can_view_profiles AS can_view_profiles2,
@@ -351,7 +351,7 @@ class ExpressionEngine extends Source
             'timezone' => 'HourOffset',
             'location' => 'Location'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "SELECT u.*,
                     'django' AS HashMethod,
@@ -375,7 +375,7 @@ class ExpressionEngine extends Source
             'group_title' => 'Name',
             'group_description' => 'Description'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "SELECT * FROM forum_member_groups",
             $role_Map
@@ -386,7 +386,7 @@ class ExpressionEngine extends Source
             'member_id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "SELECT * FROM forum_members u",
             $userRole_Map
@@ -398,7 +398,7 @@ class ExpressionEngine extends Source
      */
     protected function signatures(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "SELECT
                     member_id AS UserID,
@@ -421,7 +421,7 @@ class ExpressionEngine extends Source
             'forum_parent' => 'ParentCategoryID',
             'forum_order' => 'Sort'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "SELECT * FROM forum_forums",
             $category_Map
@@ -445,7 +445,7 @@ class ExpressionEngine extends Source
             'topic_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
             'topic_edit_author' => 'UpdateUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "SELECT t.*,
                     CASE WHEN announcement = 'y' THEN 1 WHEN sticky = 'y' THEN 2 ELSE 0 END AS Announce,
@@ -472,7 +472,7 @@ class ExpressionEngine extends Source
             'post_edit_date' => array('Column' => 'DateUpdated', 'Filter' => array($ex, 'timestampToDate')),
             'post_edit_author' => 'UpdateUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "SELECT p.*,
                     'Html' AS Format,
@@ -497,7 +497,7 @@ class ExpressionEngine extends Source
             'attachment_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
             'filehash' => array('Column' => 'FileHash', 'Type' => 'varchar(100)')
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "SELECT a.*,
                 concat('imported/', filename) AS Path,

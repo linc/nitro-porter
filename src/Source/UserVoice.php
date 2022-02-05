@@ -149,7 +149,7 @@ class UserVoice extends Source
             'UserName' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'CreateDate' => array('Column' => 'DateInserted'),
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.*,
                     concat('sha1$', m.PasswordSalt, '$', m.Password) as Password,
@@ -171,7 +171,7 @@ class UserVoice extends Source
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'roleIDConverter')),
             'RoleName' => 'Name'
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from aspnet_Roles",
             $role_Map
@@ -181,7 +181,7 @@ class UserVoice extends Source
         $userRole_Map = array(
             'RoleId' => array('Column' => 'RoleID', 'Filter' => array($this, 'roleIDConverter')),
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select u.UserID, ur.RoleId
                 from aspnet_UsersInRoles ur
@@ -201,7 +201,7 @@ class UserVoice extends Source
             'SortOrder' => 'Sort',
             'DateCreated' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select s.* from :_Sections s",
             $category_Map
@@ -228,7 +228,7 @@ class UserVoice extends Source
             'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
             'IPAddress' => 'InsertIPAddress'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     p.Subject,
@@ -256,7 +256,7 @@ class UserVoice extends Source
             'Body' => array('Column' => 'Body', 'Filter' => 'HTMLDecoder'),
             'PostDate' => 'DateInserted'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.* from :_Posts p where SortOrder > 1",
             $comment_Map
@@ -271,7 +271,7 @@ class UserVoice extends Source
         $userDiscussion_Map = array(
             'ThreadID' => 'DiscussionID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select t.*,
                     '1' as Bookmarked,

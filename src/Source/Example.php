@@ -109,7 +109,7 @@ class Example extends Source
         // Therefore, our select statement must cover all the "source" columns.
         // It's frequently necessary to add joins, where clauses, and more to get the data we want.
         // The :_ before the table name is the placeholder for the prefix designated. It gets swapped on the fly.
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select u.* from :_User u",
             $user_Map
@@ -128,7 +128,7 @@ class Example extends Source
             'Group_ID' => 'RoleID',
             'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
         );
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select * from :_tblGroup",
             $role_Map
@@ -142,7 +142,7 @@ class Example extends Source
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID',
         ];
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select u.* from :_tblAuthor u",
             $userRole_Map
@@ -159,7 +159,7 @@ class Example extends Source
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration.
         // Profiles will auto-populate with the migrated data.
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     Author_ID as UserID,
@@ -183,7 +183,7 @@ class Example extends Source
             'Forum_ID' => 'CategoryID',
             'Forum_name' => 'Name',
         ];
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select * from :_tblCategory c",
             $category_Map
@@ -203,7 +203,7 @@ class Example extends Source
             'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select *, FROM_UNIXTIME(Message_date) as Message_date
                 from :_tblTopic t
@@ -229,7 +229,7 @@ class Example extends Source
             'Format' => 'Format',
             'Message_date' => ['Column' => 'DateInserted']
         ];
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select th.* from :_tblThread th",
             $comment_Map

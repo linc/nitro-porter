@@ -150,7 +150,7 @@ class PhpBb3 extends Source
                 }
             )
         );
-        $ex->exportTable(
+        $ex->export(
             'UserNote',
             "select l.*, 'Text' as format
                 from :_log l
@@ -170,7 +170,7 @@ class PhpBb3 extends Source
      */
     public function banList(ExportModel $ex)
     {
-        $ex->exportTable(
+        $ex->export(
             'Ban',
             "select bl.*,
                     ban_id as BanID,
@@ -268,7 +268,7 @@ class PhpBb3 extends Source
             'user_rank' => 'RankID',
             'user_ip' => 'LastIPAddress'
         );
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select *,
                     case user_avatar_type
@@ -323,7 +323,7 @@ class PhpBb3 extends Source
                 }
             )
         );
-        $ex->exportTable(
+        $ex->export(
             'Rank',
             "select
                     r.*,
@@ -343,7 +343,7 @@ class PhpBb3 extends Source
     protected function permissions(ExportModel $ex): void
     {
         $member = 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add';
-        $ex->exportTable(
+        $ex->export(
             'Permission',
             "select
                     group_id as RoleID,
@@ -369,14 +369,14 @@ class PhpBb3 extends Source
             'group_name' => 'Name',
             'group_desc' => 'Description'
         );
-        $ex->exportTable('Role', 'select * from :_groups', $role_Map);
+        $ex->export('Role', 'select * from :_groups', $role_Map);
 
         // UserRoles
         $userRole_Map = array(
             'user_id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             'select user_id, group_id from :_users
                 union
@@ -395,7 +395,7 @@ class PhpBb3 extends Source
             'name' => 'Name',
             'user_sig' => array('Column' => 'Value', 'Filter' => array($this, 'removeBBCodeUIDs'))
         );
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     user_id,
@@ -427,7 +427,7 @@ class PhpBb3 extends Source
             'forum_desc' => 'Description',
             'left_id' => 'Sort'
         );
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select *,
                     nullif(parent_id,0) as ParentCategoryID
@@ -451,7 +451,7 @@ class PhpBb3 extends Source
             'topic_first_post_id' => array('Column' => 'FirstCommentID', 'Type' => 'int'),
             'type' => 'Type'
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select t.*,
                     'BBCode' as Format,
@@ -480,7 +480,7 @@ class PhpBb3 extends Source
             'poster_ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'forceIP4'),
             'post_edit_user' => 'UpdateUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select p.*,
                     'BBCode' as Format,
@@ -496,7 +496,7 @@ class PhpBb3 extends Source
      */
     protected function bookmarks(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserDiscussion',
             "select
                     tt.user_id as UserID,
@@ -634,7 +634,7 @@ class PhpBb3 extends Source
                 'Filter' => array('Phpbb2', 'EntityDecode')
             )
         );
-        $ex->exportTable(
+        $ex->export(
             'Conversation',
             "select pm.*,
                     g.subject as RealSubject,
@@ -651,7 +651,7 @@ class PhpBb3 extends Source
             'message_text' => array('Column' => 'Body', 'Filter' => array($this, 'removeBBCodeUIDs')),
             'author_id' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'ConversationMessage',
             "select pm.*,
                     pm2.groupid,
@@ -667,7 +667,7 @@ class PhpBb3 extends Source
             'userid' => 'UserID',
             'groupid' => 'ConversationID'
         );
-        $ex->exportTable(
+        $ex->export(
             'UserConversation',
             "select g.groupid, t.userid
                 from z_pmto t
@@ -694,7 +694,7 @@ class PhpBb3 extends Source
             'topic_poster' => 'InsertUserID',
             'anonymous' => 'Anonymous'
         );
-        $ex->exportTable(
+        $ex->export(
             'Poll',
             "select distinct
                     t.*,
@@ -715,7 +715,7 @@ class PhpBb3 extends Source
             'topic_time' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'topic_poster' => 'InsertUserID'
         );
-        $ex->exportTable(
+        $ex->export(
             'PollOption',
             "select po.*,
                     po.poll_option_id * 1000000 + po.topic_id as id,
@@ -731,7 +731,7 @@ class PhpBb3 extends Source
             'vote_user_id' => 'UserID',
             'id' => 'PollOptionID'
         );
-        $ex->exportTable(
+        $ex->export(
             'PollVote',
             "select v.*,
                     v.poll_option_id * 1000000 + v.topic_id as id
@@ -755,7 +755,7 @@ class PhpBb3 extends Source
             'mimetype' => 'Type',
             'filesize' => 'Size',
         );
-        $ex->exportTable(
+        $ex->export(
             'Media',
             "select a.*,
                     case when a.post_msg_id = t.topic_first_post_id

@@ -88,6 +88,6 @@ class Vanilla2 extends Source
             return;
         }
 
-        $ex->exportTable($tableName, "select * from :_{$tableName}");
+        $ex->export($tableName, "select * from :_{$tableName}");
     }
 }

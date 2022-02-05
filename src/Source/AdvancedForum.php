@@ -78,7 +78,7 @@ class AdvancedForum extends Source
      */
     protected function users(ExportModel $ex, $filePath): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select `u`.`uid` as `UserID`, `u`.`name` as `Name`, `u`.`mail` as `Email`, `u`.`pass` as `Password`,
                     'drupal' as `HashMethod`, from_unixtime(`created`) as `DateInserted`,
@@ -93,7 +93,7 @@ class AdvancedForum extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "SELECT `name` AS `Name`, `rid` AS `RoleID`
                 FROM `:_role` `r`
@@ -101,7 +101,7 @@ class AdvancedForum extends Source
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "SELECT `rid` AS `RoleID`, `uid` AS `UserID`
                 FROM `:_users_roles` `ur`"
@@ -113,7 +113,7 @@ class AdvancedForum extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "SELECT `ttd`.`tid` AS `CategoryID`, `tth`.`parent` AS `ParentCategoryID`,
                     `ttd`.`name` AS `Name`, `ttd`.`weight` AS `Sort`
@@ -133,7 +133,7 @@ class AdvancedForum extends Source
         $discussion_Map = array(
             'body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'translateFormatType'))
         );
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "
             SELECT `fi`.`nid` AS `DiscussionID`, `fi`.`tid` AS `CategoryID`, `fi`.`title` AS `Name`,
@@ -157,7 +157,7 @@ class AdvancedForum extends Source
         $comment_Map = array(
             'comment_body_format' => array('Column' => 'Format', 'Filter' => array(__CLASS__, 'translateFormatType'))
         );
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "SELECT `c`.`cid` AS `CommentID`, `c`.`nid` AS `DiscussionID`, `c`.`uid` AS `InsertUserID`,
                     from_unixtime(`c`.`created`) AS `DateInserted`,

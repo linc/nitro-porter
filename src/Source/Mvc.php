@@ -232,7 +232,7 @@ class Mvc extends Source
      */
     protected function users(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'User',
             "select
                     UserID,
@@ -254,7 +254,7 @@ class Mvc extends Source
      */
     protected function userMeta(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'UserMeta',
             "select
                     UserID,
@@ -277,13 +277,13 @@ class Mvc extends Source
      */
     protected function roles(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Role',
             "select RoleID, RoleName as Name from :_MembershipRole"
         );
 
         // User Role.
-        $ex->exportTable(
+        $ex->export(
             'UserRole',
             "select
                     u.UserID as UserID,
@@ -298,7 +298,7 @@ class Mvc extends Source
      */
     protected function badges(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Badge',
             "select
                     BadgeID,
@@ -310,7 +310,7 @@ class Mvc extends Source
                 from :_Badge"
         );
 
-        $ex->exportTable(
+        $ex->export(
             'UserBadge',
             "select
                     u.UserID,
@@ -327,7 +327,7 @@ class Mvc extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Category',
             "select
                     m.CategoryID,
@@ -356,7 +356,7 @@ class Mvc extends Source
      */
     protected function discussions(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Discussion',
             "select
                     m.TopicID as DiscussionID,
@@ -377,7 +377,7 @@ class Mvc extends Source
      */
     protected function comments(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Comment',
             "select
                     m.PostID as CommentID,
@@ -398,7 +398,7 @@ class Mvc extends Source
      */
     protected function tags(ExportModel $ex): void
     {
-        $ex->exportTable(
+        $ex->export(
             'Tag',
             "select
                     TagID,
@@ -416,7 +416,7 @@ class Mvc extends Source
     {
         // Use of placeholder for Type and Size due to lack of data in db.
         // Will require external script to get the info.
-        $ex->exportTable(
+        $ex->export(
             'Attachment',
             "select
                     MediaID,
