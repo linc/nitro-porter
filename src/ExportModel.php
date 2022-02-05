@@ -253,7 +253,6 @@ class ExportModel
             $endTime = microtime(true);
             $elapsed = formatElapsed($beginTime, $endTime);
             $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
-            fwrite($this->file, self::NEWLINE);
         }
     }
 
@@ -320,9 +319,7 @@ class ExportModel
             }
         }
         unset($data);
-        if (!isset($options['NoEndline'])) {
-            $this->writeEndTable($fp);
-        }
+        $this->writeEndTable($fp);
 
         return $rowCount;
     }
@@ -854,6 +851,7 @@ class ExportModel
      */
     public function writeEndTable($fp)
     {
+        fwrite($fp, self::NEWLINE);
         fwrite($fp, self::NEWLINE);
     }
 
