@@ -105,7 +105,7 @@ class Smf1 extends Source
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
      * @access public
-     * @see    ExportModel::exportTableWrite
+     * @see    ExportModel::writeTableToFile
      *
      * @param  string $value Current value
      * @param  string $field Current field

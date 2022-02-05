@@ -146,11 +146,9 @@ class ExportModel
     /**
      * Create the export file and begin the export.
      */
-    public function beginExport()
+    public function beginFileExport()
     {
-        $this->comments = array();
-
-        // Allow us to define where the output file goes.
+        // Define where output file goes.
         if (Request::instance()->get('destpath')) {
             $this->path = Request::instance()->get('destpath');
             if (strstr($this->path, '/') !== false && substr($this->path, 1, -1) != '/') {
@@ -159,23 +157,16 @@ class ExportModel
             }
         }
 
-        // Allow the $path parameter to override this default naming.
+        // Build file name.
         $this->path .= 'export_' . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
 
         // Start the file pointer.
         $fp = $this->openFile();
 
-        // Build meta info about where this file came from.
-        $comment = 'Nitro Porter Export';
-
         // Add meta info to the output.
-        if ($this->captureOnly) {
-            $this->comment($comment);
-        } else {
-            fwrite($fp, $comment . self::NEWLINE . self::NEWLINE);
+        if (!$this->captureOnly) {
+            fwrite($fp, 'Nitro Porter Export' . self::NEWLINE . self::NEWLINE);
         }
-
-        $this->comment('Export Started: ' . date('Y-m-d H:i:s'));
     }
 
     /**
@@ -207,17 +198,8 @@ class ExportModel
      *
      * This method must be called if BeginExport() has been called or else the export file will not be closed.
      */
-    public function endExport($time)
+    public function endFileExport()
     {
-        $this->comment($this->path);
-        $this->comment('Export Completed: ' . date('Y-m-d H:i:s'));
-        $this->comment(sprintf('Elapsed Time: %s', formatElapsed($time)));
-
-        if ($this->testMode || Request::instance()->get('dumpsql') || $this->captureOnly) {
-            $queries = implode("\n\n", $this->queryRecord);
-            $this->comment($queries, true);
-        }
-
         if ($this->useCompression()) {
             gzclose($this->file);
         } else {
@@ -247,7 +229,22 @@ class ExportModel
         }
 
         $start = microtime(true);
-        $rowCount = $this->exportTableWrite($tableName, $query, $map);
+
+        // Make sure the table is valid for export.
+        if (!array_key_exists($tableName, $this->mapStructure)) {
+            $this->comment("Error: $tableName is not a valid export.");
+            return;
+        }
+
+        $query = $this->processQuery($query);
+        $data = $this->executeQuery($query);
+
+        if ($data === false) {
+            $this->comment("Error: No data found in $tableName.");
+            return;
+        }
+
+        $rowCount = $this->writeTableToFile($tableName, $data, $map);
         $elapsed = formatElapsed($start - microtime(true));
         $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
     }
@@ -255,53 +252,42 @@ class ExportModel
     /**
      * Process for writing an entire single table to file.
      *
-     * @param  string $tableName
-     * @param  string $query
-     * @param  array $map
+     * @param string $tableName
+     * @param object $data
+     * @param array $map
      * @return int
      */
-    protected function exportTableWrite(string $tableName, string $query, array $map = []): int
+    protected function writeTableToFile(string $tableName, object $data, array $map = []): int
     {
-        // Make sure the table is valid for export.
-        if (!array_key_exists($tableName, $this->mapStructure)) {
-            $this->comment("Error: $tableName is not a valid export.");
-            return 0;
-        }
-
-        $query = $this->processQuery($query);
-        $data = $this->executeQuery($query);
-
         $structure = $this->mapStructure[$tableName];
         $firstQuery = true;
         $fp = $this->file;
 
         // Loop through the data and write it to the file.
         $rowCount = 0;
-        if ($data !== false) {
-            while ($row = $data->nextResultRow()) {
-                $row = (array)$row; // export%202010-05-06%20210937.txt
-                $this->currentRow =& $row;
-                $rowCount++;
+        while ($row = $data->nextResultRow()) {
+            $row = (array)$row; // export%202010-05-06%20210937.txt
+            $this->currentRow =& $row;
+            $rowCount++;
 
-                if ($firstQuery) {
-                    // Get the export structure.
-                    $exportStructure = $this->getExportStructure($row, $structure, $map, $tableName);
-                    $revMappings = $this->flipMappings($map);
-                    $this->writeBeginTable($fp, $tableName, $exportStructure);
+            if ($firstQuery) {
+                // Get the export structure.
+                $exportStructure = $this->getExportStructure($row, $structure, $map, $tableName);
+                $revMappings = $this->flipMappings($map);
+                $this->writeBeginTable($fp, $tableName, $exportStructure);
 
-                    $firstQuery = false;
-                }
-                $this->writeRow($fp, $row, $exportStructure, $revMappings);
+                $firstQuery = false;
             }
+            $this->writeRow($fp, $row, $exportStructure, $revMappings);
         }
-        unset($data);
         $this->writeEndTable($fp);
 
         return $rowCount;
     }
 
-
     /**
+     * Do preprocessing on the database query.
+     *
      * @param string $query
      * @return string
      */

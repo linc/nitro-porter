@@ -821,7 +821,7 @@ class VBulletin extends Source
      * @param  string $field Ignored.
      * @param  array  $row   Contents of the current attachment record.
      * @return string Future path to file.
-     *@see    ExportModel::exportTableWrite
+     *@see    ExportModel::writeTableToFile
      *
      */
     public function buildMediaPath($value, $field, $row)
@@ -882,7 +882,7 @@ class VBulletin extends Source
      * @param  string $field Ignored.
      * @param  array  $row   Ignored.
      * @return string Extension or accurate MIME type.
-     *@see    ExportModel::exportTableWrite
+     *@see    ExportModel::writeTableToFile
      *
      */
     public function buildMimeType($value, $field, $row)
@@ -919,7 +919,7 @@ class VBulletin extends Source
      * @param  string $field Current field
      * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
-     *@see    ExportModel::exportTableWrite
+     *@see    ExportModel::writeTableToFile
      *
      */
     public function filterThumbnailData($value, $field, $row)

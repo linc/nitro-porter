@@ -94,7 +94,7 @@ class AnswerHub extends Source
      * Set valid MIME type for images.
      *
      * @access public
-     * @see    ExportModel::exportTableWrite
+     * @see    ExportModel::writeTableToFile
      *
      * @param  string $value Extension.
      * @param  string $field Ignored.

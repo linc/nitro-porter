@@ -23,9 +23,21 @@ class Controller
         }
 
         $start = microtime(true);
-        $model->beginExport();
+        $model->beginFileExport();
+        $model->comment('Export Started: ' . date('Y-m-d H:i:s'));
+
         $source->run($model);
-        $model->endExport(microtime(true) - $start);
+
+        $model->comment($model->path);
+        $model->comment('Export Completed: ' . date('Y-m-d H:i:s'));
+        $model->comment(sprintf('Elapsed Time: %s', formatElapsed(microtime(true) - $start)));
+
+        if ($model->testMode || Request::instance()->get('dumpsql') || $model->captureOnly) {
+            $queries = implode("\n\n", $model->queryRecord);
+            $model->comment($queries, true);
+        }
+
+        $model->endFileExport();
     }
 
     /**
