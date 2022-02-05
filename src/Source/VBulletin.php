@@ -231,7 +231,7 @@ class VBulletin extends Source
             $forumWhere = '';
         }
 
-        $this->exportBlobs(
+        $this->doFileExport(
             $ex,
             $this->param('db-files'),
             $this->param('db-avatars')
@@ -330,7 +330,7 @@ class VBulletin extends Source
      * @param bool $attachments   Whether to move attachments.
      * @param bool $customAvatars Whether to move avatars.
      */
-    public function exportBlobs($ex, $attachments = true, $customAvatars = true)
+    public function doFileExport(ExportModel $ex, $attachments = true, $customAvatars = true)
     {
         if ($attachments) {
             $identity = 'f.attachmentid';
@@ -359,7 +359,7 @@ class VBulletin extends Source
                 $sql .= ":_attachment f";
             }
 
-            $ex->exportBlobs($sql, 'filedata', 'Path');
+            $this->exportBlobs($ex, $sql, 'filedata', 'Path');
         }
 
         if ($customAvatars) {
@@ -378,12 +378,13 @@ class VBulletin extends Source
                    ) as customphoto
                 from :_customavatar a";
             $sql = str_replace('u.userid', 'a.userid', $sql);
-            $ex->exportBlobs($sql, $avatarDataColumn, 'customphoto', 80);
+            $this->exportBlobs($ex, $sql, $avatarDataColumn, 'customphoto', 80);
         }
 
         // Export the group icons no matter what.
         if ($ex->exists('socialgroupicon', 'thumbnail_filedata') === true && ($attachments || $customAvatars)) {
-            $ex->exportBlobs(
+            $this->exportBlobs(
+                $ex,
                 "select
                    i.filedata,
                    concat('vb/groupicons/', i.groupid, '.', i.extension) as path
@@ -392,6 +393,73 @@ class VBulletin extends Source
                 'path'
             );
         }
+    }
+
+    /**
+     * Convert database blobs into files.
+     *
+     * @param ExportModel $ex
+     * @param string $sql
+     * @param string $blobColumn
+     * @param string $pathColumn
+     * @param bool $thumbnail
+     */
+    public function exportBlobs(ExportModel $ex, $sql, $blobColumn, $pathColumn, $thumbnail = false)
+    {
+        $ex->comment('Exporting blobs...');
+        $result = $ex->query($sql);
+        $count = 0;
+        while ($row = $result->nextResultRow()) {
+            // vBulletin attachment hack (can't do this in MySQL)
+            if (strpos($row[$pathColumn], '.attach') && strpos($row[$pathColumn], 'attachments/') !== false) {
+                $pathParts = explode('/', $row[$pathColumn]); // 3 parts
+
+                // Split up the userid into a path, digit by digit
+                $n = strlen($pathParts[1]);
+                $dirParts = array();
+                for ($i = 0; $i < $n; $i++) {
+                    $dirParts[] = $pathParts[1][$i];
+                }
+                $pathParts[1] = implode('/', $dirParts);
+
+                // Rebuild full path
+                $row[$pathColumn] = implode('/', $pathParts);
+            }
+
+            $path = $row[$pathColumn];
+
+            // Build path
+            if (!file_exists(dirname($path))) {
+                $r = mkdir(dirname($path), 0777, true);
+                if (!$r) {
+                    die("Could not create " . dirname($path));
+                }
+            }
+
+            if ($thumbnail) {
+                $picPath = str_replace('/avat', '/pavat', $path);
+                $fp = fopen($picPath, 'wb');
+            } else {
+                $fp = fopen($path, 'wb');
+            }
+            if (!is_resource($fp)) {
+                die("Could not open $path.");
+            }
+
+            fwrite($fp, $row[$blobColumn]);
+            fclose($fp);
+
+            if ($thumbnail) {
+                if ($thumbnail === true) {
+                    $thumbnail = 50;
+                }
+
+                $thumbPath = str_replace('/avat', '/navat', $path);
+                generateThumbnail($picPath, $thumbPath, $thumbnail, $thumbnail);
+            }
+            $count++;
+        }
+        $ex->comment("$count Blobs.", false);
     }
 
     /**

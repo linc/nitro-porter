@@ -83,7 +83,7 @@ class VBulletin5 extends VBulletin
      */
     public function run($ex)
     {
-        $this->exportBlobs(
+        $this->doFileExport(
             $this->param('db-files'),
             $this->param('db-avatars')
         );
