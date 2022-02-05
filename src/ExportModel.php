@@ -41,11 +41,6 @@ class ExportModel
     public $characterSet = 'utf8';
 
     /**
-     * @var int The chunk size when exporting large tables.
-     */
-    public $chunkSize = 100000;
-
-    /**
      * @var array *
      */
     public $currentRow = null;
@@ -56,7 +51,10 @@ class ExportModel
      */
     public $destPrefix = 'GDN_z';
 
-    public $destDb;
+    /**
+     * @var string Name of target database.
+     */
+    public $destDb = '';
 
     /**
      * @var resource File pointer
@@ -460,7 +458,7 @@ class ExportModel
             $columnDefs[] = "`$columnName` $type";
         }
         $destDb = '';
-        if (isset($this->destDb)) {
+        if (!empty($this->destDb)) {
             $destDb = $this->destDb . '.';
         }
 
