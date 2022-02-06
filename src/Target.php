@@ -11,6 +11,8 @@ abstract class Target
         'features' => [],
     ];
 
+    public Connection $connection;
+
     /**
      * Register supported features.
      */
@@ -19,18 +21,5 @@ abstract class Target
         return static::SUPPORTED;
     }
 
-    /**
-     * Software-specific import process.
-     *
-     * @param string $tableName
-     * @param array $structure
-     * @param object $data
-     * @param array $map
-     * @return int Count of imported records.
-     */
-    abstract public function import(string $tableName, array $structure, object $data, array $map = []): int;
-
-    abstract public function begin();
-
-    abstract public function end();
+    abstract public function import();
 }

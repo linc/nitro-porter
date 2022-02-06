@@ -38,6 +38,11 @@ class Controller
         }
     }
 
+    public static function doImport()
+    {
+        //
+    }
+
     /**
      * Called by router to setup and run main export process.
      */
@@ -46,16 +51,25 @@ class Controller
         // Remove time limit.
         set_time_limit(0);
 
-        // Wire new database.
-        $connection = new Connection($request->get('source'));
-        $info = $connection->getAllInfo();
-        bootDatabase($info);
-
         // Export.
         $source = sourceFactory($request->get('package'));
-        $target = targetFactory($request->get('output'));
-        $exportModel = exportModelFactory($request, $info, $target); // @todo Pass options not Request
+        $connection = new Connection($request->get('source'));
+        if ($request->get('output') === 'file') {
+            $export = new Export\File();
+        } else {
+            $export = new Export\Database();
+        }
+        $exportModel = exportModelFactory($request, $connection, $export); // @todo Pass options not Request
         self::doExport($source, $exportModel);
+
+        // Import.
+        if ($request->get('output') !== 'file') {
+            $target = targetFactory($request->get('output'));
+            if ($request->get('target')) {
+                $target->connection = new Connection($request->get('target'));
+            }
+            self::doImport();
+        }
 
         // Write the results (web only).
         if (!defined('CONSOLE')) {

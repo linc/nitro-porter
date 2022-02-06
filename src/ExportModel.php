@@ -8,6 +8,7 @@ namespace Porter;
 
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
+use Porter\ExportInterface;
 use Porter\Log;
 
 /**
@@ -89,18 +90,18 @@ class ExportModel
     protected DbFactory $database;
 
     /**
-     * @var Target Where the data is being sent.
+     * @var ExportInterface Where the data is being sent.
      */
-    protected Target $target;
+    protected ExportInterface $export;
 
     /**
      * Setup.
      */
-    public function __construct($db, $map, $target)
+    public function __construct($db, $map, $export)
     {
         $this->database = $db;
         $this->mapStructure = $map;
-        $this->target = $target;
+        $this->export = $export;
     }
 
     /**
@@ -135,7 +136,7 @@ class ExportModel
         if ($this->captureOnly) {
             return;
         }
-        $this->target->begin();
+        $this->export->begin();
     }
 
     /**
@@ -146,7 +147,7 @@ class ExportModel
         if ($this->captureOnly) {
             return;
         }
-        $this->target->end();
+        $this->export->end();
     }
 
     /**
@@ -210,7 +211,7 @@ class ExportModel
             return;
         }
 
-        $rowCount = $this->target->import($tableName, $this->mapStructure[$tableName], $data, $map);
+        $rowCount = $this->export->output($tableName, $this->mapStructure[$tableName], $data, $map);
 
         $elapsed = formatElapsed(microtime(true) - $start);
         $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");

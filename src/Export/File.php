@@ -1,18 +1,11 @@
 <?php
 
-namespace Porter\Target;
+namespace Porter\Export;
 
-use Porter\Target;
+use Porter\ExportInterface;
 
-class File extends Target
+class File implements ExportInterface
 {
-    public const SUPPORTED = [
-        'name' => 'Vanilla Forum (file)',
-        'prefix' => '',
-        'charset_table' => '',
-        'features' => [],
-    ];
-
     /** Comment character in the import file. */
     public const COMMENT = '//';
 
@@ -222,7 +215,7 @@ class File extends Target
      * @param array $map
      * @return int
      */
-    public function import(string $tableName, array $structure, object $data, array $map = []): int
+    public function output(string $tableName, array $structure, object $data, array $map = []): int
     {
         $firstQuery = true;
         $fp = $this->file;

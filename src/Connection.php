@@ -2,6 +2,8 @@
 
 namespace Porter;
 
+use Illuminate\Database\Capsule\Manager as Capsule;
+
 class Connection
 {
     /** @var array Valid values for $type. */
@@ -52,5 +54,29 @@ class Connection
     public function getAllInfo(): array
     {
         return $this->info;
+    }
+
+    /**
+     * Boot the database for global access.
+     * @param array $config
+     */
+    public function getDatabase(array $config)
+    {
+        $capsule = new Capsule();
+        $capsule->addConnection($this->translateConfig($config));
+        return $capsule;
+        //$capsule->setAsGlobal();
+        //$capsule->bootEloquent();
+    }
+
+    /**
+     * Map keys from our config to Illuminate's.
+     * @param array $config
+     * @return array
+     */
+    public function translateConfig(array $config): array
+    {
+        // Valid keys: driver, host, database, username, password, charset, collation, prefix
+        return $config;
     }
 }

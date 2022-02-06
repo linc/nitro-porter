@@ -185,6 +185,7 @@ class Render
                             <?php foreach ($targets as $alias => $info) : ?>
                                 <option value="<?php echo $alias; ?>"><?php echo $info['name']; ?></option>
                             <?php endforeach; ?>
+                            <option value="file">Vanilla Forums (file)</option>
                         </select>
                     </label>
                 </li>

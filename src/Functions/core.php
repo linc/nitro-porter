@@ -11,6 +11,7 @@ use Porter\ImportModel;
 use Porter\Request;
 use Porter\Source;
 use Porter\Target;
+use Porter\ExportInterface;
 use Porter\Support;
 
 /**
@@ -92,16 +93,17 @@ function targetFactory(string $target): Target
 
 /**
  * @param Request $request
- * @param array $info
- * @param Target $target
+ * @param Connection $connection
+ * @param ExportInterface $export
  * @return ExportModel
  */
-function exportModelFactory(Request $request, array $info, Target $target): ExportModel
+function exportModelFactory(Request $request, Connection $connection, ExportInterface $export): ExportModel
 {
     // Wire old database / model mess.
+    $info = $connection->getAllInfo();
     $db = new DbFactory($info, 'pdo');
     $map = loadStructure();
-    $model = new ExportModel($db, $map, $target);
+    $model = new ExportModel($db, $map, $export);
 
     // Set model properties.
     $model->prefix = $request->get('src-prefix') ?? '';
