@@ -112,18 +112,18 @@ class ExportModel
      * 3. Normalize case to lower
      * 4. Save to the ExportModel instance
      *
-     * @param string $restrictedTables
+     * @param string $tables
      */
-    public function loadTables(string $restrictedTables)
+    public function limitTables(string $tables)
     {
-        if (!empty($restrictedTables)) {
-            $restrictedTables = explode(',', $restrictedTables);
+        if (!empty($tables)) {
+            $tables = explode(',', $tables);
 
-            if (is_array($restrictedTables) && !empty($restrictedTables)) {
-                $restrictedTables = array_map('trim', $restrictedTables);
-                $restrictedTables = array_map('strtolower', $restrictedTables);
+            if (is_array($tables) && !empty($tables)) {
+                $tables = array_map('trim', $tables);
+                $tables = array_map('strtolower', $tables);
 
-                $this->limitedTables = $restrictedTables;
+                $this->limitedTables = $tables;
             }
         }
     }

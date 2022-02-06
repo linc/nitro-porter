@@ -109,7 +109,7 @@ function exportModelFactory(Request $request, Connection $connection, ExportInte
     $model->prefix = $request->get('src-prefix') ?? '';
     $model->destDb = $request->get('destdb') ?? '';
     $model->testMode = $request->get('test') ?? false;
-    $model->loadTables((string) $request->get('tables'));
+    $model->limitTables((string) $request->get('tables'));
     $model->captureOnly = $request->get('dumpsql') ?? false;
 
     return $model;
