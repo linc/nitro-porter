@@ -48,7 +48,7 @@ class Xenforo extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 0,
-            'Permissions' => 1,
+            //'Permissions' => 1,
         ]
     ];
 
@@ -250,6 +250,7 @@ class Xenforo extends Source
      */
     public function permissions(ExportModel $ex)
     {
+        /*
         $permissions = array();
 
         // Export the global permissions.
@@ -294,6 +295,7 @@ class Xenforo extends Source
         }
         $ex->writeEndTable($ex->file);
         $ex->comment("Exported Table: Permission ($count rows)");
+        */
     }
 
     /**

@@ -347,8 +347,10 @@ class VBulletin5 extends VBulletin
                 left join :_node as n on n.nodeid = po.nodeid;";
 
         // We have to generate a sort order so let's do the exportation manually line by line....
-        $exportStructure = getExportStructure($pollOption_Map, $ex->mapStructure['PollOption'], $pollOption_Map);
-        $revMappings = flipMappings($pollOption_Map);
+        list($revMappings, $legacyFilter) = $ex->normalizeDataMap($pollOption_Map);
+        $exportStructure = $ex->mapStructure['PollOption'];
+        //$exportStructure = getExportStructure($pollOption_Map, $ex->mapStructure['PollOption'], $pollOption_Map);
+        //$revMappings = flipMappings($pollOption_Map);
 
         $ex->writeBeginTable($fp, 'PollOption', $exportStructure);
 
@@ -364,7 +366,7 @@ class VBulletin5 extends VBulletin
 
             $row['sort'] = ++$currentSortID;
 
-            $ex->writeRow($fp, $row, $exportStructure, $revMappings);
+            $ex->writeRow($fp, $row, $exportStructure, $revMappings, $legacyFilter);
             $pollCount++;
         }
         $ex->writeEndTable($fp);

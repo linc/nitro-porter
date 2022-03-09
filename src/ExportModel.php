@@ -207,7 +207,7 @@ class ExportModel
      * @param array $dataMap
      * @return array $map and $filter lists
      */
-    protected function normalizeDataMap(array $dataMap): array
+    public function normalizeDataMap(array $dataMap): array
     {
         $filter = [];
         foreach ($dataMap as $source => $dest) {
