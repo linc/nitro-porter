@@ -54,12 +54,13 @@ class Controller
         // Export.
         $source = sourceFactory($request->get('package'));
         $connection = new Connection($request->get('source'));
-        if ($request->get('output') === 'file') {
-            $export = new Export\File();
+        if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
+            $storage = new Storage\File();
         } else {
-            $export = new Export\Database();
+            $storage = new Storage\Database($connection);
+            $storage->destDb = $request->get('destdb') ?? ''; // @todo Don't set property
         }
-        $exportModel = exportModelFactory($request, $connection, $export); // @todo Pass options not Request
+        $exportModel = exportModelFactory($request, $connection, $storage); // @todo Pass options not Request
         self::doExport($source, $exportModel);
 
         // Import.

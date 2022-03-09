@@ -15,6 +15,8 @@ class Connection
 
     protected array $info = [];
 
+    public Capsule $dbm;
+
     /**
      * If no connect alias is give, initiate a test connection.
      *
@@ -29,6 +31,15 @@ class Connection
         }
         $this->setInfo($info);
         $this->setType($info['type']);
+
+        // Set Illuminate Database instance.
+        if ($info['type'] === 'database') {
+            $capsule = new Capsule();
+            $capsule->addConnection($this->translateConfig($info));
+            $this->dbm = $capsule;
+            //$capsule->setAsGlobal();
+            //$capsule->bootEloquent();
+        }
     }
 
     public function setType(string $type)
@@ -57,16 +68,11 @@ class Connection
     }
 
     /**
-     * Boot the database for global access.
-     * @param array $config
+     * Get the database connection.
      */
-    public function getDatabase(array $config)
+    public function open()
     {
-        $capsule = new Capsule();
-        $capsule->addConnection($this->translateConfig($config));
-        return $capsule;
-        //$capsule->setAsGlobal();
-        //$capsule->bootEloquent();
+        $this->dbm->getConnection();
     }
 
     /**

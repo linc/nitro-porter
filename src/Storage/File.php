@@ -1,10 +1,10 @@
 <?php
 
-namespace Porter\Export;
+namespace Porter\Storage;
 
-use Porter\ExportInterface;
+use Porter\StorageInterface;
 
-class File implements ExportInterface
+class File implements StorageInterface
 {
     /** Comment character in the import file. */
     public const COMMENT = '//';
@@ -144,29 +144,23 @@ class File implements ExportInterface
      *
      * @param resource $fp
      * @param array $row
-     * @param array $exportStructure
-     * @param array $revMappings
+     * @param array $structure
+     * @param array $map
+     * @param array $filter
      */
-    public function writeRow($fp, $row, $exportStructure, $revMappings)
+    public function writeRow($fp, array $row, array $structure, array $map, array $filter)
     {
         $this->currentRow =& $row;
 
         // Loop through the columns in the export structure and grab their values from the row.
         $exRow = array();
-        foreach ($exportStructure as $field => $type) {
+        foreach ($structure as $field => $dest) {
             // Get the value of the export.
-            $value = null;
-            if (isset($revMappings[$field]) && isset($row[$revMappings[$field]['Column']])) {
-                // The column is mapped.
-                $value = $row[$revMappings[$field]['Column']];
-            } elseif (array_key_exists($field, $row)) {
-                // The column has an exact match in the export.
-                $value = $row[$field];
-            }
+            $value = $row[$field] ?? null;
 
             // Check to see if there is a callback filter.
-            if (isset($revMappings[$field]['Filter'])) {
-                $callback = $revMappings[$field]['Filter'];
+            if (isset($filter[$field])) {
+                $callback = $filter[$field];
 
                 $row2 =& $row;
                 $value = call_user_func($callback, $value, $field, $row2, $field);
@@ -181,7 +175,7 @@ class File implements ExportInterface
                 // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
             } elseif (is_string($value) || is_numeric($value)) {
                 // Check to see if there is a callback filter.
-                if (!isset($revMappings[$field])) {
+                if (!isset($map[$field])) {
                     //$value = call_user_func($Filters[$field], $value, $field, $row);
                 } else {
                     if (function_exists('mb_detect_encoding') && mb_detect_encoding($value) != 'UTF-8') {
@@ -207,39 +201,38 @@ class File implements ExportInterface
     }
 
     /**
-     * Process for writing an entire single table to file.
+     * Write an entire single table's data to file.
      *
-     * @param string $tableName
+     * @param string $name
      * @param array $structure
      * @param object $data
      * @param array $map
+     * @param array $filter
      * @return int
      */
-    public function output(string $tableName, array $structure, object $data, array $map = []): int
+    public function store(string $name, array $structure, object $data, array $map = [], array $filter = []): int
     {
-        $firstQuery = true;
-        $fp = $this->file;
-
-        // Loop through the data and write it to the file.
         $rowCount = 0;
         while ($row = $data->nextResultRow()) {
-            $row = (array)$row; // export%202010-05-06%20210937.txt
+            $row = (array)$row;
             $this->currentRow =& $row;
             $rowCount++;
-
-            if ($firstQuery) {
-                // Get the export structure.
-                $exportStructure = getExportStructure($row, $structure, $map, $tableName);
-                $revMappings = flipMappings($map);
-                $this->writeBeginTable($fp, $tableName, $exportStructure);
-
-                $firstQuery = false;
-            }
-            $this->writeRow($fp, $row, $exportStructure, $revMappings);
+            $this->writeRow($this->file, $row, $structure, $map, $filter);
         }
-        $this->writeEndTable($fp);
+        $this->writeEndTable($this->file);
 
         return $rowCount;
+    }
+
+    /**
+     * Write CSV header row.
+     *
+     * @param string $name
+     * @param array $structure
+     */
+    public function prepare(string $name, array $structure): void
+    {
+        $this->writeBeginTable($this->file, $name, $structure);
     }
 
     /**

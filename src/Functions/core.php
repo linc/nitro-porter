@@ -11,8 +11,7 @@ use Porter\ImportModel;
 use Porter\Request;
 use Porter\Source;
 use Porter\Target;
-use Porter\ExportInterface;
-use Porter\Support;
+use Porter\StorageInterface;
 
 /**
  * Retrieve the config.
@@ -94,161 +93,24 @@ function targetFactory(string $target): Target
 /**
  * @param Request $request
  * @param Connection $connection
- * @param ExportInterface $export
+ * @param StorageInterface $storage
  * @return ExportModel
  */
-function exportModelFactory(Request $request, Connection $connection, ExportInterface $export): ExportModel
+function exportModelFactory(Request $request, Connection $connection, StorageInterface $storage): ExportModel
 {
     // Wire old database / model mess.
     $info = $connection->getAllInfo();
     $db = new DbFactory($info, 'pdo');
     $map = loadStructure();
-    $model = new ExportModel($db, $map, $export);
+    $model = new ExportModel($db, $map, $storage);
 
     // Set model properties.
     $model->prefix = $request->get('src-prefix') ?? '';
-    $model->destDb = $request->get('destdb') ?? '';
     $model->testMode = $request->get('test') ?? false;
     $model->limitTables((string) $request->get('tables'));
     $model->captureOnly = $request->get('dumpsql') ?? false;
 
     return $model;
-}
-
-/**
- * Flip keys and values of associative array.
- *
- * @param  $mappings
- * @return array
- */
-function flipMappings($mappings)
-{
-    $result = array();
-    foreach ($mappings as $column => $mapping) {
-        if (is_string($mapping)) {
-            $result[$mapping] = array('Column' => $column);
-        } else {
-            $col = $mapping['Column'];
-            $mapping['Column'] = $column;
-            $result[$col] = $mapping;
-        }
-    }
-
-    return $result;
-}
-
-/**
- *
- *
- * @param array $row
- * @param mixed $tableOrStructure
- * @param array $map
- * @param string $tableName
- * @return array
- */
-function getExportStructure(array $row, $structure, array &$map, string $tableName = '_')
-{
-    $exportStructure = [];
-
-    // See what columns to add to the end of the structure.
-    foreach ($row as $column => $x) {
-        $destColumn = '';
-        $destType = '';
-        if (array_key_exists($column, $map)) {
-            $mapping = $map[$column];
-            if (is_string($mapping)) {
-                if (array_key_exists($mapping, $structure)) {
-                    // This an existing column.
-                    $destColumn = $mapping;
-                    $destType = $structure[$destColumn];
-                } else {
-                    // This is a created column.
-                    $destColumn = $column;
-                    $destType = $mapping;
-                }
-            } elseif (is_array($mapping)) {
-                if (!isset($mapping['Column'])) {
-                    trigger_error("Mapping for $column does not have a 'Column' defined.", E_USER_ERROR);
-                }
-
-                $destColumn = $mapping['Column'];
-
-                if (isset($mapping['Type'])) {
-                    $destType = $mapping['Type'];
-                } elseif (isset($structure[$destColumn])) {
-                    $destType = $structure[$destColumn];
-                } else {
-                    $destType = 'varchar(255)';
-                }
-            }
-        } elseif (array_key_exists($column, $structure)) {
-            $destColumn = $column;
-            $destType = $structure[$column];
-
-            // Verify column doesn't exist in Mapping array's Column element
-            $mappingExists = false;
-            foreach ($map as $testMapping) {
-                if ($testMapping == $column) {
-                    $mappingExists = true;
-                } elseif (
-                    is_array($testMapping)
-                    && array_key_exists('Column', $testMapping)
-                    && ($testMapping['Column'] == $column)
-                ) {
-                    $mappingExists = true;
-                }
-            }
-
-            // Also add the column to the mapping.
-            if (!$mappingExists) {
-                $map[$column] = $destColumn;
-            }
-        }
-
-        // Check to see if we have to add the column to the export structure.
-        if ($destColumn && !array_key_exists($destColumn, $exportStructure)) {
-            // TODO: Make sure $destType is a valid MySQL type.
-            $exportStructure[$destColumn] = $destType;
-        }
-    }
-
-    // Add filtered mappings since filters can add new columns.
-    foreach ($map as $source => $options) {
-        if (!is_array($options)) {
-            // Force the mappings into the expanded array syntax for easier processing later.
-            $map[$source] = array('Column' => $options);
-            continue;
-        }
-
-        if (!isset($options['Column'])) {
-            trigger_error("No column for $tableName(source).$source.", E_USER_NOTICE);
-            continue;
-        }
-
-        $destColumn = $options['Column'];
-
-        if (!array_key_exists($source, $row) && !isset($options['Type'])) {
-            trigger_error("No column for $tableName(source).$source.", E_USER_NOTICE);
-        }
-
-        if (isset($exportStructure[$destColumn])) {
-            continue;
-        }
-
-        if (isset($structure[$destColumn])) {
-            $destType = $structure[$destColumn];
-        } elseif (isset($options['Type'])) {
-            $destType = $options['Type'];
-        } else {
-            trigger_error("No column for $tableName.$destColumn.", E_USER_NOTICE);
-            continue;
-        }
-
-        $exportStructure[$destColumn] = $destType;
-        $map[$source] = $destColumn;
-    }
-
-    return $exportStructure;
 }
 
 /**
