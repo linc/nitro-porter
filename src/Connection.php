@@ -15,6 +15,8 @@ class Connection
 
     protected array $info = [];
 
+    public Capsule $dbm;
+
     /**
      * If no connect alias is give, initiate a test connection.
      *
@@ -23,12 +25,22 @@ class Connection
     public function __construct(string $alias = '')
     {
         if (!empty($alias)) {
+            $this->alias = $alias;
             $info = Config::getInstance()->getConnectionAlias($alias);
         } else {
             $info = Config::getInstance()->getTestConnection();
         }
         $this->setInfo($info);
         $this->setType($info['type']);
+
+        // Set Illuminate Database instance.
+        if ($info['type'] === 'database') {
+            $capsule = new Capsule();
+            $capsule->addConnection($this->translateConfig($info), $info['alias']);
+            $this->dbm = $capsule;
+            //$capsule->setAsGlobal();
+            //$capsule->bootEloquent();
+        }
     }
 
     public function setType(string $type)
@@ -57,16 +69,21 @@ class Connection
     }
 
     /**
-     * Boot the database for global access.
-     * @param array $config
+     * @return string
      */
-    public function getDatabase(array $config)
+    public function getAlias(): string
     {
-        $capsule = new Capsule();
-        $capsule->addConnection($this->translateConfig($config));
-        return $capsule;
-        //$capsule->setAsGlobal();
-        //$capsule->bootEloquent();
+        return $this->alias;
+    }
+
+    /**
+     * Get the database connection.
+     *
+     * @return \Illuminate\Database\Connection
+     */
+    public function open(): \Illuminate\Database\Connection
+    {
+        return $this->dbm->getConnection($this->alias);
     }
 
     /**
@@ -77,6 +94,12 @@ class Connection
     public function translateConfig(array $config): array
     {
         // Valid keys: driver, host, database, username, password, charset, collation, prefix
+        $config['driver'] = $config['adapter'];
+        $config['database'] = $config['name'];
+        $config['username'] = $config['user'];
+        $config['password'] = $config['pass'];
+        //$config['strict'] = false;
+
         return $config;
     }
 }

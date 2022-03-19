@@ -5,7 +5,7 @@ require_once 'vendor/autoload.php';
 
 // Environment.
 const ROOT_DIR = __DIR__;
-set_error_handler("ErrorHandler");
+//set_error_handler("ErrorHandler");
 if (ini_get('date.timezone') == '') {
     date_default_timezone_set('America/Detroit');
 }

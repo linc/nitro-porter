@@ -8,24 +8,12 @@ namespace Porter;
 
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
-use Porter\ExportInterface;
-use Porter\Log;
 
 /**
  * Object for exporting other database structures into a format that can be imported.
  */
 class ExportModel
 {
-    /**
-     * Character constants.
-     */
-    public const COMMENT = '//';
-    public const DELIM = ',';
-    public const ESCAPE = '\\';
-    public const NEWLINE = "\n";
-    public const NULL = '\N';
-    public const QUOTE = '"';
-
     /**
      * @var bool Whether to capture SQL without executing.
      */
@@ -50,16 +38,6 @@ class ExportModel
      * @var string The charcter set to set as the connection anytime the database connects.
      */
     public string $characterSet = 'utf8';
-
-    /**
-     * @var string Prefix for the target database.
-     */
-    public string $destPrefix = 'PORT_';
-
-    /**
-     * @var string Name of target database.
-     */
-    public string $destDb = '';
 
     /**
      * @var string DB prefix. SQL strings passed to export() will replace occurances of :_ with this.
@@ -90,18 +68,18 @@ class ExportModel
     protected DbFactory $database;
 
     /**
-     * @var ExportInterface Where the data is being sent.
+     * @var StorageInterface Where the data is being sent.
      */
-    protected ExportInterface $export;
+    protected StorageInterface $storage;
 
     /**
      * Setup.
      */
-    public function __construct($db, $map, $export)
+    public function __construct($db, $map, $storage)
     {
         $this->database = $db;
         $this->mapStructure = $map;
-        $this->export = $export;
+        $this->storage = $storage;
     }
 
     /**
@@ -136,7 +114,7 @@ class ExportModel
         if ($this->captureOnly) {
             return;
         }
-        $this->export->begin();
+        $this->storage->begin();
     }
 
     /**
@@ -147,27 +125,21 @@ class ExportModel
         if ($this->captureOnly) {
             return;
         }
-        $this->export->end();
+        $this->storage->end();
     }
 
     /**
      * Write a comment to the export file.
      *
      * @param string $message The message to write.
-     * @param bool   $echo    Whether or not to echo the message in addition to writing it to the file.
+     * @param bool $echo Whether or not to echo the message in addition to writing it to the file.
      */
     public function comment($message, $echo = true)
     {
-        $comment = self::COMMENT . ' ' . str_replace(
-            self::NEWLINE,
-            self::NEWLINE . self::COMMENT . ' ',
-            $message
-        ) . self::NEWLINE;
-
-        Log::comment($comment);
+        Log::comment($message);
         if ($echo) {
             if (defined('CONSOLE')) {
-                echo $comment;
+                echo $message;
             } else {
                 $this->comments[] = $message;
             }
@@ -188,36 +160,135 @@ class ExportModel
      *      Filter (the callable function name to process the data with)
      *      Type (the MySQL type)
      */
-    public function export(string $tableName, string $query, array $map = [])
+    public function export(string $tableName, string $query, array $map = [], array $filters = [])
     {
         if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
             return;
         }
 
+        // Start timer.
         $start = microtime(true);
 
-        // Make sure the table is valid for export.
+        // Validate table for export.
         if (!array_key_exists($tableName, $this->mapStructure)) {
             $this->comment("Error: $tableName is not a valid export.");
             return;
         }
 
+        // Do the export.
         $query = $this->processQuery($query);
-        $data = $this->executeQuery($query);
-
-        if ($data === false) {
+        $data = $this->executeQuery($query); // @todo Use new db layer.
+        if (empty($data)) {
             $this->comment("Error: No data found in $tableName.");
             return;
         }
 
-        $rowCount = $this->export->output($tableName, $this->mapStructure[$tableName], $data, $map);
+        $structure = $this->mapStructure[$tableName];
 
+        // Reconcile data structure to be written to storage.
+        list($map, $legacyFilter) = $this->normalizeDataMap($map); // @todo Update legacy filter usage and remove.
+        $filters = array_merge($filters, $legacyFilter);
+
+        // Prepare the storage medium for the incoming structure.
+        $this->storage->prepare($tableName, $structure);
+
+        // Store the data.
+        $rowCount = $this->storage->store($tableName, $map, $structure, $data, $filters, $this);
+
+        // Stop timer.
         $elapsed = formatElapsed(microtime(true) - $start);
         $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
     }
 
+    /**
+     *
+     *
+     * @param array $map
+     * @param array $structure
+     * @param array $row
+     * @param array $filters
+     * @return array
+     */
+    public function normalizeRow(array $map, array $structure, array $row, array $filters): array
+    {
+        // Apply callback filters.
+        $row = $this->filterData($row, $filters);
 
+        // Rename data keys for the target.
+        $row = $this->mapData($row, $map);
+
+        // Drop columns not in the structure.
+        return array_intersect_key($row, $structure);
+    }
+
+    /**
+     * Apply callback filters to the data row.
+     *
+     * @param array $row Single row of query results.
+     * @param array $filters List of column => callable.
+     * @return array
+     */
+    public function filterData(array $row, array $filters): array
+    {
+        foreach ($filters as $column => $callable) {
+            if (isset($row[$column])) {
+                $row[$column] = call_user_func($callable, $row[$column], $column, $row, $column);
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * Apply column map to the data row to rename keys as required.
+     *
+     * @param array $row
+     * @param array $map
+     * @return array
+     */
+    public function mapData(array $row, array $map): array
+    {
+        // @todo One of those moments I wish I had a collections library in here.
+        foreach ($map as $src => $dest) {
+            foreach ($row as $columnName => $value) {
+                if ($columnName === $src) {
+                    $row[$dest] = $value; // Add column with new name.
+                    unset($row[$columnName]); // Remove old column.
+                }
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * Fixes source datamap arrays to not be multi-dimensional.
+     *
+     * Splits the 'Filter' property to a new array and collapses 'Column' as the value.
+     * Ignores 'Type' property and any other nonsense.
+     * Rather than updating 100 lines of Source DataMaps, do this for now.
+     *
+     * @param array $dataMap
+     * @return array $map and $filter lists
+     */
+    public function normalizeDataMap(array $dataMap): array
+    {
+        $filter = [];
+        foreach ($dataMap as $source => $dest) {
+            if (is_array($dest)) {
+                // Collapse the value to a string.
+                // This key had better be present, so letting it error if not is fine tbh.
+                $dataMap[$source] = $dest['Column'];
+                if (array_key_exists('Filter', $dest)) {
+                    // Add to the outgoing $filter list. Can be an array $callable or a closure.
+                    $filter[$source] = $dest['Filter'];
+                }
+            }
+        }
+
+        return [$dataMap, $filter];
+    }
 
     /**
      * Do preprocessing on the database query.
@@ -239,45 +310,6 @@ class ExportModel
             }
         }
         return $query;
-    }
-
-
-    /**
-     *
-     *
-     * @param string $tableName
-     * @param string $query
-     * @param array $map
-     */
-    protected function createExportTable(string $tableName, string $query, array $map = [])
-    {
-        // Limit the query to grab any additional columns.
-        $queryStruct = rtrim($query, ';') . ' limit 1';
-        $structure = $this->mapStructure[$tableName];
-
-        $data = $this->query($queryStruct, true);
-        if ($data === false) {
-            return;
-        }
-
-        // Get the export structure.
-        $row = (array)$data->nextResultRow();
-        $exportStructure = getExportStructure($row, $structure, $map, $tableName);
-
-        // Build the `create table` statement.
-        $columnDefs = array();
-        foreach ($exportStructure as $columnName => $type) {
-            $columnDefs[] = "`$columnName` $type";
-        }
-        $destDb = '';
-        if (!empty($this->destDb)) {
-            $destDb = $this->destDb . '.';
-        }
-
-        $this->query("drop table if exists {$destDb}{$this->destPrefix}$tableName");
-
-        $this->query("create table {$destDb}{$this->destPrefix}$tableName (\n  " .
-            implode(",\n  ", $columnDefs) . "\n) engine=innodb");
     }
 
     /**
@@ -302,8 +334,8 @@ class ExportModel
     /**
      * Execute an sql statement and return the entire result as an associative array.
      *
-     * @param  string $sql
-     * @param  bool   $indexColumn
+     * @param string $sql
+     * @param bool $indexColumn
      * @return array
      */
     public function get($sql, $indexColumn = false)
@@ -367,10 +399,10 @@ class ExportModel
      *
      * Wrapper for _Query().
      *
-     * @param  string $query The sql to execute.
-     * @return ResultSet|string|false The query cursor.
+     * @param string $query The sql to execute.
+     * @return ResultSet|false The query cursor.
      */
-    public function query($query)
+    public function query(string $query)
     {
         if (!preg_match('`limit 1;$`', $query)) {
             $this->queryRecord[] = $query;
@@ -400,14 +432,14 @@ class ExportModel
     /**
      * Checks whether or not a table and columns exist in the database.
      *
-     * @param  string $table   The name of the table to check.
-     * @param  array  $columns An array of column names to check.
+     * @param string $table The name of the table to check.
+     * @param array|string $columns An array of column names to check.
      * @return bool|array The method will return one of the following
      *  - true: If table and all of the columns exist.
      *  - false: If the table does not exist.
      *  - array: The names of the missing columns if one or more columns don't exist.
      */
-    public function exists($table, $columns = [])
+    public function exists(string $table, $columns = [])
     {
         static $_exists = array();
 
@@ -440,7 +472,6 @@ class ExportModel
         }
 
         $columns = (array)$columns;
-
         if (count($columns) == 0) {
             return true;
         }
@@ -459,7 +490,7 @@ class ExportModel
     /**
      * Checks all required source tables are present.
      *
-     * @param  array $requiredTables
+     * @param array $requiredTables
      */
     public function verifySource(array $requiredTables)
     {
@@ -469,8 +500,6 @@ class ExportModel
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
             $tableDescriptions = $this->executeQuery('describe :_' . $reqTable);
-
-            //echo 'describe '.$prefix.$reqTable;
             if ($tableDescriptions === false) { // Table doesn't exist
                 $countMissingTables++;
                 if ($missingTables !== false) {
@@ -505,7 +534,6 @@ class ExportModel
         } elseif ($countMissingTables == count($requiredTables)) {
             $error = 'The required tables are not present in the database.
                 Make sure you entered the correct database name and prefix and try again.';
-
             trigger_error($error);
         } else {
             trigger_error('Missing required database tables: ' . $missingTables);
@@ -518,11 +546,10 @@ class ExportModel
      * @param string $sql
      * @return ResultSet|false instance of ResultSet of success false on failure
      */
-    private function executeQuery($sql)
+    private function executeQuery(string $sql)
     {
         $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
-
-        $sql = rtrim($sql, ';') . ';';
+        $sql = rtrim($sql, ';') . ';'; // guarantee semicolon.
 
         $dbResource = $this->database->getInstance();
         return $dbResource->query($sql);
@@ -534,7 +561,7 @@ class ExportModel
      * @param string $string
      * @return string escaped string
      */
-    public function escape($string)
+    public function escape(string $string): string
     {
         $dbResource = $this->database->getInstance();
         return $dbResource->escape($string);
@@ -543,14 +570,13 @@ class ExportModel
     /**
      * Determine if an index exists in a table
      *
-     * @param  string $indexName
-     * @param  string $table
+     * @param string $indexName
+     * @param string $table
      * @return bool
      */
     public function indexExists($indexName, $table)
     {
         $result = $this->query("show index from `$table` WHERE Key_name = '$indexName'");
-
         return $result->nextResultRow() !== false;
     }
 
@@ -560,10 +586,9 @@ class ExportModel
      * @param string $tableName
      * @return bool
      */
-    public function tableExists($tableName)
+    public function tableExists(string $tableName): bool
     {
         $result = $this->query("show tables like '$tableName'");
-
         return !empty($result->nextResultRow());
     }
 
@@ -574,16 +599,14 @@ class ExportModel
      * @param string $columnName
      * @return bool
      */
-    public function columnExists($tableName, $columnName)
+    public function columnExists(string $tableName, string $columnName): bool
     {
         $result = $this->query(
-            "
-            select column_name
-            from information_schema.columns
-            where table_schema = database()
-                and table_name = '$tableName'
-                and column_name = '$columnName'
-        "
+            " select column_name
+                from information_schema.columns
+                where table_schema = database()
+                    and table_name = '$tableName'
+                    and column_name = '$columnName'"
         );
         return $result->nextResultRow() !== false;
     }
