@@ -132,7 +132,7 @@ class ExportModel
      * Write a comment to the export file.
      *
      * @param string $message The message to write.
-     * @param bool   $echo    Whether or not to echo the message in addition to writing it to the file.
+     * @param bool $echo Whether or not to echo the message in addition to writing it to the file.
      */
     public function comment($message, $echo = true)
     {
@@ -160,7 +160,7 @@ class ExportModel
      *      Filter (the callable function name to process the data with)
      *      Type (the MySQL type)
      */
-    public function export(string $tableName, string $query, array $map = [], array $filter = [])
+    public function export(string $tableName, string $query, array $map = [], array $filters = [])
     {
         if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
@@ -178,23 +178,88 @@ class ExportModel
 
         // Do the export.
         $query = $this->processQuery($query);
-        $data = $this->executeQuery($query);
-        if ($data === false) {
+        $data = $this->executeQuery($query); // @todo Use new db layer.
+        if (empty($data)) {
             $this->comment("Error: No data found in $tableName.");
             return;
         }
 
+        $structure = $this->mapStructure[$tableName];
+
         // Reconcile data structure to be written to storage.
         list($map, $legacyFilter) = $this->normalizeDataMap($map); // @todo Update legacy filter usage and remove.
-        $filter = array_merge($filter, $legacyFilter);
-        $this->storage->prepare($tableName, $this->mapStructure[$tableName]);
+        $filters = array_merge($filters, $legacyFilter);
+
+        // Prepare the storage medium for the incoming structure.
+        $this->storage->prepare($tableName, $structure);
 
         // Store the data.
-        $rowCount = $this->storage->store($tableName, $this->mapStructure[$tableName], $data, $map, $filter);
+        $rowCount = $this->storage->store($tableName, $map, $structure, $data, $filters, $this);
 
         // Stop timer.
         $elapsed = formatElapsed(microtime(true) - $start);
         $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
+    }
+
+    /**
+     *
+     *
+     * @param array $map
+     * @param array $structure
+     * @param array $row
+     * @param array $filters
+     * @return array
+     */
+    public function normalizeRow(array $map, array $structure, array $row, array $filters): array
+    {
+        // Apply callback filters.
+        $row = $this->filterData($row, $filters);
+
+        // Rename data keys for the target.
+        $row = $this->mapData($row, $map);
+
+        // Drop columns not in the structure.
+        return array_intersect_key($row, $structure);
+    }
+
+    /**
+     * Apply callback filters to the data row.
+     *
+     * @param array $row Single row of query results.
+     * @param array $filters List of column => callable.
+     * @return array
+     */
+    public function filterData(array $row, array $filters): array
+    {
+        foreach ($filters as $column => $callable) {
+            if (isset($row[$column])) {
+                $row[$column] = call_user_func($callable, $row[$column], $column, $row, $column);
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * Apply column map to the data row to rename keys as required.
+     *
+     * @param array $row
+     * @param array $map
+     * @return array
+     */
+    public function mapData(array $row, array $map): array
+    {
+        // @todo One of those moments I wish I had a collections library in here.
+        foreach ($map as $src => $dest) {
+            foreach ($row as $columnName => $value) {
+                if ($columnName === $src) {
+                    $row[$dest] = $value; // Add column with new name.
+                    unset($row[$columnName]); // Remove old column.
+                }
+            }
+        }
+
+        return $row;
     }
 
     /**
@@ -269,8 +334,8 @@ class ExportModel
     /**
      * Execute an sql statement and return the entire result as an associative array.
      *
-     * @param  string $sql
-     * @param  bool   $indexColumn
+     * @param string $sql
+     * @param bool $indexColumn
      * @return array
      */
     public function get($sql, $indexColumn = false)
@@ -334,7 +399,7 @@ class ExportModel
      *
      * Wrapper for _Query().
      *
-     * @param  string $query The sql to execute.
+     * @param string $query The sql to execute.
      * @return ResultSet|false The query cursor.
      */
     public function query(string $query)
@@ -367,8 +432,8 @@ class ExportModel
     /**
      * Checks whether or not a table and columns exist in the database.
      *
-     * @param  string $table   The name of the table to check.
-     * @param  array|string  $columns An array of column names to check.
+     * @param string $table The name of the table to check.
+     * @param array|string $columns An array of column names to check.
      * @return bool|array The method will return one of the following
      *  - true: If table and all of the columns exist.
      *  - false: If the table does not exist.
@@ -425,7 +490,7 @@ class ExportModel
     /**
      * Checks all required source tables are present.
      *
-     * @param  array $requiredTables
+     * @param array $requiredTables
      */
     public function verifySource(array $requiredTables)
     {
@@ -505,8 +570,8 @@ class ExportModel
     /**
      * Determine if an index exists in a table
      *
-     * @param  string $indexName
-     * @param  string $table
+     * @param string $indexName
+     * @param string $table
      * @return bool
      */
     public function indexExists($indexName, $table)

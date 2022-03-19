@@ -5,10 +5,15 @@ namespace Porter\Storage;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 use Porter\Connection;
+use Porter\Database\ResultSet;
+use Porter\ExportModel;
 use Porter\StorageInterface;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class Database implements StorageInterface
 {
+    public const INSERT_BATCH = 1000;
+
     /**
      * @var array Table structures that define the format of the intermediary export tables.
      */
@@ -18,11 +23,6 @@ class Database implements StorageInterface
      * @var string Prefix for the target database.
      */
     public string $destPrefix = 'PORT_';
-
-    /**
-     * @var string Name of target database.
-     */
-    public string $destDb = '';
 
     /**
      * @var Connection
@@ -38,44 +38,43 @@ class Database implements StorageInterface
     }
 
     /**
+     * Save the given records to the database.
+     *
      * @param string $name
-     * @param array $structure
-     * @param object $data
      * @param array $map
-     * @param array $filter
-     * @return int
+     * @param array $structure
+     * @param ResultSet $data
+     * @param array $filters
+     * @param ExportModel $exportModel
+     * @return int Count of how many records were stored.
      */
-    public function store(string $name, array $structure, object $data, array $map = [], array $filter = []): int
-    {
-        //@todo I THINK THIS IS THE LAST PIECE OF GETTING DB STORAGE TO WORK?
+    public function store(
+        string $name,
+        array $map,
+        array $structure,
+        ResultSet $data,
+        array $filters,
+        ExportModel $exportModel
+    ): int {
+        $rowCount = 0;
+        $batchedValues = [];
+        while ($row = $data->nextResultRow()) {
+            $rowCount++;
+            $batchedValues[] = $exportModel->normalizeRow($map, $structure, $row, $filters);
 
-        // Loop thru $data? Then within that run the filter:
-
-        $row = [];
-        $value = '';
-        foreach ($map as $source => $dest) {
-            // @todo
-            // Check to see if there is a callback filter.
-            if (isset($filter[$source])) {
-                $value = $this->filter($source, $value, $row, $filter[$source]);
+            // Insert batched records and reset batch.
+            if (self::INSERT_BATCH === count($batchedValues)) {
+                $this->connection->dbm->getConnection($this->connection->getAlias())
+                    ->table($name)->insert($batchedValues);
+                $batchedValues = [];
             }
         }
 
-        // Batch inserts or we gonna die.
+        // Insert remaining records.
+        $this->connection->dbm->getConnection($this->connection->getAlias())
+            ->table($name)->insert($batchedValues);
 
-
-        return 0;
-    }
-
-    /**
-     * Apply the data map's filter callback.
-     *
-     * @todo Abstract this for File storage too.
-     * @see File::writeRow()
-     */
-    public function filter(string $field, $value, $data, $callback)
-    {
-        return call_user_func($callback, $value, $field, $data, $field);
+        return $rowCount;
     }
 
     /**
@@ -95,7 +94,9 @@ class Database implements StorageInterface
      */
     public function createTable(string $name, callable $closure)
     {
-        $this->connection->dbm->schema()->create($name, $closure);
+        $schema = $this->connection->dbm->getConnection($this->connection->getAlias())->getSchemaBuilder();
+        // @todo DROP TABLE FIRST
+        $schema->create($name, $closure);
     }
 
     /**
@@ -119,15 +120,18 @@ class Database implements StorageInterface
                 if (strpos($type, 'varchar') === 0) {
                     // Handle varchars.
                     $length = $this->getVarcharLength($type);
-                    $table->string($columnName, $length);
+                    $table->string($columnName, $length)->nullable();
                 } elseif (is_array($type)) {
                     // Handle enums.
-                    $table->enum($columnName, $type); // $type == $options.
+                    $table->enum($columnName, $type)->nullable(); // $type == $options.
+                } elseif (strpos($type, 'varbinary') === 0) {
+                    // Handle varbinary as blobs.
+                    $table->binary($columnName)->nullable();
                 } else {
                     // Handle everything else.
                     // But first, un-abbreviate 'int' (e.g. `bigint`, `tinyint(1)`).
                     $type = preg_replace('/int($|\()/', 'integer', $type);
-                    $table->$type($columnName);
+                    $table->$type($columnName)->nullable();
                 }
             }
         };
@@ -167,6 +171,6 @@ class Database implements StorageInterface
      */
     public function query(string $sql): Expression
     {
-        return $this->connection->dbm->getConnection()->raw($sql);
+        return $this->connection->open()->raw($sql);
     }
 }

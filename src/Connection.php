@@ -25,6 +25,7 @@ class Connection
     public function __construct(string $alias = '')
     {
         if (!empty($alias)) {
+            $this->alias = $alias;
             $info = Config::getInstance()->getConnectionAlias($alias);
         } else {
             $info = Config::getInstance()->getTestConnection();
@@ -35,7 +36,7 @@ class Connection
         // Set Illuminate Database instance.
         if ($info['type'] === 'database') {
             $capsule = new Capsule();
-            $capsule->addConnection($this->translateConfig($info));
+            $capsule->addConnection($this->translateConfig($info), $info['alias']);
             $this->dbm = $capsule;
             //$capsule->setAsGlobal();
             //$capsule->bootEloquent();
@@ -68,11 +69,21 @@ class Connection
     }
 
     /**
-     * Get the database connection.
+     * @return string
      */
-    public function open()
+    public function getAlias(): string
     {
-        $this->dbm->getConnection();
+        return $this->alias;
+    }
+
+    /**
+     * Get the database connection.
+     *
+     * @return \Illuminate\Database\Connection
+     */
+    public function open(): \Illuminate\Database\Connection
+    {
+        return $this->dbm->getConnection($this->alias);
     }
 
     /**
@@ -83,6 +94,12 @@ class Connection
     public function translateConfig(array $config): array
     {
         // Valid keys: driver, host, database, username, password, charset, collation, prefix
+        $config['driver'] = $config['adapter'];
+        $config['database'] = $config['name'];
+        $config['username'] = $config['user'];
+        $config['password'] = $config['pass'];
+        //$config['strict'] = false;
+
         return $config;
     }
 }

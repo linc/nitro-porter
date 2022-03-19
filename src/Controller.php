@@ -51,23 +51,25 @@ class Controller
         // Remove time limit.
         set_time_limit(0);
 
-        // Export.
-        $source = sourceFactory($request->get('package'));
-        $connection = new Connection($request->get('source'));
+        // Set up export storage.
         if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
             $storage = new Storage\File();
         } else {
-            $storage = new Storage\Database($connection);
-            $storage->destDb = $request->get('destdb') ?? ''; // @todo Don't set property
+            $targetConnection = new Connection($request->get('target') ?? '');
+            $storage = new Storage\Database($targetConnection);
         }
-        $exportModel = exportModelFactory($request, $connection, $storage); // @todo Pass options not Request
+
+        // Export.
+        $source = sourceFactory($request->get('package'));
+        $sourceConnection = new Connection($request->get('source'));
+        $exportModel = exportModelFactory($request, $sourceConnection, $storage); // @todo Pass options not Request
         self::doExport($source, $exportModel);
 
         // Import.
-        if ($request->get('output') !== 'file') {
+        if (false && $request->get('output') !== 'file') {
             $target = targetFactory($request->get('output'));
             if ($request->get('target')) {
-                $target->connection = new Connection($request->get('target'));
+                $target->connection = $targetConnection;
             }
             self::doImport();
         }

@@ -2,6 +2,9 @@
 
 namespace Porter\Storage;
 
+use Couchbase\Result;
+use Porter\Database\ResultSet;
+use Porter\ExportModel;
 use Porter\StorageInterface;
 
 class File implements StorageInterface
@@ -23,12 +26,6 @@ class File implements StorageInterface
 
     /** Quote character in the import file. */
     public const QUOTE = '"';
-
-    /**
-     * @var array Storage for sloppy data passing.
-     * @deprecated
-     */
-    public array $currentRow = [];
 
     /**
      * @var resource File pointer
@@ -145,54 +142,17 @@ class File implements StorageInterface
      * @param resource $fp
      * @param array $row
      * @param array $structure
-     * @param array $map
-     * @param array $filter
      */
-    public function writeRow($fp, array $row, array $structure, array $map, array $filter)
+    public function writeRow($fp, array $row, array $structure)
     {
-        $this->currentRow =& $row;
-
         // Loop through the columns in the export structure and grab their values from the row.
         $exRow = array();
         foreach ($structure as $field => $dest) {
             // Get the value of the export.
             $value = $row[$field] ?? null;
 
-            // Check to see if there is a callback filter.
-            if (isset($filter[$field])) {
-                $callback = $filter[$field];
-
-                $row2 =& $row;
-                $value = call_user_func($callback, $value, $field, $row2, $field);
-                $row = $this->currentRow;
-            }
-
             // Format the value for writing.
-            if (is_null($value)) {
-                $value = self::NULL;
-            } elseif (is_integer($value)) {
-                // Do nothing, formats as is.
-                // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
-            } elseif (is_string($value) || is_numeric($value)) {
-                // Check to see if there is a callback filter.
-                if (!isset($map[$field])) {
-                    //$value = call_user_func($Filters[$field], $value, $field, $row);
-                } else {
-                    if (function_exists('mb_detect_encoding') && mb_detect_encoding($value) != 'UTF-8') {
-                        $value = utf8_encode($value);
-                    }
-                }
-
-                $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
-                $value = $this->escapedValue($value);
-            } elseif (is_bool($value)) {
-                $value = $value ? 1 : 0;
-            } else {
-                // Unknown format.
-                $value = self::NULL;
-            }
-
-            $exRow[] = $value;
+            $exRow[] = $this->formatValue($value);
         }
         // Write the data.
         fwrite($fp, implode(self::DELIM, $exRow));
@@ -204,20 +164,26 @@ class File implements StorageInterface
      * Write an entire single table's data to file.
      *
      * @param string $name
-     * @param array $structure
-     * @param object $data
      * @param array $map
-     * @param array $filter
+     * @param array $structure
+     * @param ResultSet $data
+     * @param array $filters
+     * @param ExportModel $exportModel
      * @return int
      */
-    public function store(string $name, array $structure, object $data, array $map = [], array $filter = []): int
-    {
+    public function store(
+        string $name,
+        array $map,
+        array $structure,
+        ResultSet $data,
+        array $filters,
+        ExportModel $exportModel
+    ): int {
         $rowCount = 0;
         while ($row = $data->nextResultRow()) {
-            $row = (array)$row;
-            $this->currentRow =& $row;
             $rowCount++;
-            $this->writeRow($this->file, $row, $structure, $map, $filter);
+            $row = $exportModel->normalizeRow($map, $structure, $row, $filters);
+            $this->writeRow($this->file, $row, $structure);
         }
         $this->writeEndTable($this->file);
 
@@ -258,5 +224,35 @@ class File implements StorageInterface
         return self::QUOTE
             . str_replace($escapeSearch, $escapeReplace, $value)
             . self::QUOTE;
+    }
+
+    /**
+     * Format the value for file storage.
+     *
+     * @param mixed $value
+     * @return int|string
+     */
+    public function formatValue($value)
+    {
+        if (is_integer($value)) {
+            // Do nothing, formats as is.
+            // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
+            return $value;
+        } elseif (is_string($value) || is_numeric($value)) {
+            // Fix encoding if needed.
+            if (function_exists('mb_detect_encoding') && mb_detect_encoding($value) != 'UTF-8') {
+                $value = utf8_encode($value);
+            }
+            // Fix carriage returns for file storage.
+            $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
+            // Fix special chars in our file storage format.
+            $value = $this->escapedValue($value);
+        } elseif (is_bool($value)) {
+            $value = $value ? 1 : 0;
+        } else {
+            // Unknown format or null.
+            $value = self::NULL;
+        }
+        return $value;
     }
 }
