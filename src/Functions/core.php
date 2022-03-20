@@ -213,10 +213,10 @@ function combinePaths($paths, string $delimiter = '/'): string
 /**
  * For outputting how long the export took.
  *
- * @param  int $elapsed
+ * @param float $elapsed
  * @return string
  */
-function formatElapsed(int $elapsed): string
+function formatElapsed(float $elapsed): string
 {
     $m = floor($elapsed / 60);
     $s = $elapsed - $m * 60;
