@@ -85,7 +85,7 @@ class Database implements StorageInterface
      */
     public function prepare(string $name, array $structure): void
     {
-        $this->createTable($name, $this->getTableStructureClosure($structure));
+        $this->createTable('PORT_' . $name, $this->getTableStructureClosure($structure));
     }
 
     /**
