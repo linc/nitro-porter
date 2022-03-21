@@ -187,14 +187,4 @@ class Database implements StorageInterface
         preg_match('/varchar\(([0-9]){1,3}\)/', $type, $matches);
         return (int)$matches[1] ?? 100;
     }
-
-    /**
-     * @deprecated
-     * @param string $sql
-     * @return Expression
-     */
-    public function query(string $sql): Expression
-    {
-        return $this->connection->open()->raw($sql);
-    }
 }
