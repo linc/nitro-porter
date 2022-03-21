@@ -21,5 +21,5 @@ abstract class Target
         return static::SUPPORTED;
     }
 
-    abstract public function import();
+    abstract public function run(ExportModel $ex);
 }

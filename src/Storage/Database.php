@@ -2,13 +2,12 @@
 
 namespace Porter\Storage;
 
-use Illuminate\Database\Query\Expression;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Porter\Connection;
 use Porter\Database\ResultSet;
 use Porter\ExportModel;
 use Porter\StorageInterface;
-use Illuminate\Database\Capsule\Manager as Capsule;
 
 class Database implements StorageInterface
 {
@@ -20,9 +19,9 @@ class Database implements StorageInterface
     public array $mapStructure = []; // @todo
 
     /**
-     * @var string Prefix for the target database.
+     * @var string Prefix for the storage database.
      */
-    public string $destPrefix = 'PORT_';
+    public string $prefix = '';
 
     /**
      * @var Connection
@@ -38,12 +37,12 @@ class Database implements StorageInterface
     }
 
     /**
-     * Save the given records to the database.
+     * Save the given records to the database. Use prefix.
      *
      * @param string $name
      * @param array $map
      * @param array $structure
-     * @param ResultSet $data
+     * @param ResultSet|Builder $data
      * @param array $filters
      * @param ExportModel $exportModel
      * @return int Count of how many records were stored.
@@ -52,50 +51,67 @@ class Database implements StorageInterface
         string $name,
         array $map,
         array $structure,
-        ResultSet $data,
+        $data,
         array $filters,
         ExportModel $exportModel
     ): int {
         $rowCount = 0;
         $batchedValues = [];
-        while ($row = $data->nextResultRow()) {
-            $rowCount++;
-            $batchedValues[] = $exportModel->normalizeRow($map, $structure, $row, $filters);
+        $db = $this->connection->dbm->getConnection($this->connection->getAlias());
 
-            // Insert batched records and reset batch.
-            if (self::INSERT_BATCH === count($batchedValues)) {
-                $this->connection->dbm->getConnection($this->connection->getAlias())
-                    ->table($name)->insert($batchedValues);
-                $batchedValues = [];
+        if (is_a($data, '\Porter\Database\ResultSet')) {
+            // Iterate on old ResultSet.
+            while ($row = $data->nextResultRow()) {
+                $rowCount++;
+                $batchedValues[] = $exportModel->normalizeRow($map, $structure, $row, $filters);
+
+                // Insert batched records and reset batch.
+                if (self::INSERT_BATCH === count($batchedValues)) {
+                    $db->table($this->prefix . $name)->insert($batchedValues);
+                    $batchedValues = [];
+                }
+            }
+        } elseif (is_a($data, '\Illuminate\Database\Query\Builder')) {
+            // Use the Builder to process results one at a time.
+            foreach ($data->cursor() as $row) { // Using `chunk()` takes MUCH longer to process.
+                $rowCount++;
+                $batchedValues[] = $exportModel->normalizeRow($map, $structure, (array)$row, $filters);
+
+                // Insert batched records and reset batch.
+                if (self::INSERT_BATCH === count($batchedValues)) {
+                    $db->table($this->prefix . $name)->insert($batchedValues);
+                    $batchedValues = [];
+                }
             }
         }
 
         // Insert remaining records.
-        $this->connection->dbm->getConnection($this->connection->getAlias())
-            ->table($name)->insert($batchedValues);
+        $db->table($this->prefix . $name)->insert($batchedValues);
 
         return $rowCount;
     }
 
     /**
-     * Create fresh table for storage.
+     * Create fresh table for storage. Use prefix.
      *
      * @param string $name
      * @param array $structure
      */
     public function prepare(string $name, array $structure): void
     {
-        $this->createTable('PORT_' . $name, $this->getTableStructureClosure($structure));
+        $this->createTable($this->prefix . $name, $this->getTableStructureClosure($structure));
     }
 
     /**
+     * Create a new table. Drops the table first if it already exists.
+     *
      * @param string $name
      * @param callable $closure
      */
     public function createTable(string $name, callable $closure)
     {
         $schema = $this->connection->dbm->getConnection($this->connection->getAlias())->getSchemaBuilder();
-        // @todo DROP TABLE FIRST
+        $schema->dropIfExists($name);
         $schema->create($name, $closure);
     }
 
@@ -135,6 +151,14 @@ class Database implements StorageInterface
                 }
             }
         };
+    }
+
+    /**
+     * @param string $prefix Database table prefix.
+     */
+    public function setPrefix(string $prefix): void
+    {
+        $this->prefix = $prefix;
     }
 
     /**

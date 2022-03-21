@@ -2,7 +2,7 @@
 
 namespace Porter\Storage;
 
-use Couchbase\Result;
+use Illuminate\Database\Query\Builder;
 use Porter\Database\ResultSet;
 use Porter\ExportModel;
 use Porter\StorageInterface;
@@ -91,6 +91,11 @@ class File implements StorageInterface
         }
     }
 
+    public function setPrefix(string $prefix): void
+    {
+        // Do nothing.
+    }
+
     /**
      * Start table write to file.
      *
@@ -166,7 +171,7 @@ class File implements StorageInterface
      * @param string $name
      * @param array $map
      * @param array $structure
-     * @param ResultSet $data
+     * @param ResultSet|Builder $data
      * @param array $filters
      * @param ExportModel $exportModel
      * @return int
@@ -175,7 +180,7 @@ class File implements StorageInterface
         string $name,
         array $map,
         array $structure,
-        ResultSet $data,
+        $data,
         array $filters,
         ExportModel $exportModel
     ): int {

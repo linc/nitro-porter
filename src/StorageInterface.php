@@ -2,6 +2,7 @@
 
 namespace Porter;
 
+use Illuminate\Database\Query\Builder;
 use Porter\Database\ResultSet;
 
 interface StorageInterface
@@ -12,7 +13,7 @@ interface StorageInterface
      * @param string $name Name of the data chunk / table to be written.
      * @param array $map
      * @param array $structure
-     * @param ResultSet $data
+     * @param ResultSet|Builder $data
      * @param array $filters
      * @param ExportModel $exportModel
      * @return int Count of imported records.
@@ -21,7 +22,7 @@ interface StorageInterface
         string $name,
         array $map,
         array $structure,
-        ResultSet $data,
+        $data,
         array $filters,
         ExportModel $exportModel
     ): int;
@@ -35,4 +36,6 @@ interface StorageInterface
     public function begin();
 
     public function end();
+
+    public function setPrefix(string $prefix): void;
 }

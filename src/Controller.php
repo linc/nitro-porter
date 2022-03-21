@@ -7,12 +7,15 @@
 namespace Porter;
 
 /**
- * Generic controller implemented by forum-specific ones.
+ * Top-level workflows.
  */
 class Controller
 {
     /**
      * Export workflow.
+     *
+     * @param Source $source
+     * @param ExportModel $model
      */
     public static function doExport(Source $source, ExportModel $model)
     {
@@ -22,15 +25,9 @@ class Controller
             $model->setCharacterSet($source::getCharSetTable());
         }
 
-        $start = microtime(true);
-        $model->comment('Export Started: ' . date('Y-m-d H:i:s'));
-
         $model->begin();
         $source->run($model);
         $model->end();
-
-        $model->comment('Export Completed: ' . date('Y-m-d H:i:s'));
-        $model->comment(sprintf('Elapsed Time: %s', formatElapsed(microtime(true) - $start)));
 
         if ($model->testMode || $model->captureOnly) {
             $queries = implode("\n\n", $model->queryRecord);
@@ -38,13 +35,21 @@ class Controller
         }
     }
 
-    public static function doImport()
+    /**
+     * Import workflow.
+     *
+     * @param Target $target
+     * @param ExportModel $model
+     */
+    public static function doImport(Target $target, ExportModel $model)
     {
-        //
+        $model->begin();
+        $target->run($model);
+        $model->end();
     }
 
     /**
-     * Called by router to setup and run main export process.
+     * Called by router to set up and run main export process.
      */
     public static function run(Request $request)
     {
@@ -53,26 +58,39 @@ class Controller
 
         // Set up export storage.
         if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
+            $targetConnection = new Connection(); // Unused but required by ExportModel regardless.
             $storage = new Storage\File();
         } else {
             $targetConnection = new Connection($request->get('target') ?? '');
             $storage = new Storage\Database($targetConnection);
         }
 
-        // Export.
+        // Setup source & model.
         $source = sourceFactory($request->get('package'));
         $sourceConnection = new Connection($request->get('source'));
-        $exportModel = exportModelFactory($request, $sourceConnection, $storage); // @todo Pass options not Request
+        // @todo Pass options not Request
+        $exportModel = exportModelFactory($request, $sourceConnection, $storage, $targetConnection);
+
+        // Start timer.
+        $start = microtime(true);
+        $exportModel->comment('START: ' . date('Y-m-d H:i:s'));
+
+        // Export.
         self::doExport($source, $exportModel);
 
         // Import.
-        if (false && $request->get('output') !== 'file') {
+        if ($request->get('output') !== 'file') {
             $target = targetFactory($request->get('output'));
             if ($request->get('target')) {
-                $target->connection = $targetConnection;
+                $target->connection = $targetConnection; // @todo Allow separate connection for this.
             }
-            self::doImport();
+            $exportModel->tarPrefix = $target::SUPPORTED['prefix']; // @todo Wrap these refs.
+            self::doImport($target, $exportModel);
         }
+
+        // End timer.
+        $exportModel->comment('END: ' . date('Y-m-d H:i:s'));
+        $exportModel->comment(sprintf('Elapsed: %s', formatElapsed(microtime(true) - $start)));
 
         // Write the results (web only).
         if (!defined('CONSOLE')) {

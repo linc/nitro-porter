@@ -96,16 +96,20 @@ function targetFactory(string $target): Target
  * @param StorageInterface $storage
  * @return ExportModel
  */
-function exportModelFactory(Request $request, Connection $connection, StorageInterface $storage): ExportModel
-{
+function exportModelFactory(
+    Request $request,
+    Connection $sourceConnect,
+    StorageInterface $storage,
+    Connection $targetConnect
+): ExportModel {
     // Wire old database / model mess.
-    $info = $connection->getAllInfo();
+    $info = $sourceConnect->getAllInfo();
     $db = new DbFactory($info, 'pdo');
     $map = loadStructure();
-    $model = new ExportModel($db, $map, $storage);
+    $model = new ExportModel($db, $map, $storage, $targetConnect);
 
     // Set model properties.
-    $model->prefix = $request->get('src-prefix') ?? '';
+    $model->srcPrefix = $request->get('src-prefix') ?? '';
     $model->testMode = $request->get('test') ?? false;
     $model->limitTables((string) $request->get('tables'));
     $model->captureOnly = $request->get('dumpsql') ?? false;

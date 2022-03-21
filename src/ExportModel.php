@@ -6,6 +6,7 @@
 
 namespace Porter;
 
+use Illuminate\Database\Query\Builder;
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
 
@@ -40,11 +41,20 @@ class ExportModel
     public string $characterSet = 'utf8';
 
     /**
-     * @var string DB prefix. SQL strings passed to export() will replace occurances of :_ with this.
+     * @var string DB prefix of source. Queries passed to export() will replace `:_` with this.
      * @see ExportModel::export()
-     * @deprecated
      */
-    public string $prefix = '';
+    public string $srcPrefix = '';
+
+    /**
+     * @var string DB prefix of the intermediate storage. @todo Should be a constant; don't alter.
+     */
+    public string $intPrefix = 'PORT_';
+
+    /**
+     * @var string DB prefix of the final target. Blindly prepended to give table name.
+     */
+    public string $tarPrefix = '';
 
     /**
      * @var array Log of all queries done in this run for debugging / test mode.
@@ -68,6 +78,11 @@ class ExportModel
     protected DbFactory $database;
 
     /**
+     * @var Connection
+     */
+    protected Connection $importSource;
+
+    /**
      * @var StorageInterface Where the data is being sent.
      */
     protected StorageInterface $storage;
@@ -75,11 +90,23 @@ class ExportModel
     /**
      * Setup.
      */
-    public function __construct($db, $map, $storage)
+    public function __construct($db, $map, $storage, $connection)
     {
         $this->database = $db;
         $this->mapStructure = $map;
         $this->storage = $storage;
+        $this->importSource = $connection;
+    }
+
+    /**
+     * Provide the import database.
+     *
+     * @return \Illuminate\Database\Connection
+     */
+    public function dbImport(): \Illuminate\Database\Connection
+    {
+        // @todo Put this logic in our Connection class.
+        return $this->importSource->dbm->getConnection($this->importSource->getAlias());
     }
 
     /**
@@ -190,6 +217,9 @@ class ExportModel
         list($map, $legacyFilter) = $this->normalizeDataMap($map); // @todo Update legacy filter usage and remove.
         $filters = array_merge($filters, $legacyFilter);
 
+        // Set storage prefix.
+        $this->storage->setPrefix($this->intPrefix);
+
         // Prepare the storage medium for the incoming structure.
         $this->storage->prepare($tableName, $structure);
 
@@ -198,7 +228,34 @@ class ExportModel
 
         // Stop timer.
         $elapsed = formatElapsed(microtime(true) - $start);
-        $this->comment("Exported Table: $tableName ($rowCount rows, $elapsed)");
+        $this->comment("$tableName exported ($rowCount rows, $elapsed)");
+    }
+
+    /**
+     * @param string $tableName
+     * @param Builder $exp
+     * @param array $structure
+     * @param array $map
+     * @param array $filters
+     */
+    public function import(string $tableName, Builder $exp, array $structure, array $map = [], array $filters = [])
+    {
+        // Start timer.
+        $start = microtime(true);
+
+        // Set storage prefix.
+        $this->storage->setPrefix($this->tarPrefix);
+
+        // Prepare the storage medium for the incoming structure.
+        $this->storage->prepare($tableName, $structure);
+            // @todo Allow a different storage option for import step.
+
+        // Store the data.
+        $rowCount = $this->storage->store($tableName, $map, $structure, $exp, $filters, $this);
+
+        // Stop timer.
+        $elapsed = formatElapsed(microtime(true) - $start);
+        $this->comment("$tableName imported ($rowCount rows, $elapsed)");
     }
 
     /**
@@ -317,6 +374,7 @@ class ExportModel
      *
      * @param  $columns
      * @return array
+     * @deprecated
      */
     public function fixPermissionColumns($columns)
     {
@@ -337,6 +395,7 @@ class ExportModel
      * @param string $sql
      * @param bool $indexColumn
      * @return array
+     * @deprecated
      */
     public function get($sql, $indexColumn = false)
     {
@@ -414,6 +473,7 @@ class ExportModel
      * Send multiple SQL queries.
      *
      * @param string|array $sqlList An array of single query strings or a string of queries terminated with semi-colons.
+     * @deprecated
      */
     public function queryN($sqlList)
     {
@@ -548,7 +608,7 @@ class ExportModel
      */
     private function executeQuery(string $sql)
     {
-        $sql = str_replace(':_', $this->prefix, $sql); // replace prefix.
+        $sql = str_replace(':_', $this->srcPrefix, $sql); // replace prefix.
         $sql = rtrim($sql, ';') . ';'; // guarantee semicolon.
 
         $dbResource = $this->database->getInstance();
@@ -560,6 +620,7 @@ class ExportModel
      *
      * @param string $string
      * @return string escaped string
+     * @deprecated
      */
     public function escape(string $string): string
     {
