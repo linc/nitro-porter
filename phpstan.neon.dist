@@ -1,7 +1,7 @@
 parameters:
     level: 1
-	paths:
-		- src
-		- tests
+    paths:
+        - src
+        - tests
     bootstrapFiles:
         - bootstrap.php
