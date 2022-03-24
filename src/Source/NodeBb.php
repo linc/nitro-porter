@@ -62,7 +62,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @return string
      */
     public function nameToSlug($name)
@@ -71,7 +71,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $mixed
+     * @param mixed $mixed
      * @return string
      */
     public function url($mixed)
@@ -100,7 +100,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $time
+     * @param string $time
      * @return false|string|null
      */
     public function tsToDate($time)
@@ -113,7 +113,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $slug
+     * @param string $slug
      * @return array|string|string[]|null
      */
     public function removeNumId($slug)
@@ -123,7 +123,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return mixed
      */
     public function roleNameFromKey($key)
@@ -135,7 +135,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return mixed
      */
     public function idFromKey($key)
@@ -147,7 +147,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $value
+     * @param mixed $value
      * @return int
      */
     public function makeNullZero($value)
@@ -160,7 +160,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $value
+     * @param mixed $value
      * @return string|null
      */
     public function isPoll($value)
@@ -173,7 +173,7 @@ class NodeBb extends Source
     }
 
     /**
-     * @param $reactions
+     * @param mixed $reactions
      * @return string|null
      */
     public function serializeReactions($reactions)
