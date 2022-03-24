@@ -267,9 +267,9 @@ class VBulletin extends Source
         $this->comments($ex, $minDiscussionID, $forumWhere);
 
         // UserDiscussion
-        if ($minDiscussionID) {
-            $minDiscussionWhere = "where st.threadid > $minDiscussionID";
-        }
+        //if ($minDiscussionID) {
+        //    $minDiscussionWhere = "where st.threadid > $minDiscussionID";
+        //}
 
         if ($ex->exists('threadread', array('readtime')) === true) {
             $threadReadTime = 'from_unixtime(tr.readtime)';
@@ -334,6 +334,7 @@ class VBulletin extends Source
     {
         if ($attachments) {
             $identity = 'f.attachmentid';
+            $extension = '';
 
             if ($ex->exists('attachment', array('contenttypeid', 'contentid')) === true) {
                 $extension = self::fileExtension('a.filename');
@@ -436,6 +437,7 @@ class VBulletin extends Source
                 }
             }
 
+            $picPath = '';
             if ($thumbnail) {
                 $picPath = str_replace('/avat', '/pavat', $path);
                 $fp = fopen($picPath, 'wb');
@@ -739,11 +741,15 @@ class VBulletin extends Source
         );
     }
 
+    /**
+     * @param ExportModel $ex
+     * @return array
+     */
     public function ranks(ExportModel $ex): array
     {
         $rank = $ex->query("select count(*) from :_ranks");
 
-        if ($rank->nextResultRow() > 0) {
+        if ($rank->nextResultRow()) {
             $ranks = $ex->get(
                 "select rankid as RankID, minposts
                    from :_ranks
@@ -855,9 +861,10 @@ class VBulletin extends Source
     /**
      * Don't allow image dimensions to creep in for non-images.
      *
-     * @param $value
-     * @param $field
-     * @param $row
+     * @param mixed $value
+     * @param string $field
+     * @param array $row
+     * @return mixed
      */
     public function buildMediaDimension($value, $field, $row)
     {
@@ -934,9 +941,9 @@ class VBulletin extends Source
     /**
      * Determine if this usergroup could likely sign in to forum based on its name.
      *
-     * @param  $value
-     * @param  $field
-     * @param  $row
+     * @param mixed $value
+     * @param string $field
+     * @param array $row
      * @return bool
      */
     public function signInPermission($value, $field, $row)
@@ -954,14 +961,14 @@ class VBulletin extends Source
     /**
      * Retrieve a value from the vBulletin setting table.
      *
-     * @param $ex
-     * @param  string $name Variable for which we want the value.
+     * @param ExportModel $ex
+     * @param string $name Variable for which we want the value.
      * @return mixed Value or FALSE if not found.
      */
     public function getConfig($ex, $name)
     {
         $sql = "select * from :_setting where varname = '$name'";
-        $result = $ex->query($sql, true);
+        $result = $ex->query($sql);
         if ($row = $result->nextResultRow()) {
             return $row['value'];
         }
@@ -970,10 +977,10 @@ class VBulletin extends Source
     }
 
     /**
-     * @param  $value
-     * @param  $field
-     * @param  $row
-     * @return bool
+     * @param mixed $value
+     * @param string $field
+     * @param array $row
+     * @return bool|int
      */
     public function filterPermissions($value, $field, $row)
     {
@@ -990,8 +997,8 @@ class VBulletin extends Source
     }
 
     /**
-     * @param $columnGroups
-     * @param $map
+     * @param array $columnGroups
+     * @param array $map
      */
     public function addPermissionColumns($columnGroups, &$map)
     {
@@ -1015,7 +1022,7 @@ class VBulletin extends Source
     }
 
     /**
-     * @param $value
+     * @param mixed $value
      * @return mixed
      */
     public function htmlDecode($value)
@@ -1025,7 +1032,6 @@ class VBulletin extends Source
 
     /**
      * @param ExportModel $ex
-     * @return void
      */
     protected function tags(ExportModel $ex): void
     {
@@ -1234,7 +1240,7 @@ class VBulletin extends Source
         $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         // Put stupid CSV column into tmp table
         $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user");
-        if (is_resource($secondaryRoles)) {
+        if (is_object($secondaryRoles)) {
             while ($row = $secondaryRoles->nextResultRow()) {
                 if ($row['membergroupids'] != '') {
                     $groups = explode(',', $row['membergroupids']);
@@ -1256,8 +1262,9 @@ class VBulletin extends Source
     }
 
     /**
+     * @param ExportModel $ex
      * @param array $ranks
-     * @param $cdn
+     * @param string $cdn
      */
     protected function users(ExportModel $ex, array $ranks, $cdn): void
     {
@@ -1326,8 +1333,9 @@ class VBulletin extends Source
     }
 
     /**
+     * @param ExportModel $ex
      * @param string $forumWhere
-     * @param $minDate
+     * @param string $minDate
      */
     protected function userMeta(ExportModel $ex, string $forumWhere, $minDate): void
     {
@@ -1388,7 +1396,7 @@ class VBulletin extends Source
                     and varname like 'field%_title'"
             );
 
-            if (is_resource($profileFields)) {
+            if (is_object($profileFields)) {
                 $profileQueries = array();
                 while ($field = $profileFields->nextResultRow()) {
                     $column = str_replace('_title', '', $field['varname']);
@@ -1428,33 +1436,12 @@ class VBulletin extends Source
                 select * from VbulletinUserMeta"
         );
         $this->categories($ex, $forumWhere);
-
-        if ($minDate) {
-            $minDiscussionID = $ex->getValue(
-                "select max(threadid)
-                    from :_thread
-                    where dateline < $minDate",
-                false
-            );
-
-            $minDiscussionID2 = $ex->getValue(
-                "select min(threadid)
-                    from :_thread
-                    where dateline >= $minDate",
-                false
-            );
-
-            // The two discussion IDs should be the same, but let's average them.
-            $minDiscussionID = floor(($minDiscussionID + $minDiscussionID2) / 2);
-
-            $ex->comment('Min topic id: ' . $minDiscussionID);
-        }
     }
 
     /**
-     * @param $minDiscussionID
+     * @param ExportModel $ex
+     * @param int $minDiscussionID
      * @param string $forumWhere
-     * @return string
      */
     protected function comments(ExportModel $ex, $minDiscussionID, string $forumWhere): void
     {
@@ -1494,7 +1481,8 @@ class VBulletin extends Source
     }
 
     /**
-     * @param $minDiscussionID
+     * @param ExportModel $ex
+     * @param int $minDiscussionID
      */
     protected function wallPosts(ExportModel $ex, $minDiscussionID): void
     {
@@ -1534,7 +1522,7 @@ class VBulletin extends Source
 
     /**
      * @param ExportModel $ex
-     * @param $minDiscussionID
+     * @param int $minDiscussionID
      * @param string $forumWhere
      */
     protected function discussions(ExportModel $ex, $minDiscussionID, string $forumWhere): void
@@ -1584,7 +1572,7 @@ class VBulletin extends Source
     }
 
     /**
-     * @return array
+     * @param ExportModel $ex
      */
     protected function permissions(ExportModel $ex): void
     {
