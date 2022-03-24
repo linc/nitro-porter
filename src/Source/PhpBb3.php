@@ -185,12 +185,12 @@ class PhpBb3 extends Source
     }
 
     /**
-     * @param $r
-     * @param $field
-     * @param $row
+     * @param mixed $r
+     * @param string $field
+     * @param array $row
      * @return array|string|string[]|null
      */
-    public function removeBBCodeUIDs($r, $field = '', $row = '')
+    public function removeBBCodeUIDs($r, $field, $row)
     {
         if (!$r) {
             return $r;

@@ -254,7 +254,6 @@ class WebWiz extends Source
                 from forum_member_groups g",
             $Permission_Map
         );
-        return $Info;
     }
 
     /**

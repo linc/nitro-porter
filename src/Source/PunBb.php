@@ -48,9 +48,9 @@ class PunBb extends Source
     ];
 
     /**
-     * @var bool Path to avatar images
+     * @var string Path to avatar images
      */
-    protected $avatarPath = false;
+    protected $avatarPath = '';
 
     /**
      * @var string CDN path prefix
@@ -95,9 +95,9 @@ class PunBb extends Source
     /**
      * Take the user ID, avatar type value and generate a path to the avatar file.
      *
-     * @param $value Row field value.
-     * @param $field Name of the current field.
-     * @param $row   All of the current row values.
+     * @param mixed $value Row field value.
+     * @param string $field Name of the current field.
+     * @param array $row All of the current row values.
      *
      * @return null|string
      */

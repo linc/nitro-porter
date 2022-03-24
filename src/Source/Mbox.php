@@ -163,7 +163,7 @@ class Mbox extends Source
 // Temporary user table
         $ex->query('create table :_mbox_user
             (UserID int AUTO_INCREMENT, Name varchar(255), Email varchar(255), PRIMARY KEY (UserID))');
-        $result = $ex->query('select Sender from :_mbox group by Sender', true);
+        $result = $ex->query('select Sender from :_mbox group by Sender');
 
         // Users, pt 1: Build ref array; Parse name & email out - strip quotes, <, >
         $users = array();
@@ -209,7 +209,7 @@ class Mbox extends Source
             'create table :_mbox_category (CategoryID int AUTO_INCREMENT, Name varchar(255),
             PRIMARY KEY (CategoryID))'
         );
-        $result = $ex->query('select Folder from :_mbox group by Folder', true);
+        $result = $ex->query('select Folder from :_mbox group by Folder');
         // Parse name out & build ref array
         $categories = array();
         while ($row = $result->nextResultRow()) {
@@ -232,7 +232,7 @@ class Mbox extends Source
             IsDiscussion tinyint default 0, InsertUserID int, Name varchar(255), Body text, DateInserted datetime,
             CategoryID int, PRIMARY KEY (PostID))'
         );
-        $result = $ex->query('select * from :_mbox', true);
+        $result = $ex->query('select * from :_mbox');
         // Parse name, body, date, userid, categoryid
         while ($row = $result->nextResultRow()) {
             // Assemble posts into a format we can actually export.

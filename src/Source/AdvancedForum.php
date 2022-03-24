@@ -56,9 +56,9 @@ class AdvancedForum extends Source
     /**
      * Translate from known Drupal format slugs to those compatible with Vanilla
      *
-     * @param  $value Value of the current row
-     * @param  $field Name associated with the current field value
-     * @param  $row   Full data row columns
+     * @param mixed $value Value of the current row
+     * @param string $field Name associated with the current field value
+     * @param array $row Full data row columns
      * @return string Translated format slug
      */
     public static function translateFormatType($value, $field, $row)
@@ -74,7 +74,7 @@ class AdvancedForum extends Source
 
     /**
      * @param ExportModel $ex
-     * @param $filePath
+     * @param string $filePath
      */
     protected function users(ExportModel $ex, $filePath): void
     {

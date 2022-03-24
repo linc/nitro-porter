@@ -44,9 +44,9 @@ class Q2a extends Source
     /**
      * Main export process.
      *
-     * @param $ex
+     * @param ExportModel $ex
      */
-    public function run($ex)
+    public function run(ExportModel $ex)
     {
         $this->users($ex);
         $this->roles($ex);
@@ -56,7 +56,6 @@ class Q2a extends Source
 
     /**
      * @param ExportModel $ex
-     * @param array $user_Map
      */
     protected function users(ExportModel $ex): void
     {
@@ -77,7 +76,7 @@ class Q2a extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function roles(ExportModel $ex): void
     {

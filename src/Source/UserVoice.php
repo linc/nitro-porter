@@ -92,15 +92,13 @@ class UserVoice extends Source
             file_put_contents($photoPath, hex2bin($row['Content']));
             $ex->status('.');
 
-            if ($thumbnail) {
-                if ($thumbnail === true) {
-                    $thumbnail = 50;
-                }
-
-                //$PicPath = str_replace('/avat', '/pavat', $photoPath);
-                $thumbPath = str_replace('/pavat', '/navat', $photoPath);
-                generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
+            if ($thumbnail === true) {
+                $thumbnail = 50;
             }
+
+            //$PicPath = str_replace('/avat', '/pavat', $photoPath);
+            $thumbPath = str_replace('/pavat', '/navat', $photoPath);
+            generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
             $count++;
         }
         $ex->status("$count Hex Encoded.\n");

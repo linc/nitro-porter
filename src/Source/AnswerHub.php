@@ -63,9 +63,9 @@ class AnswerHub extends Source
     /**
      * Generate an email for users who do not have one.
      *
-     * @param  $value Value of the current row
-     * @param  $field Name associated with the current field value
-     * @param  $row   Full data row columns
+     * @param mixed $value Value of the current row
+     * @param string $field Name associated with the current field value
+     * @param array $row Full data row columns
      * @return string Email
      */
     public function generateEmail($value, $field, $row)

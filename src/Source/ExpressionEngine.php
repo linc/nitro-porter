@@ -292,7 +292,6 @@ class ExpressionEngine extends Source
 
     /**
      * @param ExportModel $ex
-     * @return array|mixed
      */
     protected function permissions(ExportModel $ex)
     {
@@ -331,7 +330,6 @@ class ExpressionEngine extends Source
                  FROM forum_member_groups g",
             $permission_Map
         );
-        return $info;
     }
 
     /**

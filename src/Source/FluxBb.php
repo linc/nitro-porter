@@ -92,10 +92,9 @@ class FluxBb extends Source
     /**
      * Take the user ID, avatar type value and generate a path to the avatar file.
      *
-     * @param $value Row field value.
-     * @param $field Name of the current field.
-     * @param $row   All of the current row values.
-     *
+     * @param mixed $value Row field value.
+     * @param string $field Name of the current field.
+     * @param array $row All of the current row values.
      * @return null|string
      */
     public function getAvatarByID($value, $field, $row)

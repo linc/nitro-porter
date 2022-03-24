@@ -69,9 +69,9 @@ class FuseTalk extends Source
     /**
      * Fix smileys URL
      *
-     * @param  $value Value of the current row
-     * @param  $field Name associated with the current field value
-     * @param  $row   Full data row columns
+     * @param mixed $value Value of the current row
+     * @param string $field Name associated with the current field value
+     * @param array $row Full data row columns
      * @return string Body
      */
     public function fixSmileysURL($value, $field, $row)
@@ -181,7 +181,7 @@ class FuseTalk extends Source
     protected function roles(ExportModel $ex): void
     {
         $memberRoleID = 1;
-        $result = $ex->query("select max(igroupid) as maxRoleID from :_groups", true);
+        $result = $ex->query("select max(igroupid) as maxRoleID from :_groups");
         if ($row = $result->nextResultRow()) {
             $memberRoleID += $row['maxRoleID'];
         }

@@ -84,7 +84,6 @@ class Drupal7 extends Source
                     file_put_contents($this->param('attach-source', null) . '/' . $filename, $file);
                     return "\"$this->path/$filename\"";
                 }
-                return '';
             },
             $value
         );

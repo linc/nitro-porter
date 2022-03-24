@@ -233,10 +233,9 @@ class BbPress1 extends Source
                 $to = $ex->query(
                     "select object_id, meta_value
                         from :_meta
-                        where object_type = 'bbpm_thread' and meta_key = 'to'",
-                    true
+                        where object_type = 'bbpm_thread' and meta_key = 'to'"
                 );
-                if (is_resource($to)) {
+                if (is_object($to)) {
                     while ($row = $to->nextResultRow()) {
                         $thread = $row['object_id'];
                         $tos = explode(',', trim($row['meta_value'], ','));
@@ -246,7 +245,7 @@ class BbPress1 extends Source
                         }
                         $toIns = trim($toIns, ',');
 
-                        $ex->query("insert bbpmto (UserID, ConversationID) values $toIns", true);
+                        $ex->query("insert bbpmto (UserID, ConversationID) values $toIns");
                     }
 
                     $ex->export('UserConversation', 'select * from bbpmto');

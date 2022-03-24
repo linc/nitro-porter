@@ -55,7 +55,7 @@ class Kunena extends Source
      * @access public
      * @see    ExportModel::writeTableToFile
      *
-     * @param  string $ralue Current value
+     * @param  string $value Current value
      * @param  string $field Current field
      * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
