@@ -296,9 +296,12 @@ class VBulletin5 extends VBulletin
         $ex->query($sql);
     }
 
+    /**
+     * @param ExportModel $ex
+     */
     protected function pollsV5(ExportModel $ex)
     {
-        $fp = $ex->file;
+        //$fp = $ex->file;
 
         $poll_Map = array(
             'nodeid' => 'PollID',
@@ -352,7 +355,7 @@ class VBulletin5 extends VBulletin
         //$exportStructure = getExportStructure($pollOption_Map, $ex->mapStructure['PollOption'], $pollOption_Map);
         //$revMappings = flipMappings($pollOption_Map);
 
-        $ex->writeBeginTable($fp, 'PollOption', $exportStructure);
+        //$ex->writeBeginTable($fp, 'PollOption', $exportStructure);
 
         $result = $ex->query($sql);
         $currentPollID = null;
@@ -366,10 +369,10 @@ class VBulletin5 extends VBulletin
 
             $row['sort'] = ++$currentSortID;
 
-            $ex->writeRow($fp, $row, $exportStructure, $revMappings, $legacyFilter);
+            //$ex->writeRow($fp, $row, $exportStructure, $revMappings, $legacyFilter);
             $pollCount++;
         }
-        $ex->writeEndTable($fp);
+        //$ex->writeEndTable($fp);
         $ex->comment("Exported Table: PollOption (" . $pollCount . " rows)");
 
         $pollVote_Map = array(
@@ -391,8 +394,7 @@ class VBulletin5 extends VBulletin
     /**
      * @param ExportModel $ex
      * @param array $ranks
-     * @param $cdn
-     * @return void
+     * @param string $cdn
      */
     public function usersV5(ExportModel $ex, array $ranks, $cdn): void
     {
@@ -489,15 +491,14 @@ class VBulletin5 extends VBulletin
         // Put primary groups into tmp table
         $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         // Put stupid CSV column into tmp table
-        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user", true);
-        if (is_resource($secondaryRoles)) {
+        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user");
+        if (is_object($secondaryRoles)) {
             while (($row = $secondaryRoles->nextResultRow()) !== false) {
                 if ($row['membergroupids'] != '') {
                     $groups = explode(',', $row['membergroupids']);
                     foreach ($groups as $groupID) {
                         $ex->query(
-                            "insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})",
-                            true
+                            "insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})"
                         );
                     }
                 }
@@ -510,7 +511,6 @@ class VBulletin5 extends VBulletin
 
     /**
      * @param ExportModel $ex
-     * @return array
      */
     public function permissionsV5(ExportModel $ex): void
     {
@@ -645,8 +645,7 @@ class VBulletin5 extends VBulletin
 
     /**
      * @param ExportModel $ex
-     * @param $categoryIDs
-     * @return string|void
+     * @param mixed $categoryIDs
      */
     public function commentsV5(ExportModel $ex, $categoryIDs): void
     {
@@ -672,7 +671,7 @@ class VBulletin5 extends VBulletin
                     and ctPPP.class = 'Channel'/*Category*/
                 left join :_text t on t.nodeid = node.nodeid
             where node.showpublished = 1";
-        $result = $ex->query($innerCommentQuery . ' limit 1', true);
+        $result = $ex->query($innerCommentQuery . ' limit 1');
 
         $innerCommentSQLFix = null;
         if ($result->nextResultRow()) {
@@ -729,8 +728,7 @@ class VBulletin5 extends VBulletin
 
     /**
      * @param ExportModel $ex
-     * @param $categoryIDs
-     * @return void
+     * @param mixed $categoryIDs
      */
     public function attachmentsV5(ExportModel $ex, $categoryIDs)
     {
@@ -784,8 +782,7 @@ class VBulletin5 extends VBulletin
 
     /**
      * @param ExportModel $ex
-     * @param $privateMessagesID
-     * @return void
+     * @param mixed $privateMessagesID
      */
     public function conversationsV5(ExportModel $ex, $privateMessagesID): void
     {
