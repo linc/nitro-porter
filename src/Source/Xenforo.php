@@ -159,9 +159,9 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $folder
-     * @param $type
-     * @param $errors
+     * @param string $folder
+     * @param string $type
+     * @param array $errors
      * @return void
      */
     protected function avatarFolder($folder, $type, &$errors)
@@ -320,8 +320,8 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $r
-     * @param $perms
+     * @param mixed $r
+     * @param mixed $perms
      * @return string[]|void
      */
     protected function exportPermissionsMap($r, &$perms = null)
@@ -431,7 +431,7 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      * @param string $cdn
      */
     protected function users(ExportModel $ex, string $cdn): void
@@ -477,7 +477,7 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function roles(ExportModel $ex): void
     {
@@ -511,7 +511,7 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function categories(ExportModel $ex): void
     {
@@ -536,7 +536,7 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function discussions(ExportModel $ex): void
     {
@@ -570,7 +570,7 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function comments(ExportModel $ex): void
     {
@@ -633,7 +633,7 @@ class Xenforo extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function conversations(ExportModel $ex): void
     {
