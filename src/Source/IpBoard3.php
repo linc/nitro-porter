@@ -91,6 +91,7 @@ class IpBoard3 extends Source
                 break;
 
             case 'member_extra':
+            default:
                 $userList = $ex->query(
                     "select
                         id as member_id,
@@ -448,9 +449,9 @@ EOT;
     }
 
     /**
-     * @param $table
-     * @param $map
-     * @param $sql
+     * @param string $table
+     * @param array $map
+     * @param string $sql
      */
     public function clearFilters($table, &$map, &$sql)
     {
@@ -501,7 +502,7 @@ EOT;
      *
      * @see    ExportModel::writeTableToFile
      *
-     * @param  string $ralue Current value
+     * @param  string $value Current value
      * @param  string $field Current field
      * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
@@ -591,7 +592,7 @@ EOT;
                     on m.$memberID = p.pp_member_id
                 $from";
         }
-        $this->clearFilters('members', $user_Map, $sql, 'm');
+        $this->clearFilters('members', $user_Map, $sql);
         $ex->export('User', $sql, $user_Map);
     }
 
@@ -778,7 +779,7 @@ EOT;
         left join :_posts p
             on t.topic_firstpost = p.pid
         where t.tid between {from} and {to}";
-        $this->clearFilters('topics', $discussion_Map, $sql, 't');
+        $this->clearFilters('topics', $discussion_Map, $sql);
         $ex->export('Discussion', $sql, $discussion_Map);
     }
 
@@ -838,7 +839,7 @@ EOT;
                 on p.topic_id = t.tid
             where p.pid between {from} and {to}
                 and p.pid <> t.topic_firstpost";
-        $this->clearFilters('Comment', $comment_Map, $sql, 'p');
+        $this->clearFilters('Comment', $comment_Map, $sql);
         $ex->export('Comment', $sql, $comment_Map);
     }
 
