@@ -9,10 +9,10 @@
 /**
  * Don't allow zero-equivalent dates.
  *
- * @param  $value
+ * @param string $value
  * @return string
  */
-function forceDate($value)
+function forceDate(string $value): string
 {
     if (!$value || preg_match('`0000-00-00`', $value)) {
         return gmdate('Y-m-d H:i:s');
@@ -24,15 +24,14 @@ function forceDate($value)
 /**
  * Only allow IPv4 addresses to pass.
  *
- * @param  $ip
+ * @param string $ip
  * @return string|null Valid IPv4 address or nuthin'.
  */
-function forceIP4($ip)
+function forceIP4(string $ip): ?string
 {
+    $ip = null;
     if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m)) {
         $ip = $m[1];
-    } else {
-        $ip = null;
     }
 
     return $ip;
@@ -351,7 +350,7 @@ function HTMLDecoder($value)
 /**
  * Inverse int value.
  *
- * @param  $value
+ * @param mixed $value
  * @return int
  */
 function notFilter($value)
@@ -364,7 +363,7 @@ function notFilter($value)
  *
  * Do this in MySQL with FROM_UNIXTIME() instead whenever possible.
  *
- * @param  $value
+ * @param mixed $value
  * @return null|string
  */
 function timestampToDate($value)
@@ -379,7 +378,7 @@ function timestampToDate($value)
 /**
  * Wrapper for long2ip that nulls 'non-digit' values.
  *
- * @param  $value
+ * @param mixed $value
  * @return null|string
  */
 function long2ipf($value)
@@ -394,7 +393,7 @@ function long2ipf($value)
 /**
  * Convert 'y/n' to boolean.
  *
- * @param  $value
+ * @param mixed $value
  * @return int
  */
 function YNBool($value)
@@ -409,7 +408,7 @@ function YNBool($value)
 /**
  * Guess the Format of the Body.
  *
- * @param  $value
+ * @param mixed $value
  * @return string
  */
 function guessFormat($value)
@@ -426,7 +425,7 @@ function guessFormat($value)
 /**
  * Derive mimetype from file extension.
  *
- * @param  string $value
+ * @param string $value
  * @return string
  */
 function mimeTypeFromExtension($value)
@@ -464,22 +463,20 @@ function mimeTypeFromExtension($value)
 /**
  * Change square brackets to braces.
  *
- * @param  $value
+ * @param mixed $value
  * @return mixed
  */
 function cleanBodyBrackets($value)
 {
     if (strpos($value, '[') !== false) {
         $result = str_replace(array('<', '>'), array('[', ']'), $value);
-
         return $result;
     }
-
     return $value;
 }
 
 /**
- * @param $text
+ * @param string $text
  * @return string
  */
 function bbPressTrim($text)
@@ -488,8 +485,8 @@ function bbPressTrim($text)
 }
 
 /**
- * @param $text
- * @return array|string|string[]
+ * @param string $text
+ * @return string
  */
 function bb_Code_Trick_Reverse($text)
 {
@@ -504,7 +501,7 @@ function bb_Code_Trick_Reverse($text)
 }
 
 /**
- * @param $matches
+ * @param array $matches
  * @return string
  */
 function bb_Decodeit($matches)

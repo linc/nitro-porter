@@ -124,7 +124,7 @@ class ExportModel
         if (!empty($tables)) {
             $tables = explode(',', $tables);
 
-            if (is_array($tables) && !empty($tables)) {
+            if (is_array($tables)) {
                 $tables = array_map('trim', $tables);
                 $tables = array_map('strtolower', $tables);
 
@@ -372,11 +372,11 @@ class ExportModel
     /**
      * Applying filter to permission column.
      *
-     * @param  $columns
+     * @param array $columns
      * @return array
      * @deprecated
      */
-    public function fixPermissionColumns($columns)
+    public function fixPermissionColumns(array $columns)
     {
         $result = array();
         foreach ($columns as $index => $value) {
@@ -421,36 +421,33 @@ class ExportModel
     public function setCharacterSet(string $table)
     {
         $characterSet = 'utf8'; // Default.
-        $update = true;
 
         // First get the collation for the database.
         $data = $this->query("show table status like ':_{$table}';");
         if (!$data) {
-            $update = false;
+            return;
         }
         if ($statusRow = $data->nextResultRow()) {
             $collation = $statusRow['Collation'];
         } else {
-            $update = false;
+            return;
         }
         unset($data);
 
         // Grab the character set from the database.
         $data = $this->query("show collation like '$collation'");
         if (!$data) {
-            $update = false;
+            return;
         }
         if ($collationRow = $data->nextResultRow()) {
             $characterSet = $collationRow['Charset'];
             if (!defined('PORTER_CHARACTER_SET')) {
                 define('PORTER_CHARACTER_SET', $characterSet);
             }
-            $update = false;
+            return;
         }
 
-        if ($update) {
-            $this->characterSet = $characterSet;
-        }
+        $this->characterSet = $characterSet;
     }
 
     /**
@@ -514,10 +511,6 @@ class ExportModel
                 if ($desc === false) {
                     $_exists[$table] = false;
                 } else {
-                    if (is_string($desc)) {
-                        die($desc);
-                    }
-
                     $cols = array();
                     while (($TD = $desc->nextResultRow()) !== false) {
                         $cols[$TD['Field']] = $TD;

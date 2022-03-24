@@ -13,9 +13,9 @@ class Render
     /**
      * Output help to the CLI.
      *
-     * @param array $options Multi-dimensional array of CLI options.
+     * @param Request $request
      */
-    public static function cliHelp(\Porter\Request $request)
+    public static function cliHelp(Request $request)
     {
         $options = $request->getAllOptions(true);
 
@@ -102,16 +102,12 @@ class Render
     /**
      * Form: Database connection info.
      */
-    public static function viewForm(\Porter\Request $request)
+    public static function viewForm(Request $request)
     {
         $sources = \Porter\Support::getInstance()->getSources();
         $targets = \Porter\Support::getInstance()->getTargets();
         $msg = getValue('Msg', $request->getAll(), '');
         $canWrite = testWrite();
-
-        if ($canWrite === null) {
-            $canWrite = testWrite();
-        }
         if (!$canWrite) {
             $msg = 'The porter does not have write permission to write to this folder. '
             . 'You need to give the porter permission to create files so that it can generate the export file.' . $msg;
@@ -312,10 +308,9 @@ class Render
     /**
      * Output a definition list of features for a single platform.
      *
-     * @param string $platform
-     * @param array  $features
+     * @param Request $request
      */
-    public static function viewFeatureList($request)
+    public static function viewFeatureList(Request $request)
     {
         $platform = $request->get('list');
         $supported = \Porter\Support::getInstance()->getSources();
@@ -339,8 +334,6 @@ class Render
 
     /**
      * Output a table of features per all platforms.
-     *
-     * @param array $features
      */
     public static function viewFeatureTable()
     {
@@ -385,7 +378,7 @@ class Render
     /**
      * Insert spaces into a CamelCaseName => Camel Case Name.
      *
-     * @param  $feature
+     * @param string $feature
      * @return string
      */
     public static function featureName($feature)

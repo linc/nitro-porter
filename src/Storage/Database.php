@@ -178,13 +178,13 @@ class Database implements StorageInterface
     }
 
     /**
-     * @param $type
-     * @return array
+     * @param string $type
+     * @return int
      */
     public function getVarcharLength($type): int
     {
         $matches = [];
         preg_match('/varchar\(([0-9]){1,3}\)/', $type, $matches);
-        return (int)$matches[1] ?? 100;
+        return (int)$matches[1] ?: 100;
     }
 }

@@ -92,8 +92,9 @@ function targetFactory(string $target): Target
 
 /**
  * @param Request $request
- * @param Connection $connection
+ * @param Connection $sourceConnect
  * @param StorageInterface $storage
+ * @param Connection $targetConnect
  * @return ExportModel
  */
 function exportModelFactory(
@@ -260,6 +261,8 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
         $heightSource = $newHeightSource;
     }
 
+    $targetImage = false;
+    $sourceImage = false;
     try {
         switch ($type) {
             case 1:
@@ -290,7 +293,9 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
             $widthSource,
             $heightSource
         );
-        imagedestroy($sourceImage);
+        if ($sourceImage) {
+            imagedestroy($sourceImage);
+        }
 
         switch ($type) {
             case 1:
@@ -303,7 +308,9 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
                 imagepng($targetImage, $thumbPath);
                 break;
         }
-        imagedestroy($targetImage);
+        if ($targetImage) {
+            imagedestroy($targetImage);
+        }
     } catch (\Exception $e) {
         echo "Could not generate a thumnail for " . $targetImage;
     }

@@ -207,7 +207,7 @@ class File implements StorageInterface
     }
 
     /**
-     * @param $value
+     * @param mixed $value
      * @return string
      */
     public function escapedValue($value): string
