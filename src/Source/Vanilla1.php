@@ -86,7 +86,7 @@ class Vanilla1 extends Source
     }
 
     /**
-     * @param $absPath
+     * @param string $absPath
      * @return false|string
      */
     public function stripMediaPath($absPath)
@@ -99,9 +99,9 @@ class Vanilla1 extends Source
     }
 
     /**
-     * @param $permissions
-     * @param $columnName
-     * @param $row
+     * @param mixed $permissions
+     * @param string $columnName
+     * @param array $row
      * @return false|mixed
      */
     public function filterPermissions($permissions, $columnName, &$row)
@@ -116,8 +116,6 @@ class Vanilla1 extends Source
 
         if (is_array($permissions2)) {
             $row = array_merge($row, $permissions2);
-            $this->exportModel->currentRow = $row;
-
             return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
         }
 
@@ -125,7 +123,7 @@ class Vanilla1 extends Source
     }
 
     /**
-     * @param $value
+     * @param mixed $value
      * @return bool
      */
     public function forceBool($value)
@@ -162,7 +160,7 @@ class Vanilla1 extends Source
         // Since the zero role is a valid role in Vanilla 1 then we'll have to reassign it.
         $r = $ex->query('select max(RoleID) as RoleID from :_Role');
         $zeroRoleID = 0;
-        if (is_resource($r)) {
+        if (is_object($r)) {
             while ($row = $r->nextResultRow()) {
                 $zeroRoleID = $row['RoleID'];
             }
