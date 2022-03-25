@@ -184,7 +184,7 @@ class Database implements StorageInterface
     public function getVarcharLength($type): int
     {
         $matches = [];
-        preg_match('/varchar\(([0-9]){1,3}\)/', $type, $matches);
+        preg_match('/varchar\(([0-9]{1,3})\)/', $type, $matches);
         return (int)$matches[1] ?: 100;
     }
 }
