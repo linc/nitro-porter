@@ -235,7 +235,7 @@ return array(
         'UpdateUserID' => 'int',
         'FirstCommentID' => 'int',
         'LastCommentID' => 'int',
-        'Name' => 'varchar(100)',
+        'Name' => 'varchar(200)',
         'Body' => 'longText',
         'Format' => 'varchar(20)',
         'Tags' => 'text',

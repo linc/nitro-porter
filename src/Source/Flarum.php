@@ -159,7 +159,7 @@ class Flarum extends Source
             'discussion_id' => 'DiscussionID',
             'user_id' => 'InsertUserID',
             'created_at' => 'DateInserted',
-            'edited_at' => 'LastUpdated',
+            'edited_at' => 'DateUpdated',
             'edited_user_id' => 'UpdateUserID',
         ];
         $ex->export(

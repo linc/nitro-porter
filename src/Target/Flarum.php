@@ -143,8 +143,8 @@ class Flarum extends Target
         $structure = [
             'id' => 'int',
             'user_id' => 'int',
-            'title' => 'varchar(100)',
-            'content' => 'longText',
+            'title' => 'varchar(200)',
+            //'content' => 'longText',
             'tag_id' => 'int',
             'view_count' => 'int', // flarumite/simple-discussion-views
         ];
@@ -152,7 +152,6 @@ class Flarum extends Target
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
             'Name' => 'title',
-            'Body' => 'content',
             'CountViews' => 'view_count',
         );
         $ex->import(
@@ -176,19 +175,51 @@ class Flarum extends Target
             'edited_at' => 'datetime',
             'edited_user_id' => 'int',
             'type' => 'varchar(100)',
+            'content' => 'longText',
         ];
         $map = [
             'CommentID' => 'id',
             'DiscussionID' => 'discussion_id',
             'InsertUserID' => 'user_id',
             'DateInserted' => 'created_at',
-            'LastUpdated' => 'edited_at',
+            'DateUpdated' => 'edited_at',
             'UpdateUserID' => 'edited_user_id',
+            'Body' => 'content'
         ];
+
+        // Get highest CommentID.
+        $result = $ex->dbImport()
+            ->table('PORT_Comment')
+            ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
+            ->first();
+
+        // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
+        $discussions = $ex->dbImport()->table('PORT_Discussion')
+            ->select(
+                $ex->dbImport()->raw('(DiscussionID + ' . $result->LastCommentID . ') as CommentID'),
+                'DiscussionID',
+                'InsertUserID',
+                'DateInserted',
+                'DateUpdated',
+                'UpdateUserID',
+                'Body',
+                $ex->dbImport()->raw('"comment" as type')
+            );
+
+        // Union discussion body with all comments to get posts.
         $ex->import(
             'posts',
             $ex->dbImport()->table('PORT_Comment')
-                ->select('*', $ex->dbImport()->raw('"comment" as type')),
+                ->select(
+                    'CommentID',
+                    'DiscussionID',
+                    'InsertUserID',
+                    'DateInserted',
+                    'DateUpdated',
+                    'UpdateUserID',
+                    'Body',
+                    $ex->dbImport()->raw('"comment" as type')
+                )->union($discussions),
             $structure,
             $map
         );
