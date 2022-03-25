@@ -12,7 +12,7 @@
     <!-- Run Composer, removing dev requirements. -->
     <target name="compose">
         <echo msg="Rebuilding Composer without dev files..." />
-        <composer composer="/usr/local/bin/composer" command="install">
+        <composer composer="/opt/homebrew/bin/composer" command="install">
             <arg value="--working-dir=${repo_root}" />
             <arg value="--no-dev" />
             <arg value="--optimize-autoloader" />
@@ -32,7 +32,7 @@
     <!-- Restore require-dev for localhost -->
     <target name="cleanup">
         <echo msg="Restoring Composer (with developer files)..." />
-        <composer composer="/usr/local/bin/composer" command="install">
+        <composer composer="/opt/homebrew/bin/composer" command="install">
             <arg value="--working-dir=${repo_root}"/>
             <arg value="--quiet" />
         </composer>
