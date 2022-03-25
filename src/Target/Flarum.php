@@ -146,12 +146,14 @@ class Flarum extends Target
             'title' => 'varchar(100)',
             'content' => 'longText',
             'tag_id' => 'int',
+            'view_count' => 'int', // flarumite/simple-discussion-views
         ];
         $map = array(
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
             'Name' => 'title',
             'Body' => 'content',
+            'CountViews' => 'view_count',
         );
         $ex->import(
             'discussions',
