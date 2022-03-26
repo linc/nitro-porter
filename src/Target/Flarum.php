@@ -63,12 +63,9 @@ class Flarum extends Target
             'CountDiscussions' => 'discussion_count',
             'CountComments' => 'comment_count',
         ];
-        $ex->import(
-            'users',
-            $ex->dbImport()->table('PORT_User')->select('*'),
-            $structure,
-            $map
-        );
+        $query = $ex->dbImport()->table('PORT_User')->select('*');
+
+        $ex->import('users', $query, $structure, $map);
     }
 
     /**
@@ -84,12 +81,9 @@ class Flarum extends Target
             'RoleID' => 'id',
             'Name' => 'name_singular',
         );
-        $ex->import(
-            'groups',
-            $ex->dbImport()->table('PORT_Role')->select('*'),
-            $structure,
-            $map
-        );
+        $query = $ex->dbImport()->table('PORT_Role')->select('*');
+
+        $ex->import('groups', $query, $structure, $map);
 
         // User Role.
         $structure = [
@@ -100,12 +94,9 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $ex->import(
-            'group_user',
-            $ex->dbImport()->table('PORT_UserRole')->select('*'),
-            $structure,
-            $map
-        );
+        $query = $ex->dbImport()->table('PORT_UserRole')->select('*');
+
+        $ex->import('group_user', $query, $structure, $map);
     }
 
     /**
@@ -131,12 +122,9 @@ class Flarum extends Target
             'Sort' => 'position',
             'CountDiscussions' => 'discussion_count',
         ];
-        $ex->import(
-            'tags',
-            $ex->dbImport()->table('PORT_Category')->select('*'),
-            $structure,
-            $map
-        );
+        $query = $ex->dbImport()->table('PORT_Category')->select('*');
+
+        $ex->import('tags', $query, $structure, $map);
     }
 
     /**
@@ -157,12 +145,9 @@ class Flarum extends Target
             'Name' => 'title',
             'CountViews' => 'view_count',
         );
-        $ex->import(
-            'discussions',
-            $ex->dbImport()->table('PORT_Discussion')->select('*'),
-            $structure,
-            $map
-        );
+        $query = $ex->dbImport()->table('PORT_Discussion')->select('*');
+
+        $ex->import('discussions', $query, $structure, $map);
     }
 
     /**
