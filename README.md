@@ -21,6 +21,8 @@ Nitro Porter can run via the web browser or the command line.
 
 ### CLI via Composer
 
+_Beware, this installs the latest development version of Nitro Porter!_
+
 1. [Get Composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos).
 2. Install Porter with: `composer global require "linc/nitro-porter"`.
 3. Go to the install folder: `cd ~/.composer/vendor/linc/nitro-porter`. 
