@@ -140,6 +140,8 @@ class Flarum extends Source
             'id' => 'DiscussionID',
             'user_id' => 'InsertUserID',
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'is_sticky' => 'Announce', // flarum/sticky — optional field
+            'is_locked' => 'Closed', // flarum/lock — optional field
         );
 
         $getBody = '';

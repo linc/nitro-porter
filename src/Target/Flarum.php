@@ -142,6 +142,8 @@ class Flarum extends Target
             'user_id' => 'int',
             'title' => 'varchar(200)',
             'tag_id' => 'int',
+            'is_sticky' => 'tinyint', // flarum/sticky
+            'is_locked' => 'tinyint', // flarum/lock
             'view_count' => 'int', // flarumite/simple-discussion-views
         ];
         $map = array(
@@ -149,6 +151,8 @@ class Flarum extends Target
             'InsertUserID' => 'user_id',
             'Name' => 'title',
             'CountViews' => 'view_count',
+            'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
+            'Closed' => 'is_locked',
         );
         $query = $ex->dbImport()->table('PORT_Discussion')->select('*');
 
