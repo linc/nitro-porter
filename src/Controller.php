@@ -58,7 +58,10 @@ class Controller
     {
         // If both the source and target don't store content/body on the discussion/thread record,
         // skip the conversion on both sides so we don't do joins and renumber keys for nothing.
-        if ($source->getDiscussionBodyMode() === false && $target->getDiscussionBodyMode() === false) {
+        if (
+            $source::getFlag('hasDiscussionBody') === false &&
+            $target::getFlag('hasDiscussionBody') === false
+        ) {
             $source->skipDiscussionBody();
             $target->skipDiscussionBody();
         }
