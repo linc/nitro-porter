@@ -59,7 +59,7 @@ class Flarum extends Source
         $this->categories($ex); // Tags
         $this->discussions($ex);
         if ($ex->exists('discussion_user', ['subscription'])) {
-            $this->bookmarks($ex);
+            $this->bookmarks($ex); // flarum/subscriptions
         }
         $this->comments($ex); // Posts
     }

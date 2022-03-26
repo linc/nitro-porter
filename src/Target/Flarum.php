@@ -42,7 +42,7 @@ class Flarum extends Target
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
         $this->discussions($ex);
-        $this->bookmarks($ex);
+        $this->bookmarks($ex); // flarum/subscriptions
         $this->comments($ex); // Posts
     }
 
