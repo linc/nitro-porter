@@ -15,7 +15,7 @@ use Porter\ExportModel;
 class Vanilla2 extends Source
 {
     public const SUPPORTED = [
-        'name' => 'Vanilla 2',
+        'name' => 'Vanilla 2+',
         'prefix' => 'GDN_',
         'charset_table' => 'Comment',
         'hashmethod' => 'Vanilla',
