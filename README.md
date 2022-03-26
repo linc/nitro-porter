@@ -1,7 +1,7 @@
 Nitro Porter
 ============
 
-The only multi-platform community migration tool.
+The only multi-platform community migration tool. Free your forum!
 
 ## Requirements
 
