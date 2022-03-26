@@ -13,6 +13,10 @@ abstract class Source
         'features' => [],
     ];
 
+    protected const FLAGS = [];
+
+    protected bool $useDiscussionBody = true;
+
     /**
      * @deprecated
      * @var ExportModel
@@ -36,6 +40,27 @@ abstract class Source
     public static function getSupport(): array
     {
         return static::SUPPORTED;
+    }
+
+    /**
+     * Retrieve characteristics of the package.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
+    public static function getFlag(string $name)
+    {
+        return (isset(static::FLAGS[$name])) ? static::FLAGS[$name] : null;
+    }
+
+    public function getDiscussionBodyMode(): bool
+    {
+        return $this->useDiscussionBody;
+    }
+
+    public function skipDiscussionBody()
+    {
+        $this->useDiscussionBody = false;
     }
 
     /**

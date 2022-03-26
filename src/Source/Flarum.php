@@ -30,6 +30,10 @@ class Flarum extends Source
         ]
     ];
 
+    protected const FLAGS = [
+        //'hasDiscussionBody' => false,
+    ];
+
     /**
      * @var array Required tables => columns
      */

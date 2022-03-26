@@ -49,6 +49,22 @@ class Controller
     }
 
     /**
+     * Do some intelligent configuration of the migration process.
+     *
+     * @param Source $source
+     * @param Target $target
+     */
+    public static function setModes(Source $source, Target $target)
+    {
+        // If both the source and target don't store content/body on the discussion/thread record,
+        // skip the conversion on both sides so we don't do joins and renumber keys for nothing.
+        if ($source->getDiscussionBodyMode() === false && $target->getDiscussionBodyMode() === false) {
+            $source->skipDiscussionBody();
+            $target->skipDiscussionBody();
+        }
+    }
+
+    /**
      * Called by router to set up and run main export process.
      */
     public static function run(Request $request)
@@ -71,6 +87,13 @@ class Controller
         // @todo Pass options not Request
         $exportModel = exportModelFactory($request, $sourceConnection, $storage, $targetConnection);
 
+        // Setup target & modes.
+        $target = false;
+        if ($request->get('output') !== 'file') {
+            $target = targetFactory($request->get('output'));
+            self::setModes($source, $target);
+        }
+
         // Start timer.
         $start = microtime(true);
         $exportModel->comment('START: ' . date('Y-m-d H:i:s'));
@@ -79,8 +102,7 @@ class Controller
         self::doExport($source, $exportModel);
 
         // Import.
-        if ($request->get('output') !== 'file') {
-            $target = targetFactory($request->get('output'));
+        if ($target) {
             if ($request->get('target')) {
                 $target->connection = $targetConnection; // @todo Allow separate connection for this.
             }

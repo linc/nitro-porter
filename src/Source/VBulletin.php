@@ -96,6 +96,10 @@ class VBulletin extends Source
         ]
     ];
 
+    protected const FLAGS = [
+        //'hasDiscussionBody' => false,
+    ];
+
     /* @var string SQL fragment to build new path to attachments. */
     public $attachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/',
         f.filehash, '_', a.attachmentid,'.', f.extension) as Path";

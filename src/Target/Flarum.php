@@ -23,6 +23,10 @@ class Flarum extends Target
         ]
     ];
 
+    protected const FLAGS = [
+        'hasDiscussionBody' => false,
+    ];
+
     /**
      * Main import process.
      */
@@ -144,7 +148,6 @@ class Flarum extends Target
             'id' => 'int',
             'user_id' => 'int',
             'title' => 'varchar(200)',
-            //'content' => 'longText',
             'tag_id' => 'int',
             'view_count' => 'int', // flarumite/simple-discussion-views
         ];
@@ -186,17 +189,9 @@ class Flarum extends Target
             'UpdateUserID' => 'edited_user_id',
             'Body' => 'content'
         ];
-
-        // Get highest CommentID.
-        $result = $ex->dbImport()
-            ->table('PORT_Comment')
-            ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
-            ->first();
-
-        // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
-        $discussions = $ex->dbImport()->table('PORT_Discussion')
+        $query = $ex->dbImport()->table('PORT_Comment')
             ->select(
-                $ex->dbImport()->raw('(DiscussionID + ' . $result->LastCommentID . ') as CommentID'),
+                'CommentID',
                 'DiscussionID',
                 'InsertUserID',
                 'DateInserted',
@@ -206,12 +201,18 @@ class Flarum extends Target
                 $ex->dbImport()->raw('"comment" as type')
             );
 
-        // Union discussion body with all comments to get posts.
-        $ex->import(
-            'posts',
-            $ex->dbImport()->table('PORT_Comment')
+        // Extract OP from the discussion.
+        if ($this->getDiscussionBodyMode()) {
+            // Get highest CommentID.
+            $result = $ex->dbImport()
+                ->table('PORT_Comment')
+                ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
+                ->first();
+
+            // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
+            $discussions = $ex->dbImport()->table('PORT_Discussion')
                 ->select(
-                    'CommentID',
+                    $ex->dbImport()->raw('(DiscussionID + ' . $result->LastCommentID . ') as CommentID'),
                     'DiscussionID',
                     'InsertUserID',
                     'DateInserted',
@@ -219,9 +220,12 @@ class Flarum extends Target
                     'UpdateUserID',
                     'Body',
                     $ex->dbImport()->raw('"comment" as type')
-                )->union($discussions),
-            $structure,
-            $map
-        );
+                );
+
+            // Combine discussions.body with the comments to get all posts.
+            $query->union($discussions);
+        }
+
+        $ex->import('posts', $query, $structure, $map);
     }
 }

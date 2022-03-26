@@ -11,6 +11,10 @@ abstract class Target
         'features' => [],
     ];
 
+    protected const FLAGS = [];
+
+    protected bool $useDiscussionBody = true;
+
     public Connection $connection;
 
     /**
@@ -19,6 +23,27 @@ abstract class Target
     public static function getSupport(): array
     {
         return static::SUPPORTED;
+    }
+
+    /**
+     * Retrieve characteristics of the package.
+     *
+     * @param string $name
+     * @return mixed|null
+     */
+    public static function getFlag(string $name)
+    {
+        return (isset(static::FLAGS[$name])) ? static::FLAGS[$name] : null;
+    }
+
+    public function getDiscussionBodyMode(): bool
+    {
+        return $this->useDiscussionBody;
+    }
+
+    public function skipDiscussionBody()
+    {
+        $this->useDiscussionBody = false;
     }
 
     abstract public function run(ExportModel $ex);
