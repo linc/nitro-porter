@@ -97,7 +97,7 @@ class VBulletin extends Source
     ];
 
     protected const FLAGS = [
-        //'hasDiscussionBody' => false,
+        'hasDiscussionBody' => false,
     ];
 
     /* @var string SQL fragment to build new path to attachments. */
@@ -1461,6 +1461,14 @@ class VBulletin extends Source
             $minDiscussionWhere = "and p.threadid > $minDiscussionID";
         }
 
+        $excludeFirstPost = '';
+        $joinThreads = '';
+        if ($this->getDiscussionBodyMode()) {
+            // Don't export the OP, it would be redundant.
+            $excludeFirstPost = 'p.postid <> t.firstpostid and';
+            $joinThreads = 'inner join :_thread as t on p.threadid = t.threadid';
+        }
+
         $ex->export(
             'Comment',
             "select
@@ -1473,10 +1481,9 @@ class VBulletin extends Source
                     p.userid as UpdateUserID,
                     from_unixtime(p.dateline) as DateInserted
                 from :_post as p
-                    inner join :_thread as t on p.threadid = t.threadid
+                    $joinThreads
                     left join :_deletionlog as d on (d.type='post' and d.primaryid=p.postid)
-                where p.postid <> t.firstpostid
-                    and d.primaryid is null
+                where $excludeFirstPost d.primaryid is null
                     and p.visible = 1
                     $minDiscussionWhere
                     $forumWhere",
