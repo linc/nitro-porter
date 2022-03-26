@@ -58,7 +58,9 @@ class Flarum extends Source
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
         $this->discussions($ex);
-        $this->bookmarks($ex);
+        if ($ex->exists('discussion_user', ['subscription'])) {
+            $this->bookmarks($ex);
+        }
         $this->comments($ex); // Posts
     }
 
@@ -174,7 +176,7 @@ class Flarum extends Source
             'user_id' => 'InsertUserID',
             'last_read_at' => 'DateLastViewed',
         ];
-        $query = "select *, if (subscription = 'follow', 1, 0) as Bookmarked";
+        $query = "select *, if (subscription = 'follow', 1, 0) as Bookmarked from :_discussion_user";
 
         $ex->export('UserDiscussion', $query, $map);
     }
