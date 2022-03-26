@@ -22,11 +22,12 @@ Nitro Porter can run via the web browser or the command line.
 ### CLI via Composer
 
 1. [Get Composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos).
-2. Install Porter with `composer global require "linc/nitro-porter"`.
-3. Go to `~/.composer/vendor/linc/nitro-porter`. 
-4. Copy `config-sample.php` as `config.php` and add connections for your source and output.
-5. Run `composer install`.
-6. View Porter's options with `porter --help`.
+2. Install Porter with: `composer global require "linc/nitro-porter"`.
+3. Go to the install folder: `cd ~/.composer/vendor/linc/nitro-porter`. 
+4. Copy the sample config: `cp config-sample.php config.php`.
+5. Add connections for your source and output to `config.php`.
+6. Run: `composer install`.
+7. View Porter's options with: `porter --help`.
 
 ## Contribute
 
