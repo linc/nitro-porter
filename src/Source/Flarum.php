@@ -2,7 +2,7 @@
 
 /**
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
- * @author YOUR NAME
+ * @author Lincoln Russell, lincolnwebs.com
  */
 
 namespace Porter\Source;
