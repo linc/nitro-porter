@@ -13,8 +13,19 @@ abstract class Source
         'features' => [],
     ];
 
+    /** @var array Settings that change Source behavior. */
     protected const FLAGS = [];
 
+    /**
+     * If this is 'false', skip extract first post content from `Discussions.Body`.
+     *
+     * Do not change this default in child Sources.
+     * Use `'hasDiscussionBody' => false` in FLAGS to declare your Source can skip this step.
+     *
+     * @var bool
+     * @see Source::getDiscussionBodyMode()
+     * @see Source::skipDiscussionBody()
+     */
     protected bool $useDiscussionBody = true;
 
     /**
@@ -53,11 +64,19 @@ abstract class Source
         return (isset(static::FLAGS[$name])) ? static::FLAGS[$name] : null;
     }
 
+    /**
+     * @return bool
+     */
     public function getDiscussionBodyMode(): bool
     {
         return $this->useDiscussionBody;
     }
 
+    /**
+     * Set `useDiscussionBody` to false.
+     *
+     * @return void
+     */
     public function skipDiscussionBody()
     {
         $this->useDiscussionBody = false;
