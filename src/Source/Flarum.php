@@ -27,6 +27,7 @@ class Flarum extends Source
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 0,
+            'Bookmarks' => 1,
         ]
     ];
 
@@ -57,6 +58,7 @@ class Flarum extends Source
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
         $this->discussions($ex);
+        $this->bookmarks($ex);
         $this->comments($ex); // Posts
     }
 
@@ -160,6 +162,21 @@ class Flarum extends Source
                  join :_discussion_tag dt on dt.discussion_id = d.id",
             $discussion_Map
         );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
+        $map = [
+            'discussion_id' => 'DiscussionID',
+            'user_id' => 'InsertUserID',
+            'last_read_at' => 'DateLastViewed',
+        ];
+        $query = "select *, if (subscription = 'follow', 1, 0) as Bookmarked";
+
+        $ex->export('UserDiscussion', $query, $map);
     }
 
     /**

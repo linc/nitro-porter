@@ -25,6 +25,7 @@ class Flarum extends Target
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 0,
+            'Bookmarks' => 1,
         ]
     ];
 
@@ -41,6 +42,7 @@ class Flarum extends Target
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
         $this->discussions($ex);
+        $this->bookmarks($ex);
         $this->comments($ex); // Posts
     }
 
@@ -82,10 +84,10 @@ class Flarum extends Target
             'id' => 'int',
             'name_singular' => 'varchar(100)',
         ];
-        $map = array(
+        $map = [
             'RoleID' => 'id',
             'Name' => 'name_singular',
-        );
+        ];
         $query = $ex->dbImport()->table('PORT_Role')->select('*');
 
         $ex->import('groups', $query, $structure, $map);
@@ -146,17 +148,39 @@ class Flarum extends Target
             'is_locked' => 'tinyint', // flarum/lock
             'view_count' => 'int', // flarumite/simple-discussion-views
         ];
-        $map = array(
+        $map = [
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
             'Name' => 'title',
             'CountViews' => 'view_count',
             'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
             'Closed' => 'is_locked',
-        );
+        ];
         $query = $ex->dbImport()->table('PORT_Discussion')->select('*');
 
         $ex->import('discussions', $query, $structure, $map);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function bookmarks(ExportModel $ex): void
+    {
+        $structure = [
+            'discussion_id' => 'int',
+            'user_id' => 'int',
+            'last_read_at' => 'datetime',
+            'subscription' => [null, 'follow', 'ignore'],
+        ];
+        $map = [
+            'DiscussionID' => 'discussion_id',
+            'InsertUserID' => 'user_id',
+            'DateLastViewed' => 'last_read_at',
+        ];
+        $query = $ex->dbImport()->table('PORT_UserDiscussion')
+            ->select('*', ($ex->dbImport()->raw("if (Bookmarked > 0, 'follow', null) as subscription")));
+
+        $ex->import('discussion_user', $query, $structure, $map);
     }
 
     /**
