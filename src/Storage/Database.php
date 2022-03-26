@@ -133,13 +133,13 @@ class Database implements StorageInterface
         return function (Blueprint $table) use ($tableInfo) {
             // One statement per column to be created.
             foreach ($tableInfo as $columnName => $type) {
-                if (strpos($type, 'varchar') === 0) {
+                if (is_array($type)) {
+                    // Handle enums first (blocking potential `strpos()` on an array).
+                    $table->enum($columnName, $type)->nullable(); // $type == $options.
+                } elseif (strpos($type, 'varchar') === 0) {
                     // Handle varchars.
                     $length = $this->getVarcharLength($type);
                     $table->string($columnName, $length)->nullable();
-                } elseif (is_array($type)) {
-                    // Handle enums.
-                    $table->enum($columnName, $type)->nullable(); // $type == $options.
                 } elseif (strpos($type, 'varbinary') === 0) {
                     // Handle varbinary as blobs.
                     $table->binary($columnName)->nullable();
