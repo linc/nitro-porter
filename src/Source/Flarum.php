@@ -31,7 +31,7 @@ class Flarum extends Source
     ];
 
     protected const FLAGS = [
-        //'hasDiscussionBody' => false,
+        'hasDiscussionBody' => false,
     ];
 
     /**
@@ -141,14 +141,21 @@ class Flarum extends Source
             'user_id' => 'InsertUserID',
             'title' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
+
+        $getBody = '';
+        $joinPosts = '';
+        if ($this->getDiscussionBodyMode()) {
+            // Put the OP in the body.
+            $getBody = 'p.content as Body,';
+            $joinPosts = 'join :_posts p on p.id = d.first_post_id';
+        }
+
         $ex->export(
             'Discussion',
-            "select *, p.content as Body, dt.tag_id as CategoryID
+            "select *, $getBody dt.tag_id as CategoryID
                  from :_discussions d
-                 join :_posts p
-                    on p.id = d.first_post_id
-                 join :_discussion_tag dt
-                    on dt.discussion_id = d.id",
+                 $joinPosts
+                 join :_discussion_tag dt on dt.discussion_id = d.id",
             $discussion_Map
         );
     }
@@ -166,12 +173,19 @@ class Flarum extends Source
             'edited_at' => 'DateUpdated',
             'edited_user_id' => 'UpdateUserID',
         ];
+
+        $skipOP = '';
+        if ($this->getDiscussionBodyMode()) {
+            // Skip the OP.
+            $skipOP = 'and `number` > 1';
+        }
+
         $ex->export(
             'Comment',
             "select *, 'Html' as Format
                 from :_posts
                 where type = 'comment'
-                    and `number` > 1",
+                    $skipOP",
             $comment_Map
         );
     }
