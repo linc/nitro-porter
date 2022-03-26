@@ -38,7 +38,7 @@ class ExportModel
     /**
      * @var string The charcter set to set as the connection anytime the database connects.
      */
-    public string $characterSet = 'utf8';
+    public string $characterSet = 'utf8mb4';
 
     /**
      * @var string DB prefix of source. Queries passed to export() will replace `:_` with this.
@@ -275,6 +275,9 @@ class ExportModel
         // Rename data keys for the target.
         $row = $this->mapData($row, $map);
 
+        // Fix encoding as needed.
+        $row = $this->fixEncoding($row);
+
         // Drop columns not in the structure.
         return array_intersect_key($row, $structure);
     }
@@ -345,6 +348,18 @@ class ExportModel
         }
 
         return [$dataMap, $filter];
+    }
+
+    /**
+     * @param array $row
+     * @return array
+     */
+    public function fixEncoding(array $row): array
+    {
+        return array_map(function ($value) {
+            $doEncode = function_exists('mb_detect_encoding') && (mb_detect_encoding($value) != 'UTF-8');
+            return ($doEncode) ? utf8_encode($value) : $value;
+        }, $row);
     }
 
     /**
@@ -420,7 +435,7 @@ class ExportModel
      */
     public function setCharacterSet(string $table)
     {
-        $characterSet = 'utf8'; // Default.
+        $characterSet = 'utf8mb4'; // Default.
 
         // First get the collation for the database.
         $data = $this->query("show table status like ':_{$table}';");

@@ -13,7 +13,7 @@ return [
             'name' => 'some_db_name',
             'user' => 'root',
             'pass' => 'password_here',
-            'charset' => 'utf8',
+            'charset' => 'utf8mb4',
         ],
         [
             'alias' => 'vanilla-csv',
@@ -49,7 +49,7 @@ return [
            'name' => 'testing_db',
            'user' => 'root',
            'pass' => 'password_here',
-           'charset' => 'utf8',
+           'charset' => 'utf8mb4',
         ],
     ],
 ];
