@@ -14,16 +14,19 @@ Some specific data transfers may have additional requirements.
 
 Nitro Porter can run via the web browser or the command line. 
 
-### Web browser
+### Web via Browser
 
-Drop the latest release in a web-enabled directory and navigate to the folder in your web browser.
+1. Drop the latest release in a web-enabled directory and navigate to the folder in your web browser.
+2. That's it!
 
-### CLI
+### CLI via Composer
 
 1. [Get Composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos).
-2. Install Porter with `composer global require "linc/nitro-porter:dev-main"`.
-3. Go to `~/.composer/vendor/linc/nitro-porter`. Copy `config-sample.php` as `config.php` and add connections for your source and output.
-4. View Porter's options with `porter --help`.
+2. Install Porter with `composer global require "linc/nitro-porter"`.
+3. Go to `~/.composer/vendor/linc/nitro-porter`. 
+4. Copy `config-sample.php` as `config.php` and add connections for your source and output.
+5. Run `composer install`.
+6. View Porter's options with `porter --help`.
 
 ## Contribute
 
