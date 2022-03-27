@@ -45,7 +45,7 @@ class Database implements StorageInterface
      * @param ResultSet|Builder $data
      * @param array $filters
      * @param ExportModel $exportModel
-     * @return int Count of how many records were stored.
+     * @return array Information about the results.
      */
     public function store(
         string $name,
@@ -54,16 +54,19 @@ class Database implements StorageInterface
         $data,
         array $filters,
         ExportModel $exportModel
-    ): int {
-        $rowCount = 0;
+    ): array {
+        $info = [
+            'rows' => 0,
+        ];
         $batchedValues = [];
+
         $this->connection->reset(); // DB driver can't reuse connections with unbuffered queries.
         $db = $this->connection->dbm->getConnection($this->connection->getAlias());
 
         if (is_a($data, '\Porter\Database\ResultSet')) {
             // Iterate on old ResultSet.
             while ($row = $data->nextResultRow()) {
-                $rowCount++;
+                $info['rows']++;
                 $row = $exportModel->normalizeRow($map, $structure, $row, $filters);
 
                 // Convert empty strings to null.
@@ -80,7 +83,7 @@ class Database implements StorageInterface
         } elseif (is_a($data, '\Illuminate\Database\Query\Builder')) {
             // Use the Builder to process results one at a time.
             foreach ($data->cursor() as $row) { // Using `chunk()` takes MUCH longer to process.
-                $rowCount++;
+                $info['rows']++;
                 $row = $exportModel->normalizeRow($map, $structure, (array)$row, $filters);
 
                 // Convert empty strings to null.
@@ -99,7 +102,7 @@ class Database implements StorageInterface
         // Insert remaining records.
         $db->table($this->prefix . $name)->insert($batchedValues);
 
-        return $rowCount;
+        return $info;
     }
 
     /**

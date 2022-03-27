@@ -174,7 +174,7 @@ class File implements StorageInterface
      * @param ResultSet|Builder $data
      * @param array $filters
      * @param ExportModel $exportModel
-     * @return int
+     * @return array Information about the results.
      */
     public function store(
         string $name,
@@ -183,16 +183,16 @@ class File implements StorageInterface
         $data,
         array $filters,
         ExportModel $exportModel
-    ): int {
-        $rowCount = 0;
+    ): array {
+        $info['rows'] = 0;
         while ($row = $data->nextResultRow()) {
-            $rowCount++;
+            $info['rows']++;
             $row = $exportModel->normalizeRow($map, $structure, $row, $filters);
             $this->writeRow($this->file, $row, $structure);
         }
         $this->writeEndTable($this->file);
 
-        return $rowCount;
+        return $info;
     }
 
     /**

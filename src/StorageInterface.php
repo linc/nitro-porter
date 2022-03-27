@@ -16,7 +16,7 @@ interface StorageInterface
      * @param ResultSet|Builder $data
      * @param array $filters
      * @param ExportModel $exportModel
-     * @return int Count of imported records.
+     * @return array Information about the results.
      */
     public function store(
         string $name,
@@ -25,7 +25,7 @@ interface StorageInterface
         $data,
         array $filters,
         ExportModel $exportModel
-    ): int;
+    ): array;
 
     /**
      * @param string $name
