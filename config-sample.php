@@ -14,6 +14,9 @@ return [
             'user' => 'root',
             'pass' => 'password_here',
             'charset' => 'utf8mb4',
+            'options' => [
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false, // Critical for large datasets.
+            ],
         ],
         [
             'alias' => 'vanilla-csv',
@@ -41,15 +44,18 @@ return [
             'path' => '',
         ],
         [
-           'alias' => 'test',
-           'type' => 'database',
-           'adapter' => 'mysql',
-           'host' => '127.0.0.1',
-           'port' => '3306',
-           'name' => 'testing_db',
-           'user' => 'root',
-           'pass' => 'password_here',
-           'charset' => 'utf8mb4',
+            'alias' => 'test',
+            'type' => 'database',
+            'adapter' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => '3306',
+            'name' => 'testing_db',
+            'user' => 'root',
+            'pass' => 'password_here',
+            'charset' => 'utf8mb4',
+            'options' => [
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false, // Critical for large datasets.
+            ],
         ],
     ],
 ];
