@@ -43,6 +43,17 @@ class Connection
         }
     }
 
+    public function reset()
+    {
+        // Reset Illuminate Database instance.
+        $info = $this->getInfo();
+        if ($info['type'] === 'database') {
+            $capsule = new Capsule();
+            $capsule->addConnection($this->translateConfig($info), $info['alias']);
+            $this->dbm = $capsule;
+        }
+    }
+
     public function setType(string $type)
     {
         if (in_array($type, self::ALLOWED_TYPES)) {
@@ -55,9 +66,9 @@ class Connection
         $this->info = $info;
     }
 
-    public function getInfo(string $name): array
+    public function getInfo(): array
     {
-        return $this->info[$name];
+        return $this->info;
     }
 
     /**
