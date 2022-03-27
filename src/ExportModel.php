@@ -273,12 +273,14 @@ class ExportModel
      */
     public function reportStorage($info)
     {
+        // Format output.
         $report = sprintf(
-            '%s: %s — %d rows in %s',
+            '%s: %s — %d rows, %s (%s)',
             $info['action'],
             $info['table'],
             $info['rows'],
-            formatElapsed($info['time'])
+            formatElapsed($info['time']),
+            formatBytes(max($info['memory'])) // Maximum batch size.
         );
         $this->comment($report);
     }

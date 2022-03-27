@@ -225,17 +225,17 @@ function formatElapsed(float $elapsed): string
 {
     $m = floor($elapsed / 60);
     $s = $elapsed - $m * 60;
-    return sprintf('%02d:%05.2f', $m, $s);
+    return ($m) ? sprintf('%d:%05.2f', $m, $s) : sprintf('%05.2fs', $s);
 }
 
 /**
  * @param int $size
  * @return string
  */
-function convertBytes(int $size): string
+function formatBytes(int $size): string
 {
     $unit = ['b','kb','mb','gb','tb','pb'];
-    return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $unit[$i];
+    return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 1) . $unit[$i];
 }
 
 /**

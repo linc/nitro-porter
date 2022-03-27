@@ -99,10 +99,9 @@ class Controller
 
         // Start timer.
         $start = microtime(true);
-        $exportModel->comment('START: ' . date('Y-m-d H:i:s'));
 
         // Export.
-        //self::doExport($source, $exportModel);
+        self::doExport($source, $exportModel);
 
         // Import.
         if ($target) {
@@ -113,9 +112,11 @@ class Controller
             self::doImport($target, $exportModel);
         }
 
-        // End timer.
-        $exportModel->comment('END: ' . date('Y-m-d H:i:s'));
-        $exportModel->comment(sprintf('Elapsed: %s', formatElapsed(microtime(true) - $start)));
+        // End timer & report.
+        $exportModel->comment(
+            sprintf('ELAPSED — %s', formatElapsed(microtime(true) - $start)) .
+            ' ( ' . date('H:i:s', $start) . ' - ' . date('H:i:s') . ')'
+        );
 
         // Write the results (web only).
         if (!defined('CONSOLE')) {

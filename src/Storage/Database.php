@@ -57,6 +57,7 @@ class Database implements StorageInterface
     ): array {
         $info = [
             'rows' => 0,
+            'memory' => [],
         ];
         $batchedValues = [];
 
@@ -76,6 +77,7 @@ class Database implements StorageInterface
 
                 // Insert batched records and reset batch.
                 if (self::INSERT_BATCH === count($batchedValues)) {
+                    $info['memory'][] = memory_get_usage();
                     $db->table($this->prefix . $name)->insert($batchedValues);
                     $batchedValues = [];
                 }
@@ -93,6 +95,7 @@ class Database implements StorageInterface
 
                 // Insert batched records and reset batch.
                 if (self::INSERT_BATCH === count($batchedValues)) {
+                    $info['memory'][] = memory_get_usage();
                     $db->table($this->prefix . $name)->insert($batchedValues);
                     $batchedValues = [];
                 }
@@ -100,6 +103,7 @@ class Database implements StorageInterface
         }
 
         // Insert remaining records.
+        $info['memory'][] = memory_get_usage(); // Note this would pull down a mean calculation.
         $db->table($this->prefix . $name)->insert($batchedValues);
 
         return $info;
