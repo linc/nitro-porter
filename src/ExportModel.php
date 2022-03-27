@@ -224,11 +224,15 @@ class ExportModel
         $this->storage->prepare($tableName, $structure);
 
         // Store the data.
-        $rowCount = $this->storage->store($tableName, $map, $structure, $data, $filters, $this);
+        $info = $this->storage->store($tableName, $map, $structure, $data, $filters, $this);
 
         // Stop timer.
-        $elapsed = formatElapsed(microtime(true) - $start);
-        $this->comment("$tableName exported ($rowCount rows, $elapsed)");
+        $info['time'] = microtime(true) - $start;
+
+        // Report.
+        $info['action'] = 'export';
+        $info['table'] = $tableName;
+        $this->reportStorage($info);
     }
 
     /**
@@ -251,11 +255,32 @@ class ExportModel
             // @todo Allow a different storage option for import step.
 
         // Store the data.
-        $rowCount = $this->storage->store($tableName, $map, $structure, $exp, $filters, $this);
+        $info = $this->storage->store($tableName, $map, $structure, $exp, $filters, $this);
 
         // Stop timer.
-        $elapsed = formatElapsed(microtime(true) - $start);
-        $this->comment("$tableName imported ($rowCount rows, $elapsed)");
+        $info['time'] = microtime(true) - $start;
+
+        // Report.
+        $info['action'] = 'import';
+        $info['table'] = $tableName;
+        $this->reportStorage($info);
+    }
+
+    /**
+     * Add log with results of a table storage action.
+     *
+     * @param $info
+     */
+    public function reportStorage($info)
+    {
+        $report = sprintf(
+            '%s: %s — %d rows in %s',
+            $info['action'],
+            $info['table'],
+            $info['rows'],
+            formatElapsed($info['time'])
+        );
+        $this->comment($report);
     }
 
     /**

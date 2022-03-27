@@ -102,7 +102,7 @@ class Controller
         $exportModel->comment('START: ' . date('Y-m-d H:i:s'));
 
         // Export.
-        self::doExport($source, $exportModel);
+        //self::doExport($source, $exportModel);
 
         // Import.
         if ($target) {
