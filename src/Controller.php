@@ -115,7 +115,7 @@ class Controller
         // End timer & report.
         $exportModel->comment(
             sprintf('ELAPSED — %s', formatElapsed(microtime(true) - $start)) .
-            ' ( ' . date('H:i:s', $start) . ' - ' . date('H:i:s') . ')'
+            ' (' . date('H:i:s', $start) . ' - ' . date('H:i:s') . ')'
         );
 
         // Write the results (web only).
