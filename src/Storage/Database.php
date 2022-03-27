@@ -57,6 +57,7 @@ class Database implements StorageInterface
     ): int {
         $rowCount = 0;
         $batchedValues = [];
+        $this->connection->reset(); // DB driver can't reuse connections with unbuffered queries.
         $db = $this->connection->dbm->getConnection($this->connection->getAlias());
 
         if (is_a($data, '\Porter\Database\ResultSet')) {
