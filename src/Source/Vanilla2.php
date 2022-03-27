@@ -55,7 +55,7 @@ class Vanilla2 extends Source
     {
         $tables = array(
             //'Activity',
-            'Badge',
+            'Badge', // SaaS-only
             'Category',
             'Comment',
             'Conversation',
@@ -63,16 +63,16 @@ class Vanilla2 extends Source
             'Discussion',
             'Media',
             //'Permission',
-            'Poll',
-            'PollOption',
-            'PollVote',
+            'Poll', // SaaS-only
+            'PollOption', // SaaS-only
+            'PollVote', // SaaS-only
             'ReactionType',
-            'Rank',
+            'Rank', // SaaS-only
             'Role',
             'Tag',
             'TagDiscussion',
             'User',
-            'UserBadge',
+            'UserBadge', // SaaS-only
             'UserComment',
             'UserConversation',
             'UserDiscussion',
