@@ -357,7 +357,9 @@ class ExportModel
     public function fixEncoding(array $row): array
     {
         return array_map(function ($value) {
-            $doEncode = function_exists('mb_detect_encoding') && (mb_detect_encoding($value) != 'UTF-8');
+            $doEncode = function_exists('mb_detect_encoding') &&
+                (mb_detect_encoding($value) != 'UTF-8') &&
+                (is_string($value) || is_numeric($value));
             return ($doEncode) ? utf8_encode($value) : $value;
         }, $row);
     }

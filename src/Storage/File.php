@@ -244,10 +244,6 @@ class File implements StorageInterface
             // Only allow ints because PHP allows weird shit as numeric like "\n\n.1"
             return $value;
         } elseif (is_string($value) || is_numeric($value)) {
-            // Fix encoding if needed.
-            if (function_exists('mb_detect_encoding') && mb_detect_encoding($value) != 'UTF-8') {
-                $value = utf8_encode($value);
-            }
             // Fix carriage returns for file storage.
             $value = str_replace(array("\r\n", "\r"), array(self::NEWLINE, self::NEWLINE), $value);
             // Fix special chars in our file storage format.
