@@ -42,7 +42,7 @@ class ExpressionEngine extends Source
     public function run(ExportModel $ex)
     {
         $this->conversations($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->users($ex);
         $this->roles($ex);
         $this->signatures($ex);

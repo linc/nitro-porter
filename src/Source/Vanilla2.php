@@ -62,7 +62,7 @@ class Vanilla2 extends Source
             'ConversationMessage',
             'Discussion',
             'Media',
-            'Permission',
+            //'Permission',
             'Poll',
             'PollOption',
             'PollVote',

@@ -264,7 +264,7 @@ class VBulletin extends Source
         $this->users($ex, $ranks, $cdn);
 
         $this->roles($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->userMeta($ex, $forumWhere, $minDate);
 
         $this->discussions($ex, $minDiscussionID, $forumWhere);

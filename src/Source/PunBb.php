@@ -82,7 +82,7 @@ class PunBb extends Source
 
         $this->users($ex);
         $this->roles($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->signatures($ex);
 
         $this->categories($ex);

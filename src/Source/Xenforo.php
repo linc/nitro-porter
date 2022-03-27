@@ -235,7 +235,7 @@ class Xenforo extends Source
 
         $this->users($ex, $this->cdnPrefix());
         $this->roles($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->userMeta($ex);
 
         $this->categories($ex);

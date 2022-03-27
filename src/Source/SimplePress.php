@@ -57,7 +57,7 @@ class SimplePress extends Source
     {
         $this->users($ex);
         $this->roles($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
 
         $this->categories($ex);
         $this->discussions($ex);

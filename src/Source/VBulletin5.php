@@ -99,7 +99,7 @@ class VBulletin5 extends VBulletin
 
         $this->usersV5($ex, $ranks, $cdn);
         $this->rolesV5($ex);
-        $this->permissionsV5($ex);
+        //$this->permissionsV5($ex);
         $this->ranksV5($ex);
 
         list($categoryIDs, $privateMessagesID) = $this->categoryV5($ex);

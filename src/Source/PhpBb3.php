@@ -95,7 +95,7 @@ class PhpBb3 extends Source
         $this->roles($ex);
         $this->userNotes($ex);
         $this->ranks($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->signatures($ex);
 
         $this->categories($ex);

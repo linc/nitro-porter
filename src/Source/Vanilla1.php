@@ -81,7 +81,7 @@ class Vanilla1 extends Source
         $this->discussions($ex);
         $this->conversations($ex);
         $this->comments($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->attachments($ex);
     }
 

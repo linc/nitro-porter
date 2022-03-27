@@ -79,7 +79,7 @@ class FluxBb extends Source
         }
 
         $this->users($ex);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->roles($ex);
         $this->signatures($ex);
         $this->categories($ex);

@@ -195,7 +195,7 @@ class IpBoard3 extends Source
 
         $this->users($memberID, $ex);
         $this->roles($ex, $memberID);
-        $this->permissions($ex);
+        //$this->permissions($ex);
         $this->userMeta($ex);
 
         $this->categories($ex);
