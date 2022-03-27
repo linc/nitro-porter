@@ -38,4 +38,6 @@ interface StorageInterface
     public function end();
 
     public function setPrefix(string $prefix): void;
+
+    public function exists(string $tableName, array $columns = []): bool;
 }

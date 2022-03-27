@@ -46,7 +46,7 @@ class Flarum extends Target
         $this->bookmarks($ex); // flarum/subscriptions
         $this->comments($ex); // Posts
 
-        if ($ex->exists(('PORT_Badge'))) {
+        if ($ex->targetExists(('PORT_Badge'))) {
             $this->badges($ex); // 17development/flarum-user-badges
         }
     }

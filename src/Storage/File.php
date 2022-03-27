@@ -207,6 +207,18 @@ class File implements StorageInterface
     }
 
     /**
+     * Not required for file storage.
+     *
+     * @param string $tableName
+     * @param array $columns
+     * @return bool
+     */
+    public function exists(string $tableName, array $columns = []): bool
+    {
+        return true;
+    }
+
+    /**
      * @param mixed $value
      * @return string
      */

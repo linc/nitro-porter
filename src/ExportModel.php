@@ -531,6 +531,19 @@ class ExportModel
     }
 
     /**
+     * Check if the storage container exists for this data.
+     *
+     * @see ExportModel::exists() — Equivalent for source.
+     * @param string $table
+     * @param array $columns
+     * @return bool
+     */
+    public function targetExists(string $table, array $columns = []): bool
+    {
+        return $this->storage->exists($table, $columns);
+    }
+
+    /**
      * Checks whether or not a table and columns exist in the database.
      *
      * @param string $table The name of the table to check.

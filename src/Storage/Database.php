@@ -134,6 +134,25 @@ class Database implements StorageInterface
     }
 
     /**
+     * Whether the requested table & columns exist.
+     *
+     * @see ExportModel::exists()
+     * @param string $tableName
+     * @param array $columns
+     * @return bool
+     */
+    public function exists(string $tableName, array $columns = []): bool
+    {
+        $schema = $this->connection->dbm->getConnection($this->connection->getAlias())->getSchemaBuilder();
+        if (empty($columns) || $schema->hasTable($tableName)) {
+            // No columns requested or no table exists to check for columns.
+            return $schema->hasTable($tableName);
+        }
+        // Table must exist and columns were requested.
+        return $schema->hasColumns($tableName, $columns);
+    }
+
+    /**
      * Converts a simple array of Column => Type into a callable table structure.
      *
      * Ideally, we'd just pass structures in the correct format to start with.
