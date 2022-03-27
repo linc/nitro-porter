@@ -229,6 +229,16 @@ function formatElapsed(float $elapsed): string
 }
 
 /**
+ * @param int $size
+ * @return string
+ */
+function convertBytes(int $size): string
+{
+    $unit = ['b','kb','mb','gb','tb','pb'];
+    return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $unit[$i];
+}
+
+/**
  * Create a thumbnail from an image file.
  *
  * @param string $path
