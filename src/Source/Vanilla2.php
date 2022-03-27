@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Vanilla 2 exporter tool
+ * Vanilla 2+ exporter tool
  *
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
@@ -81,22 +81,9 @@ class Vanilla2 extends Source
         );
 
         foreach ($tables as $tableName) {
-            $this->exportEntireTable($ex, $tableName);
+            if ($ex->exists($tableName)) {
+                $ex->export($tableName, "select * from :_{$tableName}");
+            }
         }
-    }
-
-    /**
-     *
-     * @param ExportModel $ex
-     * @param string      $tableName
-     */
-    protected function exportEntireTable($ex, $tableName)
-    {
-        // Make sure the table exists.
-        if (!$ex->exists($tableName)) {
-            return;
-        }
-
-        $ex->export($tableName, "select * from :_{$tableName}");
     }
 }
