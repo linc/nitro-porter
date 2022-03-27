@@ -27,7 +27,8 @@ class Flarum extends Source
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 0,
-            'Bookmarks' => 1,
+            'Bookmarks' => 'flarum/subscriptions',
+            'Badges' => '17development/flarum-user-badges',
         ]
     ];
 
@@ -62,6 +63,10 @@ class Flarum extends Source
             $this->bookmarks($ex); // flarum/subscriptions
         }
         $this->comments($ex); // Posts
+
+        if ($ex->exists('badges')) {
+            $this->badges($ex); // 17development/flarum-user-badges
+        }
     }
 
     /**
@@ -209,5 +214,33 @@ class Flarum extends Source
                     $skipOP",
             $comment_Map
         );
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function badges(ExportModel $ex): void
+    {
+        // Badges
+        $map = [
+            'discussion_id' => 'BadgeID',
+            'user_id' => 'InsertUserID',
+            'last_read_at' => 'DateLastViewed',
+            'is_visible' => 'Visible',
+        ];
+        $query = "select * from :_badges";
+
+        $ex->export('badges', $query, $map);
+
+        // User Badges
+        $map = [
+            'badge_id' => 'BadgeID',
+            'user_id' => 'UserID',
+            'description' => 'Reason',
+            'assigned_at' => 'DateCompleted',
+        ];
+        $query = "select * from :_badge_user";
+
+        $ex->export('badge_user', $query, $map);
     }
 }
