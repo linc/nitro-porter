@@ -26,6 +26,7 @@ class Flarum extends Target
             'Avatars' => 0,
             'PrivateMessages' => 0,
             'Bookmarks' => 1,
+            'Badges' => 1,
         ]
     ];
 
@@ -44,6 +45,10 @@ class Flarum extends Target
         $this->discussions($ex);
         $this->bookmarks($ex); // flarum/subscriptions
         $this->comments($ex); // Posts
+
+        if ($ex->exists(('PORT_Badge'))) {
+            $this->badges($ex); // 17development/flarum-user-badges
+        }
     }
 
     /**
@@ -245,5 +250,50 @@ class Flarum extends Target
         }
 
         $ex->import('posts', $query, $structure, $map);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function badges(ExportModel $ex): void
+    {
+        // Badge Groups
+        //
+
+        // Badges
+        $structure = [
+            'id' => 'int',
+            'name' => 'varchar(200)',
+            'description' => 'text',
+            'points' => 'int',
+            'created_at' => 'datetime',
+            'is_visible' => 'tinyint',
+        ];
+        $map = [
+            'BadgeID' => 'discussion_id',
+            'InsertUserID' => 'user_id',
+            'DateLastViewed' => 'last_read_at',
+            'Visible' => 'is_visible',
+        ];
+        $query = $ex->dbImport()->table('PORT_Badge')->select('*');
+
+        $ex->import('badges', $query, $structure, $map);
+
+        // User Badges
+        $structure = [
+            'badge_id' => 'int',
+            'user_id' => 'int',
+            'assigned_at' => 'datetime',
+            'description' => 'text',
+        ];
+        $map = [
+            'BadgeID' => 'badge_id',
+            'UserID' => 'user_id',
+            'Reason' => 'description',
+            'DateCompleted' => 'assigned_at',
+        ];
+        $query = $ex->dbImport()->table('PORT_UserBadge')->select('*');
+
+        $ex->import('badge_user', $query, $structure, $map);
     }
 }
