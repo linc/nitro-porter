@@ -63,7 +63,12 @@ class Database implements StorageInterface
             // Iterate on old ResultSet.
             while ($row = $data->nextResultRow()) {
                 $rowCount++;
-                $batchedValues[] = $exportModel->normalizeRow($map, $structure, $row, $filters);
+                $row = $exportModel->normalizeRow($map, $structure, $row, $filters);
+
+                // Convert empty strings to null.
+                $batchedValues[] = array_map(function ($value) {
+                    return ('' === $value) ? null : $value;
+                }, $row);
 
                 // Insert batched records and reset batch.
                 if (self::INSERT_BATCH === count($batchedValues)) {
@@ -75,7 +80,12 @@ class Database implements StorageInterface
             // Use the Builder to process results one at a time.
             foreach ($data->cursor() as $row) { // Using `chunk()` takes MUCH longer to process.
                 $rowCount++;
-                $batchedValues[] = $exportModel->normalizeRow($map, $structure, (array)$row, $filters);
+                $row = $exportModel->normalizeRow($map, $structure, (array)$row, $filters);
+
+                // Convert empty strings to null.
+                $batchedValues[] = array_map(function ($value) {
+                    return ('' === $value) ? null : $value;
+                }, $row);
 
                 // Insert batched records and reset batch.
                 if (self::INSERT_BATCH === count($batchedValues)) {
