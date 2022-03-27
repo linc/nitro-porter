@@ -31,6 +31,14 @@ _Beware, this installs the latest development version of Nitro Porter!_
 6. Run: `composer install`.
 7. View Porter's options with: `porter --help`.
 
+## Troubleshooting
+
+### 504 Gateway Error
+
+While Porter does increase PHP's timeout, your webserver may disconnect, resulting in a 504 Gateway Error. 
+You must alter your web server's config to increase its timeout. 
+To set a 30-min timeout in Apache, set `Timeout 1800` in your httpd.conf and restart.
+
 ## Contribute
 
 ### Data!
