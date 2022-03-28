@@ -49,6 +49,9 @@ class Flarum extends Target
         if ($ex->targetExists(('PORT_Badge'))) {
             $this->badges($ex); // 17development/flarum-user-badges
         }
+        if ($ex->targetExists(('PORT_Poll'))) {
+            $this->polls($ex); // fof/polls
+        }
     }
 
     /**
@@ -295,5 +298,76 @@ class Flarum extends Target
         $query = $ex->dbImport()->table('PORT_UserBadge')->select('*');
 
         $ex->import('badge_user', $query, $structure, $map);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    protected function polls(ExportModel $ex): void
+    {
+        // Polls
+        $structure = [
+            'id' => 'int',
+            'question' => 'varchar(200)',
+            'discussion_id' => 'int',
+            'user_id' => 'int',
+            //'public_poll' => 'tinyint', // Map to "Anonymous" somehow?
+            'end_date' => 'datetime', // Using date created here will close all polls, but work fine.
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'vote_count' => 'int',
+        ];
+        $map = [
+            'PollID' => 'id',
+            'Name' => 'question',
+            'DiscussionID' => 'discussion_id',
+            'InsertUserID' => 'user_id',
+            'DateInserted' => 'created_at',
+            'DateUpdated' => 'updated_at',
+            'CountVotes' => 'vote_count',
+        ];
+        $query = $ex->dbImport()->table('PORT_Poll')->select('*', 'DateInserted as end_date');
+
+        $ex->import('polls', $query, $structure, $map);
+
+        // Poll Options
+        $structure = [
+            'id' => 'int',
+            'answer' => 'varchar(200)',
+            'poll_id' => 'int',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'vote_count' => 'int',
+        ];
+        $map = [
+            'PollOptionID' => 'id',
+            'PollID' => 'poll_id',
+            'Body' => 'answer',
+            'DateInserted' => 'created_at',
+            'DateUpdated' => 'updated_at',
+            'CountVotes' => 'vote_count',
+        ];
+        $query = $ex->dbImport()->table('PORT_PollOption')->select('*');
+
+        $ex->import('poll_options', $query, $structure, $map);
+
+        // Poll Votes
+        $structure = [
+            //id
+            'poll_id' => 'int',
+            'option_id' => 'int',
+            'user_id' => 'int',
+            //'created_at' => 'datetime',
+            //'updated_at' => 'datetime',
+        ];
+        $map = [
+            'PollOptionID' => 'option_id',
+            'UserID' => 'user_id',
+        ];
+        $query = $ex->dbImport()->table('PORT_PollVote')
+            ->leftJoin('PORT_PollOption', 'PORT_PollVote.PollOptionID', '=', 'PORT_PollOption.PollOptionID')
+            ->select('PORT_PollVote.*', 'PORT_PollOption.PollID as poll_id');
+
+        $ex->import('poll_votes', $query, $structure, $map);
     }
 }
