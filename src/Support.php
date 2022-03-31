@@ -18,29 +18,29 @@ class Support
         'Comments',
         'Roles',
         'Passwords',
+        'PrivateMessages',
         'Attachments',
         'Bookmarks',
         'Avatars',
         'Signatures',
-        'PrivateMessages',
         'Polls',
         'Tags',
         //'Permissions',
-        'Ranks',
         'Reactions',
         'Badges',
         'UserNotes',
-        'UserWall',
+        'Ranks',
+        //'UserWall',
         //'Groups',
         //'Emoji',
         //'Articles',
     ];
 
-    private static $instance = null;
+    private static ?Support $instance = null;
 
-    private $sources = [];
+    private array $sources = [];
 
-    private $targets = [];
+    private array $targets = [];
 
     public static function getInstance(): self
     {
