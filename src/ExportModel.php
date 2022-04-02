@@ -226,13 +226,8 @@ class ExportModel
         // Store the data.
         $info = $this->storage->store($tableName, $map, $structure, $data, $filters, $this);
 
-        // Stop timer.
-        $info['time'] = microtime(true) - $start;
-
         // Report.
-        $info['action'] = 'export';
-        $info['table'] = $tableName;
-        $this->reportStorage($info);
+        $this->reportStorage('export', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
     }
 
     /**
@@ -257,30 +252,29 @@ class ExportModel
         // Store the data.
         $info = $this->storage->store($tableName, $map, $structure, $exp, $filters, $this);
 
-        // Stop timer.
-        $info['time'] = microtime(true) - $start;
-
         // Report.
-        $info['action'] = 'import';
-        $info['table'] = $tableName;
-        $this->reportStorage($info);
+        $this->reportStorage('import', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
     }
 
     /**
      * Add log with results of a table storage action.
      *
-     * @param $info
+     * @param string $action
+     * @param string $table
+     * @param float $timeElapsed
+     * @param int $rowCount
+     * @param int $memoryPeak
      */
-    public function reportStorage($info)
+    public function reportStorage(string $action, string $table, float $timeElapsed, int $rowCount, int $memoryPeak)
     {
         // Format output.
         $report = sprintf(
             '%s: %s — %d rows, %s (%s)',
-            $info['action'],
-            $info['table'],
-            $info['rows'],
-            formatElapsed($info['time']),
-            formatBytes(max($info['memory'])) // Maximum batch size.
+            $action,
+            $table,
+            $rowCount,
+            formatElapsed($timeElapsed),
+            formatBytes(max($memoryPeak))
         );
         $this->comment($report);
     }
