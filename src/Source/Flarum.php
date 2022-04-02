@@ -234,7 +234,7 @@ class Flarum extends Source
         ];
         $query = "select * from :_badges";
 
-        $ex->export('badges', $query, $map);
+        $ex->export('Badge', $query, $map);
 
         // User Badges
         $map = [
@@ -245,7 +245,7 @@ class Flarum extends Source
         ];
         $query = "select * from :_badge_user";
 
-        $ex->export('badge_user', $query, $map);
+        $ex->export('UserBadge', $query, $map);
     }
 
     /**
