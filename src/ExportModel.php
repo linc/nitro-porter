@@ -262,9 +262,9 @@ class ExportModel
      * @param string $table
      * @param float $timeElapsed
      * @param int $rowCount
-     * @param int $memoryPeak
+     * @param array $memoryLog
      */
-    public function reportStorage(string $action, string $table, float $timeElapsed, int $rowCount, int $memoryPeak)
+    public function reportStorage(string $action, string $table, float $timeElapsed, int $rowCount, array $memoryLog)
     {
         // Format output.
         $report = sprintf(
@@ -273,7 +273,7 @@ class ExportModel
             $table,
             $rowCount,
             formatElapsed($timeElapsed),
-            formatBytes(max($memoryPeak))
+            formatBytes(max($memoryLog)) // Derive peak.
         );
         $this->comment($report);
     }
