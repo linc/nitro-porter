@@ -52,6 +52,9 @@ class Flarum extends Target
         if ($ex->targetExists(('PORT_Poll'))) {
             $this->polls($ex); // fof/polls
         }
+        if ($ex->targetExists(('PORT_ReactionType'))) {
+            $this->reactions($ex); //
+        }
     }
 
     /**
@@ -369,5 +372,74 @@ class Flarum extends Target
             ->select('PORT_PollVote.*', 'PORT_PollOption.PollID as poll_id');
 
         $ex->import('poll_votes', $query, $structure, $map);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    public function reactions(ExportModel $ex)
+    {
+        // Reaction Types
+        $structure = [
+            'id' => 'int',
+            'identifier' => 'varchar(200)',
+            'type' => 'varchar(200)',
+            'enabled' => 'tinyint',
+            'display' => 'varchar(200)',
+        ];
+        $map = [
+            'TagID' => 'id',
+            'Name' => 'identifier',
+            'Active' => 'enabled',
+        ];
+        $query = $ex->dbImport()->table('PORT_ReactionType')->select('*');
+
+        $ex->import('reactions', $query, $structure, $map);
+
+        // Post Reactions
+        $structure = [
+            'id' => 'int',
+            'post_id' => 'int',
+            'user_id' => 'int',
+            'reaction_id' => 'int',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
+        $map = [
+            'RecordID' => 'post_id',
+            'UserID' => 'user_id',
+            'TagID' => 'reaction_id',
+            'DateInserted' => 'created_at',
+        ];
+        $query = $ex->dbImport()->table('PORT_UserTag')
+            ->select(
+                'RecordID',
+                'UserID',
+                'TagID',
+                'DateInserted'
+            )->where('RecordType', '=', 'Comment');
+
+        // Get reactions for discussions (OPs).
+        if ($this->getDiscussionBodyMode()) {
+            // Get highest CommentID.
+            $result = $ex->dbImport()
+                ->table('PORT_Comment')
+                ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
+                ->first();
+
+            /* @see Target\Flarum::comments() —  replicate our math in the post split */
+            $discussionReactions = $ex->dbImport()->table('PORT_UserTag')
+                ->select(
+                    $ex->dbImport()->raw('(RecordID + ' . $result->LastCommentID . ') as RecordID'),
+                    'UserID',
+                    'TagID',
+                    'DateInserted'
+                )->where('RecordType', '=', 'Discussion');
+
+            // Combine discussion reactions + comment reactions => post reactions.
+            $query->union($discussionReactions);
+        }
+
+        $ex->import('post_reactions', $query, $structure, $map);
     }
 }
