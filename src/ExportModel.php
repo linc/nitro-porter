@@ -247,7 +247,6 @@ class ExportModel
 
         // Prepare the storage medium for the incoming structure.
         $this->storage->prepare($tableName, $structure);
-            // @todo Allow a different storage option for import step.
 
         // Store the data.
         $info = $this->storage->store($tableName, $map, $structure, $exp, $filters, $this);

@@ -24,6 +24,11 @@ class Database implements StorageInterface
     public string $prefix = '';
 
     /**
+     * @var array List of tables that have already been reset to avoid dropping multipart import data.
+     */
+    public array $resetTables = [];
+
+    /**
      * @var Connection
      */
     public Connection $connection;
@@ -117,7 +122,11 @@ class Database implements StorageInterface
      */
     public function prepare(string $name, array $structure): void
     {
-        $this->createTable($this->prefix . $name, $this->getTableStructureClosure($structure));
+        if (!in_array($name, $this->resetTables)) {
+            // Avoid double-dropping a table during an import because we probably already put data in it.
+            $this->createTable($this->prefix . $name, $this->getTableStructureClosure($structure));
+        }
+        $this->resetTables[] = $name;
     }
 
     /**
