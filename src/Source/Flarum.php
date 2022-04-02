@@ -26,7 +26,7 @@ class Flarum extends Source
             'Polls' => 0,
             'Roles' => 1,
             'Avatars' => 0,
-            'PrivateMessages' => 0,
+            'PrivateMessages' => 'fof/byobu',
             'Bookmarks' => 'flarum/subscriptions',
             'Badges' => '17development/flarum-user-badges',
         ]
@@ -66,6 +66,9 @@ class Flarum extends Source
 
         if ($ex->exists('badges')) {
             $this->badges($ex); // 17development/flarum-user-badges
+        }
+        if ($ex->exists('recipients')) {
+            $this->privateMessages($ex); // fof/byobu
         }
     }
 
@@ -166,7 +169,8 @@ class Flarum extends Source
             "select *, $getBody dt.tag_id as CategoryID
                  from :_discussions d
                  $joinPosts
-                 join :_discussion_tag dt on dt.discussion_id = d.id",
+                 join :_discussion_tag dt on dt.discussion_id = d.id
+                 where d.is_private <> 1",
             $discussion_Map
         );
     }
@@ -242,5 +246,42 @@ class Flarum extends Source
         $query = "select * from :_badge_user";
 
         $ex->export('badge_user', $query, $map);
+    }
+
+    /**
+     * @param $ex
+     */
+    protected function privateMessages($ex)
+    {
+        // Messages
+        $map = [
+            'discussion_id' => 'ConversationID',
+            'content' => 'Body',
+        ];
+        $query = "select *
+            from :_posts p
+                left join :_discussions d on d.id = p.discussion_id
+            where d.is_private = 1";
+
+        $ex->export('ConversationMessage', $query, $map);
+
+        // Conversations
+        $map = [
+            'discussion_id' => 'ConversationID',
+            'user_id' => 'InsertUserID',
+            'title' => 'Subject',
+        ];
+        $query = "select * from :_discussions where is_private = 1";
+
+        $ex->export('Conversation', $query, $map);
+
+        // Recipients
+        $map = [
+            'discussion_id' => 'ConversationID',
+            'user_id' => 'UserID',
+        ];
+        $query = "select * from :_recipients";
+
+        $ex->export('UserConversation', $query, $map);
     }
 }
