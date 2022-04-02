@@ -24,7 +24,7 @@ class Flarum extends Target
             'Polls' => 0,
             'Roles' => 1,
             'Avatars' => 0,
-            'PrivateMessages' => 0,
+            'PrivateMessages' => 1,
             'Bookmarks' => 1,
             'Badges' => 1,
         ]
@@ -55,6 +55,7 @@ class Flarum extends Target
         if ($ex->targetExists(('PORT_ReactionType'))) {
             $this->reactions($ex); //
         }
+        $this->privateMessages($ex);
     }
 
     /**
@@ -441,5 +442,76 @@ class Flarum extends Target
         }
 
         $ex->import('post_reactions', $query, $structure, $map);
+    }
+
+    /**
+     * Export PMs to fof/byobu format.
+     *
+     * @param $ex
+     */
+    protected function privateMessages(ExportModel $ex)
+    {
+        // Get max IDs for offset.
+        $MaxCommentID = $ex->dbImport()
+            ->table('PORT_Comment')
+            ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
+            ->first()->LastCommentID;
+        $MaxDiscussionID = $ex->dbImport()
+            ->table('PORT_Discussion')
+            ->select($ex->dbImport()->raw('max(DiscussionID) as LastDiscussionID'))
+            ->first()->LastDiscussionID;
+
+        // Messages — Comments
+        $map = [
+            'Body' => 'content',
+            'InsertUserID' => 'user_id',
+            'DateInserted' => 'created_at',
+        ];
+        $query = $ex->dbImport()->table('PORT_ConversationMessage')->select(
+            $ex->dbImport()->raw('(MessageID + ' . $MaxCommentID . ') as id'),
+            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id'),
+            'Body',
+            'InsertUserID',
+            'DateInserted',
+            $ex->dbImport()->raw('1 as is_private'),
+        );
+
+        $ex->import('posts', $query, [], $map); // Table already built; no structure.
+
+        // Messages — Discussions
+        $map = [
+            'InsertUserID' => 'user_id',
+            'DateInserted' => 'created_at',
+        ];
+        $query = $ex->dbImport()->table('PORT_Conversation')->select(
+            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as id'),
+            'InsertUserID',
+            'DateInserted',
+            $ex->dbImport()->raw('Subject as title') // @todo excerpt the OP if no Subject exists
+        );
+
+        $ex->import('discussions', $query, [], $map); // Table already built; no structure.
+
+        // Recipients
+        $structure = [
+            //'id' => 'int',
+            'discussion_id' => 'int',
+            'user_id' => 'int',
+            //'group_id' => 'int',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'removed_at' => 'datetime',
+        ];
+        $map = [
+            'UserID' => 'user_id',
+            'DateConversationUpdated' => 'updated_at',
+        ];
+        $query = $ex->dbImport()->table('PORT_UserConversation')->select(
+            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id'),
+            'UserID',
+            'DateConversationUpdated'
+        );
+
+        $ex->import('recipients', $query, $structure, $map);
     }
 }
