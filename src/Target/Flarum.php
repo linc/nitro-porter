@@ -219,6 +219,9 @@ class Flarum extends Target
             'UpdateUserID' => 'edited_user_id',
             'Body' => 'content'
         ];
+        $filters = [
+            'Body' => 'Porter\Formatter::filterBody',
+        ];
         $query = $ex->dbImport()->table('PORT_Comment')
             ->select(
                 'CommentID',
@@ -228,6 +231,7 @@ class Flarum extends Target
                 'DateUpdated',
                 'UpdateUserID',
                 'Body',
+                'Format',
                 $ex->dbImport()->raw('"comment" as type')
             );
 
@@ -249,6 +253,7 @@ class Flarum extends Target
                     'DateUpdated',
                     'UpdateUserID',
                     'Body',
+                    'Format',
                     $ex->dbImport()->raw('"comment" as type')
                 );
 
@@ -256,7 +261,7 @@ class Flarum extends Target
             $query->union($discussions);
         }
 
-        $ex->import('posts', $query, $structure, $map);
+        $ex->import('posts', $query, $structure, $map, $filters);
     }
 
     /**

@@ -313,7 +313,7 @@ class ExportModel
     {
         foreach ($filters as $column => $callable) {
             if (isset($row[$column])) {
-                $row[$column] = call_user_func($callable, $row[$column], $column, $row, $column);
+                $row[$column] = call_user_func($callable, $row[$column], $row);
             }
         }
 
