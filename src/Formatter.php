@@ -4,6 +4,7 @@ namespace Porter;
 
 use s9e\TextFormatter\Bundles\Forum as BBCode;
 use s9e\TextFormatter\Bundles\Fatdown as Markdown;
+use nadar\quill\Lexer as Quill;
 
 class Formatter
 {
@@ -19,17 +20,63 @@ class Formatter
         switch ($format) {
             case 'Html':
             case 'Wysiwyg':
-            case 'Raw':
+            case 'Raw': // Unfiltered
                 return self::wrap('r', $text);
             case 'BBCode':
                 return BBCode::parse($text);
             case 'Markdown':
                 return Markdown::parse($text);
+            case 'Rich': // Quill
+                return self::dequill($text);
             case 'Text':
             case 'TextEx':
             default:
                 return self::wrap('t', $text);
         }
+    }
+
+    /**
+     * 'Rich' format in Vanilla is actually Quill WYSIWYG Delta.
+     *
+     * Vanilla stored invalid JSON — the "ops" array without its wrapper.
+     *
+     * @see https://quilljs.com/docs/delta/
+     *
+     * @param string $text
+     * @return string
+     */
+    public static function dequill(string $text): string
+    {
+        // Fix invalid Quill Delta.
+        $text = self::fixQuillHeaders($text);
+
+        // Fix the JSON.
+        $text = '{"ops":' . $text . '}';
+
+        // Use the Quill renderer.
+        $lexer = new Quill($text);
+        $text = $lexer->render();
+
+        // Wrap for TextFormatter.
+        return self::wrap('r', $text);
+    }
+
+    /**
+     * Vanilla appears to use a customized 'header' element in Quill Deltas that breaks parsers.
+     *
+     * @param string $text
+     * @return string
+     */
+    public static function fixQuillHeaders(string $text): string
+    {
+        // Avoid regex if we can.
+        if (strstr($text, '{"header"') === false) {
+            return $text;
+        }
+
+        // Remove array of attributes under `header` and simply give the numeric level instead.
+        // ex: {"header":{"level":1,"ref":""}},
+        return preg_replace('/{"header":{"level":([1-6]),"ref":"\w*"}}/', '{"header":$1}', $text);
     }
 
     /**
