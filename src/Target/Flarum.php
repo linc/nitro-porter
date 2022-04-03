@@ -220,7 +220,7 @@ class Flarum extends Target
             'Body' => 'content'
         ];
         $filters = [
-            'Body' => 'Porter\Formatter::filterBody',
+            'Body' => 'Porter\Formatter::filterFlarumContent',
         ];
         $query = $ex->dbImport()->table('PORT_Comment')
             ->select(
