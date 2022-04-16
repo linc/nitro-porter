@@ -110,6 +110,12 @@ class Controller
             }
             $exportModel->tarPrefix = $target::SUPPORTED['prefix']; // @todo Wrap these refs.
             self::doImport($target, $exportModel);
+
+            // Finalize the import (if the optional postscript class exists).
+            $postscript = postscriptFactory($request->get('output'));
+            if ($postscript) {
+                $postscript->run($exportModel);
+            }
         }
 
         // End timer & report.

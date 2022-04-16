@@ -8,6 +8,7 @@ use Porter\Connection;
 use Porter\Database\DbFactory;
 use Porter\ExportModel;
 use Porter\ImportModel;
+use Porter\Postscript;
 use Porter\Request;
 use Porter\Source;
 use Porter\Target;
@@ -88,6 +89,23 @@ function targetFactory(string $target): Target
     }
 
     return new $class();
+}
+
+/**
+ * Get postscript class.
+ *
+ * @param string $target
+ * @return Postscript|null
+ */
+function postscriptFactory(string $target): ?Postscript
+{
+    $postscript = null;
+    $class = '\Porter\Postscript\\' . ucwords($target);
+    if (class_exists($class)) {
+        $postscript = new $class();
+    }
+
+    return $postscript;
 }
 
 /**
