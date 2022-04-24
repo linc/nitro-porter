@@ -249,9 +249,9 @@ class Flarum extends Source
     }
 
     /**
-     * @param $ex
+     * @param ExportModel $ex
      */
-    protected function privateMessages($ex)
+    protected function privateMessages(ExportModel $ex)
     {
         // Messages
         $map = [

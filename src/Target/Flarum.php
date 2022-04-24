@@ -452,7 +452,7 @@ class Flarum extends Target
     /**
      * Export PMs to fof/byobu format.
      *
-     * @param $ex
+     * @param ExportModel $ex
      */
     protected function privateMessages(ExportModel $ex)
     {
