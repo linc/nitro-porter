@@ -92,17 +92,18 @@ function targetFactory(string $target): Target
 }
 
 /**
- * Get postscript class.
+ * Get postscript class if it exists.
  *
  * @param string $target
+ * @param Connection $connection
  * @return Postscript|null
  */
-function postscriptFactory(string $target): ?Postscript
+function postscriptFactory(string $target, Connection $connection): ?Postscript
 {
     $postscript = null;
     $class = '\Porter\Postscript\\' . ucwords($target);
     if (class_exists($class)) {
-        $postscript = new $class();
+        $postscript = new $class($connection);
     }
 
     return $postscript;

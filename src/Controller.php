@@ -112,7 +112,7 @@ class Controller
             self::doImport($target, $exportModel);
 
             // Finalize the import (if the optional postscript class exists).
-            $postscript = postscriptFactory($request->get('output'));
+            $postscript = postscriptFactory($request->get('output'), $targetConnection);
             if ($postscript) {
                 $postscript->run($exportModel);
             }
