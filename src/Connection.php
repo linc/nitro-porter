@@ -88,12 +88,13 @@ class Connection
     }
 
     /**
-     * Get the database connection.
+     * Get a new DBM connection.
      *
      * @return \Illuminate\Database\Connection
      */
-    public function open(): \Illuminate\Database\Connection
+    public function dbm(): \Illuminate\Database\Connection
     {
+        $this->reset(); // DB driver can't reuse connections with unbuffered queries.
         return $this->dbm->getConnection($this->alias);
     }
 
