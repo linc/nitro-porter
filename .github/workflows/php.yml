@@ -29,6 +29,9 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
 
+    - name: Mock config file
+      run: echo -e "<?php\n\nreturn [];" >> config.php
+
     - name: Run test suite
       run: composer test
 
