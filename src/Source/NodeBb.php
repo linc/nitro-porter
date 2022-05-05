@@ -109,7 +109,7 @@ class NodeBb extends Source
             return null;
         }
 
-        return gmdate('Y-m-d H:i:s', $time / 1000);
+        return gmdate('Y-m-d H:i:s', (int) $time / 1000);
     }
 
     /**
