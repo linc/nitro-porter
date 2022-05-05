@@ -21,7 +21,7 @@ use Porter\StorageInterface;
  */
 function loadConfig(): array
 {
-    return include(ROOT_DIR . '/config.php');
+    return require(ROOT_DIR . '/config.php');
 }
 
 /**

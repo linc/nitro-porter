@@ -11,9 +11,6 @@ if (ini_get('date.timezone') == '') {
 }
 
 // Require & load config.
-if (!file_exists(__DIR__ . '/config.php')) {
-    die('Required file config.php missing');
-}
 \Porter\Config::getInstance()->set(loadConfig());
 
 // Load source & target support.
