@@ -24,6 +24,11 @@ class Database extends Storage
     public string $prefix = '';
 
     /**
+     * @var string Table name currently targeted by the batcher.
+     */
+    protected string $batchTable = '';
+
+    /**
      * @var array List of tables that have already been reset to avoid dropping multipart import data.
      */
     public array $resetTables = [];
@@ -62,46 +67,85 @@ class Database extends Storage
     ): array {
         $info = [
             'rows' => 0,
-            'memory' => [],
+            'memory' => 0,
         ];
-        $batchedValues = [];
-
-        $this->connection->reset(); // DB driver can't reuse connections with unbuffered queries.
-        $db = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $this->setBatchTable($name);
 
         if (is_a($data, '\Porter\Database\ResultSet')) {
             // Iterate on old ResultSet.
             while ($row = $data->nextResultRow()) {
                 $info['rows']++;
-                $batchedValues[] = $this->normalizeRow($map, $structure, $row, $filters);
-
-                // Insert batched records and reset batch.
-                if (self::INSERT_BATCH === count($batchedValues)) {
-                    $info['memory'][] = memory_get_usage();
-                    $db->table($this->prefix . $name)->insert($batchedValues);
-                    $batchedValues = [];
-                }
+                $row = $this->normalizeRow($map, $structure, $row, $filters);
+                $bytes = $this->batchInsert($row);
+                $info['memory'] = ($bytes > $info['memory']) ? $bytes : $info['memory']; // Highest memory usage.
             }
         } elseif (is_a($data, '\Illuminate\Database\Query\Builder')) {
             // Use the Builder to process results one at a time.
             foreach ($data->cursor() as $row) { // Using `chunk()` takes MUCH longer to process.
                 $info['rows']++;
-                $batchedValues[] = $this->normalizeRow($map, $structure, (array)$row, $filters);
-
-                // Insert batched records and reset batch.
-                if (self::INSERT_BATCH === count($batchedValues)) {
-                    $info['memory'][] = memory_get_usage();
-                    $db->table($this->prefix . $name)->insert($batchedValues);
-                    $batchedValues = [];
-                }
+                $row = $this->normalizeRow($map, $structure, (array)$row, $filters);
+                $bytes = $this->batchInsert($row);
+                $info['memory'] = ($bytes > $info['memory']) ? $bytes : $info['memory'];  // Highest memory usage.
             }
         }
 
         // Insert remaining records.
-        $info['memory'][] = memory_get_usage(); // Note this would pull down a mean calculation.
-        $db->table($this->prefix . $name)->insert($batchedValues);
+        $this->batchInsert([], true);
 
         return $info;
+    }
+
+    /**
+     * Accept rows one at a time and batch them together for more efficient inserts.
+     *
+     * @param array $row Row of data to insert.
+     * @param bool $final Force an insert with existing batch.
+     * @return int Bytes currently being used by the app.
+     */
+    private function batchInsert(array $row, bool $final = false): int
+    {
+        static $batch = [];
+        $batch[] = $row;
+        $bytes = memory_get_usage(); // Measure before potential send.
+
+        if (self::INSERT_BATCH === count($batch) || $final) {
+            $this->sendBatch($batch);
+            $batch = [];
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * Insert a batch of rows into the database.
+     *
+     * @param array $batch
+     */
+    private function sendBatch(array $batch)
+    {
+        $this->connection->reset(); // DB driver can't reuse connections with unbuffered queries.
+        $db = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $db->table($this->getBatchTable())->insert($batch);
+    }
+
+    /**
+     * Set table name that sendBatch() will target.
+     *
+     * @param string $tableName
+     */
+    private function setBatchTable(string $tableName)
+    {
+        $this->batchTable = $this->prefix . $tableName;
+    }
+
+    /**
+     * Get table name that sendBatch() will target.
+     *
+     * @return string
+     */
+    private function getBatchTable(): string
+    {
+        return $this->batchTable;
     }
 
     /**
