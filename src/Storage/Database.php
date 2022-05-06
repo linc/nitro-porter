@@ -77,7 +77,7 @@ class Database extends Storage
                 $info['rows']++;
                 $row = $this->normalizeRow($map, $structure, $row, $filters);
                 $bytes = $this->batchInsert($row);
-                $info['memory'] = ($bytes > $info['memory']) ? $bytes : $info['memory']; // Highest memory usage.
+                $info['memory'] = max($bytes, $info['memory']); // Highest memory usage.
             }
         } elseif (is_a($data, '\Illuminate\Database\Query\Builder')) {
             // Use the Builder to process results one at a time.
@@ -85,7 +85,7 @@ class Database extends Storage
                 $info['rows']++;
                 $row = $this->normalizeRow($map, $structure, (array)$row, $filters);
                 $bytes = $this->batchInsert($row);
-                $info['memory'] = ($bytes > $info['memory']) ? $bytes : $info['memory'];  // Highest memory usage.
+                $info['memory'] = max($bytes, $info['memory']); // Highest memory usage.
             }
         }
 
