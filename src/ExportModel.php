@@ -299,7 +299,12 @@ class ExportModel
         $row = $this->fixEncoding($row);
 
         // Drop columns not in the structure.
-        return array_intersect_key($row, $structure);
+        $row = array_intersect_key($row, $structure);
+
+        // Convert empty strings to null.
+        return array_map(function ($value) {
+            return ('' === $value) ? null : $value;
+        }, $row);
     }
 
     /**
