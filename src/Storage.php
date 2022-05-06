@@ -148,7 +148,7 @@ abstract class Storage
             $doEncode = function_exists('mb_detect_encoding') &&
                 (mb_detect_encoding($value) != 'UTF-8') &&
                 (is_string($value) || is_numeric($value));
-            return ($doEncode) ? utf8_encode($value) : $value;
+            return ($doEncode) ? utf8_encode($value) : $value; // @todo Don't use utf8_encode()
         }, $row);
     }
 }
