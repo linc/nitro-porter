@@ -187,7 +187,7 @@ class File extends Storage
         $info['rows'] = 0;
         while ($row = $data->nextResultRow()) {
             $info['rows']++;
-            $row = $exportModel->normalizeRow($map, $structure, $row, $filters);
+            $row = $this->normalizeRow($map, $structure, $row, $filters);
             $this->writeRow($this->file, $row, $structure);
         }
         $this->writeEndTable($this->file);

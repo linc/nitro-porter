@@ -73,7 +73,7 @@ class Database extends Storage
             // Iterate on old ResultSet.
             while ($row = $data->nextResultRow()) {
                 $info['rows']++;
-                $batchedValues[] = $exportModel->normalizeRow($map, $structure, $row, $filters);
+                $batchedValues[] = $this->normalizeRow($map, $structure, $row, $filters);
 
                 // Insert batched records and reset batch.
                 if (self::INSERT_BATCH === count($batchedValues)) {
@@ -86,7 +86,7 @@ class Database extends Storage
             // Use the Builder to process results one at a time.
             foreach ($data->cursor() as $row) { // Using `chunk()` takes MUCH longer to process.
                 $info['rows']++;
-                $batchedValues[] = $exportModel->normalizeRow($map, $structure, (array)$row, $filters);
+                $batchedValues[] = $this->normalizeRow($map, $structure, (array)$row, $filters);
 
                 // Insert batched records and reset batch.
                 if (self::INSERT_BATCH === count($batchedValues)) {
