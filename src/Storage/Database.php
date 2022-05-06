@@ -7,9 +7,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Porter\Connection;
 use Porter\Database\ResultSet;
 use Porter\ExportModel;
-use Porter\StorageInterface;
+use Porter\Storage;
 
-class Database implements StorageInterface
+class Database extends Storage
 {
     public const INSERT_BATCH = 1000;
 

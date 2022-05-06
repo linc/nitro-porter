@@ -13,6 +13,11 @@ abstract class Postscript
     /** @var Connection */
     protected Connection $connection;
 
+    /**
+     * @var Storage Where the data is being sent.
+     */
+    protected Storage $storage;
+
     /** Main process, custom per package. */
     abstract public function run(ExportModel $ex);
 
@@ -21,8 +26,9 @@ abstract class Postscript
      *
      * @param Connection $connection
      */
-    public function __construct(Connection $connection)
+    public function __construct(Storage $storage, Connection $connection)
     {
+        $this->storage = $storage;
         $this->connection = $connection;
     }
 }

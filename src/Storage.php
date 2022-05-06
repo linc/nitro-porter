@@ -5,7 +5,7 @@ namespace Porter;
 use Illuminate\Database\Query\Builder;
 use Porter\Database\ResultSet;
 
-interface StorageInterface
+abstract class Storage
 {
     /**
      * Software-specific import process.
@@ -18,7 +18,7 @@ interface StorageInterface
      * @param ExportModel $exportModel
      * @return array Information about the results.
      */
-    public function store(
+    abstract public function store(
         string $name,
         array $map,
         array $structure,
@@ -31,13 +31,13 @@ interface StorageInterface
      * @param string $name
      * @param array $structure The final, combined structure to be written.
      */
-    public function prepare(string $name, array $structure): void;
+    abstract public function prepare(string $name, array $structure): void;
 
-    public function begin();
+    abstract public function begin();
 
-    public function end();
+    abstract public function end();
 
-    public function setPrefix(string $prefix): void;
+    abstract public function setPrefix(string $prefix): void;
 
-    public function exists(string $tableName, array $columns = []): bool;
+    abstract public function exists(string $tableName, array $columns = []): bool;
 }

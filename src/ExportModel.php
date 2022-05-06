@@ -83,9 +83,9 @@ class ExportModel
     protected Connection $importSource;
 
     /**
-     * @var StorageInterface Where the data is being sent.
+     * @var Storage Where the data is being sent.
      */
-    protected StorageInterface $storage;
+    protected Storage $storage;
 
     /**
      * Setup.

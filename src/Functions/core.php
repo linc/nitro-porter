@@ -12,7 +12,7 @@ use Porter\Postscript;
 use Porter\Request;
 use Porter\Source;
 use Porter\Target;
-use Porter\StorageInterface;
+use Porter\Storage;
 
 /**
  * Retrieve the config.
@@ -98,12 +98,12 @@ function targetFactory(string $target): Target
  * @param Connection $connection
  * @return Postscript|null
  */
-function postscriptFactory(string $target, Connection $connection): ?Postscript
+function postscriptFactory(string $target, Storage $storage, Connection $connection): ?Postscript
 {
     $postscript = null;
     $class = '\Porter\Postscript\\' . ucwords($target);
     if (class_exists($class)) {
-        $postscript = new $class($connection);
+        $postscript = new $class($storage, $connection);
     }
 
     return $postscript;
@@ -112,14 +112,14 @@ function postscriptFactory(string $target, Connection $connection): ?Postscript
 /**
  * @param Request $request
  * @param Connection $sourceConnect
- * @param StorageInterface $storage
+ * @param Storage $storage
  * @param Connection $targetConnect
  * @return ExportModel
  */
 function exportModelFactory(
-    Request $request,
+    Request    $request,
     Connection $sourceConnect,
-    StorageInterface $storage,
+    Storage    $storage,
     Connection $targetConnect
 ): ExportModel {
     // Wire old database / model mess.

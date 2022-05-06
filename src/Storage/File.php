@@ -5,9 +5,9 @@ namespace Porter\Storage;
 use Illuminate\Database\Query\Builder;
 use Porter\Database\ResultSet;
 use Porter\ExportModel;
-use Porter\StorageInterface;
+use Porter\Storage;
 
-class File implements StorageInterface
+class File extends Storage
 {
     /** Comment character in the import file. */
     public const COMMENT = '//';
