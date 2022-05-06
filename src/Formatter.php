@@ -55,6 +55,7 @@ class Formatter
 
         // Use the Quill renderer.
         $lexer = new Quill($text);
+        $lexer->registerListener(new \Porter\Parser\FlarumMention()); // Custom mention handler.
         $text = $lexer->render();
 
         // Wrap for TextFormatter.
@@ -63,6 +64,10 @@ class Formatter
 
     /**
      * Vanilla appears to use a customized 'header' element in Quill Deltas that breaks parsers.
+     *
+     * @todo Replace this with an overridden listener.
+     * @todo example call: `$lexer->overwriteListener(new Heading, new \Porter\Parser\Heading());`
+     * @todo example class: `class Heading extends \nadar\quill\listener\Heading`
      *
      * @param string $text
      * @return string
