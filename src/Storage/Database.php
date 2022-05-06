@@ -115,7 +115,9 @@ class Database extends Storage
     private function batchInsert(array $row, bool $final = false): int
     {
         static $batch = [];
-        $batch[] = $row;
+        if (!empty($row)) {
+            $batch[] = $row;
+        }
         $bytes = memory_get_usage(); // Measure before potential send.
 
         if (self::INSERT_BATCH === count($batch) || $final) {
