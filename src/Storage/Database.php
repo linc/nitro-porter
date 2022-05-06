@@ -95,6 +95,16 @@ class Database extends Storage
         return $info;
     }
 
+    public function stream(array $row, array $structure): int
+    {
+        return $this->batchInsert($row);
+    }
+
+    public function endStream(): int
+    {
+        return $this->batchInsert([], true);
+    }
+
     /**
      * Accept rows one at a time and batch them together for more efficient inserts.
      *
@@ -161,6 +171,7 @@ class Database extends Storage
             $this->createTable($this->prefix . $name, $this->getTableStructureClosure($structure));
         }
         $this->resetTables[] = $name;
+        $this->setBatchTable($name);
     }
 
     /**

@@ -41,6 +41,10 @@ abstract class Storage
 
     abstract public function exists(string $tableName, array $columns = []): bool;
 
+    abstract public function stream(array $row, array $structure);
+
+    abstract public function endStream();
+
     /**
      * Prepare a row of data for storage.
      *

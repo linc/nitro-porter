@@ -195,6 +195,16 @@ class File extends Storage
         return $info;
     }
 
+    public function stream(array $row, array $structure)
+    {
+        $this->writeRow($this->file, $row, $structure);
+    }
+
+    public function endStream()
+    {
+        // Required.
+    }
+
     /**
      * Write CSV header row.
      *
