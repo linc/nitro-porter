@@ -279,6 +279,18 @@ class ExportModel
     }
 
     /**
+     * Shim for storage method access.
+     *
+     * @deprecated
+     * @param array $dataMap
+     * @return array
+     */
+    public function normalizeDataMap(array $dataMap): array
+    {
+        return $this->storage->normalizeDataMap($dataMap);
+    }
+
+    /**
      * Do preprocessing on the database query.
      *
      * @param string $query
