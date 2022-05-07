@@ -7,6 +7,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Porter\Connection;
 use Porter\Database\ResultSet;
 use Porter\ExportModel;
+use Porter\Postscript;
 use Porter\Storage;
 
 class Database extends Storage
@@ -95,11 +96,28 @@ class Database extends Storage
         return $info;
     }
 
+    /**
+     * Lower-level single record insert access.
+     *
+     * While `store()` takes a batch and processes it, this takes 1 row at a time.
+     * Created for Postscripts to have finer control over record inserts.
+     * @see Postscript — Where this method is most likely used (its children).
+     * @see endStream — Must be called after using this method.
+     *
+     * @param array $row
+     * @param array $structure
+     * @return int
+     */
     public function stream(array $row, array $structure): int
     {
         return $this->batchInsert($row);
     }
 
+    /**
+     * Send remaining batched records for insert.
+     *
+     * @return int
+     */
     public function endStream(): int
     {
         return $this->batchInsert([], true);
