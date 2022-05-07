@@ -105,10 +105,11 @@ class Formatter
      * @see \Porter\Target\Flarum::comments()
      *
      * @param string $value
+     * @param string $column
      * @param array $row
      * @return string
      */
-    public static function filterFlarumContent(string $value, array $row): string
+    public static function filterFlarumContent(string $value, string $column, array $row): string
     {
         $format = $row['Format'] ?? 'Text'; // Apparently null 'Format' values are possible.
         return self::toTextFormatter($format, $value);
