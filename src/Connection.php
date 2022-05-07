@@ -30,6 +30,7 @@ class Connection
         } else {
             $info = Config::getInstance()->getTestConnection();
         }
+
         $this->setInfo($info);
         $this->setType($info['type']);
 
@@ -43,7 +44,14 @@ class Connection
         }
     }
 
-    public function reset()
+    /**
+     * Resets the database instance.
+     *
+     * DB driver can't reuse connections with unbuffered queries.
+     *
+     * @return $this Make it chainable.
+     */
+    public function reset(): self
     {
         // Reset Illuminate Database instance.
         $info = $this->getInfo();
@@ -52,6 +60,7 @@ class Connection
             $capsule->addConnection($this->translateConfig($info), $info['alias']);
             $this->dbm = $capsule;
         }
+        return $this;
     }
 
     public function setType(string $type)
@@ -94,7 +103,6 @@ class Connection
      */
     public function dbm(): \Illuminate\Database\Connection
     {
-        $this->reset(); // DB driver can't reuse connections with unbuffered queries.
         return $this->dbm->getConnection($this->alias);
     }
 
