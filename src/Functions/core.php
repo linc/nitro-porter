@@ -117,9 +117,9 @@ function postscriptFactory(string $target, Storage $storage, Connection $connect
  * @return ExportModel
  */
 function exportModelFactory(
-    Request    $request,
+    Request $request,
     Connection $sourceConnect,
-    Storage    $storage,
+    Storage $storage,
     Connection $targetConnect
 ): ExportModel {
     // Wire old database / model mess.
