@@ -153,9 +153,7 @@ class Database extends Storage
      */
     private function sendBatch(array $batch)
     {
-        $this->connection->reset(); // DB driver can't reuse connections with unbuffered queries.
-        $db = $this->connection->dbm->getConnection($this->connection->getAlias());
-        $db->table($this->getBatchTable())->insert($batch);
+        $this->connection->dbm()->table($this->getBatchTable())->insert($batch);
     }
 
     /**
