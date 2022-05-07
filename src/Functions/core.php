@@ -253,6 +253,9 @@ function formatElapsed(float $elapsed): string
  */
 function formatBytes(int $size): string
 {
+    if (!$size) {
+        return '0b';
+    }
     $unit = ['b','kb','mb','gb','tb','pb'];
     return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 1) . $unit[$i];
 }
