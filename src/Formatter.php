@@ -27,7 +27,7 @@ class Formatter
             case 'Markdown':
                 return Markdown::parse($text);
             case 'Rich': // Quill
-                return self::dequill($text);
+                return self::wrap('r', self::dequill($text));
             case 'Text':
             case 'TextEx':
             default:
@@ -55,11 +55,9 @@ class Formatter
 
         // Use the Quill renderer.
         $lexer = new Quill($text);
-        $lexer->registerListener(new \Porter\Parser\FlarumMention()); // Custom mention handler.
-        $text = $lexer->render();
-
-        // Wrap for TextFormatter.
-        return self::wrap('r', $text);
+        // Custom mention handler.
+        $lexer->registerListener(new \Porter\Parser\FlarumMention());
+        return $lexer->render();
     }
 
     /**
