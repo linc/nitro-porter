@@ -38,9 +38,13 @@ class Flarum extends Postscript
 
         // Find & record mentions in batches.
         foreach ($posts->cursor() as $post) {
-            // Find mentions and connect to a userID.
+            // Find converted mentions and connect to userID.
             $mentions = [];
-            preg_match_all('/<USERMENTION .* id="(?<userids>[0-9]*)".*\/USERMENTION>/U', $post->content, $mentions);
+            preg_match_all(
+                '/<USERMENTION .* id="(?<userids>[0-9]*)".*\/USERMENTION>/U',
+                $post->content,
+                $mentions
+            );
             foreach ($mentions['userids'] as $userid) {
                 // There can be multiple userids per post.
                 $this->storage->stream([
