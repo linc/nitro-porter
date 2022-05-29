@@ -8,6 +8,34 @@ use nadar\quill\Lexer as Quill;
 
 class Formatter
 {
+    /** @var ?Formatter Singleton storage. */
+    private static ?Formatter $instance = null;
+
+    /** @var array Some formatting requires UserIDs to be accessible. */
+    protected array $userMap = [];
+
+    /**
+     * Singleton accessor.
+     *
+     * @return Formatter
+     */
+    public static function instance($ex = null): self
+    {
+        if (null === self::$instance) {
+            self::$instance = new self();
+            self::$instance->setup($ex);
+        }
+        return self::$instance;
+    }
+
+    /**
+     * @return void
+     */
+    public function setup(ExportModel $ex)
+    {
+        $this->userMap = $ex->buildUserMap();
+    }
+
     /**
      * Put content in TextFormatter-compatible format.
      *
@@ -15,23 +43,23 @@ class Formatter
      * @param string $text
      * @return string
      */
-    public static function toTextFormatter(string $format, string $text): string
+    public function toTextFormatter(string $format, string $text): string
     {
         switch ($format) {
             case 'Html':
             case 'Wysiwyg':
             case 'Raw': // Unfiltered
-                return self::wrap('r', $text);
+                return self::wrap('r', $this->fixRawMentions($text));
             case 'BBCode':
-                return BBCode::parse($text);
+                return $this->fixRawMentions(BBCode::parse($text));
             case 'Markdown':
-                return Markdown::parse($text);
+                return $this->fixRawMentions(Markdown::parse($text));
             case 'Rich': // Quill
                 return self::wrap('r', self::dequill($text));
             case 'Text':
             case 'TextEx':
             default:
-                return self::wrap('t', $text);
+                return self::wrap('t', $this->fixRawMentions($text));
         }
     }
 
@@ -83,6 +111,53 @@ class Formatter
     }
 
     /**
+     * Replace basic Vanilla mentions with tag-based Flarum mentions.
+     *
+     * @param string $text
+     * @return string
+     */
+    public function fixRawMentions(string $text): string
+    {
+        // Find unconverted mentions and associate userID.
+        $mentions = $this->findRawMentions($text);
+        foreach ($mentions as $mention) {
+            // Remove the optional double quote if present & guarantee we have a userid.
+            $slug = strtolower(trim($mention, "\""));
+            if (!isset($this->userMap[$slug])) {
+                continue; // Username wasn't in the map, abort.
+            }
+
+            // Do the content substitution per found mention.
+            $newMention = '<USERMENTION id="' . $this->userMap[$slug] . '">@' . $mention . '</USERMENTION>';
+            $text = str_replace('@' . $mention, $newMention, $text);
+        }
+
+        return $text;
+    }
+
+    /**
+     * Find valid Vanilla mentions in a post's content.
+     *
+     * Results may be wrapped in double quotes if the original was.
+     *
+     * @param string $content
+     * @return array
+     */
+    protected function findRawMentions(string $content): array
+    {
+        $mentions = [];
+        preg_match_all(
+            // Mentions start with '@' and may be quoted or not.
+            // Valid username rules apply unless it's quoted, in which case ANY character is allowed.
+            // Mentions are bounded by whitespace, non-dash/underscore punctuation, OR the start/end of content.
+            '/(?:^|[\s\r\n])@(([\p{N}\p{L}\p{M}\p{Pc}\p{Pd}]+)(?=[\s\r\n\p{Po}\p{Ps}\p{Pe}]+|$)|(".+"))/Uu',
+            $content,
+            $mentions
+        );
+        return $mentions[1];
+    }
+
+    /**
      * Wraps text in an XML tag.
      *
      * s9e\TextFormatter requires a `<t>` wrap for plain text and `<r>` for HTML ('rich').
@@ -94,22 +169,5 @@ class Formatter
     public static function wrap(string $char, string $text): string
     {
         return '<' . $char . '>' . $text . '</' . $char . '>';
-    }
-
-    /**
-     * Available filter for ExportModel.
-     *
-     * @see ExportModel::filterData()
-     * @see \Porter\Target\Flarum::comments()
-     *
-     * @param string $value
-     * @param string $column
-     * @param array $row
-     * @return string
-     */
-    public static function filterFlarumContent(string $value, string $column, array $row): string
-    {
-        $format = $row['Format'] ?? 'Text'; // Apparently null 'Format' values are possible.
-        return self::toTextFormatter($format, $value);
     }
 }

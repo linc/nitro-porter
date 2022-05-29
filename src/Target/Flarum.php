@@ -8,6 +8,7 @@
 namespace Porter\Target;
 
 use Porter\ExportModel;
+use Porter\Formatter;
 use Porter\Target;
 
 class Flarum extends Target
@@ -42,6 +43,10 @@ class Flarum extends Target
         $this->users($ex);
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
+
+        // Singleton factory; big timing issue; depends on Users being done.
+        Formatter::instance($ex); // @todo Hook for pre-UGC import?
+
         $this->discussions($ex);
         $this->bookmarks($ex); // flarum/subscriptions
         $this->comments($ex); // Posts
@@ -220,7 +225,7 @@ class Flarum extends Target
             'Body' => 'content'
         ];
         $filters = [
-            'Body' => 'Porter\Formatter::filterFlarumContent',
+            'Body' => 'filterFlarumContent',
         ];
         $query = $ex->dbImport()->table('PORT_Comment')
             ->select(

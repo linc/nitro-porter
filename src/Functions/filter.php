@@ -7,6 +7,23 @@
  */
 
 /**
+ * Available filter for ExportModel.
+ *
+ * @see ExportModel::filterData()
+ * @see \Porter\Target\Flarum::comments()
+ *
+ * @param string $value
+ * @param string $column
+ * @param array $row
+ * @return string
+ */
+function filterFlarumContent(string $value, string $column, array $row): string
+{
+    $format = $row['Format'] ?? 'Text'; // Apparently null 'Format' values are possible.
+    return \Porter\Formatter::instance()->toTextFormatter($format, $value);
+}
+
+/**
  * Don't allow zero-equivalent dates.
  *
  * @param string $value

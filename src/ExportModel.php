@@ -291,6 +291,33 @@ class ExportModel
     }
 
     /**
+     * Create an array of `strtolower(name)` => ID for doing lookups later.
+     *
+     * @todo This strategy likely won't scale past 100K users. 18K users @ +8mb memory use.
+     *
+     * @return array
+     */
+    public function buildUserMap(): array
+    {
+        $userMap = $this->importSource->dbm()
+            ->table($this->tarPrefix . 'users')
+            ->get(['id', 'username']);
+
+        $users = [];
+        foreach ($userMap as $user) {
+            // Use the first found ID for each name in case of duplicates.
+            if (!isset($users[$user->username])) {
+                $users[strtolower($user->username)] = $user->id;
+            }
+        }
+
+        // Record memory usage from user map.
+        $this->comment('Mentions map memory usage at ' . formatBytes(memory_get_usage()));
+
+        return $users;
+    }
+
+    /**
      * Do preprocessing on the database query.
      *
      * @param string $query
