@@ -112,7 +112,10 @@ class Controller
             self::doImport($target, $exportModel);
 
             // Finalize the import (if the optional postscript class exists).
-            $postscript = postscriptFactory($request->get('output'), $storage, $targetConnection);
+            // Use a separate database connection since re-querying data may be necessary.
+            // -> "Cannot execute queries while other unbuffered queries are active."
+            $postConnection = new Connection($request->get('target') ?? '');
+            $postscript = postscriptFactory($request->get('output'), $storage, $postConnection);
             if ($postscript) {
                 $postscript->run($exportModel);
             }
