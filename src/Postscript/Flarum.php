@@ -28,6 +28,10 @@ class Flarum extends Postscript
      */
     protected function buildUserMentions(ExportModel $ex)
     {
+        // Start timer.
+        $start = microtime(true);
+        $rows = 0;
+
         // Prepare mentions table.
         $this->storage->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
 
@@ -51,10 +55,14 @@ class Flarum extends Postscript
                     'post_id' => $post->id,
                     'mentions_user_id' => (int)$userid
                 ], self::DB_STRUCTURE_POST_MENTIONS_USER);
+                $rows++;
             }
         }
 
         // Insert remaining mentions.
         $this->storage->endStream();
+
+        // Report.
+        $ex->reportStorage('import', 'mentions', microtime(true) - $start, $rows, 0);
     }
 }
