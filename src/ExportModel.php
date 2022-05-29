@@ -306,7 +306,7 @@ class ExportModel
         $users = [];
         foreach ($userMap as $user) {
             // Use the first found ID for each name in case of duplicates.
-            if (!isset($users[$user->username])) {
+            if (!isset($users[strtolower($user->username)])) {
                 $users[strtolower($user->username)] = $user->id;
             }
         }
