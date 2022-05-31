@@ -194,16 +194,23 @@ class Database extends Storage
     }
 
     /**
-     * Create a new table. Drops the table first if it already exists.
+     * Create a new table if it doesn't already exist.
      *
      * @param string $name
      * @param callable $closure
      */
     public function createTable(string $name, callable $closure)
     {
-        $schema = $this->connection->dbm->getConnection($this->connection->getAlias())->getSchemaBuilder();
-        $schema->dropIfExists($name);
-        $schema->create($name, $closure);
+        $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $schema = $dbm->getSchemaBuilder();
+        if ($this->exists($name)) {
+            // Empty the table if it already exists.
+            $dbm->query()->from($name)->truncate();
+            // @todo Check column integrity too.
+        } else {
+            // Create table if it does not.
+            $schema->create($name, $closure);
+        }
     }
 
     /**
@@ -272,19 +279,29 @@ class Database extends Storage
     }
 
     /**
+     * Disable foreign key & secondary unique checking temporarily for import.
+     *
+     * Does not disable primary unique key enforcement (which is not possible).
      * Required by interface.
      */
     public function begin()
     {
-        // Do nothing.
+        $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $dbm->unprepared("SET foreign_key_checks = 0");
+        $dbm->unprepared("SET unique_checks = 0");
     }
 
     /**
+     * Re-enable foreign key & secondary unique checking.
+     *
+     * Does not enforce constraints on existing data.
      * Required by interface.
      */
     public function end()
     {
-        // Do nothing.
+        $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $dbm->unprepared("SET foreign_key_checks = 1");
+        $dbm->unprepared("SET unique_checks = 1");
     }
 
     /**
