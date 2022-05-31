@@ -44,7 +44,7 @@ function fixDuplicateDeletedNames(string $value, string $column, array $row): st
 }
 
 /**
- * @param $value
+ * @param mixed $value
  * @param string $column
  * @param array $row
  * @return string
