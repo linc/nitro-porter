@@ -24,6 +24,40 @@ function filterFlarumContent(string $value, string $column, array $row): string
 }
 
 /**
+ * De-duplicate deleted usernames.
+ *
+ * Check for '[Deleted User]' (and variants) as username and replace.
+ * Violates a unique key constraint on the target db's username field.
+ *
+ * @param string $value
+ * @param string $column
+ * @param array $row
+ * @return string
+ */
+function fixDuplicateDeletedNames(string $value, string $column, array $row): string
+{
+    $duplicates = ['[Deleted User]', '-Deleted-User-'];
+    if (in_array($value, $duplicates)) {
+        $value = 'deleted_user_' . $row['UserID'];
+    }
+    return $value;
+}
+
+/**
+ * @param $value
+ * @param string $column
+ * @param array $row
+ * @return string
+ */
+function fixNullEmails($value, string $column, array $row): string
+{
+    if (empty($value)) {
+        $value = 'blank_email_' . $row['UserID'];
+    }
+    return $value;
+}
+
+/**
  * Don't allow zero-equivalent dates.
  *
  * @param string $value

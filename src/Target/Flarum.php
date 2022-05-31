@@ -88,9 +88,13 @@ class Flarum extends Target
             'CountDiscussions' => 'discussion_count',
             'CountComments' => 'comment_count',
         ];
+        $filters = [
+            'Name' => 'fixDuplicateDeletedNames',
+            'Email' => 'fixNullEmails',
+        ];
         $query = $ex->dbImport()->table('PORT_User')->select('*');
 
-        $ex->import('users', $query, $structure, $map);
+        $ex->import('users', $query, $structure, $map, $filters);
     }
 
     /**
