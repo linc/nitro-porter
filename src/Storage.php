@@ -84,7 +84,7 @@ abstract class Storage
     public function filterData(array $row, array $filters): array
     {
         foreach ($filters as $column => $callable) {
-            if (isset($row[$column])) {
+            if (array_key_exists($column, $row)) {
                 $row[$column] = call_user_func($callable, $row[$column], $column, $row);
             }
         }
