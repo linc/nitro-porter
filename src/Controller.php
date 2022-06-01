@@ -44,6 +44,7 @@ class Controller
     public static function doImport(Target $target, ExportModel $model)
     {
         $model->begin();
+        $target->validate($model);
         $target->run($model);
         $model->end();
     }

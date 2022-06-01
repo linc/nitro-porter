@@ -36,6 +36,38 @@ class Flarum extends Target
     ];
 
     /**
+     * Check for issues that will break the import.
+     *
+     * @param ExportModel $ex
+     */
+    public function validate(ExportModel $ex)
+    {
+        $this->uniqueUserNames($ex);
+        $this->uniqueUserEmails($ex);
+    }
+
+    public function uniqueUserNames(ExportModel $ex)
+    {
+        $allowlist = ['[Deleted User]', '-Deleted-User-']; // @see fixDuplicateDeletedNames()
+        $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
+        if (!empty($dupes)) {
+            // @todo Do nicer error log + halt here to allow export to output report.
+            exit('Import halted due to data integrity error. Found duplicates for user.name: '
+                . implode(', ', $dupes));
+        }
+    }
+
+    public function uniqueUserEmails(ExportModel $ex)
+    {
+        $dupes = $ex->findDuplicates('PORT_User', 'Email');
+        if (!empty($dupes)) {
+            // @todo Do nicer error log + halt here to allow export to output report.
+            exit('Import halted due to data integrity error. Found duplicates for user.email: '
+                . implode(', ', $dupes));
+        }
+    }
+
+    /**
      * Main import process.
      */
     public function run(ExportModel $ex)

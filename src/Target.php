@@ -65,5 +65,9 @@ abstract class Target
         $this->useDiscussionBody = false;
     }
 
+    /** Do the main process for imports, table by table. */
     abstract public function run(ExportModel $ex);
+
+    /** Enforce data constraints required by the target platform. */
+    abstract public function validate(ExportModel $ex);
 }

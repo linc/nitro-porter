@@ -318,6 +318,28 @@ class ExportModel
     }
 
     /**
+     * Find duplicate records on the given table + column.
+     *
+     * @param string $table
+     * @param string $column
+     * @return array
+     */
+    public function findDuplicates(string $table, string $column): array
+    {
+        $results = [];
+        $db = $this->dbImport();
+        $duplicates = $db->table($table)
+            ->select($column, $db->raw('count(' . $column . ') as found_count'))
+            ->groupBy($column)
+            ->having('found_count', '>', 1)
+            ->get();
+        foreach ($duplicates as $dupe) {
+            $results[] = $dupe->Name;
+        }
+        return $results;
+    }
+
+    /**
      * Do preprocessing on the database query.
      *
      * @param string $query
