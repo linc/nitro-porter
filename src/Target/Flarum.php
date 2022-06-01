@@ -137,12 +137,14 @@ class Flarum extends Target
         $structure = [
             'id' => 'int',
             'name_singular' => 'varchar(100)',
+            'name_plural' => 'varchar(100)',
         ];
         $map = [
             'RoleID' => 'id',
             'Name' => 'name_singular',
+            'Plural' => 'name_plural',
         ];
-        $query = $ex->dbImport()->table('PORT_Role')->select('*');
+        $query = $ex->dbImport()->table('PORT_Role')->select('*', 'Name as Plural');
 
         $ex->import('groups', $query, $structure, $map);
 
