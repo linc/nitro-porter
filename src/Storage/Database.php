@@ -4,7 +4,7 @@ namespace Porter\Storage;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
-use Porter\Connection;
+use Porter\ConnectionManager;
 use Porter\Database\ResultSet;
 use Porter\ExportModel;
 use Porter\Postscript;
@@ -35,14 +35,14 @@ class Database extends Storage
     public array $resetTables = [];
 
     /**
-     * @var Connection
+     * @var ConnectionManager
      */
-    public Connection $connection;
+    public ConnectionManager $connection;
 
     /**
-     * @param Connection $c
+     * @param ConnectionManager $c
      */
-    public function __construct(Connection $c)
+    public function __construct(ConnectionManager $c)
     {
         $this->connection = $c;
     }

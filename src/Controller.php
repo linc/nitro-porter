@@ -78,16 +78,16 @@ class Controller
 
         // Set up export storage.
         if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
-            $targetConnection = new Connection(); // Unused but required by ExportModel regardless.
+            $targetConnection = new ConnectionManager(); // Unused but required by ExportModel regardless.
             $storage = new Storage\File();
         } else {
-            $targetConnection = new Connection($request->get('target') ?? '');
+            $targetConnection = new ConnectionManager($request->get('target') ?? '');
             $storage = new Storage\Database($targetConnection);
         }
 
         // Setup source & model.
         $source = sourceFactory($request->get('package'));
-        $sourceConnection = new Connection($request->get('source'));
+        $sourceConnection = new ConnectionManager($request->get('source'));
         // @todo Pass options not Request
         $exportModel = exportModelFactory($request, $sourceConnection, $storage, $targetConnection);
 
@@ -115,7 +115,7 @@ class Controller
             // Finalize the import (if the optional postscript class exists).
             // Use a separate database connection since re-querying data may be necessary.
             // -> "Cannot execute queries while other unbuffered queries are active."
-            $postConnection = new Connection($request->get('target') ?? '');
+            $postConnection = new ConnectionManager($request->get('target') ?? '');
             $postscript = postscriptFactory($request->get('output'), $storage, $postConnection);
             if ($postscript) {
                 $postscript->run($exportModel);

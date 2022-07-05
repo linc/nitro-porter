@@ -4,7 +4,7 @@
  * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
-use Porter\Connection;
+use Porter\ConnectionManager;
 use Porter\Database\DbFactory;
 use Porter\ExportModel;
 use Porter\ImportModel;
@@ -55,7 +55,7 @@ function loadStructure(): array
  */
 function getTestDatabaseCredentials(): array
 {
-    $c = new \Porter\Connection();
+    $c = new \Porter\ConnectionManager();
     return $c->getAllInfo();
 }
 
@@ -95,10 +95,10 @@ function targetFactory(string $target): Target
  * Get postscript class if it exists.
  *
  * @param string $target
- * @param Connection $connection
+ * @param ConnectionManager $connection
  * @return Postscript|null
  */
-function postscriptFactory(string $target, Storage $storage, Connection $connection): ?Postscript
+function postscriptFactory(string $target, Storage $storage, ConnectionManager $connection): ?Postscript
 {
     $postscript = null;
     $class = '\Porter\Postscript\\' . ucwords($target);
@@ -111,16 +111,16 @@ function postscriptFactory(string $target, Storage $storage, Connection $connect
 
 /**
  * @param Request $request
- * @param Connection $sourceConnect
+ * @param ConnectionManager $sourceConnect
  * @param Storage $storage
- * @param Connection $targetConnect
+ * @param ConnectionManager $targetConnect
  * @return ExportModel
  */
 function exportModelFactory(
-    Request $request,
-    Connection $sourceConnect,
-    Storage $storage,
-    Connection $targetConnect
+    Request           $request,
+    ConnectionManager $sourceConnect,
+    Storage           $storage,
+    ConnectionManager $targetConnect
 ): ExportModel {
     // Wire old database / model mess.
     $info = $sourceConnect->getAllInfo();

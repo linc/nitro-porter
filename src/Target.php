@@ -26,7 +26,7 @@ abstract class Target
      */
     protected bool $useDiscussionBody = true;
 
-    public Connection $connection;
+    public ConnectionManager $connection;
 
     /**
      * Register supported features.

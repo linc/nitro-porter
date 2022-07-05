@@ -4,7 +4,7 @@ namespace Porter;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-class Connection
+class ConnectionManager
 {
     /** @var array Valid values for $type. */
     public const ALLOWED_TYPES = ['database', 'files', 'api'];
@@ -14,6 +14,8 @@ class Connection
     protected string $alias = '';
 
     protected array $info = [];
+
+    // @todo Store the actual connection here and RENAME THIS OBJECT TO `CONNECTION MANAGER`
 
     public Capsule $dbm;
 

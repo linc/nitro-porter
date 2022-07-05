@@ -10,8 +10,8 @@ namespace Porter;
  */
 abstract class Postscript
 {
-    /** @var Connection */
-    protected Connection $connection;
+    /** @var ConnectionManager */
+    protected ConnectionManager $connection;
 
     /**
      * @var Storage Where the data is being sent.
@@ -24,9 +24,9 @@ abstract class Postscript
     /**
      * Only Target database connection required; don't care what Source was.
      *
-     * @param Connection $connection
+     * @param ConnectionManager $connection
      */
-    public function __construct(Storage $storage, Connection $connection)
+    public function __construct(Storage $storage, ConnectionManager $connection)
     {
         $this->storage = $storage;
         $this->connection = $connection;
