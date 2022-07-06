@@ -39,11 +39,11 @@ class Formatter
     /**
      * Put content in TextFormatter-compatible format.
      *
-     * @param string $format
-     * @param string $text
+     * @param ?string $format
+     * @param ?string $text
      * @return string
      */
-    public function toTextFormatter(string $format, string $text): string
+    public function toTextFormatter(?string $format, ?string $text): string
     {
         switch ($format) {
             case 'Html':

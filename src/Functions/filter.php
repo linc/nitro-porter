@@ -12,12 +12,12 @@
  * @see ExportModel::filterData()
  * @see \Porter\Target\Flarum::comments()
  *
- * @param string $value
+ * @param ?string $value
  * @param string $column
  * @param array $row
  * @return string
  */
-function filterFlarumContent(string $value, string $column, array $row): string
+function filterFlarumContent(?string $value, string $column, array $row): string
 {
     $format = $row['Format'] ?? 'Text'; // Apparently null 'Format' values are possible.
     return \Porter\Formatter::instance()->toTextFormatter($format, $value);
@@ -36,7 +36,7 @@ function filterFlarumContent(string $value, string $column, array $row): string
  */
 function fixDuplicateDeletedNames(string $value, string $column, array $row): string
 {
-    $duplicates = ['[Deleted User]', '-Deleted-User-'];
+    $duplicates = ['[Deleted User]', '[DeletedUser]', '-Deleted-User-'];
     if (in_array($value, $duplicates)) {
         $value = 'deleted_user_' . $row['UserID'];
     }
