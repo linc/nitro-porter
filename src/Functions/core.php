@@ -111,22 +111,22 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
 
 /**
  * @param Request $request
- * @param ConnectionManager $sourceConnect
+ * @param ConnectionManager $sourceCM
  * @param Storage $storage
- * @param ConnectionManager $targetConnect
+ * @param ConnectionManager $targetCM
  * @return ExportModel
  */
 function exportModelFactory(
     Request           $request,
-    ConnectionManager $sourceConnect,
+    ConnectionManager $sourceCM,
     Storage           $storage,
-    ConnectionManager $targetConnect
+    ConnectionManager $targetCM
 ): ExportModel {
     // Wire old database / model mess.
-    $info = $sourceConnect->getAllInfo();
+    $info = $sourceCM->getAllInfo();
     $db = new DbFactory($info, 'pdo');
     $map = loadStructure();
-    $model = new ExportModel($db, $map, $storage, $targetConnect);
+    $model = new ExportModel($db, $map, $storage, $targetCM);
 
     // Set model properties.
     $model->srcPrefix = $request->get('src-prefix') ?? '';
