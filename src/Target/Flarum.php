@@ -46,24 +46,40 @@ class Flarum extends Target
         $this->uniqueUserEmails($ex);
     }
 
+    /**
+     * Flarum must have unique usernames.
+     *
+     * Unsure this could get automated. You'd have to determine which has/have data attached and possibly merge.
+     * You'd also need more data from findDuplicates, especially the IDs.
+     * Folks are just gonna need to manually edit their existing forum data for now to rectify dupe issues.
+     *
+     * @param ExportModel $ex
+     */
     public function uniqueUserNames(ExportModel $ex)
     {
-        $allowlist = ['[Deleted User]', '-Deleted-User-']; // @see fixDuplicateDeletedNames()
+        $allowlist = ['[Deleted User]', '[DeletedUser]', '-Deleted-User-']; // @see fixDuplicateDeletedNames()
         $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
         if (!empty($dupes)) {
             // @todo Do nicer error log + halt here to allow export to output report.
-            exit('Import halted due to data integrity error. Found duplicates for user.name: '
-                . implode(', ', $dupes));
+            //exit('Import halted. Found duplicates for user.name, which Flarum cannot import. Fix these first: '
+            //    . implode(', ', $dupes));
         }
     }
 
+    /**
+     * Flarum must have unique emails.
+     *
+     * @see uniqueUserNames
+     *
+     * @param ExportModel $ex
+     */
     public function uniqueUserEmails(ExportModel $ex)
     {
         $dupes = $ex->findDuplicates('PORT_User', 'Email');
         if (!empty($dupes)) {
             // @todo Do nicer error log + halt here to allow export to output report.
-            exit('Import halted due to data integrity error. Found duplicates for user.email: '
-                . implode(', ', $dupes));
+            //exit('Import halted. Found duplicates for user.email, which Flarum cannot import. Fix these first: '
+            //    . implode(', ', $dupes));
         }
     }
 
@@ -83,13 +99,13 @@ class Flarum extends Target
         $this->bookmarks($ex); // flarum/subscriptions
         $this->comments($ex); // Posts
 
-        if ($ex->targetExists(('PORT_Badge'))) {
+        if ($ex->targetExists('PORT_Badge')) {
             $this->badges($ex); // 17development/flarum-user-badges
         }
-        if ($ex->targetExists(('PORT_Poll'))) {
+        if ($ex->targetExists('PORT_Poll')) {
             $this->polls($ex); // fof/polls
         }
-        if ($ex->targetExists(('PORT_ReactionType'))) {
+        if ($ex->targetExists('PORT_ReactionType')) {
             $this->reactions($ex); //
         }
         $this->privateMessages($ex);
@@ -146,6 +162,7 @@ class Flarum extends Target
         ];
         $query = $ex->dbImport()->table('PORT_Role')->select('*', 'Name as Plural');
 
+        $ex->dbImport()->unprepared("SET foreign_key_checks = 0");
         $ex->import('groups', $query, $structure, $map);
 
         // User Role.
@@ -159,6 +176,7 @@ class Flarum extends Target
         ];
         $query = $ex->dbImport()->table('PORT_UserRole')->select('*');
 
+        $ex->dbImport()->unprepared("SET foreign_key_checks = 0");
         $ex->import('group_user', $query, $structure, $map);
     }
 
@@ -202,16 +220,20 @@ class Flarum extends Target
             'tag_id' => 'int',
             'is_sticky' => 'tinyint', // flarum/sticky
             'is_locked' => 'tinyint', // flarum/lock
-            'view_count' => 'int', // flarumite/simple-discussion-views
         ];
         $map = [
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
             'Name' => 'title',
-            'CountViews' => 'view_count',
             'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
             'Closed' => 'is_locked',
         ];
+        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
+            // flarumite/simple-discussion-views
+            $structure['view_count'] = 'int';
+            $map['CountViews'] = 'view_count';
+        }
+
         $query = $ex->dbImport()->table('PORT_Discussion')->select('*');
 
         $ex->import('discussions', $query, $structure, $map);
