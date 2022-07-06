@@ -3,7 +3,11 @@
 namespace Porter;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Database\Connection;
 
+/**
+ * Manages a single connection to a data source or target, like a database or API.
+ */
 class ConnectionManager
 {
     /** @var array Valid values for $type. */
@@ -15,7 +19,8 @@ class ConnectionManager
 
     protected array $info = [];
 
-    // @todo Store the actual connection here and RENAME THIS OBJECT TO `CONNECTION MANAGER`
+    /** @var Connection Current connection being used. */
+    protected Connection $connection;
 
     public Capsule $dbm;
 
@@ -41,8 +46,7 @@ class ConnectionManager
             $capsule = new Capsule();
             $capsule->addConnection($this->translateConfig($info), $info['alias']);
             $this->dbm = $capsule;
-            //$capsule->setAsGlobal();
-            //$capsule->bootEloquent();
+            $this->newConnection();
         }
     }
 
@@ -99,13 +103,24 @@ class ConnectionManager
     }
 
     /**
+     * Get the current DBM connection.
+     *
+     * @return Connection
+     */
+    public function connection(): Connection
+    {
+        return $this->connection;
+    }
+
+    /**
      * Get a new DBM connection.
      *
-     * @return \Illuminate\Database\Connection
+     * @return Connection
      */
-    public function dbm(): \Illuminate\Database\Connection
+    public function newConnection(): Connection
     {
-        return $this->dbm->getConnection($this->alias);
+        $this->connection = $this->dbm->getConnection($this->alias);
+        return $this->connection;
     }
 
     /**

@@ -6,6 +6,7 @@
 
 namespace Porter;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
@@ -89,24 +90,28 @@ class ExportModel
 
     /**
      * Setup.
+     *
+     * @param $db
+     * @param $map
+     * @param $storage
+     * @param ConnectionManager $cm
      */
-    public function __construct($db, $map, $storage, $connection)
+    public function __construct($db, $map, $storage, ConnectionManager $cm)
     {
         $this->database = $db;
         $this->mapStructure = $map;
         $this->storage = $storage;
-        $this->importSource = $connection;
+        $this->importSource = $cm->newConnection();
     }
 
     /**
      * Provide the import database.
      *
-     * @return \Illuminate\Database\Connection
+     * @return Connection
      */
-    public function dbImport(): \Illuminate\Database\Connection
+    public function dbImport(): Connection
     {
-        // @todo Put this logic in our Connection class.
-        return $this->importSource->dbm->getConnection($this->importSource->getAlias());
+        return $this->importSource;
     }
 
     /**
@@ -299,7 +304,7 @@ class ExportModel
      */
     public function buildUserMap(): array
     {
-        $userMap = $this->importSource->dbm()
+        $userMap = $this->importSource
             ->table($this->tarPrefix . 'users')
             ->get(['id', 'username']);
 
@@ -334,7 +339,7 @@ class ExportModel
             ->having('found_count', '>', 1)
             ->get();
         foreach ($duplicates as $dupe) {
-            $results[] = $dupe->Name;
+            $results[] = $dupe->$column;
         }
         return $results;
     }

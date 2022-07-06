@@ -154,7 +154,7 @@ class Database extends Storage
      */
     private function sendBatch(array $batch)
     {
-        $this->connection->dbm()->table($this->getBatchTable())->insert($batch);
+        $this->connection->newConnection()->table($this->getBatchTable())->insertOrIgnore($batch);
     }
 
     /**
@@ -205,6 +205,8 @@ class Database extends Storage
         $schema = $dbm->getSchemaBuilder();
         if ($this->exists($name)) {
             // Empty the table if it already exists.
+            // Foreign key check must be disabled or MySQL throws error.
+            $dbm->unprepared("SET foreign_key_checks = 0");
             $dbm->query()->from($name)->truncate();
             // @todo Check column integrity too.
         } else {
@@ -224,12 +226,12 @@ class Database extends Storage
     public function exists(string $tableName, array $columns = []): bool
     {
         $schema = $this->connection->dbm->getConnection($this->connection->getAlias())->getSchemaBuilder();
-        if (empty($columns) || $schema->hasTable($tableName)) {
-            // No columns requested or no table exists to check for columns.
+        if (empty($columns)) {
+            // No columns requested.
             return $schema->hasTable($tableName);
         }
         // Table must exist and columns were requested.
-        return $schema->hasColumns($tableName, $columns);
+        return $schema->hasTable($tableName) && $schema->hasColumns($tableName, $columns);
     }
 
     /**

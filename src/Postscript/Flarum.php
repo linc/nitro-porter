@@ -36,7 +36,7 @@ class Flarum extends Postscript
         $this->storage->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
 
         // Get post data.
-        $posts = $this->connection->dbm()
+        $posts = $this->connection->newConnection()
             ->table($ex->tarPrefix . 'posts')
             ->select(['id', 'discussion_id', 'content']);
 
