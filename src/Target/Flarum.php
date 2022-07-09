@@ -47,9 +47,9 @@ class Flarum extends Target
     }
 
     /**
-     * Flarum must have unique usernames.
+     * Flarum must have unique usernames. Report users skipped (because of `insert ignore`).
      *
-     * Unsure this could get automated. You'd have to determine which has/have data attached and possibly merge.
+     * Unsure this could get automated fix. You'd have to determine which has/have data attached and possibly merge.
      * You'd also need more data from findDuplicates, especially the IDs.
      * Folks are just gonna need to manually edit their existing forum data for now to rectify dupe issues.
      *
@@ -60,14 +60,12 @@ class Flarum extends Target
         $allowlist = ['[Deleted User]', '[DeletedUser]', '-Deleted-User-']; // @see fixDuplicateDeletedNames()
         $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
         if (!empty($dupes)) {
-            // @todo Do nicer error log + halt here to allow export to output report.
-            //exit('Import halted. Found duplicates for user.name, which Flarum cannot import. Fix these first: '
-            //    . implode(', ', $dupes));
+            $ex->comment('Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
     }
 
     /**
-     * Flarum must have unique emails.
+     * Flarum must have unique emails. Report users skipped (because of `insert ignore`).
      *
      * @see uniqueUserNames
      *
@@ -77,9 +75,7 @@ class Flarum extends Target
     {
         $dupes = $ex->findDuplicates('PORT_User', 'Email');
         if (!empty($dupes)) {
-            // @todo Do nicer error log + halt here to allow export to output report.
-            //exit('Import halted. Found duplicates for user.email, which Flarum cannot import. Fix these first: '
-            //    . implode(', ', $dupes));
+            $ex->comment('Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
     }
 
