@@ -4,6 +4,8 @@ namespace Porter\Database;
 
 /**
  * Class MysqlDB
+ *
+ * @deprecated
  */
 class PdoDB implements DbResource
 {

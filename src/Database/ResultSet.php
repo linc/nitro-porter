@@ -4,6 +4,8 @@ namespace Porter\Database;
 
 /**
  * Class ResultSet
+ *
+ * @deprecated
  */
 class ResultSet
 {

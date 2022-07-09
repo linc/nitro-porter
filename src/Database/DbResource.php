@@ -2,6 +2,9 @@
 
 namespace Porter\Database;
 
+/**
+ * @deprecated
+ */
 interface DbResource
 {
     /**

@@ -4,7 +4,7 @@ namespace Porter\Database;
 
 /**
  * Creating desired db instances on the go
- * Class DbFactory
+ * @deprecated
  */
 class DbFactory
 {
