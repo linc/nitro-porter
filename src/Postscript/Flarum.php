@@ -63,6 +63,6 @@ class Flarum extends Postscript
         $this->storage->endStream();
 
         // Report.
-        $ex->reportStorage('import', 'mentions', microtime(true) - $start, $rows, 0);
+        $ex->reportStorage('built', 'mentions', microtime(true) - $start, $rows, 0);
     }
 }
