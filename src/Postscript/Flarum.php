@@ -20,13 +20,13 @@ class Flarum extends Postscript
      */
     public function run(ExportModel $ex)
     {
-        $this->buildUserMentions($ex);
+        $this->userMentions($ex);
     }
 
     /**
      * Find mentions in posts and record to database table.
      */
-    protected function buildUserMentions(ExportModel $ex)
+    protected function userMentions(ExportModel $ex)
     {
         // Start timer.
         $start = microtime(true);
@@ -63,6 +63,6 @@ class Flarum extends Postscript
         $this->storage->endStream();
 
         // Report.
-        $ex->reportStorage('built', 'mentions', microtime(true) - $start, $rows, 0);
+        $ex->reportStorage('build', 'mentions', microtime(true) - $start, $rows, 0);
     }
 }
