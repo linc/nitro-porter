@@ -231,6 +231,7 @@ class Flarum extends Target
             'LastCommentID' => 'last_post_id',
             'DateLastComment' => 'last_posted_at',
             'LastCommentUserID' => 'last_posted_user_id',
+            'CountComments' => 'last_post_number',
             'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
             'Closed' => 'is_locked',
         ];
@@ -240,7 +241,9 @@ class Flarum extends Target
             $map['CountViews'] = 'view_count';
         }
 
-        $query = $ex->dbImport()->table('PORT_Discussion')->select('*');
+        // CountComments needs to be double-mapped so it's included as an alias also.
+        $query = $ex->dbImport()->table('PORT_Discussion')
+            ->select('*', $ex->dbImport()->raw('CountComments as post_number_index'));
 
         $ex->import('discussions', $query, $structure, $map);
     }
