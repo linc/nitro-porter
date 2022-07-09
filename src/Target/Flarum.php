@@ -214,6 +214,11 @@ class Flarum extends Target
             'user_id' => 'int',
             'title' => 'varchar(200)',
             'tag_id' => 'int',
+            'created_at' => 'datetime',
+            'first_post_id' => 'int',
+            'last_post_id' => 'int',
+            'last_posted_at' => 'datetime',
+            'last_posted_user_id' => 'datetime',
             'is_sticky' => 'tinyint', // flarum/sticky
             'is_locked' => 'tinyint', // flarum/lock
         ];
@@ -221,6 +226,11 @@ class Flarum extends Target
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
             'Name' => 'title',
+            'DateInserted' => 'created_at',
+            'FirstCommentID' => 'first_post_id',
+            'LastCommentID' => 'last_post_id',
+            'DateLastComment' => 'last_posted_at',
+            'LastCommentUserID' => 'last_posted_user_id',
             'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
             'Closed' => 'is_locked',
         ];
