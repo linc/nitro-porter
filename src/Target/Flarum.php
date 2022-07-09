@@ -329,7 +329,8 @@ class Flarum extends Target
                     'UpdateUserID',
                     'Body',
                     'Format',
-                    $ex->dbImport()->raw('"comment" as type')
+                    $ex->dbImport()->raw('"comment" as type'),
+                    $ex->dbImport()->raw('1 as number')
                 );
 
             // Combine discussions.body with the comments to get all posts.
