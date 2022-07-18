@@ -71,7 +71,7 @@ class Database extends Storage
             'memory' => 0,
         ];
         $this->setBatchTable($name);
-        $this->connection->reset();
+        $this->connection->newConnection();
 
         if (is_a($data, '\Porter\Database\ResultSet')) {
             // Iterate on old ResultSet.
