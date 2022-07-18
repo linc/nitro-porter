@@ -50,25 +50,6 @@ class ConnectionManager
         }
     }
 
-    /**
-     * Resets the database instance.
-     *
-     * DB driver can't reuse connections with unbuffered queries.
-     *
-     * @return $this Make it chainable.
-     */
-    public function reset(): self
-    {
-        // Reset Illuminate Database instance.
-        $info = $this->getInfo();
-        if ($info['type'] === 'database') {
-            $capsule = new Capsule();
-            $capsule->addConnection($this->translateConfig($info), $info['alias']);
-            $this->dbm = $capsule;
-        }
-        return $this;
-    }
-
     public function setType(string $type)
     {
         if (in_array($type, self::ALLOWED_TYPES)) {
