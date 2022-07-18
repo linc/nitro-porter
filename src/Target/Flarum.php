@@ -84,6 +84,9 @@ class Flarum extends Target
      */
     public function run(ExportModel $ex)
     {
+        // Ignore constraints on tables that block import.
+        $ex->ignoreDuplicates('users');
+
         $this->users($ex);
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
@@ -158,8 +161,10 @@ class Flarum extends Target
         ];
         $query = $ex->dbImport()->table('PORT_Role')->select('*', 'Name as Plural');
 
-        $ex->dbImport()->unprepared("SET foreign_key_checks = 0");
         $ex->import('groups', $query, $structure, $map);
+
+        // Delete orphaned user role associations (deleted users).
+        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
 
         // User Role.
         $structure = [
@@ -172,7 +177,6 @@ class Flarum extends Target
         ];
         $query = $ex->dbImport()->table('PORT_UserRole')->select('*');
 
-        $ex->dbImport()->unprepared("SET foreign_key_checks = 0");
         $ex->import('group_user', $query, $structure, $map);
     }
 
