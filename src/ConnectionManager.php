@@ -101,6 +101,8 @@ class ConnectionManager
     public function newConnection(): Connection
     {
         $this->connection = $this->dbm->getConnection($this->alias);
+        // Always disable data integrity checks.
+        $this->connection->unprepared("SET foreign_key_checks = 0");
         return $this->connection;
     }
 
