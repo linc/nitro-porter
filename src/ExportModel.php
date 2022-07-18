@@ -347,6 +347,26 @@ class ExportModel
     }
 
     /**
+     * Prune records where a foreign key doesn't exist for them.
+     *
+     * This happens in the Porter format / intermediary step.
+     * It must be complete BEFORE records are inserted into the Target due to FK constraints.
+     *
+     * @param string $table Table to prune.
+     * @param string $column Column (likely a key) to be compared to the foreign key for its existence.
+     * @param string $fnTable Foreign table to check for corresponding key.
+     * @param string $fnColumn Foreign key to select.
+     */
+    public function pruneOrphanedRecords(string $table, string $column, string $fnTable, string $fnColumn)
+    {
+        // `DELETE FROM $table WHERE $column NOT IN (SELECT $fnColumn FROM $fnTable)`
+        $db = $this->dbImport();
+        $duplicates = $db->table($table)
+            ->whereNotIn($column, $db->table($fnTable)->pluck($fnColumn))
+            ->delete();
+    }
+
+    /**
      * Do preprocessing on the database query.
      *
      * @param string $query
