@@ -269,11 +269,12 @@ class Flarum extends Target
         ];
         $map = [
             'DiscussionID' => 'discussion_id',
-            'InsertUserID' => 'user_id',
+            'UserID' => 'user_id',
             'DateLastViewed' => 'last_read_at',
         ];
         $query = $ex->dbImport()->table('PORT_UserDiscussion')
-            ->select('*', ($ex->dbImport()->raw("if (Bookmarked > 0, 'follow', null) as subscription")));
+            ->select('*', ($ex->dbImport()->raw("if (Bookmarked > 0, 'follow', null) as subscription")))
+            ->where('UserID', '>', 0); // Vanilla can have zeroes here, can't remember why.
 
         $ex->import('discussion_user', $query, $structure, $map);
     }
@@ -292,6 +293,7 @@ class Flarum extends Target
             'edited_user_id' => 'int',
             'type' => 'varchar(100)',
             'content' => 'longText',
+            'number' => 'int',
         ];
         $map = [
             'CommentID' => 'id',
@@ -315,7 +317,8 @@ class Flarum extends Target
                 'UpdateUserID',
                 'Body',
                 'Format',
-                $ex->dbImport()->raw('"comment" as type')
+                $ex->dbImport()->raw('"comment" as type'),
+                $ex->dbImport()->raw('null as number')
             );
 
         // Extract OP from the discussion.
