@@ -35,6 +35,11 @@ class Database extends Storage
     public array $resetTables = [];
 
     /**
+     * @var array List of tables to ignore errors on insert.
+     */
+    protected array $ignoreErrorsTables = [];
+
+    /**
      * @var ConnectionManager
      */
     public ConnectionManager $connection;
@@ -150,11 +155,25 @@ class Database extends Storage
     /**
      * Insert a batch of rows into the database.
      *
+     * Ignore errors if table is in `ignoreErrorsTables` list.
+     *
      * @param array $batch
      */
     private function sendBatch(array $batch)
     {
-        $this->connection->newConnection()->table($this->getBatchTable())->insertOrIgnore($batch);
+        $tableName = $this->getBatchTable();
+        $action = (in_array($tableName, $this->ignoreErrorsTables)) ? 'insertOrIgnore' : 'insert';
+        $this->connection->connection()->table($tableName)->$action($batch);
+    }
+
+    /**
+     * Add a table name to the list for ignoring insert errors. Adds the prefix for you.
+     *
+     * @param string $tableName
+     */
+    public function ignoreTable(string $tableName)
+    {
+        $this->ignoreErrorsTables[] = $tableName;
     }
 
     /**
