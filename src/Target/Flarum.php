@@ -60,7 +60,7 @@ class Flarum extends Target
         $allowlist = ['[Deleted User]', '[DeletedUser]', '-Deleted-User-']; // @see fixDuplicateDeletedNames()
         $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
         if (!empty($dupes)) {
-            $ex->comment('Users skipped for duplicate user.name: ' . implode(', ', $dupes));
+            $ex->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
     }
 
@@ -75,7 +75,7 @@ class Flarum extends Target
     {
         $dupes = $ex->findDuplicates('PORT_User', 'Email');
         if (!empty($dupes)) {
-            $ex->comment('Users skipped for duplicate user.email: ' . implode(', ', $dupes));
+            $ex->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
     }
 
