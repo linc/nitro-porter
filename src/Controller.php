@@ -78,18 +78,18 @@ class Controller
 
         // Set up export storage.
         if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
-            $targetConnection = new ConnectionManager(); // Unused but required by ExportModel regardless.
             $storage = new Storage\File();
         } else {
-            $targetConnection = new ConnectionManager($request->get('target') ?? '');
-            $storage = new Storage\Database($targetConnection);
+            $targetCM = new ConnectionManager($request->get('target') ?? '');
+            $storage = new Storage\Database($targetCM);
         }
 
         // Setup source & model.
         $source = sourceFactory($request->get('package'));
-        $sourceConnection = new ConnectionManager($request->get('source'));
+        $exportSourceCM = new ConnectionManager($request->get('source'));
+        $importSourceCM = new ConnectionManager($request->get('target') ?? '');
         // @todo Pass options not Request
-        $exportModel = exportModelFactory($request, $sourceConnection, $storage, $targetConnection);
+        $exportModel = exportModelFactory($request, $exportSourceCM, $storage, $importSourceCM);
 
         // Setup target & modes.
         $target = false;
@@ -106,9 +106,6 @@ class Controller
 
         // Import.
         if ($target) {
-            if ($request->get('target')) {
-                $target->connection = $targetConnection; // @todo Allow separate connection for this.
-            }
             $exportModel->tarPrefix = $target::SUPPORTED['prefix']; // @todo Wrap these refs.
             self::doImport($target, $exportModel);
 
