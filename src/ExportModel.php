@@ -409,6 +409,18 @@ class ExportModel
     }
 
     /**
+     * Ignore duplicates for a SQL storage target table. Adds prefix for you.
+     *
+     * @param string $tableName
+     */
+    public function ignoreDuplicates(string $tableName)
+    {
+        if (method_exists($this->storage, 'ignoreTable')) {
+            $this->storage->ignoreTable($this->tarPrefix . $tableName);
+        }
+    }
+
+    /**
      * Execute an sql statement and return the entire result as an associative array.
      *
      * @param string $sql
