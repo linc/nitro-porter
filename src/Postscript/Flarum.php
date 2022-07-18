@@ -41,7 +41,7 @@ class Flarum extends Postscript
         $posts = $this->connection->newConnection()
             ->table($ex->tarPrefix . 'posts')
             ->select(['id', 'discussion_id', 'content']);
-
+        $memory = memory_get_usage();
         // Find & record mentions in batches.
         foreach ($posts->cursor() as $post) {
             // Find converted mentions and connect to userID.
@@ -65,7 +65,7 @@ class Flarum extends Postscript
         $this->storage->endStream();
 
         // Report.
-        $ex->reportStorage('build', 'mentions', microtime(true) - $start, $rows, 0);
+        $ex->reportStorage('build', 'mentions', microtime(true) - $start, $rows, $memory);
     }
 
     /**
