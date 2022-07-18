@@ -203,7 +203,11 @@ class Flarum extends Target
             'Sort' => 'position',
             'CountDiscussions' => 'discussion_count',
         ];
-        $query = $ex->dbImport()->table('PORT_Category')->select('*');
+        $query = $ex->dbImport()->table('PORT_Category')
+            ->select(
+                '*',
+                $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID")
+            )->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
         $ex->import('tags', $query, $structure, $map);
     }
