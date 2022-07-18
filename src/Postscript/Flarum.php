@@ -35,6 +35,7 @@ class Flarum extends Postscript
 
         // Prepare mentions table.
         $this->storage->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
+        $ex->ignoreDuplicates('post_mentions_user'); // Primary key forbids more than 1 record per user/post.
 
         // Get post data.
         $posts = $this->connection->newConnection()
