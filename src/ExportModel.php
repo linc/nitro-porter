@@ -79,6 +79,8 @@ class ExportModel
     protected DbFactory $database;
 
     /**
+     * Source connection for the import step.
+     *
      * @var Connection
      */
     protected Connection $importSource;
@@ -94,14 +96,14 @@ class ExportModel
      * @param $db
      * @param $map
      * @param $storage
-     * @param ConnectionManager $cm
+     * @param ConnectionManager $importSourceCM
      */
-    public function __construct($db, $map, $storage, ConnectionManager $cm)
+    public function __construct($db, $map, $storage, ConnectionManager $importSourceCM)
     {
         $this->database = $db;
         $this->mapStructure = $map;
         $this->storage = $storage;
-        $this->importSource = $cm->newConnection();
+        $this->importSource = $importSourceCM->newConnection();
     }
 
     /**
@@ -304,7 +306,7 @@ class ExportModel
      */
     public function buildUserMap(): array
     {
-        $userMap = $this->importSource
+        $userMap = $this->dbImport()
             ->table($this->tarPrefix . 'users')
             ->get(['id', 'username']);
 
