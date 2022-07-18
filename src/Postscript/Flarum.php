@@ -21,6 +21,7 @@ class Flarum extends Postscript
     public function run(ExportModel $ex)
     {
         $this->userMentions($ex);
+        $this->postData($ex);
     }
 
     /**
@@ -64,5 +65,40 @@ class Flarum extends Postscript
 
         // Report.
         $ex->reportStorage('build', 'mentions', microtime(true) - $start, $rows, 0);
+    }
+
+    /**
+     * Calculate post numbers for imported posts.
+     *
+     * Numbers are sequentially incremented chronologically per discussion, not an ID.
+     *
+     * @param ExportModel $ex
+     */
+    protected function postData(ExportModel $ex)
+    {
+        // Start timer.
+        $start = microtime(true);
+        $rows = 0;
+
+        // Calculate & set posts.number.
+        $db = $this->connection->newConnection();
+        // Get only discussions with comments.
+        $posts = $db->table($ex->tarPrefix . 'posts')
+            ->distinct()
+            ->whereNotNull('number') // Exclude OPs.
+            ->get('discussion_id');
+        $memory = memory_get_usage();
+        // Update posts 2+ with their number, per discussion.
+        foreach ($posts as $post) {
+            $db->statement("set @num := 1");
+            $count = $db->affectingStatement("update `" . $ex->tarPrefix . "posts`
+                    set `number` = (@num := @num + 1)
+                    where `discussion_id` = " . $post->discussion_id . "
+                    order by `id` asc");
+            $rows += $count;
+        }
+
+        // Report.
+        $ex->reportStorage('build', 'post numbers (non-OP)', microtime(true) - $start, $rows, $memory);
     }
 }
