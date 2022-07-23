@@ -238,6 +238,7 @@ class Flarum extends Target
             'id' => 'int',
             'user_id' => 'int',
             'title' => 'varchar(200)',
+            'slug' => 'varchar(200)',
             'tag_id' => 'int',
             'created_at' => 'datetime',
             'first_post_id' => 'int',
@@ -260,6 +261,9 @@ class Flarum extends Target
             'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
             'Closed' => 'is_locked',
         ];
+        $filters = [
+            'slug' => 'createDiscussionSlugs',
+        ];
         if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
             // flarumite/simple-discussion-views
             $structure['view_count'] = 'int';
@@ -268,9 +272,13 @@ class Flarum extends Target
 
         // CountComments needs to be double-mapped so it's included as an alias also.
         $query = $ex->dbImport()->table('PORT_Discussion')
-            ->select('*', $ex->dbImport()->raw('CountComments as post_number_index'));
+            ->select(
+                '*',
+                $ex->dbImport()->raw('CountComments as post_number_index'),
+                $ex->dbImport()->raw('DiscussionID as slug')
+            );
 
-        $ex->import('discussions', $query, $structure, $map);
+        $ex->import('discussions', $query, $structure, $map, $filters);
     }
 
     /**

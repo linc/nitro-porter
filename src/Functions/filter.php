@@ -58,6 +58,17 @@ function fixNullEmails($value, string $column, array $row): string
 }
 
 /**
+ * @param mixed $value
+ * @param string $column
+ * @param array $row
+ * @return string
+ */
+function createDiscussionSlugs($value, string $column, array $row): string
+{
+    return $value; // @todo Create a slug
+}
+
+/**
  * Don't allow zero-equivalent dates.
  *
  * @param string $value
