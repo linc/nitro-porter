@@ -143,7 +143,7 @@ class Flarum extends Postscript
                 ->insert(['group_id' => 1, 'user_id' => $result->UserID]);
 
             // Report promotion.
-            $ex->comment('Promoted to Admin: ' . $result->Name . '(' . $result->Email . ')');
+            $ex->comment('Promoted to Admin: ' . $result->Name . ' (' . $result->Email . ')');
         } else {
             // Report failure.
             $ex->comment('No user found to promote to Admin. (Searching for Admin=1 flag on PORT_User.)');
