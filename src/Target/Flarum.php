@@ -122,7 +122,7 @@ class Flarum extends Target
             'id' => 'int',
             'username' => 'varchar(100)',
             'email' => 'varchar(100)',
-            'is_email_comfirmed' => 'tinyint',
+            'is_email_confirmed' => 'tinyint',
             'password' => 'varchar(100)',
             'joined_at' => 'datetime',
             'last_seen_at' => 'datetime',
