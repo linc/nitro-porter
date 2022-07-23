@@ -91,6 +91,9 @@ class Flarum extends Target
         $this->roles($ex); // Groups
         $this->categories($ex); // Tags
 
+        // No permissions warning.
+        $ex->comment('Permissions are not migrated. Verify all permissions afterward.');
+
         // Singleton factory; big timing issue; depends on Users being done.
         Formatter::instance($ex); // @todo Hook for pre-UGC import?
 
@@ -145,10 +148,18 @@ class Flarum extends Target
     }
 
     /**
+     * Flarum handles role assignment in a magic way.
+     *
+     * This compensates by shifting all RoleIDs +4, rendering any old 'Member' or 'Guest' role useless & deprecated.
+     * @see https://docs.flarum.org/extend/permissions/
+     *
      * @param ExportModel $ex
      */
     protected function roles(ExportModel $ex): void
     {
+        // Delete orphaned user role associations (deleted users).
+        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
+
         $structure = [
             'id' => 'int',
             'name_singular' => 'varchar(100)',
@@ -159,12 +170,13 @@ class Flarum extends Target
             'Name' => 'name_singular',
             'Plural' => 'name_plural',
         ];
-        $query = $ex->dbImport()->table('PORT_Role')->select('*', 'Name as Plural');
+        $query = $ex->dbImport()->table('PORT_Role')->select(
+            '*',
+            'Name as Plural',
+            $ex->dbImport()->raw("(RoleID + 4) as RoleID") // Flarum reserves 1-3 & uses 4 for mods by default.
+        );
 
         $ex->import('groups', $query, $structure, $map);
-
-        // Delete orphaned user role associations (deleted users).
-        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
 
         // User Role.
         $structure = [
@@ -175,7 +187,10 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $query = $ex->dbImport()->table('PORT_UserRole')->select('*');
+        $query = $ex->dbImport()->table('PORT_UserRole')->select(
+            '*',
+            $ex->dbImport()->raw("(RoleID + 4) as RoleID") // Match above offset
+        );
 
         $ex->import('group_user', $query, $structure, $map);
     }

@@ -22,6 +22,7 @@ class Flarum extends Postscript
     {
         $this->userMentions($ex);
         $this->postData($ex);
+        $this->defaultGroups($ex);
     }
 
     /**
@@ -101,5 +102,50 @@ class Flarum extends Postscript
 
         // Report.
         $ex->reportStorage('build', 'post numbers (non-OP)', microtime(true) - $start, $rows, $memory);
+    }
+
+    /**
+     * Recreate the default groups (1 = Admins, 2 = Guests, 3 = Members).
+     *
+     * @param ExportModel $ex
+     */
+    protected function defaultGroups(ExportModel $ex)
+    {
+        $db = $this->connection->newConnection();
+        $db->table($ex->tarPrefix . 'groups')
+            ->insert([
+                ['id' => 1, 'name_singular' => 'Admin', 'name_plural' => 'Admins'],
+                ['id' => 2, 'name_singular' => 'Guest', 'name_plural' => 'Guests'],
+                ['id' => 3, 'name_singular' => 'Member', 'name_plural' => 'Members'],
+                // Not strictly necessary, just safer because Mod-level permissions may be in `group_user` already.
+                ['id' => 4, 'name_singular' => 'Mod', 'name_plural' => 'Mods'],
+            ]);
+    }
+
+    /**
+     * Promote the superadmin to the Flarum admin role.
+     *
+     * @param ExportModel $ex
+     */
+    protected function promoteAdmin(ExportModel $ex)
+    {
+        // Find the Vanlla superadmin (User.Admin = 1) and make them an Admin.
+        $result = $ex->dbImport()
+            ->table('PORT_User')
+            ->where('Admin', '>', 0)
+            ->first();
+
+        if (isset($result->UserID)) {
+            // Add the admin.
+            $ex->dbImport()
+                ->table($ex->tarPrefix . 'group_user')
+                ->insert(['group_id' => 1, 'user_id' => $result->UserID]);
+
+            // Report promotion.
+            $ex->comment('Promoted to Admin: ' . $result->Name . '(' . $result->Email . ')');
+        } else {
+            // Report failure.
+            $ex->comment('No user found to promote to Admin. (Searching for Admin=1 flag on PORT_User.)');
+        }
     }
 }
