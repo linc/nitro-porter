@@ -221,7 +221,9 @@ class Flarum extends Target
         $query = $ex->dbImport()->table('PORT_Category')
             ->select(
                 '*',
-                $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID")
+                $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID"),
+                $ex->dbImport()->raw("0 as is_hidden"),
+                $ex->dbImport()->raw("0 as is_restricted")
             )->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
         $ex->import('tags', $query, $structure, $map);
