@@ -23,6 +23,7 @@ class Flarum extends Postscript
         $this->userMentions($ex);
         $this->postData($ex);
         $this->defaultGroups($ex);
+        $this->promoteAdmin($ex);
     }
 
     /**
