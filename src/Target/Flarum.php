@@ -279,6 +279,19 @@ class Flarum extends Target
             );
 
         $ex->import('discussions', $query, $structure, $map, $filters);
+
+        // Flarum has a separate pivot table for discussion tags.
+        $structure = [
+            'discussion_id' => 'int',
+            'tag_id' => 'int',
+        ];
+        $map = [
+            'DiscussionID' => 'discussion_id',
+            'CategoryID' => 'tag_id',
+        ];
+        $query = $ex->dbImport()->table('PORT_Discussion')->select(['DiscussionID', 'CategoryID']);
+
+        $ex->import('discussion_tag', $query, $structure, $map, $filters);
     }
 
     /**
