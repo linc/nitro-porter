@@ -136,7 +136,7 @@ class Flarum extends Postscript
             ->where('Admin', '>', 0)
             ->first();
 
-        if (isset($result->UserID)) {
+        if (isset($result->UserID, $result->Name, $result->Email)) {
             // Add the admin.
             $ex->dbImport()
                 ->table($ex->tarPrefix . 'group_user')
