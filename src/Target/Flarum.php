@@ -591,6 +591,10 @@ class Flarum extends Target
             ->select($ex->dbImport()->raw('max(DiscussionID) as LastDiscussionID'))
             ->first()->LastDiscussionID;
 
+        // Log the PM offsets for debugging.
+        $ex->comment('Discussion offset for PMs is ' . $MaxDiscussionID);
+        $ex->comment('Post offset for PMs is ' . $MaxCommentID);
+
         // Messages — Comments
         $map = [
             'Body' => 'content',
