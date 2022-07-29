@@ -81,9 +81,9 @@ class ExportModel
     /**
      * Source connection for the import step.
      *
-     * @var Connection
+     * @var ConnectionManager
      */
-    protected Connection $importSource;
+    protected ConnectionManager $importSourceCM;
 
     /**
      * @var Storage Where the data is being sent.
@@ -103,7 +103,8 @@ class ExportModel
         $this->database = $db;
         $this->mapStructure = $map;
         $this->storage = $storage;
-        $this->importSource = $importSourceCM->newConnection();
+        $importSourceCM->newConnection();
+        $this->importSourceCM = $importSourceCM;
     }
 
     /**
@@ -113,7 +114,7 @@ class ExportModel
      */
     public function dbImport(): Connection
     {
-        return $this->importSource;
+        return $this->importSourceCM->connection();
     }
 
     /**
