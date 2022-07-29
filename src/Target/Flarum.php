@@ -582,14 +582,14 @@ class Flarum extends Target
     protected function privateMessages(ExportModel $ex)
     {
         // Get max IDs for offset.
-        $MaxCommentID = $ex->dbImport()
-            ->table('PORT_Comment')
-            ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
-            ->first()->LastCommentID;
-        $MaxDiscussionID = $ex->dbImport()
-            ->table('PORT_Discussion')
-            ->select($ex->dbImport()->raw('max(DiscussionID) as LastDiscussionID'))
-            ->first()->LastDiscussionID;
+        $MaxComment = $ex->dbImport()->table('PORT_Comment')
+            ->where('CommentID', $ex->dbImport()->raw("(select max(`CommentID`) from PORT_Comment)"))
+            ->get()->pluck('CommentID');
+        $MaxCommentID = $MaxComment[0] ?? 0;
+        $MaxDiscussion = $ex->dbImport()->table('PORT_Discussion')
+            ->where('DiscussionID', $ex->dbImport()->raw("(select max(`DiscussionID`) from PORT_Discussion)"))
+            ->get()->pluck('DiscussionID');
+        $MaxDiscussionID = $MaxDiscussion[0] ?? 0;
 
         // Log the PM offsets for debugging.
         $ex->comment('Discussion offset for PMs is ' . $MaxDiscussionID);
