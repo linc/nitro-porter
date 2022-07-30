@@ -88,12 +88,11 @@ class Flarum extends Postscript
         // Get only discussions with comments.
         $posts = $db->table($ex->tarPrefix . 'posts')
             ->distinct()
-            ->whereNull('number') // Exclude OPs.
             ->get('discussion_id');
         $memory = memory_get_usage();
         // Update posts 2+ with their number, per discussion.
         foreach ($posts as $post) {
-            $db->statement("set @num := 1");
+            $db->statement("set @num := 0");
             $count = $db->affectingStatement("update `" . $ex->tarPrefix . "posts`
                     set `number` = (@num := @num + 1)
                     where `discussion_id` = " . $post->discussion_id . "
@@ -102,7 +101,7 @@ class Flarum extends Postscript
         }
 
         // Report.
-        $ex->reportStorage('build', 'post numbers (non-OP)', microtime(true) - $start, $rows, $memory);
+        $ex->reportStorage('build', 'post numbers', microtime(true) - $start, $rows, $memory);
     }
 
     /**

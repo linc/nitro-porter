@@ -383,7 +383,7 @@ class Flarum extends Target
                     'Body',
                     'Format',
                     $ex->dbImport()->raw('"comment" as type'),
-                    $ex->dbImport()->raw('1 as number')
+                    $ex->dbImport()->raw('null as number')
                 );
 
             // Combine discussions.body with the comments to get all posts.
