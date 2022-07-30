@@ -88,7 +88,7 @@ class Flarum extends Postscript
         // Get only discussions with comments.
         $posts = $db->table($ex->tarPrefix . 'posts')
             ->distinct()
-            ->whereNotNull('number') // Exclude OPs.
+            ->whereNull('number') // Exclude OPs.
             ->get('discussion_id');
         $memory = memory_get_usage();
         // Update posts 2+ with their number, per discussion.
