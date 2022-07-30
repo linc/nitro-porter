@@ -103,6 +103,11 @@ class ConnectionManager
         $this->connection = $this->dbm->getConnection($this->alias);
         // Always disable data integrity checks.
         $this->connection->unprepared("SET foreign_key_checks = 0");
+        // Log all queries if debug mode is enabled.
+        if (\Porter\Config::getInstance()->debugEnabled()) {
+            // See ${hostname}.log in datadir (find with `SHOW GLOBAL VARIABLES LIKE 'datadir'`)
+            $this->connection->unprepared("SET GLOBAL general_log = 1");
+        }
         return $this->connection;
     }
 

@@ -35,6 +35,16 @@ class Config
     }
 
     /**
+     * Whether debug mode is enabled in the config.
+     *
+     * @return bool
+     */
+    public function debugEnabled(): bool
+    {
+        return $this->config['debug'];
+    }
+
+    /**
      * Get designated test connection.
      *
      * @return array
