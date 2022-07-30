@@ -59,7 +59,9 @@ class Formatter
             case 'Text':
             case 'TextEx':
             default:
-                return self::wrap('t', $this->fixRawMentions($text));
+                // Use of nl2br() here is needed for Vanilla PMs (which have no `Format`).
+                // May require more refined detection for other cases but too many breaks is safer than too few.
+                return self::wrap('t', $this->fixRawMentions(nl2br($text)));
         }
     }
 
