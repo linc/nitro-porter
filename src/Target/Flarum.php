@@ -35,6 +35,35 @@ class Flarum extends Target
         'hasDiscussionBody' => false,
     ];
 
+    /** @var string[] Table structure for `posts`. */
+    protected const DB_STRUCTURE_POSTS = [
+        'id' => 'int',
+        'discussion_id' => 'int',
+        'user_id' => 'int',
+        'created_at' => 'datetime',
+        'edited_at' => 'datetime',
+        'edited_user_id' => 'int',
+        'type' => 'varchar(100)',
+        'content' => 'longText',
+        'number' => 'int',
+    ];
+
+    /** @var string[] Table structure for 'discussions`. */
+    protected const DB_STRUCTURE_DISCUSSIONS = [
+        'id' => 'int',
+        'user_id' => 'int',
+        'title' => 'varchar(200)',
+        'slug' => 'varchar(200)',
+        'tag_id' => 'int',
+        'created_at' => 'datetime',
+        'first_post_id' => 'int',
+        'last_post_id' => 'int',
+        'last_posted_at' => 'datetime',
+        'last_posted_user_id' => 'datetime',
+        'is_sticky' => 'tinyint', // flarum/sticky
+        'is_locked' => 'tinyint', // flarum/lock
+    ];
+
     /**
      * Check for issues that will break the import.
      *
@@ -234,20 +263,6 @@ class Flarum extends Target
      */
     protected function discussions(ExportModel $ex): void
     {
-        $structure = [
-            'id' => 'int',
-            'user_id' => 'int',
-            'title' => 'varchar(200)',
-            'slug' => 'varchar(200)',
-            'tag_id' => 'int',
-            'created_at' => 'datetime',
-            'first_post_id' => 'int',
-            'last_post_id' => 'int',
-            'last_posted_at' => 'datetime',
-            'last_posted_user_id' => 'datetime',
-            'is_sticky' => 'tinyint', // flarum/sticky
-            'is_locked' => 'tinyint', // flarum/lock
-        ];
         $map = [
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
@@ -278,7 +293,7 @@ class Flarum extends Target
                 $ex->dbImport()->raw('DiscussionID as slug')
             );
 
-        $ex->import('discussions', $query, $structure, $map, $filters);
+        $ex->import('discussions', $query, self::DB_STRUCTURE_DISCUSSIONS, $map, $filters);
 
         // Flarum has a separate pivot table for discussion tags.
         $structure = [
@@ -322,17 +337,6 @@ class Flarum extends Target
      */
     protected function comments(ExportModel $ex): void
     {
-        $structure = [
-            'id' => 'int',
-            'discussion_id' => 'int',
-            'user_id' => 'int',
-            'created_at' => 'datetime',
-            'edited_at' => 'datetime',
-            'edited_user_id' => 'int',
-            'type' => 'varchar(100)',
-            'content' => 'longText',
-            'number' => 'int',
-        ];
         $map = [
             'CommentID' => 'id',
             'DiscussionID' => 'discussion_id',
@@ -386,7 +390,7 @@ class Flarum extends Target
             $query->union($discussions);
         }
 
-        $ex->import('posts', $query, $structure, $map, $filters);
+        $ex->import('posts', $query, self::DB_STRUCTURE_POSTS, $map, $filters);
     }
 
     /**
@@ -575,31 +579,44 @@ class Flarum extends Target
     }
 
     /**
-     * Export PMs to fof/byobu format.
+     * Export PMs to fof/byobu format, which uses the `posts` & `discussions` tables.
      *
      * @param ExportModel $ex
      */
     protected function privateMessages(ExportModel $ex)
     {
-        // Get max IDs for offset.
-        $MaxComment = $ex->dbImport()->table('PORT_Comment')
-            ->where('CommentID', $ex->dbImport()->raw("(select max(`CommentID`) from PORT_Comment)"))
-            ->get()->pluck('CommentID');
-        $MaxCommentID = $MaxComment[0] ?? 0;
-        $MaxDiscussion = $ex->dbImport()->table('PORT_Discussion')
-            ->where('DiscussionID', $ex->dbImport()->raw("(select max(`DiscussionID`) from PORT_Discussion)"))
-            ->get()->pluck('DiscussionID');
-        $MaxDiscussionID = $MaxDiscussion[0] ?? 0;
+        // Messages — Discussions
+        $MaxDiscussionID = $this->getMaxDiscussionID($ex);
+        $ex->comment('Discussions offset for PMs is ' . $MaxDiscussionID);
+        $map = [
+            'InsertUserID' => 'user_id',
+            'DateInserted' => 'created_at',
+        ];
+        $filters = [
+            'slug' => 'createDiscussionSlugs',
+        ];
+        $query = $ex->dbImport()->table('PORT_Conversation')->select(
+            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as id'),
+            'InsertUserID',
+            'DateInserted',
+            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as slug'),
+            // Use a numbered title "Private message 1234" if there's no Subject line.
+            $ex->dbImport()->raw('ifnull(Subject,
+                concat("Private message ", (ConversationID + ' . $MaxDiscussionID . '))) as title')
+        );
 
-        // Log the PM offsets for debugging.
-        $ex->comment('Discussion offset for PMs is ' . $MaxDiscussionID);
-        $ex->comment('Post offset for PMs is ' . $MaxCommentID);
+        $ex->import('discussions', $query, self::DB_STRUCTURE_DISCUSSIONS, $map, $filters);
 
         // Messages — Comments
+        $MaxCommentID = $this->getMaxCommentID($ex);
+        $ex->comment('Posts offset for PMs is ' . $MaxCommentID);
         $map = [
             'Body' => 'content',
             'InsertUserID' => 'user_id',
             'DateInserted' => 'created_at',
+        ];
+        $filters = [
+            'Body' => 'filterFlarumContent',
         ];
         $query = $ex->dbImport()->table('PORT_ConversationMessage')->select(
             $ex->dbImport()->raw('(MessageID + ' . $MaxCommentID . ') as id'),
@@ -608,23 +625,10 @@ class Flarum extends Target
             'InsertUserID',
             'DateInserted',
             $ex->dbImport()->raw('1 as is_private'),
+            $ex->dbImport()->raw('"comment" as type'),
         );
 
-        $ex->import('posts', $query, [], $map); // Table already built; no structure.
-
-        // Messages — Discussions
-        $map = [
-            'InsertUserID' => 'user_id',
-            'DateInserted' => 'created_at',
-        ];
-        $query = $ex->dbImport()->table('PORT_Conversation')->select(
-            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as id'),
-            'InsertUserID',
-            'DateInserted',
-            $ex->dbImport()->raw('Subject as title') // @todo excerpt the OP if no Subject exists
-        );
-
-        $ex->import('discussions', $query, [], $map); // Table already built; no structure.
+        $ex->import('posts', $query, self::DB_STRUCTURE_POSTS, $map, $filters);
 
         // Recipients
         $structure = [
@@ -647,5 +651,35 @@ class Flarum extends Target
         );
 
         $ex->import('recipients', $query, $structure, $map);
+    }
+
+    /**
+     * Get current max id from `posts` table.
+     *
+     * Cannot use intermediary (PORT_) tables because we may have added posts elsewhere.
+     *
+     * @param ExportModel $ex
+     * @return int
+     */
+    protected function getMaxCommentID(ExportModel $ex)
+    {
+        $MaxComment = $ex->dbImport()->table($ex->tarPrefix . 'posts')
+            ->where('id', $ex->dbImport()->raw("(select max(`id`) from " . $ex->tarPrefix . 'posts' . ")"))
+            ->get()->pluck('id');
+        return $MaxComment[0] ?? 0;
+    }
+
+    /**
+     * Get current max id from `discussions` table.
+     *
+     * @param ExportModel $ex
+     * @return int
+     */
+    protected function getMaxDiscussionID(ExportModel $ex)
+    {
+        $MaxDiscussion = $ex->dbImport()->table($ex->tarPrefix . 'discussions')
+            ->where('id', $ex->dbImport()->raw("(select max(`id`) from " . $ex->tarPrefix . 'discussions' . ")"))
+            ->get()->pluck('id');
+        return $MaxDiscussion[0] ?? 0;
     }
 }
