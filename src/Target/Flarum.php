@@ -600,9 +600,9 @@ class Flarum extends Target
             'InsertUserID',
             'DateInserted',
             $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as slug'),
-            // Use a numbered title "Private message 1234" if there's no Subject line.
+            // Use a numbered title "Private discussion 1234" if there's no Subject line.
             $ex->dbImport()->raw('ifnull(Subject,
-                concat("Private message ", (ConversationID + ' . $MaxDiscussionID . '))) as title')
+                concat("Private discussion ", (ConversationID + ' . $MaxDiscussionID . '))) as title')
         );
 
         $ex->import('discussions', $query, self::DB_STRUCTURE_DISCUSSIONS, $map, $filters);
