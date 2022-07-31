@@ -134,7 +134,7 @@ class Flarum extends Target
             $this->badges($ex); // 17development/flarum-user-badges
         }
         if ($ex->targetExists('PORT_Poll')) {
-            $this->polls($ex); // fof/polls
+            $this->polls($ex); // fof/pollsx
         }
         if ($ex->targetExists('PORT_ReactionType')) {
             $this->reactions($ex); //
@@ -449,7 +449,7 @@ class Flarum extends Target
             'question' => 'varchar(200)',
             'discussion_id' => 'int',
             'user_id' => 'int',
-            //'public_poll' => 'tinyint', // Map to "Anonymous" somehow?
+            'public_poll' => 'tinyint', // Map to "Anonymous" somehow?
             'end_date' => 'datetime', // Using date created here will close all polls, but work fine.
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
@@ -464,7 +464,13 @@ class Flarum extends Target
             'DateUpdated' => 'updated_at',
             'CountVotes' => 'vote_count',
         ];
-        $query = $ex->dbImport()->table('PORT_Poll')->select('*', 'DateInserted as end_date');
+        $query = $ex->dbImport()->table('PORT_Poll')
+            ->select(
+                '*',
+                'DateInserted as end_date',
+                // Whether its public or anonymous are inverse conditions, so flip the value.
+                $ex->dbImport()->raw('if(Anonymous>0, 0, 1) as public_poll')
+            );
 
         $ex->import('polls', $query, $structure, $map);
 
