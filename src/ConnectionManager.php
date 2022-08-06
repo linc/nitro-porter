@@ -101,8 +101,13 @@ class ConnectionManager
     public function newConnection(): Connection
     {
         $this->connection = $this->dbm->getConnection($this->alias);
+
         // Always disable data integrity checks.
         $this->connection->unprepared("SET foreign_key_checks = 0");
+
+        // Set the timezone to UTC. Avoid named timezones because they may not be loaded.
+        $this->connection->unprepared("SET time_zone = '+00:00'");
+
         // Log all queries if debug mode is enabled.
         if (\Porter\Config::getInstance()->debugEnabled()) {
             // See ${hostname}.log in datadir (find with `SHOW GLOBAL VARIABLES LIKE 'datadir'`)
