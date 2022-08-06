@@ -11,6 +11,12 @@ use Porter\ExportModel;
 use Porter\Formatter;
 use Porter\Target;
 
+/**
+ * You'll notice a seemingly random mix of datetime and timestamp in the Flarum database.
+ *
+ * Synch0, 2022-08-01:
+ * > Back in 2014-16, the default was datetime, but then Laravel switched to timestamp by default.
+ */
 class Flarum extends Target
 {
     public const SUPPORTED = [
@@ -533,7 +539,9 @@ class Flarum extends Target
             'Name' => 'identifier',
             'Active' => 'enabled',
         ];
-        $query = $ex->dbImport()->table('PORT_ReactionType')->select('*');
+        $query = $ex->dbImport()->table('PORT_ReactionType')
+            // @todo Setting type='emoji' is a kludge since it won't render Vanilla defaults that way.
+            ->select('*', $ex->dbImport()->raw('"emoji" as type'));
 
         $ex->import('reactions', $query, $structure, $map);
 
@@ -543,8 +551,8 @@ class Flarum extends Target
             'post_id' => 'int',
             'user_id' => 'int',
             'reaction_id' => 'int',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
+            'created_at' => 'timestamp',
+            'updated_at' => 'timestamp',
         ];
         $map = [
             'RecordID' => 'post_id',
@@ -557,8 +565,9 @@ class Flarum extends Target
                 'RecordID',
                 'UserID',
                 'TagID',
-                'DateInserted'
-            )->where('RecordType', '=', 'Comment');
+                $ex->dbImport()->raw('TIMESTAMP(DateInserted) as DateInserted'),
+            )->where('RecordType', '=', 'Comment')
+            ->where('UserID', '>', 0);
 
         // Get reactions for discussions (OPs).
         if ($this->getDiscussionBodyMode()) {
@@ -574,8 +583,9 @@ class Flarum extends Target
                     $ex->dbImport()->raw('(RecordID + ' . $result->LastCommentID . ') as RecordID'),
                     'UserID',
                     'TagID',
-                    'DateInserted'
-                )->where('RecordType', '=', 'Discussion');
+                    $ex->dbImport()->raw('TIMESTAMP(DateInserted) as DateInserted'),
+                )->where('RecordType', '=', 'Discussion')
+                ->where('UserID', '>', 0);
 
             // Combine discussion reactions + comment reactions => post reactions.
             $query->union($discussionReactions);
