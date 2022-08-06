@@ -12,7 +12,14 @@ use Porter\Storage;
 
 class Database extends Storage
 {
+    /** @var int How many rows to insert at once. */
     public const INSERT_BATCH = 1000;
+
+    /** @var int When to start reporting on incremental storage (in the logs). */
+    public const LOG_THRESHOLD = 100000;
+
+    /** @var int Increment to report at after `REPORT_THRESHOLD` is reached; must be multiple of `INSERT_BATCH`. */
+    public const LOG_INCREMENT = 100000;
 
     /**
      * @var array Table structures that define the format of the intermediary export tables.
@@ -84,6 +91,7 @@ class Database extends Storage
                 $info['rows']++;
                 $row = $this->normalizeRow($map, $structure, $row, $filters);
                 $bytes = $this->batchInsert($row);
+                $this->logBatchProgress($name, $info['rows'], $exportModel);
                 $info['memory'] = max($bytes, $info['memory']); // Highest memory usage.
             }
         } elseif (is_a($data, '\Illuminate\Database\Query\Builder')) {
@@ -92,6 +100,7 @@ class Database extends Storage
                 $info['rows']++;
                 $row = $this->normalizeRow($map, $structure, (array)$row, $filters);
                 $bytes = $this->batchInsert($row);
+                $this->logBatchProgress($name, $info['rows'], $exportModel);
                 $info['memory'] = max($bytes, $info['memory']); // Highest memory usage.
             }
         }
@@ -100,6 +109,20 @@ class Database extends Storage
         $this->batchInsert([], true);
 
         return $info;
+    }
+
+    /**
+     * Report incremental storage for large datasets.
+     *
+     * @param string $name
+     * @param int $rows
+     * @param ExportModel $exportModel
+     */
+    public function logBatchProgress(string $name, int $rows, ExportModel $exportModel)
+    {
+        if ($rows >= self::LOG_THRESHOLD && ($rows % self::LOG_INCREMENT) === 0) {
+            $exportModel->comment("inserting '" . $name . "': " . number_format($rows) . ' done...', false);
+        }
     }
 
     /**
