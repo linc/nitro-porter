@@ -32,6 +32,7 @@ class Flarum extends Target
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 1,
+            'Attachments' => 1,
             'Bookmarks' => 1,
             'Badges' => 1,
         ]
@@ -69,6 +70,15 @@ class Flarum extends Target
         'is_sticky' => 'tinyint', // flarum/sticky
         'is_locked' => 'tinyint', // flarum/lock
     ];
+
+    /** @var int Offset for inserting OP content into the posts table. */
+    protected int $discussionPostOffset = 0;
+
+    /** @var int Offset for inserting PMs into posts table. */
+    protected int $messagePostOffset = 0;
+
+    /** @var int  Offset for inserting PMs into discussions table. */
+    protected int $messageDiscussionOffset = 0;
 
     /**
      * Check for issues that will break the import.
@@ -146,6 +156,8 @@ class Flarum extends Target
             $this->reactions($ex); //
         }
         $this->privateMessages($ex);
+
+        $this->attachments($ex); // Requires discussions, comments, and PMs have imported.
     }
 
     /**
@@ -377,6 +389,9 @@ class Flarum extends Target
                 ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
                 ->first();
 
+            // Save value for other associations (e.g. attachments).
+            $this->discussionPostOffset = $result->LastCommentID;
+
             // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
             $discussions = $ex->dbImport()->table('PORT_Discussion')
                 ->select(
@@ -397,6 +412,51 @@ class Flarum extends Target
         }
 
         $ex->import('posts', $query, self::DB_STRUCTURE_POSTS, $map, $filters);
+    }
+
+    /**
+     * Currently discards thumbnails because Flarum's extension doesn't have any.
+     *
+     * @todo Support for `fof_upload_files.discussion_id` field, likely in Postscript (it's derived data).
+     *
+     * @param ExportModel $ex
+     */
+    protected function attachments(ExportModel $ex): void
+    {
+        $structure = [
+            'id' => 'int',
+            'actor_id' => 'int',
+            'discussion_id' => 'int',
+            'post_id' => 'int',
+            'base_name' => 'varchar(255)',
+            'path' => 'varchar(255)', // from /forumroot/assets/files
+            'url' => 'varchar(255)',
+            'type' => 'varchar(255)', // MIME
+            'size'  => 'int', // bytes
+            'created_at' => 'datetime',
+        ];
+        $map = [
+            'MediaID' => 'id',
+            'Name' => 'base_name',
+            'InsertUserID' => 'actor_id',
+            'DateInserted' => 'created_at',
+            'Path' => 'path',
+            'Type' => 'type',
+            'Size' => 'size',
+        ];
+        $query = $ex->dbImport()->table('PORT_Media')->select(
+            '*',
+            $ex->dbImport()->raw('concat("/assets/files", Path) as url'), // @todo This isn't a URL yet.
+            // Untangle the Media.ForeignID & Media.ForeignTable [comment, discussion, message]
+            $ex->dbImport()->raw("case
+                when ForeignID is null then null
+                when ForeignTable = 'comment' then ForeignID
+                when ForeignTable = 'discussion' then (ForeignID + " . $this->discussionPostOffset . ")
+                when ForeignTable = 'message' then (ForeignID + " . $this->messagePostOffset . ")
+                end as post_id")
+        );
+
+        $ex->import('fof_upload_files', $query, $structure, $map);
     }
 
     /**
@@ -602,7 +662,7 @@ class Flarum extends Target
     protected function privateMessages(ExportModel $ex)
     {
         // Messages — Discussions
-        $MaxDiscussionID = $this->getMaxDiscussionID($ex);
+        $MaxDiscussionID = $this->messageDiscussionOffset = $this->getMaxDiscussionID($ex);
         $ex->comment('Discussions offset for PMs is ' . $MaxDiscussionID);
         $map = [
             'InsertUserID' => 'user_id',
@@ -624,7 +684,7 @@ class Flarum extends Target
         $ex->import('discussions', $query, self::DB_STRUCTURE_DISCUSSIONS, $map, $filters);
 
         // Messages — Comments
-        $MaxCommentID = $this->getMaxCommentID($ex);
+        $MaxCommentID = $this->messagePostOffset = $this->getMaxCommentID($ex);
         $ex->comment('Posts offset for PMs is ' . $MaxCommentID);
         $map = [
             'Body' => 'content',
