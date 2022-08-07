@@ -49,7 +49,7 @@ class Flarum extends Postscript
             // Find converted mentions and connect to userID.
             $mentions = [];
             preg_match_all(
-                '/<USERMENTION .* id="(?<userids>[0-9]*)".*\/USERMENTION>/U',
+                '/<USERMENTION .*id="(?<userids>[0-9]*)".*\/USERMENTION>/U',
                 $post->content,
                 $mentions
             );
