@@ -680,6 +680,7 @@ class Flarum extends Target
             $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as id'),
             'InsertUserID',
             'DateInserted',
+            'DateInserted as last_posted_at', // @todo Orders old PMs by OP instead of last comment.
             $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as slug'),
             // Use a numbered title "Private discussion 1234" if there's no Subject line.
             $ex->dbImport()->raw('ifnull(Subject,
