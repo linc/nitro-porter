@@ -567,8 +567,8 @@ class Flarum extends Target
             'poll_id' => 'int',
             'option_id' => 'int',
             'user_id' => 'int',
-            //'created_at' => 'datetime',
-            //'updated_at' => 'datetime',
+            'created_at' => 'timestamp',
+            'updated_at' => 'timestamp',
         ];
         $map = [
             'PollOptionID' => 'option_id',
@@ -576,7 +576,12 @@ class Flarum extends Target
         ];
         $query = $ex->dbImport()->table('PORT_PollVote')
             ->leftJoin('PORT_PollOption', 'PORT_PollVote.PollOptionID', '=', 'PORT_PollOption.PollOptionID')
-            ->select('PORT_PollVote.*', 'PORT_PollOption.PollID as poll_id');
+            ->select(
+                'PORT_PollVote.*',
+                'PORT_PollOption.PollID as poll_id',
+                'PORT_PollOption.DateInserted as created_at', // Total hack for approximate vote dates.
+                'PORT_PollOption.DateUpdated as updated_at',
+            );
 
         $ex->import('poll_votes', $query, $structure, $map);
     }
