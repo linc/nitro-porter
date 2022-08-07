@@ -96,7 +96,7 @@ class Flarum extends Postscript
             $count = $db->affectingStatement("update `" . $ex->tarPrefix . "posts`
                     set `number` = (@num := @num + 1)
                     where `discussion_id` = " . $post->discussion_id . "
-                    order by `id` asc");
+                    order by `created_at` asc");
             $rows += $count;
         }
 
