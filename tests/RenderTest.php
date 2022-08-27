@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+namespace PorterTest;
 
 use PHPUnit\Framework\TestCase;
 

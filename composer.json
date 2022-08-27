@@ -50,11 +50,12 @@
    },
    "autoload": {
        "psr-4": {
-            "Porter\\": "src/"
+           "Porter\\": "src/",
+           "PorterTest\\": "tests/"
        },
        "files": [
-            "src/Functions/core.php",
-            "src/Functions/filter.php"
+           "src/Functions/core.php",
+           "src/Functions/filter.php"
        ]
    }
 }
