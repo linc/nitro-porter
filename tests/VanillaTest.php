@@ -7,12 +7,13 @@ use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Phinx\Config\Config;
 use Phinx\Migration\Manager;
+use Phinx\Console\PhinxApplication;
 
 class VanillaTest extends TestCase
 {
     public function setUp(): void
     {
-        $app = new Phinx\Console\PhinxApplication();
+        $app = new PhinxApplication();
         $app->setAutoExit(false);
         $app->run(new StringInput('migrate'), new NullOutput());
         $app->run(new StringInput('seed:run'), new NullOutput());
