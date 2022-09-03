@@ -42,7 +42,10 @@ class Flarum extends Target
         'hasDiscussionBody' => false,
     ];
 
-    /** @var string[] Table structure for `posts`. */
+    /**
+     * @var string[] Table structure for `posts`.
+     * @see \Porter\Postscript\Flarum::postData() for 'keys' requirement.
+     */
     protected const DB_STRUCTURE_POSTS = [
         'id' => 'int',
         'discussion_id' => 'int',
@@ -53,6 +56,12 @@ class Flarum extends Target
         'type' => 'varchar(100)',
         'content' => 'longText',
         'number' => 'int',
+        'keys' => [
+            'FLA_posts_discussion_id_number_unique' => [
+                'type' => 'unique',
+                'columns' => ['discussion_id', 'number'],
+            ],
+        ],
     ];
 
     /** @var string[] Table structure for 'discussions`. */
