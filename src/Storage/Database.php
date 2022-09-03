@@ -286,12 +286,20 @@ class Database extends Storage
      * @see https://laravel.com/docs/9.x/migrations#creating-columns
      *
      * @param array $tableInfo Keys are column names, values are MySQL data types.
+     *      A special key 'keys' can be passed to define database columns.
      * @return callable Closure defining a single Illuminate Database table.
      */
     public function getTableStructureClosure(array $tableInfo): callable
     {
         // Build the closure using given structure.
         return function (Blueprint $table) use ($tableInfo) {
+            // Allow keys to be passed in with special... key.
+            $keys = [];
+            if (array_key_exists('keys', $tableInfo)) {
+                $keys = $tableInfo['keys'];
+                unset($tableInfo['keys']);
+            }
+
             // One statement per column to be created.
             foreach ($tableInfo as $columnName => $type) {
                 if (is_array($type)) {
@@ -310,6 +318,14 @@ class Database extends Storage
                     $type = preg_replace('/int($|\()/', 'integer', $type);
                     $table->$type($columnName)->nullable();
                 }
+            }
+
+            // One statement per key to be created.
+            foreach ($keys as $keyName => $info) {
+                if ($info['type'] === 'unique') {
+                    $table->unique($info['columns'], 'FLA_posts_discussion_id_number_unique');
+                }
+                // @todo Allow more key types as needed.
             }
         };
     }

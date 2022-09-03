@@ -213,6 +213,7 @@ class File extends Storage
      */
     public function prepare(string $name, array $structure): void
     {
+        unset($structure['keys']); // Unfortunate kludge to allow databases to declare these.
         $this->writeBeginTable($this->file, $name, $structure);
     }
 
