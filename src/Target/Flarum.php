@@ -66,7 +66,7 @@ class Flarum extends Target
         'first_post_id' => 'int',
         'last_post_id' => 'int',
         'last_posted_at' => 'datetime',
-        'last_posted_user_id' => 'datetime',
+        'last_posted_user_id' => 'int',
         'is_sticky' => 'tinyint', // flarum/sticky
         'is_locked' => 'tinyint', // flarum/lock
     ];
