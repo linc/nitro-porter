@@ -714,6 +714,7 @@ class Flarum extends Target
             $ex->dbImport()->raw('(MessageID + ' . $MaxCommentID . ') as id'),
             $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id'),
             'Body',
+            'Format',
             'InsertUserID',
             'DateInserted',
             $ex->dbImport()->raw('1 as is_private'),
