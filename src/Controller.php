@@ -75,6 +75,7 @@ class Controller
     {
         // Remove time limit.
         set_time_limit(0);
+        ini_set('memory_limit', '256M');
 
         // Set up export storage.
         if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
