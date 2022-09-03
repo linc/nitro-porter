@@ -43,7 +43,7 @@ class Flarum extends Target
     ];
 
     /**
-     * @var string[] Table structure for `posts`.
+     * @var array Table structure for `posts`.
      * @see \Porter\Postscript\Flarum::postData() for 'keys' requirement.
      */
     protected const DB_STRUCTURE_POSTS = [
