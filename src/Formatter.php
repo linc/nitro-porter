@@ -118,11 +118,16 @@ class Formatter
     /**
      * Replace basic Vanilla mentions with tag-based Flarum mentions.
      *
-     * @param string $text
+     * @param ?string $text
      * @return string
      */
-    public function fixRawMentions(string $text): string
+    public function fixRawMentions(?string $text): string
     {
+        // Allow empty content.
+        if (is_null($text)) {
+            return '';
+        }
+
         // Find unconverted mentions and associate userID.
         $mentions = $this->findRawMentions($text);
         foreach ($mentions as $mention) {
