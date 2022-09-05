@@ -227,17 +227,62 @@ class Flarum extends Target
             'id' => 'int',
             'name_singular' => 'varchar(100)',
             'name_plural' => 'varchar(100)',
+            'color' => 'varchar(20)',
+            'icon' => 'varchar(100)',
+            'is_hidden' => 'tinyint',
         ];
         $map = [
             'RoleID' => 'id',
             'Name' => 'name_singular',
             'Plural' => 'name_plural',
         ];
+
         $query = $ex->dbImport()->table('PORT_Role')->select(
             '*',
             'Name as Plural',
+            'null as color',
+            'null as icon',
+            '0 as is_hidden',
             $ex->dbImport()->raw("(RoleID + 4) as RoleID") // Flarum reserves 1-3 & uses 4 for mods by default.
         );
+
+        // Add the 4 default Flarum roles (because `import` truncates).
+        $group_admin = $ex->dbImport()->table('PORT_Role')->selectRaw(
+            '1 as id,
+                "Admin" as name_singular,
+                "Admins" as name_plural,
+                "#B72A2A" as color,
+                "fas fa-wrench" as icon,
+                0 as is_hidden'
+        );
+        $query->union($group_admin);
+        $group_guest = $ex->dbImport()->table('PORT_Role')->selectRaw(
+            '2 as id,
+                "Guest" as name_singular,
+                "Guests" as name_plural,
+                "" as color,
+                "" as icon,
+                0 as is_hidden'
+        );
+        $query->union($group_guest);
+        $group_member = $ex->dbImport()->table('PORT_Role')->selectRaw(
+            '3 as id,
+                "Member" as name_singular,
+                "Member" as name_plural,
+                "" as color,
+                "" as icon,
+                0 as is_hidden'
+        );
+        $query->union($group_member);
+        $group_mod = $ex->dbImport()->table('PORT_Role')->selectRaw(
+            '4 as id,
+                "Mod" as name_singular,
+                "Mods" as name_plural,
+                "#80349E" as color,
+                "fas fa-bolt" as icon,
+                0 as is_hidden'
+        );
+        $query->union($group_mod);
 
         $ex->import('groups', $query, $structure, $map);
 
