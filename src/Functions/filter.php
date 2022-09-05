@@ -36,7 +36,14 @@ function filterFlarumContent(?string $value, string $column, array $row): string
  */
 function fixDuplicateDeletedNames(string $value, string $column, array $row): string
 {
-    $duplicates = ['[Deleted User]', '[DeletedUser]', '-Deleted-User-'];
+    // @todo Add multilingual variations of 'deleted user'.
+    $duplicates = [
+        '[Deleted User]',
+        '[DeletedUser]',
+        '-Deleted-User-',
+        '[Slettet bruker]', // Norwegian
+        '[Utilisateur supprimé]', // French
+    ];
     if (in_array($value, $duplicates)) {
         $value = 'deleted_user_' . $row['UserID'];
     }

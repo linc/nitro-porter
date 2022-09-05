@@ -111,7 +111,13 @@ class Flarum extends Target
      */
     public function uniqueUserNames(ExportModel $ex)
     {
-        $allowlist = ['[Deleted User]', '[DeletedUser]', '-Deleted-User-']; // @see fixDuplicateDeletedNames()
+        $allowlist = [
+            '[Deleted User]',
+            '[DeletedUser]',
+            '-Deleted-User-',
+            '[Slettet bruker]', // Norwegian
+            '[Utilisateur supprimé]', // French
+        ]; // @see fixDuplicateDeletedNames()
         $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
         if (!empty($dupes)) {
             $ex->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
