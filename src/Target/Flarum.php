@@ -78,6 +78,7 @@ class Flarum extends Target
         'last_posted_user_id' => 'int',
         'is_sticky' => 'tinyint', // flarum/sticky
         'is_locked' => 'tinyint', // flarum/lock
+        'votes' => 'int',
     ];
 
     /** @var int Offset for inserting OP content into the posts table. */
@@ -296,6 +297,7 @@ class Flarum extends Target
      */
     protected function discussions(ExportModel $ex): void
     {
+        $structure = self::DB_STRUCTURE_DISCUSSIONS;
         $map = [
             'DiscussionID' => 'id',
             'InsertUserID' => 'user_id',
@@ -312,10 +314,16 @@ class Flarum extends Target
         $filters = [
             'slug' => 'createDiscussionSlugs',
         ];
+
+        // flarumite/simple-discussion-views
         if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
-            // flarumite/simple-discussion-views
             $structure['view_count'] = 'int';
             $map['CountViews'] = 'view_count';
+        }
+
+        // fof/gamification — no data, just prevent failure (no default value is set)
+        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['votes'])) {
+            $structure['votes'] = 'int';
         }
 
         // CountComments needs to be double-mapped so it's included as an alias also.
@@ -323,10 +331,11 @@ class Flarum extends Target
             ->select(
                 '*',
                 $ex->dbImport()->raw('CountComments as post_number_index'),
-                $ex->dbImport()->raw('DiscussionID as slug')
+                $ex->dbImport()->raw('DiscussionID as slug'),
+                $ex->dbImport()->raw('0 as votes')
             );
 
-        $ex->import('discussions', $query, self::DB_STRUCTURE_DISCUSSIONS, $map, $filters);
+        $ex->import('discussions', $query, $structure, $map, $filters);
 
         // Flarum has a separate pivot table for discussion tags.
         $structure = [
@@ -684,6 +693,7 @@ class Flarum extends Target
         // Messages — Discussions
         $MaxDiscussionID = $this->messageDiscussionOffset = $this->getMaxDiscussionID($ex);
         $ex->comment('Discussions offset for PMs is ' . $MaxDiscussionID);
+        $structure = self::DB_STRUCTURE_DISCUSSIONS;
         $map = [
             'InsertUserID' => 'user_id',
             'DateInserted' => 'created_at',
@@ -691,19 +701,27 @@ class Flarum extends Target
         $filters = [
             'slug' => 'createDiscussionSlugs',
         ];
+
+        // fof/gamification — no data, just prevent failure (no default value is set)
+        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['votes'])) {
+            $structure['votes'] = 'int';
+        }
+
         $query = $ex->dbImport()->table('PORT_Conversation')->select(
             $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as id'),
             'InsertUserID',
             'DateInserted',
             'DateInserted as last_posted_at', // @todo Orders old PMs by OP instead of last comment.
             $ex->dbImport()->raw('1 as is_private'),
+            $ex->dbImport()->raw('0 as votes'),
+            $ex->dbImport()->raw('0 as view_count'),
             $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as slug'),
             // Use a numbered title "Private discussion 1234" if there's no Subject line.
             $ex->dbImport()->raw('ifnull(Subject,
                 concat("Private discussion ", (ConversationID + ' . $MaxDiscussionID . '))) as title')
         );
 
-        $ex->import('discussions', $query, self::DB_STRUCTURE_DISCUSSIONS, $map, $filters);
+        $ex->import('discussions', $query, $structure, $map, $filters);
 
         // Messages — Comments
         $MaxCommentID = $this->messagePostOffset = $this->getMaxCommentID($ex);
