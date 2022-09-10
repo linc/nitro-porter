@@ -509,6 +509,7 @@ class Flarum extends Target
         $structure = [
             'id' => 'int',
             'name' => 'varchar(200)',
+            'image' => 'text',
             'description' => 'text',
             'points' => 'int',
             'created_at' => 'datetime',
@@ -516,7 +517,10 @@ class Flarum extends Target
         ];
         $map = [
             'Name' => 'name',
-            'BadgeID' => 'discussion_id',
+            'BadgeID' => 'id',
+            'Body' => 'description',
+            'Photo' => 'image',
+            'Points' => 'points',
             'InsertUserID' => 'user_id',
             'DateInserted' => 'created_at',
             'DateLastViewed' => 'last_read_at',

@@ -108,6 +108,7 @@ class Vanilla2 extends Source
             $ex->export('Badge', "select *,
                 NOW() as DateInserted,
                 1 as InsertUserID,
+                Description as Body,
                 Enabled as Visible
                 from :_YagaBadge", $map);
             $ex->export('UserBadge', "select *,
