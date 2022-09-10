@@ -502,8 +502,8 @@ class Flarum extends Target
      */
     protected function badges(ExportModel $ex): void
     {
-        // Badge Groups
-        //
+        // Badge Categories
+        // One category is added in postscript.
 
         // Badges
         $structure = [
@@ -526,7 +526,7 @@ class Flarum extends Target
             'DateLastViewed' => 'last_read_at',
             'Visible' => 'is_visible',
         ];
-        $query = $ex->dbImport()->table('PORT_Badge')->select('*');
+        $query = $ex->dbImport()->table('PORT_Badge')->select('*, 1 as badge_category_id');
 
         $ex->import('badges', $query, $structure, $map);
 

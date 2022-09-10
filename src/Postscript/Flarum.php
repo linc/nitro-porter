@@ -23,6 +23,7 @@ class Flarum extends Postscript
         $this->userMentions($ex);
         $this->postData($ex);
         $this->defaultGroups($ex);
+        $this->defaultBadgeCategory($ex);
         $this->promoteAdmin($ex);
     }
 
@@ -120,6 +121,23 @@ class Flarum extends Postscript
                 // Not strictly necessary, just safer because Mod-level permissions may be in `group_user` already.
                 ['id' => 4, 'name_singular' => 'Mod', 'name_plural' => 'Mods', 'is_hidden' => 0],
             ]);
+    }
+
+    /**
+     * Add the default badge category.
+     *
+     * Badges are automatically added to badge_category_id = 1 during import.
+     *
+     * @param ExportModel $ex
+     */
+    protected function defaultBadgeCategory(ExportModel $ex)
+    {
+        if ($ex->exists($ex->tarPrefix . 'badge_category')) {
+            $ex->dbImport()
+                ->table($ex->tarPrefix . 'badge_category')
+                ->insert(['id' => 1, 'name' => 'Imported Badges', 'created_at' => 'NOW()']);
+            $ex->comment('Added badge category "Imported Badges".');
+        }
     }
 
     /**
