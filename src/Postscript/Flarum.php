@@ -114,11 +114,11 @@ class Flarum extends Postscript
         $db = $this->connection->newConnection();
         $db->table($ex->tarPrefix . 'groups')
             ->insert([
-                ['id' => 1, 'name_singular' => 'Admin', 'name_plural' => 'Admins'],
-                ['id' => 2, 'name_singular' => 'Guest', 'name_plural' => 'Guests'],
-                ['id' => 3, 'name_singular' => 'Member', 'name_plural' => 'Members'],
+                ['id' => 1, 'name_singular' => 'Admin', 'name_plural' => 'Admins', 'is_hidden' => 0],
+                ['id' => 2, 'name_singular' => 'Guest', 'name_plural' => 'Guests', 'is_hidden' => 0],
+                ['id' => 3, 'name_singular' => 'Member', 'name_plural' => 'Members', 'is_hidden' => 0],
                 // Not strictly necessary, just safer because Mod-level permissions may be in `group_user` already.
-                ['id' => 4, 'name_singular' => 'Mod', 'name_plural' => 'Mods'],
+                ['id' => 4, 'name_singular' => 'Mod', 'name_plural' => 'Mods', 'is_hidden' => 0],
             ]);
     }
 
