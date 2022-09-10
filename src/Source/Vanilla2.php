@@ -104,8 +104,15 @@ class Vanilla2 extends Source
                 'AwardValue' => 'Points',
                 'Enabled' => 'Active',
             ];
-            $ex->export('Badge', "select * from :_YagaBadge", $map);
-            $ex->export('UserBadge', "select * from :_YagaBadgeAward");
+            // Yaga is missing a couple columns we need.
+            $ex->export('Badge', "select *,
+                NOW() as DateInserted,
+                1 as InsertUserID,
+                Enabled as Visible
+                from :_YagaBadge", $map);
+            $ex->export('UserBadge', "select *,
+                DateInserted as DateCompleted
+                from :_YagaBadgeAward");
         }
     }
 
@@ -148,7 +155,11 @@ class Vanilla2 extends Source
             // This wouldn't work for exporting a Yaga-based Vanilla install to a "standard" reactions Vanilla install,
             // but I have to assume no one is using Porter for that anyway.
             // Other Targets should probably directly join ReactionType & UserTag on TagID anyway.
-            $ex->export('ReactionType', "select *, ActionID as TagID from :_YagaAction"); // Name & Description only
+            // Yaga also lacks an 'active/enabled' field so assume they're all 'on'.
+            $ex->export('ReactionType', "select *,
+                ActionID as TagID,
+                1 as Active
+                from :_YagaAction"); // Name & Description only
             $map = [
                 'ParentID' => 'RecordID',
                 'ParentType' => 'RecordType',
