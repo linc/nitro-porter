@@ -85,10 +85,15 @@ class Formatter
 
         // Use the Quill renderer.
         $lexer = new Quill($text);
+
         // Custom mention handler.
         $lexer->registerListener(new \Porter\Parser\FlarumMention());
-        // Custom image embed handler.
+
+        // Custom image embed handler for `external-embed`.
         $lexer->registerListener(new \Porter\Parser\FlarumImageEmbed());
+
+        // Custom link handler for `external-embed`.
+        $lexer->registerListener(new \Porter\Parser\FlarumLinkEmbed());
 
         return $lexer->render();
     }
