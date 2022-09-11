@@ -22,6 +22,7 @@ class Flarum extends Postscript
     {
         $this->userMentions($ex);
         $this->postData($ex);
+        $this->lastRead($ex);
         $this->defaultGroups($ex);
         $this->defaultBadgeCategory($ex);
         $this->promoteAdmin($ex);
@@ -103,6 +104,43 @@ class Flarum extends Postscript
 
         // Report.
         $ex->reportStorage('build', 'post numbers', microtime(true) - $start, $rows, $memory);
+    }
+
+    /**
+     * Flarum won't even show your bookmarks without last_read_post_number being populated. What a diva!
+     *
+     * @param ExportModel $ex
+     */
+    protected function lastRead(ExportModel $ex)
+    {
+        // Start timer.
+        $start = microtime(true);
+        $rows = 0;
+
+        // Calculate & set discussion_user.last_read_post_number.
+        $db = $this->connection->newConnection();
+        $bookmarks = $db->table($ex->tarPrefix . 'discussion_user', 'du')
+            ->selectRaw('du.user_id, du.discussion_id, max(p.number) as last_number')
+            ->join(
+                $ex->tarPrefix . 'posts as p',
+                'p.discussion_id',
+                '=',
+                'du.discussion_id',
+                'left'
+            )
+            ->groupBy(['du.user_id', 'du.discussion_id'])
+            ->get();
+        $memory = memory_get_usage();
+        foreach ($bookmarks as $post) {
+            $count = $db->affectingStatement("update `" . $ex->tarPrefix . "discussion_user`
+                set last_read_post_number = " . $post->last_number . "
+                where user_id = " . $post->user_id . "
+                    and discussion_id = " . $post->discussion_id);
+            $rows += $count;
+        }
+
+        // Report.
+        $ex->reportStorage('build', 'following last read', microtime(true) - $start, $rows, $memory);
     }
 
     /**
