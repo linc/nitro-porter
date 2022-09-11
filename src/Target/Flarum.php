@@ -526,7 +526,9 @@ class Flarum extends Target
             'DateLastViewed' => 'last_read_at',
             'Visible' => 'is_visible',
         ];
-        $query = $ex->dbImport()->table('PORT_Badge')->select('*, 1 as badge_category_id');
+        $query = $ex->dbImport()->table('PORT_Badge')
+            ->select('*')
+            ->selectRaw('1 as badge_category_id');
 
         $ex->import('badges', $query, $structure, $map);
 
