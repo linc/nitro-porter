@@ -511,6 +511,7 @@ class Flarum extends Target
             'name' => 'varchar(200)',
             'image' => 'text',
             'description' => 'text',
+            'badge_category_id' => 'int',
             'points' => 'int',
             'created_at' => 'datetime',
             'is_visible' => 'tinyint',
@@ -527,8 +528,10 @@ class Flarum extends Target
             'Visible' => 'is_visible',
         ];
         $query = $ex->dbImport()->table('PORT_Badge')
-            ->select('*')
-            ->selectRaw('1 as badge_category_id');
+            ->select(
+                '*',
+                $ex->dbImport()->raw('1 as badge_category_id')
+            );
 
         $ex->import('badges', $query, $structure, $map);
 

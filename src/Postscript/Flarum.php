@@ -130,7 +130,7 @@ class Flarum extends Postscript
             )
             ->groupBy(['du.user_id', 'du.discussion_id'])
             ->get();
-        $memory = memory_get_usage();
+        $memory = memory_get_usage(); // @todo This is a memory bottleneck — can it be streamed?
         foreach ($bookmarks as $post) {
             $count = $db->affectingStatement("update `" . $ex->tarPrefix . "discussion_user`
                 set last_read_post_number = " . $post->last_number . "
@@ -170,11 +170,11 @@ class Flarum extends Postscript
      */
     protected function defaultBadgeCategory(ExportModel $ex)
     {
-        if ($ex->exists($ex->tarPrefix . 'badge_category')) {
+        if ($ex->targetExists($ex->tarPrefix . 'badge_category')) {
             $ex->dbImport()
                 ->table($ex->tarPrefix . 'badge_category')
-                ->insert(['id' => 1, 'name' => 'Imported Badges', 'created_at' => 'NOW()']);
-            $ex->comment('Added badge category "Imported Badges".');
+                ->insert(['id' => 1, 'name' => 'Imported Badges', 'created_at' => date('Y-m-d h:m:s')]);
+            $ex->comment('Added  badge category "Imported Badges".');
         }
     }
 
