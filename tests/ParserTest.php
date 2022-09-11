@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 final class ParserTest extends TestCase
 {
     /**
-     * @covers FlarumEmbed::process
+     * @covers FlarumImageEmbed::process
      */
     public function testQuillCanParseExternalEmbed(): void
     {
@@ -19,7 +19,7 @@ final class ParserTest extends TestCase
             '"loaderData":{"type":"image"}}}},{"insert":"\n"}]'; // post id 953302
         $stored = '{"ops":' . $stored . '}'; // Fix the JSON.
         $lexer = new Quill($stored);
-        $lexer->registerListener(new \Porter\Parser\FlarumEmbed());
+        $lexer->registerListener(new \Porter\Parser\FlarumImageEmbed());
         $result = $lexer->render();
         $expected = '<UPL-IMAGE-PREVIEW url="https://example.com/uploads/779/8C8NUCDYD6ZW.png">' .
                     '[upl-image-preview url=https://example.com/uploads/779/8C8NUCDYD6ZW.png]</UPL-IMAGE-PREVIEW>';

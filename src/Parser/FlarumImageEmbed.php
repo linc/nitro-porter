@@ -11,7 +11,7 @@ use nadar\quill\Line;
  *
  * @see https://s9etextformatter.readthedocs.io/Plugins/MediaEmbed/Synopsis/
  */
-class FlarumEmbed extends BlockListener
+class FlarumImageEmbed extends BlockListener
 {
     /**
      * {@inheritDoc}

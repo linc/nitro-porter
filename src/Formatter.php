@@ -87,8 +87,8 @@ class Formatter
         $lexer = new Quill($text);
         // Custom mention handler.
         $lexer->registerListener(new \Porter\Parser\FlarumMention());
-        // Custom embed handler.
-        $lexer->registerListener(new \Porter\Parser\FlarumEmbed());
+        // Custom image embed handler.
+        $lexer->registerListener(new \Porter\Parser\FlarumImageEmbed());
 
         return $lexer->render();
     }
