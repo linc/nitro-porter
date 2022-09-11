@@ -34,6 +34,6 @@ class FlarumLinkEmbed extends BlockListener
      */
     public function render(Lexer $lexer)
     {
-        $this->wrapElement('<a href="{url}">{url}</a>', ['url']);
+        $this->wrapElement(' <a href="{url}">{url}</a> ', ['url']);
     }
 }
