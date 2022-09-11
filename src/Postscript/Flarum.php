@@ -173,7 +173,7 @@ class Flarum extends Postscript
         if ($ex->targetExists($ex->tarPrefix . 'badge_category')) {
             $ex->dbImport()
                 ->table($ex->tarPrefix . 'badge_category')
-                ->insert(['id' => 1, 'name' => 'Imported Badges', 'created_at' => date('Y-m-d h:m:s')]);
+                ->insertOrIgnore(['id' => 1, 'name' => 'Imported Badges', 'created_at' => date('Y-m-d h:m:s')]);
             $ex->comment('Added  badge category "Imported Badges".');
         }
     }
