@@ -19,7 +19,7 @@ abstract class EmbedExternalListener extends BlockListener
     public function isEmbedExternal(array $jsonInsert, string $type): bool
     {
         // Verify basic info structure.
-        if (!$jsonInsert || !isset($jsonInsert['data'])) {
+        if (!isset($jsonInsert['data'])) {
             return false;
         }
 
