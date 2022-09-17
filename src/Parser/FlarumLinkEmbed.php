@@ -2,7 +2,6 @@
 
 namespace Porter\Parser;
 
-use nadar\quill\BlockListener;
 use nadar\quill\Lexer;
 use nadar\quill\Line;
 
@@ -11,7 +10,7 @@ use nadar\quill\Line;
  *
  * @see https://s9etextformatter.readthedocs.io/Plugins/Autolink/Synopsis/
  */
-class FlarumLinkEmbed extends BlockListener
+class FlarumLinkEmbed extends EmbedExternalListener
 {
     /**
      * {@inheritDoc}
@@ -19,11 +18,7 @@ class FlarumLinkEmbed extends BlockListener
     public function process(Line $line)
     {
         $embed = $line->insertJsonKey('embed-external');
-        if (
-            $embed && isset($embed['data']['url'])
-            && isset($embed['data']['type'])
-            && $embed['data']['type'] === 'link' // Key logic difference from FlarumImageEmbed
-        ) {
+        if ($this->isEmbedExternal($embed, 'link')) {
             $this->pick($line, ['url' => $embed['data']['url']]);
             $line->setDone();
         }
@@ -34,6 +29,6 @@ class FlarumLinkEmbed extends BlockListener
      */
     public function render(Lexer $lexer)
     {
-        $this->wrapElement(' <a href="{url}">{url}</a> ', ['url']);
+        $this->wrapElement(' <a href="{url}">{url}</a><br/>', ['url']);
     }
 }
