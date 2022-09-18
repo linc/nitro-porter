@@ -18,7 +18,7 @@ class FlarumImageEmbed extends EmbedExternalListener
     public function process(Line $line)
     {
         $embed = $line->insertJsonKey('embed-external');
-        if ($embed && $this->isEmbedExternal($embed, 'image')) {
+        if ($embed && ($this->isEmbedExternal($embed, 'image') || $this->isEmbedExternal($embed, 'giphy'))) {
             $this->pick($line, ['url' => $embed['data']['url']]);
             $line->setDone();
         }
