@@ -89,11 +89,14 @@ class Formatter
         // Custom mention handler.
         $lexer->registerListener(new \Porter\Parser\FlarumMention());
 
-        // Custom image embed handler for `external-embed`.
+        // Custom image embed handler for `embed-external`.
         $lexer->registerListener(new \Porter\Parser\FlarumImageEmbed());
 
-        // Custom link handler for `external-embed`.
+        // Custom link handler for `embed-external`.
         $lexer->registerListener(new \Porter\Parser\FlarumLinkEmbed());
+
+        // Custom quote handler for `embed-external`.
+        $lexer->registerListener(new \Porter\Parser\FlarumQuoteEmbed());
 
         return $lexer->render();
     }
