@@ -20,18 +20,18 @@ class Flarum extends Postscript
      */
     public function run(ExportModel $ex)
     {
-        $this->buildMentions($ex);
+        $this->buildUserMentions($ex);
         $this->numberPosts($ex);
-        $this->lastRead($ex);
-        $this->defaultGroups($ex);
-        $this->defaultBadgeCategory($ex);
+        $this->setLastRead($ex);
+        $this->addDefaultGroups($ex);
+        $this->addDefaultBadgeCategory($ex);
         $this->promoteAdmin($ex);
     }
 
     /**
      * Find mentions in posts and record to database table.
      */
-    protected function buildMentions(ExportModel $ex)
+    protected function buildUserMentions(ExportModel $ex)
     {
         // Start timer.
         $start = microtime(true);
@@ -46,6 +46,7 @@ class Flarum extends Postscript
             ->table($ex->tarPrefix . 'posts')
             ->select(['id', 'discussion_id', 'content']);
         $memory = memory_get_usage();
+
         // Find & record mentions in batches.
         foreach ($posts->cursor() as $post) {
             // Find converted mentions and connect to userID.
@@ -55,8 +56,8 @@ class Flarum extends Postscript
                 $post->content,
                 $mentions
             );
+            // There can be multiple userids per post.
             foreach ($mentions['userids'] as $userid) {
-                // There can be multiple userids per post.
                 $this->storage->stream([
                     'post_id' => $post->id,
                     'mentions_user_id' => (int)$userid
@@ -111,7 +112,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function lastRead(ExportModel $ex)
+    protected function setLastRead(ExportModel $ex)
     {
         // Start timer.
         $start = microtime(true);
@@ -148,7 +149,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function defaultGroups(ExportModel $ex)
+    protected function addDefaultGroups(ExportModel $ex)
     {
         $db = $this->connection->newConnection();
         $db->table($ex->tarPrefix . 'groups')
@@ -168,7 +169,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function defaultBadgeCategory(ExportModel $ex)
+    protected function addDefaultBadgeCategory(ExportModel $ex)
     {
         if ($ex->targetExists($ex->tarPrefix . 'badge_category')) {
             $ex->dbImport()
