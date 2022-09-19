@@ -44,7 +44,7 @@ class Flarum extends Target
 
     /**
      * @var array Table structure for `posts`.
-     * @see \Porter\Postscript\Flarum::postData() for 'keys' requirement.
+     * @see \Porter\Postscript\Flarum::numberPosts() for 'keys' requirement.
      */
     protected const DB_STRUCTURE_POSTS = [
         'id' => 'int',

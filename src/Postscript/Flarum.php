@@ -20,8 +20,8 @@ class Flarum extends Postscript
      */
     public function run(ExportModel $ex)
     {
-        $this->userMentions($ex);
-        $this->postData($ex);
+        $this->buildMentions($ex);
+        $this->numberPosts($ex);
         $this->lastRead($ex);
         $this->defaultGroups($ex);
         $this->defaultBadgeCategory($ex);
@@ -31,7 +31,7 @@ class Flarum extends Postscript
     /**
      * Find mentions in posts and record to database table.
      */
-    protected function userMentions(ExportModel $ex)
+    protected function buildMentions(ExportModel $ex)
     {
         // Start timer.
         $start = microtime(true);
@@ -79,7 +79,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function postData(ExportModel $ex)
+    protected function numberPosts(ExportModel $ex)
     {
         // Start timer.
         $start = microtime(true);
