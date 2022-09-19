@@ -188,4 +188,9 @@ class Formatter
     {
         return '<' . $char . '>' . $text . '</' . $char . '>';
     }
+
+    public static function unwrap(string $text): string
+    {
+        return substr($text, 3, -4);
+    }
 }
