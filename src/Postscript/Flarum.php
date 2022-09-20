@@ -13,6 +13,12 @@ class Flarum extends Postscript
         'mentions_user_id' => 'int',
     ];
 
+    /** @var string[] Database structure for the table post_mentions_post. */
+    public const DB_STRUCTURE_POST_MENTIONS_POST = [
+        'post_id' => 'int',
+        'mentions_post_id' => 'int',
+    ];
+
     /**
      * Main process.
      *
@@ -22,6 +28,7 @@ class Flarum extends Postscript
     {
         $this->buildUserMentions($ex);
         $this->numberPosts($ex);
+        $this->buildPostMentions($ex); // Must be AFTER `numberPosts()`
         $this->setLastRead($ex);
         $this->addDefaultGroups($ex);
         $this->addDefaultBadgeCategory($ex);
@@ -70,7 +77,7 @@ class Flarum extends Postscript
         $this->storage->endStream();
 
         // Report.
-        $ex->reportStorage('build', 'mentions', microtime(true) - $start, $rows, $memory);
+        $ex->reportStorage('build', 'mentions_user', microtime(true) - $start, $rows, $memory);
     }
 
     /**
@@ -105,6 +112,52 @@ class Flarum extends Postscript
 
         // Report.
         $ex->reportStorage('build', 'post numbers', microtime(true) - $start, $rows, $memory);
+    }
+
+    /**
+     * Find mentions in posts and record to database table.
+     */
+    protected function buildPostMentions(ExportModel $ex)
+    {
+        // Start timer.
+        $start = microtime(true);
+        $rows = 0;
+
+        // Prepare mentions table.
+        $this->storage->prepare('post_mentions_post', self::DB_STRUCTURE_POST_MENTIONS_POST);
+        $ex->ignoreDuplicates('post_mentions_post'); // Primary key forbids more than 1 record per user/post.
+
+        // Get post data.
+        $posts = $this->connection->newConnection()
+            ->table($ex->tarPrefix . 'posts')
+            ->select(['id', 'discussion_id', 'content']);
+        $memory = memory_get_usage();
+
+        // Find & record mentions in batches.
+        foreach ($posts->cursor() as $post) {
+            // Find converted mentions and connect to userID.
+            $mentions = [];
+            preg_match_all(
+                // @todo
+                '/<POSTMENTION .*id="(?<postids>[0-9]*)".*\/POSTMENTION>/U',
+                $post->content,
+                $mentions
+            );
+            // There can be multiple userids per post.
+            foreach ($mentions['postids'] as $postid) {
+                $this->storage->stream([
+                    'post_id' => $post->id,
+                    'mentions_post_id' => (int)$postid
+                ], self::DB_STRUCTURE_POST_MENTIONS_POST);
+                $rows++;
+            }
+        }
+
+        // Insert remaining mentions.
+        $this->storage->endStream();
+
+        // Report.
+        $ex->reportStorage('build', 'mentions_post', microtime(true) - $start, $rows, $memory);
     }
 
     /**
