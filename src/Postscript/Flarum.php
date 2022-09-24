@@ -2,7 +2,9 @@
 
 namespace Porter\Postscript;
 
+use Porter\ConnectionManager;
 use Porter\ExportModel;
+use Porter\Parser\FlarumQuoteEmbed;
 use Porter\Postscript;
 
 class Flarum extends Postscript
@@ -21,6 +23,9 @@ class Flarum extends Postscript
 
     /**
      * Main process.
+     *
+     * In test runs, 1/3 of the total migration time was from numberPosts and buildPostMentions.
+     * They take about as long as migrating all posts (comments) in the first place.
      *
      * @param ExportModel $ex
      */
@@ -116,16 +121,28 @@ class Flarum extends Postscript
 
     /**
      * Find mentions in posts and record to database table.
+     *
+     * @see FlarumQuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
      */
     protected function buildPostMentions(ExportModel $ex)
     {
         // Start timer.
         $start = microtime(true);
         $rows = 0;
+        $failures = 0;
 
         // Prepare mentions table.
         $this->storage->prepare('post_mentions_post', self::DB_STRUCTURE_POST_MENTIONS_POST);
         $ex->ignoreDuplicates('post_mentions_post'); // Primary key forbids more than 1 record per user/post.
+
+        // Create an OP lookup array.
+        // @todo This may fall down around 200K discussions.
+        $posts = $this->connection->newConnection()
+            ->table($ex->tarPrefix . 'posts')
+            ->where('number', '=', 1)
+            ->get(['id', 'discussion_id'])
+            ->toArray();
+        $discussions = array_combine(array_column($posts, 'discussion_id'), array_column($posts, 'id'));
 
         // Get post data.
         $posts = $this->connection->newConnection()
@@ -138,16 +155,37 @@ class Flarum extends Postscript
             // Find converted mentions and connect to userID.
             $mentions = [];
             preg_match_all(
-                // @todo
-                '/<POSTMENTION .*id="(?<postids>[0-9]*)".*\/POSTMENTION>/U',
+                '/<POSTMENTION id="(?<postids>[0-9]*)" discussionid="(?<discussionids>[0-9]*)".*\/POSTMENTION>/U',
                 $post->content,
                 $mentions
             );
-            // There can be multiple userids per post.
-            foreach ($mentions['postids'] as $postid) {
+
+            // There can be multiple mentioned postids per post.
+            foreach (array_filter($mentions['postids']) as $postid) {
+                // Repair the post.
+                if (!$this->repairPostMention($ex, $post->id, $post->content, (int)$postid, 'post')) {
+                    $failures++;
+                }
+
+                // Record post mentions.
                 $this->storage->stream([
                     'post_id' => $post->id,
                     'mentions_post_id' => (int)$postid
+                ], self::DB_STRUCTURE_POST_MENTIONS_POST);
+                $rows++;
+            }
+
+            // There can also be multiple mentioned discussionids per post.
+            foreach (array_filter($mentions['discussionids']) as $discussionid) {
+                // Repair the post.
+                if (!$this->repairPostMention($ex, $post->id, $post->content, (int)$discussionid, 'discussion')) {
+                    $failures++;
+                }
+
+                // Record post mentions.
+                $this->storage->stream([
+                    'post_id' => $post->id,
+                    'mentions_post_id' => (int)$discussions[$discussionid] // Use the OP lookup
                 ], self::DB_STRUCTURE_POST_MENTIONS_POST);
                 $rows++;
             }
@@ -156,8 +194,77 @@ class Flarum extends Postscript
         // Insert remaining mentions.
         $this->storage->endStream();
 
+        // Log failures.
+        if ($failures) {
+            $ex->comment('Failed to find ' . $failures . ' quoted posts (perhaps deleted).');
+        }
+
         // Report.
         $ex->reportStorage('build', 'mentions_post', microtime(true) - $start, $rows, $memory);
+    }
+
+    /**
+     * Fix incomplete mention markup.
+     *
+     * This adds considerable overheard to the migration.
+     *
+     * @see FlarumQuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
+     * @param ExportModel $ex
+     * @param int $postid Post being updated.
+     * @param string $content Content being updated.
+     * @param int $quoteID The post referenced in the content.
+     * @param string $quoteType One of 'post' or 'discussion'.
+     * @return bool Whether the post mention was repaired.
+     */
+    protected function repairPostMention(ExportModel $ex, int $postid, string $content, int $quoteID, string $quoteType)
+    {
+        // Prep a secondary connection for updating markup (main one will be running unbuffered query).
+        static $db = null;
+        if ($db === null) {
+            $dbAlias = $this->connection->getAlias(); // Use the same database.
+            $cm = new ConnectionManager($dbAlias);
+            $db = $cm->newConnection();
+        }
+
+        // Get missing quote info.
+        $quoteQuery = $db->table($ex->tarPrefix . 'posts');
+        if ($quoteType === 'post') {
+            $quoteQuery->where('id', '=', $quoteID);
+        } else { // 'discussion'
+            $quoteQuery->where('discussion_id', '=', $quoteID)
+                ->where('number', '=', 1);
+        }
+        $quotedPost = $quoteQuery->get(['id', 'discussion_id', 'number'])->first();
+
+        // Abort if no quoted post was found.
+        if (!is_object($quotedPost)) {
+            //$ex->comment("Failed to find mentioned " . $quoteType . " id: " . $quoteID);
+            return false;
+        }
+
+        // Swap it into the mention markup.
+        // Only one of these will match and it's easier than a logic gate.
+        $body = str_replace(
+            '<POSTMENTION id="' . $quoteID . '" discussionid="" number=""',
+            '<POSTMENTION id="' . $quoteID .
+            '" discussionid="' . $quotedPost->discussion_id .
+            '" number="' . $quotedPost->number . '"',
+            $content
+        );
+        $body = str_replace(
+            '<POSTMENTION id="" discussionid="' . $quoteID . '" number=""',
+            '<POSTMENTION id="' . $quotedPost->id .
+            '" discussionid="' . $quoteID .
+            '" number="' . $quotedPost->number . '"',
+            $content
+        );
+
+        // Update the post in the database.
+        $db->table($ex->tarPrefix . 'posts')
+            ->where('id', '=', $postid)
+            ->update(['content' => $body]);
+
+        return true;
     }
 
     /**
