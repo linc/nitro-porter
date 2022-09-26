@@ -1,16 +1,17 @@
 <?php
 
-namespace Porter\Parser;
+namespace Porter\Parser\Flarum;
 
 use nadar\quill\Lexer;
 use nadar\quill\Line;
+use Porter\Parser\EmbedExternalListener;
 
 /**
  * Convert a Quill (Vanilla) external embed of an uploaded image.
  *
  * @see https://s9etextformatter.readthedocs.io/Plugins/MediaEmbed/Synopsis/
  */
-class FlarumImageEmbed extends EmbedExternalListener
+class ImageEmbed extends EmbedExternalListener
 {
     /**
      * {@inheritDoc}

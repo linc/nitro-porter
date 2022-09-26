@@ -4,7 +4,7 @@ namespace Porter\Postscript;
 
 use Porter\ConnectionManager;
 use Porter\ExportModel;
-use Porter\Parser\FlarumQuoteEmbed;
+use Porter\Parser\Flarum\QuoteEmbed;
 use Porter\Postscript;
 
 class Flarum extends Postscript
@@ -122,7 +122,7 @@ class Flarum extends Postscript
     /**
      * Find mentions in posts and record to database table.
      *
-     * @see FlarumQuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
+     * @see QuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
      */
     protected function buildPostMentions(ExportModel $ex)
     {
@@ -208,13 +208,13 @@ class Flarum extends Postscript
      *
      * This adds considerable overheard to the migration.
      *
-     * @see FlarumQuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
      * @param ExportModel $ex
      * @param int $postid Post being updated.
      * @param string $content Content being updated.
      * @param int $quoteID The post referenced in the content.
      * @param string $quoteType One of 'post' or 'discussion'.
      * @return bool Whether the post mention was repaired.
+     *@see QuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
      */
     protected function repairPostMention(ExportModel $ex, int $postid, string $content, int $quoteID, string $quoteType)
     {

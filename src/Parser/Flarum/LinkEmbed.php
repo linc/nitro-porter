@@ -1,16 +1,17 @@
 <?php
 
-namespace Porter\Parser;
+namespace Porter\Parser\Flarum;
 
 use nadar\quill\Lexer;
 use nadar\quill\Line;
+use Porter\Parser\EmbedExternalListener;
 
 /**
  * Convert a Quill (Vanilla) external embed of a link.
  *
  * @see https://s9etextformatter.readthedocs.io/Plugins/Autolink/Synopsis/
  */
-class FlarumLinkEmbed extends EmbedExternalListener
+class LinkEmbed extends EmbedExternalListener
 {
     /**
      * {@inheritDoc}

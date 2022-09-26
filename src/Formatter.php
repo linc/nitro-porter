@@ -2,9 +2,9 @@
 
 namespace Porter;
 
-use s9e\TextFormatter\Bundles\Forum as BBCode;
-use s9e\TextFormatter\Bundles\Fatdown as Markdown;
 use nadar\quill\Lexer as Quill;
+use s9e\TextFormatter\Bundles\Fatdown as Markdown;
+use s9e\TextFormatter\Bundles\Forum as BBCode;
 
 class Formatter
 {
@@ -87,16 +87,16 @@ class Formatter
         $lexer = new Quill($text);
 
         // Custom mention handler.
-        $lexer->registerListener(new \Porter\Parser\FlarumMention());
+        $lexer->registerListener(new Parser\Flarum\Mention());
 
         // Custom image embed handler for `embed-external`.
-        $lexer->registerListener(new \Porter\Parser\FlarumImageEmbed());
+        $lexer->registerListener(new Parser\Flarum\ImageEmbed());
 
         // Custom link handler for `embed-external`.
-        $lexer->registerListener(new \Porter\Parser\FlarumLinkEmbed());
+        $lexer->registerListener(new Parser\Flarum\LinkEmbed());
 
         // Custom quote handler for `embed-external`.
-        $lexer->registerListener(new \Porter\Parser\FlarumQuoteEmbed());
+        $lexer->registerListener(new Parser\Flarum\QuoteEmbed());
 
         return $lexer->render();
     }

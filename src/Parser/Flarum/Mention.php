@@ -1,11 +1,11 @@
 <?php
 
-namespace Porter\Parser;
+namespace Porter\Parser\Flarum;
 
 use nadar\quill\InlineListener;
 use nadar\quill\Line;
 
-class FlarumMention extends InlineListener
+class Mention extends InlineListener
 {
     /**
      * Convert a Quill (Vanilla) mention to a Flarum mention.

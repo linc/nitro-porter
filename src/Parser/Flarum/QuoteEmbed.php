@@ -1,18 +1,18 @@
 <?php
 
-namespace Porter\Parser;
+namespace Porter\Parser\Flarum;
 
-use Porter\Formatter;
 use nadar\quill\Lexer;
 use nadar\quill\Line;
-use Porter\Postscript;
+use Porter\Formatter;
+use Porter\Parser\EmbedExternalListener;
 
 /**
  * Convert a Quill (Vanilla) external embed of a quote.
  *
  * @see
  */
-class FlarumQuoteEmbed extends EmbedExternalListener
+class QuoteEmbed extends EmbedExternalListener
 {
     /**
      * {@inheritDoc}
