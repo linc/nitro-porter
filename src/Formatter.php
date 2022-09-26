@@ -89,6 +89,9 @@ class Formatter
         // Custom mention handler.
         $lexer->registerListener(new Parser\Flarum\Mention());
 
+        // Custom emoji handler.
+        $lexer->registerListener(new Parser\Emoji());
+
         // Custom image embed handler for `embed-external`.
         $lexer->registerListener(new Parser\Flarum\ImageEmbed());
 
