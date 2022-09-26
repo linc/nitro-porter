@@ -19,7 +19,7 @@ class LinkEmbed extends EmbedExternalListener
     public function process(Line $line)
     {
         $embed = $line->insertJsonKey('embed-external');
-        if ($embed && $this->isEmbedExternal($embed, 'link')) {
+        if ($embed && $this->isEmbedExternal($embed, ['link'])) {
             $this->pick($line, ['url' => $embed['data']['url']]);
             $line->setDone();
         }

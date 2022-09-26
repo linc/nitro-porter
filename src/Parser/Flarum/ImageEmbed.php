@@ -19,7 +19,7 @@ class ImageEmbed extends EmbedExternalListener
     public function process(Line $line)
     {
         $embed = $line->insertJsonKey('embed-external');
-        if ($embed && ($this->isEmbedExternal($embed, 'image') || $this->isEmbedExternal($embed, 'giphy'))) {
+        if ($embed && ($this->isEmbedExternal($embed, ['image', 'giphy']))) {
             $this->pick($line, ['url' => $embed['data']['url']]);
             $line->setDone();
         }

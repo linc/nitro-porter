@@ -20,7 +20,7 @@ class QuoteEmbed extends EmbedExternalListener
     public function process(Line $line)
     {
         $embed = $line->insertJsonKey('embed-external');
-        if ($embed && $this->isEmbedExternal($embed, 'quote')) {
+        if ($embed && $this->isEmbedExternal($embed, ['quote'])) {
             // Quotes can be nested / recursive in any format.
             // If the 'body' isn't null, just use that. Otherwise, we have to go deeper.
             $body = $embed['data']['body'] ?? $this->processRawQuote($embed);
