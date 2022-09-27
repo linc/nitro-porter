@@ -333,6 +333,8 @@ class Database extends Storage
             foreach ($keys as $keyName => $info) {
                 if ($info['type'] === 'unique') {
                     $table->unique($info['columns'], 'FLA_posts_discussion_id_number_unique');
+                } elseif ($info['type'] === 'index') {
+                    $table->index($info['columns'], $keyName);
                 }
                 // @todo Allow more key types as needed.
             }
