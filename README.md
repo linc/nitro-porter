@@ -3,21 +3,42 @@ Nitro Porter
 
 The only multi-platform community migration tool. Free your forum!
 
+Currently exports to: 
+* Flarum
+* Vanilla
+
+Currently imports from:
+* Flarum
+* Vanilla
+* vBulletin
+* XenForo
+* phpBB
+* IPBoard
+* Simple Machines (SMF)
+* Drupal
+* NodeBB
+* FluxBB
+* ...and more than a dozen more!
+
 ## Requirements
 
-* PHP 7.4+
+* PHP 8.0+
 * PHP's PDO driver for your data sources (probably MySQL or PostgreSQL).
 
 Some specific data transfers may have additional requirements.
+
+Run this locally with a product like MAMP or XAMPP (or your own homebrew'd LAMP stack). It's not safe to run migrations on a public web server and consumes a lot of resources.
 
 ## Getting Started
 
 Nitro Porter can run via the web browser or the command line. 
 
+It logs its activity to a `porter.log` file in the root. Open it with your favorite log viewer to follow along.
+
 ### Web via Browser
 
 1. Drop the latest release in a web-enabled directory and navigate to the folder in your web browser.
-2. That's it!
+2. Fill out the form and hit the button.
 
 ### CLI via Composer
 
