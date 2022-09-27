@@ -229,7 +229,7 @@ class Database extends Storage
     {
         if (!in_array($name, $this->resetTables)) {
             // Avoid double-dropping a table during an import because we probably already put data in it.
-            $this->createTable($this->prefix . $name, $this->getTableStructureClosure($structure));
+            $this->createOrUpdateTable($this->prefix . $name, $structure);
         }
         $this->resetTables[] = $name;
         $this->setBatchTable($name);
@@ -239,9 +239,9 @@ class Database extends Storage
      * Create a new table if it doesn't already exist.
      *
      * @param string $name
-     * @param callable $closure
+     * @param array $structure
      */
-    public function createTable(string $name, callable $closure)
+    public function createOrUpdateTable(string $name, array $structure)
     {
         $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
         $schema = $dbm->getSchemaBuilder();
@@ -250,10 +250,19 @@ class Database extends Storage
             // Foreign key check must be disabled or MySQL throws error.
             $dbm->unprepared("SET foreign_key_checks = 0");
             $dbm->query()->from($name)->truncate();
-            // @todo Check column integrity too.
+
+            // Add any missing columns.
+            // To do this, removing existing columns from $structure & build a schema closure.
+            $existingStructure = $schema->getColumnListing($name);
+            foreach ($existingStructure as $existingColumn) {
+                unset($structure[$existingColumn]);
+            }
+            // Don't set any keys because I don't know how to easily get that list & it's probably fine.
+            unset($structure['keys']);
+            $schema->table($name, $this->getTableStructureClosure($structure));
         } else {
             // Create table if it does not.
-            $schema->create($name, $closure);
+            $schema->create($name, $this->getTableStructureClosure($structure));
         }
     }
 
