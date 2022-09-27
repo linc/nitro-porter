@@ -332,7 +332,7 @@ class Database extends Storage
             // One statement per key to be created.
             foreach ($keys as $keyName => $info) {
                 if ($info['type'] === 'unique') {
-                    $table->unique($info['columns'], 'FLA_posts_discussion_id_number_unique');
+                    $table->unique($info['columns'], $keyName);
                 } elseif ($info['type'] === 'index') {
                     $table->index($info['columns'], $keyName);
                 }
