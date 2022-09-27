@@ -375,6 +375,13 @@ class Flarum extends Target
             'user_id' => 'int',
             'last_read_at' => 'datetime',
             'subscription' => [null, 'follow', 'ignore'],
+            'last_read_post_number' => 'int',
+            'keys' => [
+                'FLA_discussion_user_discussion_id_foreign' => [
+                    'type' => 'index',
+                    'columns' => ['discussion_id'],
+                ],
+            ],
         ];
         $map = [
             'DiscussionID' => 'discussion_id',
