@@ -19,31 +19,6 @@ return [
             ],
         ],
         [
-            'alias' => 'vanilla-csv',
-            'type' => 'files',
-            'path' => '',
-        ],
-        [
-            'alias' => 'avatars-source',
-            'type' => 'files',
-            'path' => '',
-        ],
-        [
-            'alias' => 'avatars-target',
-            'type' => 'files',
-            'path' => '',
-        ],
-        [
-            'alias' => 'attach-source',
-            'type' => 'files',
-            'path' => '',
-        ],
-        [
-            'alias' => 'attach-target',
-            'type' => 'files',
-            'path' => '',
-        ],
-        [
             'alias' => 'test',
             'type' => 'database',
             'adapter' => 'mysql',
