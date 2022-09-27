@@ -294,7 +294,7 @@ class Flarum extends Postscript
         $memory = memory_get_usage(); // @todo This is a memory bottleneck — can it be streamed?
         foreach ($bookmarks as $post) {
             $count = $db->affectingStatement("update `" . $ex->tarPrefix . "discussion_user`
-                set last_read_post_number = " . $post->last_number . "
+                set last_read_post_number = " . (int)$post->last_number . "
                 where user_id = " . $post->user_id . "
                     and discussion_id = " . $post->discussion_id);
             $rows += $count;
