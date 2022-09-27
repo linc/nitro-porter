@@ -1074,7 +1074,7 @@ class VBulletin extends Source
                 p.parentpmid as ConversationID,
                  replace(t.title, 'Re: ', '') as Subject,
                 t.fromuserid as InsertUserID,
-                from_unixtime(t.dateline),
+                from_unixtime(t.dateline) as DateInserted,
                 t.pmtextid as FirstMessageID
             from (select
                 parentpmid,
