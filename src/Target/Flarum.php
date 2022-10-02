@@ -493,19 +493,23 @@ class Flarum extends Target
             'Name' => 'base_name',
             'InsertUserID' => 'actor_id',
             'DateInserted' => 'created_at',
-            'Path' => 'path',
             'Type' => 'type',
             'Size' => 'size',
         ];
         $query = $ex->dbImport()->table('PORT_Media')->select(
             '*',
-            $ex->dbImport()->raw('concat("/assets/files", Path) as url'), // @todo This isn't a URL yet.
+            $ex->dbImport()->raw('0 as discussion_id'),
+            $ex->dbImport()->raw('trim(leading "/" from Path) as path'),
+            // @todo Not a URL yet.
+            $ex->dbImport()->raw('concat("/assets/files/", trim(leading "/" from Path)) as url'),
             // Untangle the Media.ForeignID & Media.ForeignTable [comment, discussion, message]
             $ex->dbImport()->raw("case
-                when ForeignID is null then null
+                when ForeignID is null then 0
                 when ForeignTable = 'comment' then ForeignID
-                when ForeignTable = 'discussion' then (ForeignID + " . $this->discussionPostOffset . ")
-                when ForeignTable = 'message' then (ForeignID + " . $this->messagePostOffset . ")
+                when ForeignTable = 'Comment' then ForeignID
+                when ForeignTable = 'discussion' then ifnull((ForeignID + " . $this->discussionPostOffset . "), 0)
+                when ForeignTable = 'embed' then 0
+                when ForeignTable = 'message' then ifnull((ForeignID + " . $this->messagePostOffset . "), 0)
                 end as post_id")
         );
 
