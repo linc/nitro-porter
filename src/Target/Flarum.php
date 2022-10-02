@@ -204,8 +204,11 @@ class Flarum extends Target
             'email' => 'varchar(100)',
             'is_email_confirmed' => 'tinyint',
             'password' => 'varchar(100)',
+            'avatar_url' => 'varchar(100)',
             'joined_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'discussion_count' => 'int',
+            'comment_count' => 'int',
         ];
         $map = [
             'UserID' => 'id',
