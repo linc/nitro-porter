@@ -212,6 +212,7 @@ class Flarum extends Target
             'Name' => 'username',
             'Email' => 'email',
             'Password' => 'password',
+            'Photo' => 'avatar_url',
             'DateInserted' => 'joined_at',
             'DateLastActive' => 'last_seen_at',
             'Confirmed' => 'is_email_confirmed',
