@@ -98,6 +98,9 @@ class Formatter
         // Custom link handler for `embed-external`.
         $lexer->registerListener(new Parser\Flarum\LinkEmbed());
 
+        // Custom Spotify link handler for `embed-external`.
+        $lexer->registerListener(new Parser\Flarum\SpotifyEmbed());
+
         // Custom quote handler for `embed-external`.
         $lexer->registerListener(new Parser\Flarum\QuoteEmbed());
 

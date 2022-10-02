@@ -20,6 +20,9 @@ class LinkEmbed extends EmbedExternalListener
     {
         $embed = $line->insertJsonKey('embed-external');
         if ($embed && $this->isEmbedExternal($embed, ['link', 'twitter', 'youtube', 'instagram'])) {
+            if (str_contains($embed['data']['url'], '//open.spotify.com/')) {
+                return; // @see SpotifyEmbed
+            }
             $this->pick($line, ['url' => $embed['data']['url']]);
             $line->setDone();
         }
