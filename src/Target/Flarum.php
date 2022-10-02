@@ -81,6 +81,7 @@ class Flarum extends Target
         'is_locked' => 'tinyint', // flarum/lock
         //'votes' => 'int', // fof/polls
         //'hotness' => 'double', // fof/gamification
+        //'view_count' => 'int', // flarumite/simple-discussion-views
     ];
 
     /** @var int Offset for inserting OP content into the posts table. */
@@ -114,6 +115,9 @@ class Flarum extends Target
         if ($ex->targetExists($ex->tarPrefix . 'discussions', ['votes'])) {
             $structure['votes'] = 'int';
             $structure['hotness'] = 'double';
+        }
+        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
+            $structure['view_count'] = 'int'; // flarumite/simple-discussion-views
         }
         return $structure;
     }
