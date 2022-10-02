@@ -61,6 +61,10 @@ class Flarum extends Target
                 'type' => 'unique',
                 'columns' => ['discussion_id', 'number'],
             ],
+            'FLA_posts_id_primary' => [
+                'type' => 'primary',
+                'columns' => ['id'],
+            ]
         ],
     ];
 

@@ -335,6 +335,8 @@ class Database extends Storage
                     $table->unique($info['columns'], $keyName);
                 } elseif ($info['type'] === 'index') {
                     $table->index($info['columns'], $keyName);
+                } elseif ($info['type'] === 'primary') {
+                    $table->primary($info['columns'][0]);
                 }
                 // @todo Allow more key types as needed.
             }
