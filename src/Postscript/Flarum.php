@@ -113,6 +113,10 @@ class Flarum extends Postscript
                     where `discussion_id` = " . $post->discussion_id . "
                     order by `created_at` asc");
             $rows += $count;
+            // Set discussions.post_number_index
+            $db->table($ex->tarPrefix . 'discussions')
+                ->where('id', '=', $post->discussion_id)
+                ->update(['post_number_index' => ($count + 1)]);
         }
 
         // Report.
