@@ -89,6 +89,9 @@ class Flarum extends Postscript
      * Calculate post numbers for imported posts.
      *
      * Numbers are sequentially incremented chronologically per discussion, not an ID.
+     * The `posts.number` field is `1` for the OP and sequentially increments by `created_at` order.
+     * The `discussions.post_number_index` is the NEXT number to set for `posts.number`.
+     * That means it should be set to the current post count +1.
      *
      * @param ExportModel $ex
      */
@@ -98,21 +101,22 @@ class Flarum extends Postscript
         $start = microtime(true);
         $rows = 0;
 
-        // Calculate & set posts.number.
+        // Get discussion id list (avoiding empty discussions).
         $db = $this->connection->newConnection();
-        // Get only discussions with comments.
         $posts = $db->table($ex->tarPrefix . 'posts')
             ->distinct()
             ->get('discussion_id');
         $memory = memory_get_usage();
-        // Update posts 2+ with their number, per discussion.
+
         foreach ($posts as $post) {
+            // Update posts with their number, per discussion.
             $db->statement("set @num := 0");
             $count = $db->affectingStatement("update `" . $ex->tarPrefix . "posts`
                     set `number` = (@num := @num + 1)
                     where `discussion_id` = " . $post->discussion_id . "
                     order by `created_at` asc");
             $rows += $count;
+
             // Set discussions.post_number_index
             $db->table($ex->tarPrefix . 'discussions')
                 ->where('id', '=', $post->discussion_id)
