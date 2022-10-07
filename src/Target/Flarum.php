@@ -491,6 +491,8 @@ class Flarum extends Target
             'type' => 'varchar(255)', // MIME
             'size'  => 'int', // bytes
             'created_at' => 'datetime',
+            'upload_method' => 'varchar(255)', // Probably just 'local'
+            'tag' => 'varchar(255)', // Required; generates preview in Profile -> "My Media"
         ];
         $map = [
             'MediaID' => 'id',
@@ -514,7 +516,13 @@ class Flarum extends Target
                 when ForeignTable = 'discussion' then ifnull((ForeignID + " . $this->discussionPostOffset . "), 0)
                 when ForeignTable = 'embed' then 0
                 when ForeignTable = 'message' then ifnull((ForeignID + " . $this->messagePostOffset . "), 0)
-                end as post_id")
+                end as post_id"),
+            $ex->dbImport()->raw('"local" as upload_method'),
+            // @see packages/upload/src/Providers/DownloadProvider.php
+            $ex->dbImport()->raw("case
+                when Type like 'image/%' then 'image-preview'
+                else 'file'
+                end as tag")
         );
 
         $ex->import('fof_upload_files', $query, $structure, $map);
