@@ -92,8 +92,8 @@ class Kunena extends Source
             "SELECT
                     u.*,
                     case when ku.avatar <> '' then concat('kunena/avatars/', ku.avatar) else null end as `Photo`,
-                    case u.usertype when 'superadministrator' then 1 else 0 end as admin,
-                    coalesce(ku.banned, 0) as banned,
+                    case group_id when 'superadministrator' then 1 else 0 end as admin,
+                    if(isnull(ku.banned), 0, 1) as banned,
                     ku.birthdate,
                     !ku.hideemail as showemail
                 FROM :_users u
@@ -218,7 +218,7 @@ class Kunena extends Source
         );
         $ex->export(
             'UserDiscussion',
-            "select t.*, 1 as Bookmarked from :_kunena_subscriptions t",
+            "select t.*, 1 as Bookmarked from :_kunena_user_topics t",
             $userDiscussion_Map
         );
     }
