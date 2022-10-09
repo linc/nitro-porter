@@ -28,13 +28,18 @@ class Flarum extends Target
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 0,
+            'Polls' => 1,
             'Roles' => 1,
-            'Avatars' => 0,
+            'Avatars' => 1,
             'PrivateMessages' => 1,
             'Attachments' => 1,
             'Bookmarks' => 1,
             'Badges' => 1,
+            'UserNotes' => 0,
+            'Ranks' => 0,
+            'Groups' => 0,
+            'Tags' => 0,
+            'Reactions' => 1,
         ]
     ];
 
