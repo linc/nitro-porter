@@ -46,16 +46,18 @@
         "fakerphp/faker": "^1.16",
         "squizlabs/php_codesniffer": "^3",
         "phpunit/phpunit": "^9",
-        "phpstan/phpstan": "^1"
-   },
-   "autoload": {
-       "psr-4": {
-           "Porter\\": "src/",
-           "PorterTest\\": "tests/"
-       },
-       "files": [
-           "src/Functions/core.php",
-           "src/Functions/filter.php"
-       ]
-   }
+        "phpstan/phpstan": "^1",
+        "marcocesarato/php-conventional-changelog": "^1.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "Porter\\": "src/",
+            "PorterTest\\": "tests/"
+        },
+        "files": [
+            "src/Functions/core.php",
+            "src/Functions/filter.php"
+        ]
+    },
+    "version": "3.0"
 }
