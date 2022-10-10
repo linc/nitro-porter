@@ -122,7 +122,7 @@ class Render
         self::pageHeader(); ?>
     <p class="Info">
         Need help? Try the
-        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide" target="_blank">guide</a>.
+        <a href="https://nitroporter.org" target="_blank">guide</a>.
         Supported <a href="?sources=1">sources</a> &amp; <a href="?targets=1">targets</a>.
     </p>
     <div class="Title">
