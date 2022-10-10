@@ -58,6 +58,5 @@
             "src/Functions/core.php",
             "src/Functions/filter.php"
         ]
-    },
-    "version": "3.0"
+    }
 }
