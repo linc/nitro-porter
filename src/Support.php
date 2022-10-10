@@ -89,6 +89,13 @@ class Support
      */
     public function setTargets(array $targets): void
     {
+        // Hardcode Vanilla file support (all = yes).
+        $this->targets['Vanilla (file)'] = [
+            'name' => 'Vanilla (file)',
+            'features' => array_fill_keys(self::SUPPORTED_FEATURES, 1),
+        ];
+
+        // Load the rest of the target support automatically.
         foreach ($targets as $name) {
             $classname = '\Porter\Target\\' . $name;
             $this->targets[$name] = $classname::getSupport();
@@ -98,14 +105,13 @@ class Support
     /**
      * Get the data support status for a single platform feature.
      *
+     * @param array $supported
      * @param string $package
      * @param string $feature
      * @return string HTML-wrapped Yes or No symbols.
      */
-    public function getFeatureStatusHtml(string $package, string $feature, bool $notes = true): string
+    public function getFeatureStatusHtml(array $supported, string $package, string $feature, bool $notes = true): string
     {
-        $supported = $this->getSources();
-
         if (!isset($supported[$package]['features'])) {
             return '<span class="No">No</span>';
         }

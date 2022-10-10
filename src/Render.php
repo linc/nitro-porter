@@ -122,8 +122,8 @@ class Render
         self::pageHeader(); ?>
     <p class="Info">
         Need help? Try the
-        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide" target="_blank">guide</a> and
-        <a href="?features=1">feature support table</a>.
+        <a href="https://success.vanillaforums.com/kb/articles/150-vanilla-porter-guide" target="_blank">guide</a>.
+        Supported <a href="?sources=1">sources</a> &amp; <a href="?targets=1">targets</a>.
     </p>
     <div class="Title">
         <h1>Nitro Porter</h1>
@@ -317,7 +317,7 @@ class Render
         $features = \Porter\Support::getInstance()->getAllFeatures();
         self::pageHeader();
 
-        echo '<p class="Info"><a href="/?features=1">&larr; Back</a></p>';
+        echo '<p class="Info"><a href="/?sources=1">&larr; Back</a></p>';
         echo '<h2>' . htmlspecialchars($supported[$platform]['name']) . '</h2>';
 
         echo '<dl class="Info">';
@@ -333,19 +333,42 @@ class Render
     }
 
     /**
-     * Output a table of features per all platforms.
+     * Display table of source package features.
      */
-    public static function viewFeatureTable()
+    public static function viewSourcesTable()
     {
+        self::viewFeatureTable('sources');
+    }
+
+    /**
+     * Display table of target package features.
+     */
+    public static function viewTargetsTable()
+    {
+        self::viewFeatureTable('targets');
+    }
+
+    /**
+     * Output a table of features per all platforms.
+     *
+     * @param string $type One of 'sources' or 'targets'.
+     */
+    public static function viewFeatureTable(string $type = 'sources')
+    {
+        if (!in_array($type, ['sources', 'targets'])) {
+            return;
+        }
+
         $features = \Porter\Support::getInstance()->getAllFeatures();
-        $supported = \Porter\Support::getInstance()->getSources();
+        $method = 'get' . $type;
+        $supported = \Porter\Support::getInstance()->$method();
         $packages = array_keys($supported);
 
         self::pageHeader();
 
         echo '<p class="Info">Click a platform to zoom in or <a href="/">go back</a></p>';
 
-        echo '<h1 class="FeatureTitle">Supported Features</h1>';
+        echo '<h1 class="FeatureTitle">Supported ' . ucfirst($type) . ' Data</h1>';
         echo '<table class="Features"><thead><tr>';
 
         // Header row of labels for each platform
@@ -364,7 +387,7 @@ class Render
             // Status per platform.
             foreach ($features as $feature => $trash) {
                 echo '<td>' .
-                    \Porter\Support::getInstance()->getFeatureStatusHtml($package, $feature, false) .
+                    \Porter\Support::getInstance()->getFeatureStatusHtml($supported, $package, $feature, false) .
                 '</td>';
             }
 
