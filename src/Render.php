@@ -325,7 +325,7 @@ class Render
         foreach ($features as $feature => $trash) {
             echo '
           <dt>' . self::featureName($feature) . '</dt>
-          <dd>' . \Porter\Support::getInstance()->getFeatureStatusHtml($platform, $feature) . '</dd>';
+          <dd>' . \Porter\Support::getInstance()->getFeatureStatusHtml($supported, $platform, $feature) . '</dd>';
         }
         echo '</dl>';
 
