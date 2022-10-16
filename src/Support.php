@@ -119,17 +119,16 @@ class Support
         $available = $supported[$package]['features'];
 
         // Calculate feature availability.
-        $status = '<span class="No">&#x2717;</span>';
+        $status = '<span class="NA"></span>';
         if (isset($available[$feature])) {
-            if ($available[$feature] === 1) {
-                $status = '<span class="Yes">&#x2713;</span>';
+            if ($available[$feature] === 0) {
+                $status = '<span class="No">&#x2717;</span>';
             } elseif ($available[$feature]) {
+                // Say 'yes' for table shorthand
+                $status = '<span class="Yes">&#x2713;</span>';
                 if ($notes) {
                     // Send the text of the note
                     $status = $available[$feature];
-                } else {
-                    // Say 'yes' for table shorthand
-                    $status = '<span class="Yes">&#x2713;</span>';
                 }
             }
         }
