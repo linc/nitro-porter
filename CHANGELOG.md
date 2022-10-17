@@ -7,9 +7,11 @@ All notable changes to this project will be documented in this file.
 ## [3.0](https://github.com/linc/nitro-porter/compare/v2.5...v3.0) (2022-09-27)
 
 * Rebuilds entire framework and adds Illuminate database driver.
-* Adds two-way support for Flarum.
-* Adds support for Vanilla's Rich Text Editor.
-* Adds source support for MVC and Q2A.
+* Adds target support for Flarum.
+* Adds source support for Flarum.
+* Adds source support for Vanilla's Rich Text Editor.
+* Adds source support for MVC.
+* Adds source support for Q2A.
 * Fixes multiple minor bugs in source packages.
 
 ---
