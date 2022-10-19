@@ -25,21 +25,21 @@ class Flarum extends Target
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
-            'Categories' => 1,
+            'Categories' => 'tags',
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 1,
+            'Polls' => 'fof/polls',
             'Roles' => 1,
             'Avatars' => 1,
-            'PrivateMessages' => 1,
-            'Attachments' => 1,
-            'Bookmarks' => 1,
-            'Badges' => 1,
+            'PrivateMessages' => 'fof/byobu',
+            'Attachments' => 'fof/uploads',
+            'Bookmarks' => 'subscriptions',
+            'Badges' => 'v17development/flarum-user-badges',
             'UserNotes' => 0,
             'Ranks' => 0,
             'Groups' => 0,
             'Tags' => 0,
-            'Reactions' => 1,
+            'Reactions' => 'fof/reactions',
         ]
     ];
 
