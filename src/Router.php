@@ -7,7 +7,8 @@ class Router
     public static function run($request): callable
     {
         switch (true) {
-            case $request->get('list'): // Single package feature list.
+            case $request->get('source'): // Single source feature list.
+            case $request->get('target'): // Single target feature list.
                 return '\Porter\Render::viewFeatureList';
             case $request->get('sources'): // Overview table.
                 return '\Porter\Render::viewSourcesTable';

@@ -223,9 +223,6 @@ p.Info a {
 }
 
 /* Feature list */
-dl.Info {
-    width: 200px;
-}
 .Info dt {
    float: left;
    clear: left;
@@ -236,6 +233,9 @@ dl.Info {
    height: 30px;
     text-align: left;
     padding-top: 6px;
+}
+.Info dd pre {
+    margin-top: 0px;
 }
 
 /* Feature table */

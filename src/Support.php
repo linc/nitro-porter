@@ -126,9 +126,9 @@ class Support
             } elseif ($available[$feature]) {
                 // Say 'yes' for table shorthand
                 $status = '<span class="Yes">&#x2713;</span>';
-                if ($notes) {
+                if ($notes && $available[$feature] !== 1) {
                     // Send the text of the note
-                    $status = $available[$feature];
+                    $status = '<pre>' . $available[$feature] . '</pre>';
                 }
             }
         }

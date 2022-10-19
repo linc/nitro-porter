@@ -312,8 +312,13 @@ class Render
      */
     public static function viewFeatureList(Request $request)
     {
-        $platform = $request->get('list');
-        $supported = \Porter\Support::getInstance()->getSources();
+        if ($request->get('source')) {
+            $platform = $request->get('source');
+            $supported = \Porter\Support::getInstance()->getSources();
+        } else {
+            $platform = $request->get('target');
+            $supported = \Porter\Support::getInstance()->getTargets();
+        }
         $features = \Porter\Support::getInstance()->getAllFeatures();
         self::pageHeader();
 
@@ -381,7 +386,7 @@ class Render
         echo '</tr></thead><tbody>';
 
         foreach ($packages as $package) {
-            echo '<tr><td class="Platform"><span><a href="?list='
+            echo '<tr><td class="Platform"><span><a href="?' . rtrim($type, 's') . '='
                  . $package . '">' . $supported[$package]['name'] . '</a></span></td>';
 
             // Status per platform.
