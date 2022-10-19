@@ -25,7 +25,7 @@ class Vanilla2 extends Source
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 1,
+            'Polls' => 'Cloud or Discussion Polls',
             'Roles' => 1,
             'Avatars' => 1,
             'PrivateMessages' => 1,
@@ -33,12 +33,12 @@ class Vanilla2 extends Source
             'Attachments' => 1,
             'Bookmarks' => 1,
             'Permissions' => 1,
-            'Badges' => 1,
+            'Badges' => 'Cloud or YAGA',
             'UserNotes' => 1,
-            'Ranks' => 1,
+            'Ranks' => 'Cloud or YAGA',
             'Groups' => 0,
             'Tags' => 1,
-            'Reactions' => 1,
+            'Reactions' => 'Cloud or YAGA',
         ]
     ];
 
