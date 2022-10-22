@@ -4,6 +4,12 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.1.2](https://github.com/linc/nitro-porter/compare/v3.1.1...v3.1.2) (2022-10-22)
+
+* Fix routing error preventing main process from running.
+
+---
+
 ## [3.1](https://github.com/linc/nitro-porter/compare/v3.1...v3.1) (2022-10-22)
 
 * Add this changelog.
