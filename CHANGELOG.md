@@ -4,6 +4,21 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.1](https://github.com/linc/nitro-porter/compare/v3.1...v3.1) (2022-10-22)
+
+* Add this changelog.
+* Fix avatar locations in Flarum target support.
+* Add Spotify embed support for Flarum.
+* Add discussion view count support for Flarum.
+* Fix performance and other issues importing to blank database for Flarum.
+* Fix support for "My media" page in Flarum.
+* Fix Kunena source support (thanks to specialworld83)
+* Improve feature table to not show 'x' when the feature isn't available.
+* Add notes on Flarum and Vanilla feature compatibility.
+* Add built-in support pages for Target platform features.
+
+---
+
 ## [3.0](https://github.com/linc/nitro-porter/compare/v2.5...v3.0) (2022-09-27)
 
 * Rebuilds entire framework and adds Illuminate database driver.
