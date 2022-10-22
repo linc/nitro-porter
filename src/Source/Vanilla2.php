@@ -25,7 +25,7 @@ class Vanilla2 extends Source
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 'Cloud or Discussion Polls',
+            'Polls' => 'Cloud only',
             'Roles' => 1,
             'Avatars' => 1,
             'PrivateMessages' => 1,
