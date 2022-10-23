@@ -85,6 +85,7 @@ class Flarum extends Target
         'last_post_id' => 'int',
         'last_posted_at' => 'datetime',
         'last_posted_user_id' => 'int',
+        'post_number_index' => 'int',
         'is_private' => 'tinyint', // fof/byobu (PMs)
         'is_sticky' => 'tinyint', // flarum/sticky
         'is_locked' => 'tinyint', // flarum/lock
