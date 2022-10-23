@@ -48,12 +48,12 @@ class Formatter
         switch ($format) {
             case 'Html':
             case 'Wysiwyg':
-            case 'Raw': // Unfiltered
-                return self::wrap('r', $this->fixRawMentions($text));
+            case 'Raw': // Unfiltered — these could break.
+            case 'Markdown':
+                // Fatdown bundle allows (filtered) HTML.
+                return $this->fixRawMentions(Markdown::parse($text));
             case 'BBCode':
                 return $this->fixRawMentions(BBCode::parse($text));
-            case 'Markdown':
-                return $this->fixRawMentions(Markdown::parse($text));
             case 'Rich': // Quill
                 return self::wrap('r', self::dequill($text));
             case 'Text':
