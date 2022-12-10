@@ -172,12 +172,12 @@ class ExportModel
     public function comment($message, $echo = true)
     {
         Log::comment($message);
-        if ($echo) {
-            if (defined('CONSOLE')) {
-                echo $message;
-            } else {
-                $this->comments[] = $message;
-            }
+        if (defined('CONSOLE')) {
+            // Give full log output if using CLI.
+            echo "\n" . $message;
+        } elseif ($echo) {
+            // Summarize for web output.
+            $this->comments[] = $message;
         }
     }
 

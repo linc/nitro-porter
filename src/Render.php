@@ -29,6 +29,20 @@ class Render
             $output .= "\n";
         }
 
+        // Give the user possible values for the required parameters.
+        $output .= "Valid packages: " .
+            implode(', ', array_keys(Support::getInstance()->getSources())) . "\n\n";
+
+        $output .= "Valid outputs: " .
+            implode(', ', array_keys(Support::getInstance()->getTargets())) . "\n\n";
+
+        $output .= "Available sources/targets in config.php:" . "\n";
+        foreach (\Porter\Config::getInstance()->getConnections() as $c) {
+            $output .= str_pad('  ' . $c['alias'], 20, ' ') . '(' . $c['user'] . '@' . $c['name'] . ')' . "\n";
+        }
+
+        $output .= "\nExample command (Vanilla to Flarum):\n  porter -p=Vanilla2 -o=Flarum -s=source -t=test\n";
+
         echo $output;
     }
 
