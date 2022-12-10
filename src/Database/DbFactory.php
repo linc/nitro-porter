@@ -37,7 +37,7 @@ class DbFactory
      */
     public function getInstance()
     {
-        $className = '\Porter\Database\\' . ucase($this->extension) . 'DB';
+        $className = '\Porter\Database\\' . ucwords($this->extension) . 'DB';
         if (!class_exists($className)) {
             trigger_error($this->extension . ' extension not found.');
         }
