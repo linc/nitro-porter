@@ -4,6 +4,14 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.2.0](https://github.com/linc/nitro-porter/compare/v3.1.2...v3.2.0) (2022-12-10)
+
+* Improve CLI output with progress logs and valid parameter values. ([42e942](https://github.com/linc/nitro-porter/commit/42e9426ca8fc9bafb6c598fed2ca881aa603b178))
+* Fix CLI request handling. ([0193ea](https://github.com/linc/nitro-porter/commit/0193ea33f57c81078a888c479c956b43587a13d6))
+* Fix case-sensitive detection of PDO class.
+
+---
+
 ## [3.1.2](https://github.com/linc/nitro-porter/compare/v3.1.1...v3.1.2) (2022-10-23)
 
 * Fix 'Wysiwyg' and 'Html' formatting from Vanilla to Flarum.
