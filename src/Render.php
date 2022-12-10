@@ -12,12 +12,10 @@ class Render
 {
     /**
      * Output help to the CLI.
-     *
-     * @param Request $request
      */
-    public static function cliHelp(Request $request)
+    public static function cliHelp()
     {
-        $options = $request->getAllOptions(true);
+        $options = Request::instance()->getAllOptions(true);
 
         $output = '';
 

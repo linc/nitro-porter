@@ -170,11 +170,11 @@ class Request
      */
     public function parseCli(): array
     {
+        // Short-circuit the help flag.
         global $argv;
-        $command = $argv[1];
-
-        if ($command !== 'run') {
-            return [$command => 1];
+        if ($argv[1] === '--help') {
+            Render::cliHelp();
+            return [];
         }
 
         // Get the options for 'run'.

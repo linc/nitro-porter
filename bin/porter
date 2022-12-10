@@ -10,11 +10,12 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 // Parse CLI request.
 $input = \Porter\Request::instance()->parseCli();
-\Porter\Request::instance()->load($input);
 
-// Router.
-$command = \Porter\Router::run(\Porter\Request::instance());
-call_user_func($command, \Porter\Request::instance());
+// Run if a request was found.
+if (count($input)) {
+    \Porter\Request::instance()->load($input);
+    \Porter\Controller::run(\Porter\Request::instance());
+}
 
 // Console output should end in newline.
 echo "\n";

@@ -4,7 +4,14 @@ namespace Porter;
 
 class Router
 {
-    public static function run($request): callable
+    /**
+     * Simple web router.
+     *
+     * @param Request $request
+     *
+     * @return callable
+     */
+    public static function run(Request $request): callable
     {
         switch (true) {
             case $request->get('showsource'): // Single source feature list.
@@ -14,8 +21,6 @@ class Router
                 return '\Porter\Render::viewSourcesTable';
             case $request->get('targets'): // Overview table.
                 return '\Porter\Render::viewTargetsTable';
-            case $request->get('help'): // CLI help.
-                return '\Porter\Render::cliHelp';
             case $request->get('package'): // Main export process.
                 return '\Porter\Controller::run';
             default: // Starting Web UI (index).
