@@ -339,7 +339,7 @@ class ExportModel
         $duplicates = $db->table($table)
             ->select($column, $db->raw('count(' . $column . ') as found_count'))
             ->groupBy($column)
-            ->having('found_count', '>', 1)
+            ->having('found_count', '>', '1')
             ->get();
         foreach ($duplicates as $dupe) {
             $results[] = $dupe->$column;
@@ -376,8 +376,8 @@ class ExportModel
     protected function processQuery(string $query): string
     {
         // Check for a chunked query.
-        $query = str_replace('{from}', -2000000000, $query);
-        $query = str_replace('{to}', 2000000000, $query);
+        $query = str_replace('{from}', '-2000000000', $query);
+        $query = str_replace('{to}', '2000000000', $query);
 
         // If we are in test mode then limit the query.
         if ($this->testMode && $this->testLimit) {
@@ -425,7 +425,7 @@ class ExportModel
      * Execute an sql statement and return the entire result as an associative array.
      *
      * @param string $sql
-     * @param bool $indexColumn
+     * @param bool|string $indexColumn
      * @return array
      * @deprecated
      */

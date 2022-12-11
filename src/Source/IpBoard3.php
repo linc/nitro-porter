@@ -133,8 +133,8 @@ class IpBoard3 extends Source
                 continue;
             }
 
-            $mainPhoto = trim(getValue('main_photo', $row, null));
-            $thumbPhoto = trim(getValue('thumb_photo', $row, null));
+            $mainPhoto = trim(v('main_photo', $row, null));
+            $thumbPhoto = trim(v('thumb_photo', $row, null));
 
             // Main Photo
             if (!$mainPhoto) {

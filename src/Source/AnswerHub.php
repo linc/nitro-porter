@@ -73,7 +73,7 @@ class AnswerHub extends Source
         $email = $value;
         if (empty($email)) {
             $domain = $this->param('noemaildomain');
-            $slug = preg_replace('#[^a-z0-9-_.]#i', null, $row['Name']);
+            $slug = preg_replace('#[^a-z0-9-_.]#i', '', $row['Name']);
 
             if (!strlen($slug)) {
                 $slug = $row['UserID'];

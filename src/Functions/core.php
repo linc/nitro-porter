@@ -160,7 +160,7 @@ function errorHandler(int $level, string $msg, string $file, int $line, array $c
 
     if (defined('DEBUG') || ($level !== E_DEPRECATED && $level !== E_USER_DEPRECATED)) {
         $baseDir = realpath(__DIR__ . '/../') . '/';
-        $errFile = str_replace($baseDir, null, $file);
+        $errFile = str_replace($baseDir, '', $file);
         echo "Error in $errFile line $line: ($level) $msg\n";
         die();
     }
@@ -204,7 +204,7 @@ function getValue(string $key, array $collection = [], string $default = '')
  * @deprecated
  * @param string $name
  * @param array $array
- * @param string $default
+ * @param mixed $default
  * @return mixed|null
  */
 function v(string $name, array $array, $default = '')

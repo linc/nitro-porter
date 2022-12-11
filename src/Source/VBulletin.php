@@ -246,8 +246,8 @@ class VBulletin extends Source
             return;
         }
 
-        $minDiscussionID = false;
-        $minDiscussionWhere = false;
+        $minDiscussionID = 0;
+        $minDiscussionWhere = 0;
 
         // Check to see if there is a max date.
         $minDate = $this->param('mindate');
@@ -407,7 +407,7 @@ class VBulletin extends Source
      * @param string $sql
      * @param string $blobColumn
      * @param string $pathColumn
-     * @param bool $thumbnail
+     * @param bool|int $thumbnail
      */
     public function exportBlobs(ExportModel $ex, $sql, $blobColumn, $pathColumn, $thumbnail = false)
     {
@@ -508,10 +508,10 @@ class VBulletin extends Source
 
         // Add hash fields if they exist (from 2.x)
         $attachColumns = array('hash', 'filehash');
-        $missing = $ex->exists('attachment', $attachColumns);
+        $hasColumns = $ex->exists('attachment', $attachColumns);
         $attachColumnsString = '';
         foreach ($attachColumns as $columnName) {
-            if (in_array($columnName, $missing)) {
+            if (!$hasColumns) {
                 $attachColumnsString .= ", null as $columnName";
             } else {
                 $attachColumnsString .= ", a.$columnName";

@@ -98,12 +98,12 @@ function forceDate(string $value): string
  */
 function forceIP4(string $ip): ?string
 {
-    $ip = null;
+    $ip = '';
     if (preg_match('`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`', $ip, $m)) {
         $ip = $m[1];
     }
 
-    return $ip;
+    return $ip ?: null;
 }
 
 /**
