@@ -27,7 +27,6 @@ function loadConfig(): array
         trigger_error('Missing config.php — Make a copy of config-sample.php!');
         return require(ROOT_DIR . '/config-sample.php');
     }
-
 }
 
 /**
