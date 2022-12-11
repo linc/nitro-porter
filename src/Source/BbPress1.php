@@ -190,11 +190,7 @@ class BbPress1 extends Source
         if ($PM === true) {
             // This is from an old version of the plugin.
             $conversationVersion = 'old';
-        } elseif (
-            is_array($PM) && count(
-                array_intersect(array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'), $PM)
-            ) == 0
-        ) {
+        } elseif ($ex->exists('bbpm', array('ID', 'pm_from', 'pm_text', 'sent_on', 'pm_thread'))) {
             // This is from a newer version of the plugin.
             $conversationVersion = 'new';
         }

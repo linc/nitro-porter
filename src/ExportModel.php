@@ -536,10 +536,7 @@ class ExportModel
      *
      * @param string $table The name of the table to check.
      * @param array|string $columns An array of column names to check.
-     * @return bool|array The method will return one of the following
-     *  - true: If table and all of the columns exist.
-     *  - false: If the table does not exist.
-     *  - array: The names of the missing columns if one or more columns don't exist.
+     * @return bool Whether the table and all columns exist.
      */
     public function exists(string $table, $columns = [])
     {
@@ -582,7 +579,7 @@ class ExportModel
             }
         }
 
-        return count($missing) == 0 ? true : $missing;
+        return count($missing) == 0;
     }
 
     /**
