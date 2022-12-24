@@ -79,6 +79,13 @@ class ExportModel
     protected DbFactory $database;
 
     /**
+     * Source connection for the export step.
+     *
+     * @var ConnectionManager
+     */
+    protected ConnectionManager $exportSourceCM;
+
+    /**
      * Source connection for the import step.
      *
      * @var ConnectionManager
@@ -98,13 +105,21 @@ class ExportModel
      * @param $storage
      * @param ConnectionManager $importSourceCM
      */
-    public function __construct($db, $map, $storage, ConnectionManager $importSourceCM)
+    public function __construct($exportSourceCM, $map, $storage, ConnectionManager $importSourceCM)
     {
-        $this->database = $db;
         $this->mapStructure = $map;
         $this->storage = $storage;
+
+        $exportSourceCM->newConnection();
         $importSourceCM->newConnection();
+
+        $this->exportSourceCM = $exportSourceCM;
         $this->importSourceCM = $importSourceCM;
+    }
+
+    public function dbExport(): Connection
+    {
+        return $this->exportSourceCM->connection();
     }
 
     /**
@@ -211,13 +226,8 @@ class ExportModel
             return;
         }
 
-        // Do the export.
         $query = $this->processQuery($query);
-        $data = $this->executeQuery($query); // @todo Use new db layer.
-        if (empty($data)) {
-            $this->comment("Error: No data found in $tableName.");
-            return;
-        }
+        $data = $this->exportSourceCM->connection()->raw($query);
 
         $structure = $this->mapStructure[$tableName];
 

@@ -127,11 +127,8 @@ function exportModelFactory(
     Storage $storage,
     ConnectionManager $importSourceCM
 ): ExportModel {
-    // Wire old database / model mess.
-    $info = $exportSourceCM->getAllInfo();
-    $db = new DbFactory($info, 'pdo');
     $map = loadStructure();
-    $model = new ExportModel($db, $map, $storage, $importSourceCM);
+    $model = new ExportModel($exportSourceCM, $map, $storage, $importSourceCM);
 
     // Set model properties.
     $model->srcPrefix = $request->get('src-prefix') ?? '';
