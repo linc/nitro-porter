@@ -102,17 +102,10 @@ class ConnectionManager
     {
         $this->connection = $this->dbm->getConnection($this->alias);
 
-        // Always disable data integrity checks.
-        $this->connection->unprepared("SET foreign_key_checks = 0");
-
-        // Set the timezone to UTC. Avoid named timezones because they may not be loaded.
-        $this->connection->unprepared("SET time_zone = '+00:00'");
-
-        // Log all queries if debug mode is enabled.
-        if (\Porter\Config::getInstance()->debugEnabled()) {
-            // See ${hostname}.log in datadir (find with `SHOW GLOBAL VARIABLES LIKE 'datadir'`)
-            $this->connection->unprepared("SET GLOBAL general_log = 1");
+        if ($this->connection->getDriverName() === 'mysql') {
+            $this->optimizeMySQL();
         }
+
         return $this->connection;
     }
 
@@ -131,5 +124,23 @@ class ConnectionManager
         //$config['strict'] = false;
 
         return $config;
+    }
+
+    /**
+     * Perform MySQL-specific connection optimizations.
+     */
+    protected function optimizeMySQL(): void
+    {
+        // Always disable data integrity checks.
+        $this->connection->unprepared("SET foreign_key_checks = 0");
+
+        // Set the timezone to UTC. Avoid named timezones because they may not be loaded.
+        $this->connection->unprepared("SET time_zone = '+00:00'");
+
+        // Log all queries if debug mode is enabled.
+        if (\Porter\Config::getInstance()->debugEnabled()) {
+            // See ${hostname}.log in datadir (find with `SHOW GLOBAL VARIABLES LIKE 'datadir'`)
+            $this->connection->unprepared("SET GLOBAL general_log = 1");
+        }
     }
 }
