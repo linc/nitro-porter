@@ -92,11 +92,24 @@ class Controller
         // @todo Pass options not Request
         $exportModel = exportModelFactory($request, $exportSourceCM, $storage, $importSourceCM);
 
+        // Log source.
+        $exportModel->comment("Source: " . $source::SUPPORTED['name']);
+        $exportModel->comment("Export connection: " . $exportSourceCM->getAlias());
+
         // Setup target & modes.
         $target = false;
         if ($request->get('output') !== 'file') {
             $target = targetFactory($request->get('output'));
+
+            // Log target.
+            $exportModel->comment("Target: " . $target::SUPPORTED['name']);
+            $exportModel->comment("Import connection: " . $importSourceCM->getAlias());
+
             self::setModes($source, $target);
+
+            // Log flags.
+            $exportModel->comment("Use Discussion Body flag: " .
+                ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
 
         // Start timer.
@@ -116,7 +129,10 @@ class Controller
             $postConnection = new ConnectionManager($request->get('target') ?? '');
             $postscript = postscriptFactory($request->get('output'), $storage, $postConnection);
             if ($postscript) {
+                $exportModel->comment("Postscript found and running...");
                 $postscript->run($exportModel);
+            } else {
+                $exportModel->comment("No Postscript found.");
             }
         }
 
