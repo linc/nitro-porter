@@ -264,6 +264,17 @@ class ExportModel
     }
 
     /**
+     * Create empty import tables.
+     *
+     * @param string $tableName
+     * @param $structure
+     */
+    public function importEmpty(string $tableName, $structure): void
+    {
+        $this->storage->prepare($tableName, $structure);
+    }
+
+    /**
      * Add log with results of a table storage action.
      *
      * @param string $action

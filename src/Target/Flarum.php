@@ -250,15 +250,6 @@ class Flarum extends Target
      */
     protected function roles(ExportModel $ex): void
     {
-        // Verify support.
-        if (!$ex->targetExists('PORT_UserRole')) {
-            $ex->comment('Skipping import: Roles (Source lacks support)');
-            return;
-        }
-
-        // Delete orphaned user role associations (deleted users).
-        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
-
         $structure = [
             'id' => 'int',
             'name_singular' => 'varchar(100)',
@@ -268,6 +259,17 @@ class Flarum extends Target
             'is_hidden' => 'tinyint',
         ];
         $map = [];
+
+        // Verify support.
+        if (!$ex->targetExists('PORT_UserRole')) {
+            $ex->comment('Skipping import: Roles (Source lacks support)');
+            $ex->importEmpty('groups', $structure);
+            $ex->importEmpty('group_user', $structure);
+            return;
+        }
+
+        // Delete orphaned user role associations (deleted users).
+        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
 
         $query = $ex->dbImport()->table('PORT_Role')->select(
             $ex->dbImport()->raw("(RoleID + 4) as id"), // Flarum reserves 1-3 & uses 4 for mods by default.
