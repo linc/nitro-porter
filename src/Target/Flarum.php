@@ -180,8 +180,8 @@ class Flarum extends Target
         $ex->ignoreDuplicates('users');
 
         $this->users($ex);
-        $this->roles($ex); // Groups
-        $this->categories($ex); // Tags
+        $this->roles($ex); // 'Groups' in Flarum
+        $this->categories($ex); // 'Tags' in Flarum
 
         // No permissions warning.
         $ex->comment('Permissions are not migrated. Verify all permissions afterward.');
@@ -190,19 +190,14 @@ class Flarum extends Target
         Formatter::instance($ex); // @todo Hook for pre-UGC import?
 
         $this->discussions($ex);
-        $this->bookmarks($ex); // flarum/subscriptions
-        $this->comments($ex); // Posts
+        $this->bookmarks($ex); // Requires addon `flarum/subscriptions`
+        $this->comments($ex); // 'Posts' in Flarum
 
-        if ($ex->targetExists('PORT_Badge')) {
-            $this->badges($ex); // 17development/flarum-user-badges
-        }
-        if ($ex->targetExists('PORT_Poll')) {
-            $this->polls($ex); // fof/pollsx
-        }
-        if ($ex->targetExists('PORT_ReactionType')) {
-            $this->reactions($ex); //
-        }
-        $this->privateMessages($ex);
+        $this->badges($ex); // Requires addon `17development/flarum-user-badges`
+        $this->polls($ex); // Requires addon `fof/pollsx`
+        $this->reactions($ex); // Requires addon `fof/reactions`
+
+        $this->privateMessages($ex); // Requires addon `fof/byobu`
 
         $this->attachments($ex); // Requires discussions, comments, and PMs have imported.
     }
@@ -255,6 +250,12 @@ class Flarum extends Target
      */
     protected function roles(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_UserRole')) {
+            $ex->comment('Skipping import: Roles (Source lacks support)');
+            return;
+        }
+
         // Delete orphaned user role associations (deleted users).
         $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
 
@@ -388,6 +389,12 @@ class Flarum extends Target
      */
     protected function bookmarks(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_UserDiscussion')) {
+            $ex->comment('Skipping import: Bookmarks (Source lacks support)');
+            return;
+        }
+
         $structure = [
             'discussion_id' => 'int',
             'user_id' => 'int',
@@ -486,6 +493,12 @@ class Flarum extends Target
      */
     protected function attachments(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Media')) {
+            $ex->comment('Skipping import: Attachments (Source lacks support)');
+            return;
+        }
+
         $structure = [
             'id' => 'int',
             'actor_id' => 'int',
@@ -539,6 +552,12 @@ class Flarum extends Target
      */
     protected function badges(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Badge')) {
+            $ex->comment('Skipping import: Badges (Source lacks support)');
+            return;
+        }
+
         // Badge Categories
         // One category is added in postscript.
 
@@ -595,6 +614,12 @@ class Flarum extends Target
      */
     protected function polls(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Poll')) {
+            $ex->comment('Skipping import: Polls (Source lacks support)');
+            return;
+        }
+
         // Polls
         $structure = [
             'id' => 'int',
@@ -677,6 +702,12 @@ class Flarum extends Target
      */
     public function reactions(ExportModel $ex)
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_ReactionType')) {
+            $ex->comment('Skipping import: Reactions (Source lacks support)');
+            return;
+        }
+
         // Reaction Types
         $structure = [
             'id' => 'int',
@@ -752,6 +783,12 @@ class Flarum extends Target
      */
     protected function privateMessages(ExportModel $ex)
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Conversation')) {
+            $ex->comment('Skipping import: Private messages (Source lacks support)');
+            return;
+        }
+
         // Messages — Discussions
         $MaxDiscussionID = $this->messageDiscussionOffset = $this->getMaxDiscussionID($ex);
         $ex->comment('Discussions offset for PMs is ' . $MaxDiscussionID);
