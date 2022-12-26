@@ -183,9 +183,6 @@ class Flarum extends Target
         $this->roles($ex); // 'Groups' in Flarum
         $this->categories($ex); // 'Tags' in Flarum
 
-        // No permissions warning.
-        $ex->comment('Permissions are not migrated. Verify all permissions afterward.');
-
         // Singleton factory; big timing issue; depends on Users being done.
         Formatter::instance($ex); // @todo Hook for pre-UGC import?
 

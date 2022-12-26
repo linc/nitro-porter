@@ -92,6 +92,9 @@ class Controller
         // @todo Pass options not Request
         $exportModel = exportModelFactory($request, $exportSourceCM, $storage, $importSourceCM);
 
+        // No permissions warning.
+        $exportModel->comment('Permissions are not migrated. Verify all permissions afterward.');
+
         // Log source.
         $exportModel->comment("Source: " . $source::SUPPORTED['name']);
         $exportModel->comment("Export connection: " . $exportSourceCM->getAlias());
