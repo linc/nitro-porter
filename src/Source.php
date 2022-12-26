@@ -65,6 +65,8 @@ abstract class Source
     }
 
     /**
+     * Whether to connect the OP to the discussion record.
+     *
      * @return bool
      */
     public function getDiscussionBodyMode(): bool
