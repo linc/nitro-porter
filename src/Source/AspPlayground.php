@@ -152,13 +152,13 @@ class AspPlayground extends Source
             'parent' => 'ForeignID', // Preserve tree just in case.
             'Mem' => 'InsertUserID',
             'dateCreated' => 'DateInserted',
-            'Body' => 'Body',
+            //'Body' => 'Body',
         ];
 
         // Avoid adding OP redundantly.
         $skipOP = '';
         if ($this->getDiscussionBodyMode()) {
-            $skipOP = "where messageID != threadID";
+            $skipOP = "where parent != 0";
         }
         $ex->export(
             'Comment',
