@@ -96,22 +96,18 @@ class Controller
         $exportModel->comment('Permissions are not migrated. Verify all permissions afterward.');
 
         // Log source.
-        $exportModel->comment("Source: " . $source::SUPPORTED['name']);
-        $exportModel->comment("Export connection: " . $exportSourceCM->getAlias());
+        $exportModel->comment("Source: " . $source::SUPPORTED['name'] . " (" . $exportSourceCM->getAlias() . ")");
 
         // Setup target & modes.
         $target = false;
         if ($request->get('output') !== 'file') {
             $target = targetFactory($request->get('output'));
-
             // Log target.
-            $exportModel->comment("Target: " . $target::SUPPORTED['name']);
-            $exportModel->comment("Import connection: " . $importSourceCM->getAlias());
+            $exportModel->comment("Target: " . $target::SUPPORTED['name'] . " (" . $importSourceCM->getAlias() . ")");
 
             self::setModes($source, $target);
-
             // Log flags.
-            $exportModel->comment("Use Discussion Body flag: " .
+            $exportModel->comment("Flag: Use Discussion Body: " .
                 ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
 
