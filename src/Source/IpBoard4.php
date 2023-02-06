@@ -57,36 +57,39 @@ class IpBoard4 extends Source
     protected function conversations(ExportModel $ex): void
     {
         // Conversations.
-        $map = array(
+        $map = [
             'mt_id' => 'ConversationID',
-            'mt_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'mt_date' => 'DateInserted',
             'mt_title' => 'Subject',
             'mt_starter_id' => 'InsertUserID'
-        );
+        ];
+        $filters = [
+            'mt_date' => 'timestampToDate',
+        ];
         $query = "select * from :_core_message_topics where mt_is_deleted = 0";
-
-        $ex->export('Conversation', $query, $map);
+        $ex->export('Conversation', $query, $map, $filters);
 
         // Conversation Message.
         $map = [
             'msg_id' => 'MessageID',
             'msg_topic_id' => 'ConversationID',
-            'msg_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'msg_date' => 'DateInserted',
             'msg_post' => 'Body',
             'msg_author_id' => 'InsertUserID',
             'msg_ip_address' => 'InsertIPAddress'
         ];
+        $filters = [
+            'msg_date' => 'timestampToDate',
+        ];
         $query = "select m.*, 'IPB' as Format from :_core_message_posts m";
-
-        $ex->export('ConversationMessage', $query, $map);
+        $ex->export('ConversationMessage', $query, $map, $filters);
 
         // User Conversation.
         $map = [
             'map_user_id' => 'UserID',
             'map_topic_id' => 'ConversationID',
         ];
-        $query = "select t.*,
-            !map_user_active as Deleted
+        $query = "select t.*, !map_user_active as Deleted
             from :_core_message_topic_user_map t";
         $ex->export('UserConversation', $query, $map);
     }
@@ -98,21 +101,24 @@ class IpBoard4 extends Source
     {
         $map = [
             'member_id' => 'UserID',
-            'name' => array('Column' => 'Name', 'Filter' => 'HtmlDecoder'),
+            'name' => 'Name',
             'email' => 'Email',
-            'joined' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
+            'joined' => 'DateInserted',
             'ip_address' => 'InsertIPAddress',
             'time_offset' => 'HourOffset',
-            'last_activity' => array('Column' => 'DateLastActive', 'Filter' => 'timestampToDate'),
+            'last_activity' => 'DateLastActive',
             'member_banned' => 'Banned',
             'title' => 'Title',
             'location' => 'Location'
         ];
-
+        $filters = [
+            'name' => 'HtmlDecoder',
+            'joined' => 'timestampToDate',
+            'last_activity' => 'timestampToDate',
+        ];
         $query = "select m.*, 'ipb' as HashMethod
             from :_core_members m";
-
-        $ex->export('User', $query, $map);
+        $ex->export('User', $query, $map, $filters);
     }
 
     /**
@@ -131,10 +137,7 @@ class IpBoard4 extends Source
             'member_id' => 'UserID',
             'member_group_id' => 'RoleID'
         ];
-
-        $query = "select m.member_id, m.member_group_id
-         from :_core_members m";
-
+        $query = "select m.member_id, m.member_group_id from :_core_members m";
         $ex->export('UserRole', $query, $map);
     }
 
@@ -143,15 +146,18 @@ class IpBoard4 extends Source
      */
     protected function categories(ExportModel $ex): void
     {
-        $category_Map = [
+        $map = [
             'id' => 'CategoryID',
-            'name' => array('Column' => 'Name', 'Filter' => 'HtmlDecoder'),
+            'name' => 'Name',
             'name_seo' => 'UrlCode',
             'description' => 'Description',
             'parent_id' => 'ParentCategoryID',
             'position' => 'Sort'
         ];
-        $ex->export('Category', "select * from :_forums_forums", $category_Map);
+        $filters = [
+            'name' => 'HtmlDecoder',
+        ];
+        $ex->export('Category', "select * from :_forums_forums", $map, $filters);
     }
 
     /**
@@ -173,30 +179,30 @@ class IpBoard4 extends Source
         $map = [
             'tid' => 'DiscussionID',
             'title' => 'Name',
-            'description' => array('Column' => 'SubName', 'Type' => 'varchar(255)'),
+            'description' => 'SubName',
             'forum_id' => 'CategoryID',
             'starter_id' => 'InsertUserID',
-            'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'ip_address' => 'InsertIPAddress',
-            'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
+            'start_date' => 'DateInserted',
+            'edit_time' => 'DateUpdated',
             'posts' => 'CountComments',
             'views' => 'CountViews',
             'pinned' => 'Announce',
             'post' => 'Body',
             'closed' => 'Closed'
         ];
+        $filters = [
+            'start_date' => 'timestampToDate',
+            'edit_time' => 'timestampToDate',
+        ];
         $query = "select t.*,
-            $descriptionSQL as post,
-            IF(t.state = 'closed', 1, 0) as closed,
-            'BBCode' as Format,
-            p.ip_address,
-            p.edit_time
-        from :_forums_topics t
-        left join :_forums_posts p
-            on t.topic_firstpost = p.pid
-        where t.tid between {from} and {to}";
-
-        $ex->export('Discussion', $query, $map);
+                $descriptionSQL as post,
+                IF(t.state = 'closed', 1, 0) as closed,
+                'BBCode' as Format,
+                p.edit_time
+            from :_forums_topics t
+            left join :_forums_posts p
+                on t.topic_firstpost = p.pid";
+        $ex->export('Discussion', $query, $map, $filters);
     }
 
     /**
@@ -209,9 +215,13 @@ class IpBoard4 extends Source
             'topic_id' => 'DiscussionID',
             'author_id' => 'InsertUserID',
             'ip_address' => 'InsertIPAddress',
-            'post_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'edit_time' => array('Column' => 'DateUpdated', 'Filter' => 'timestampToDate'),
+            'post_date' => 'DateInserted',
+            'edit_time' => 'DateUpdated',
             'post' => 'Body'
+        ];
+        $filters = [
+            'post_date' => 'timestampToDate',
+            'edit_time' => 'timestampToDate',
         ];
         $query = "select p.*,
                 'BBCode' as Format
@@ -219,8 +229,7 @@ class IpBoard4 extends Source
             join :_forums_topics t
                 on p.topic_id = t.tid
             where p.pid <> t.topic_firstpost";
-
-        $ex->export('Comment', $query, $map);
+        $ex->export('Comment', $query, $map, $filters);
     }
 
     /**
@@ -230,20 +239,21 @@ class IpBoard4 extends Source
     {
         $map = [
             'attach_id' => 'MediaID',
-            //'atype_mimetype' => 'Type',
             'attach_file' => 'Name',
             'attach_path' => 'Path',
-            'attach_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
-            'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
-            'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
+            'attach_date' => 'DateInserted',
+            'thumb_path' => 'ThumbPath',
+            'thumb_width' => 'ThumbWidth',
             'attach_member_id' => 'InsertUserID',
             'attach_filesize' => 'Size',
             'img_width' => 'ImageWidth',
             'img_height' => 'ImageHeight'
         ];
+        $filters = [
+            'attach_date' => 'timestampToDate',
+        ];
         $query = "select a.*
             from :_core_attachments a";
-
-        $ex->export('Media', $query, $map);
+        $ex->export('Media', $query, $map, $filters);
     }
 }
