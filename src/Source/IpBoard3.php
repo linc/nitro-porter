@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Invision Powerboard exporter tool.
+ * Invision Powerboard 3.x or earlier exporter tool.
  *
  * To export avatars, provide ?db-avatars=1&avatars-source=/path/to/avatars
  *

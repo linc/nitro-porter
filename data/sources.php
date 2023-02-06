@@ -15,6 +15,7 @@ return [
     'FluxBb',
     'FuseTalk',
     'IpBoard3',
+    'IpBoard4',
     'JForum',
     'Kunena',
     'Mbox',
