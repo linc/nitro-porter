@@ -43,9 +43,11 @@ We greatly appreciate donated data from existing forums to improve the migration
 
 [Start a discussion](https://github.com/linc/nitro-porter/discussions/new) if you've found a reproducible defect. Please include expected vs actual outcome and full steps to reproduce it reliably. We don't currently maintain an issue tracker.
 
-### Repair a bug
+### Submit a fix or improvement
 
-Basically doing the above, but attached to a pull request with a proposed fix! It's greatly appreciated.
+Send a pull request with a proposed fix! It's greatly appreciated. Please document your understanding of the change, it makes review much easier!
+
+Try using [conventional commits](https://www.conventionalcommits.org) for a nicer changelog.
 
 ### Add support for a new source
 
