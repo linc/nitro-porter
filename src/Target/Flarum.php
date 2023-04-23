@@ -92,6 +92,12 @@ class Flarum extends Target
         //'votes' => 'int', // fof/polls
         //'hotness' => 'double', // fof/gamification
         //'view_count' => 'int', // flarumite/simple-discussion-views
+        'keys' => [
+            'FLA_discussions_id_primary' => [
+                'type' => 'primary',
+                'columns' => ['id'],
+            ]
+        ],
     ];
 
     /** @var int Offset for inserting OP content into the posts table. */
