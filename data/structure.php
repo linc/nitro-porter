@@ -203,7 +203,7 @@ return array(
         'ConversationID' => 'int',
         'Type' => 'varchar(10)',
         'ForeignID' => 'varchar(40)',
-        'Subject' => 'varchar(100)',
+        'Subject' => 'varchar(255)',
         'Contributors' => 'varchar(255)',
         'FirstMessageID' => 'int',
         'InsertUserID' => 'int',

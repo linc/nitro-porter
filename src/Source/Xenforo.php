@@ -645,7 +645,7 @@ class Xenforo extends Source
         );
         $ex->export(
             'Conversation',
-            "select * from :_conversation_master",
+            "select *, substring(title, 1, 200) as title from :_conversation_master",
             $conversation_Map
         );
 
