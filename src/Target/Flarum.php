@@ -73,7 +73,10 @@ class Flarum extends Target
         ],
     ];
 
-    /** @var string[] Table structure for 'discussions`. */
+    /**
+     * @var array Table structure for 'discussions`.
+     * @see \Porter\Postscript\Flarum::numberPosts() for 'keys' requirement.
+     */
     protected const DB_STRUCTURE_DISCUSSIONS = [
         'id' => 'int',
         'user_id' => 'int',
