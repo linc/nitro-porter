@@ -149,7 +149,7 @@ abstract class Storage
     public function fixEncoding(array $row): array
     {
         return array_map(function ($value) {
-            $doEncode = function_exists('mb_detect_encoding') &&
+            $doEncode = $value && function_exists('mb_detect_encoding') &&
                 (mb_detect_encoding($value) != 'UTF-8') &&
                 (is_string($value) || is_numeric($value));
             return ($doEncode) ? utf8_encode($value) : $value; // @todo Don't use utf8_encode()

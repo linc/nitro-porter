@@ -34,7 +34,7 @@ function filterFlarumContent(?string $value, string $column, array $row): string
  * @param array $row
  * @return string
  */
-function fixDuplicateDeletedNames(string $value, string $column, array $row): string
+function fixDuplicateDeletedNames(?string $value, string $column, array $row): ?string
 {
     // @todo Add multilingual variations of 'deleted user'.
     $duplicates = [
