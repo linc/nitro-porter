@@ -202,6 +202,7 @@ class Flarum extends Source
             'created_at' => 'DateInserted',
             'edited_at' => 'DateUpdated',
             'edited_user_id' => 'UpdateUserID',
+            'content' => 'Body',
         ];
 
         $skipOP = '';
