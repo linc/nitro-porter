@@ -106,7 +106,7 @@ class Flarum extends Source
         );
         $ex->export(
             'Role',
-            "select * from :_groups",
+            "select * from `:_groups`",
             $role_Map
         );
 
