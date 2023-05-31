@@ -282,6 +282,7 @@ class Render
         let target = document.getElementById('TargetType').value;
         switch (target) {
             case 'Flarum':
+            case 'Waterhole':
                 document.getElementById("TargetConnection").style.display = 'block';
                 break;
             default:
