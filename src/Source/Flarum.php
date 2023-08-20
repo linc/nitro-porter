@@ -106,7 +106,7 @@ class Flarum extends Source
         );
         $ex->export(
             'Role',
-            "select * from :_groups",
+            "select * from `:_groups`",
             $role_Map
         );
 
@@ -166,11 +166,12 @@ class Flarum extends Source
 
         $ex->export(
             'Discussion',
-            "select *, $getBody dt.tag_id as CategoryID
+            "select d.*, $getBody min(dt.tag_id) as CategoryID
                  from :_discussions d
                  $joinPosts
                  join :_discussion_tag dt on dt.discussion_id = d.id
-                 where d.is_private <> 1",
+                 where d.is_private <> 1
+                 group by d.id",
             $discussion_Map
         );
     }
@@ -202,6 +203,7 @@ class Flarum extends Source
             'created_at' => 'DateInserted',
             'edited_at' => 'DateUpdated',
             'edited_user_id' => 'UpdateUserID',
+            'content' => 'Body',
         ];
 
         $skipOP = '';

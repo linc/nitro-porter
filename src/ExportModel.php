@@ -605,7 +605,7 @@ class ExportModel
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->executeQuery('describe :_' . $reqTable);
+            $tableDescriptions = $this->executeQuery('describe `:_' . $reqTable . '`');
             if ($tableDescriptions === false) { // Table doesn't exist
                 $countMissingTables++;
                 if ($missingTables !== false) {
