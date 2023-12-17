@@ -6,6 +6,7 @@ The only multi-platform community migration tool. Free your forum!
 Currently [exports](https://nitroporter.org/targets) to: 
 * Flarum
 * Vanilla
+* Waterhole
 
 Currently imports from:
 * Flarum
