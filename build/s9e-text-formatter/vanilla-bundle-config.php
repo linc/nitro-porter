@@ -30,13 +30,5 @@ $configurator->HTMLElements->allowElement('br');
 $configurator->HTMLElements->allowElement('img');
 $configurator->HTMLElements->allowElement('div');
 
-// s9e/textformatter loses its mind about unclosed HTML tags & illegal spans.
-// Close every <br>
-//$configurator->Preg->replace('<br>', '<br/>');
-// Close every <img src="">
-//$configurator->Preg->replace('#<img ([^>]+[^/])>#', '<img $1 />');
-// Fix <span><div ... </div></span>
-//$configurator->Preg->replace('#<span>[]*<div ([^>]+[^/])>(.+)</div></span>#U', '<div $1>$2</div>');
-
 // Save it as new Vanilla bundle.
 $configurator->saveBundle('Vanilla', __DIR__ . '/../../src/Bundle/Vanilla.php');
