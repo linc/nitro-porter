@@ -11,12 +11,12 @@ namespace Porter\Bundle;
 abstract class Vanilla extends \s9e\TextFormatter\Bundle
 {
     /**
-    * @var s9e\TextFormatter\Parser Singleton instance used by parse()
+    * @var ?object s9e\TextFormatter\Parser Singleton instance used by parse()
     */
     protected static $parser;
 
     /**
-    * @var s9e\TextFormatter\Renderer Singleton instance used by render()
+    * @var ?object s9e\TextFormatter\Renderer Singleton instance used by render()
     */
     protected static $renderer;
 
