@@ -143,6 +143,8 @@ abstract class Storage
     }
 
     /**
+     * Convert non-UTF-8 encodings to UTF-8.
+     *
      * @param array $row
      * @return array
      */
@@ -150,9 +152,10 @@ abstract class Storage
     {
         return array_map(function ($value) {
             $doEncode = $value && function_exists('mb_detect_encoding') &&
-                (mb_detect_encoding($value) != 'UTF-8') &&
+                mb_detect_encoding($value) && // Verify we know the encoding at all.
+                (mb_detect_encoding($value) !== 'UTF-8') &&
                 (is_string($value) || is_numeric($value));
-            return ($doEncode) ? utf8_encode($value) : $value; // @todo Don't use utf8_encode()
+            return ($doEncode) ? mb_convert_encoding($value, 'UTF-8', mb_detect_encoding($value)) : $value;
         }, $row);
     }
 }
