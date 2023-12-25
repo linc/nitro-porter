@@ -140,10 +140,5 @@ class Controller
             sprintf('ELAPSED — %s', formatElapsed(microtime(true) - $start)) .
             ' (' . date('H:i:s', (int)$start) . ' - ' . date('H:i:s') . ')'
         );
-
-        // Write the results (web only).
-        if (!defined('CONSOLE')) {
-            Render::viewResult($exportModel->comments);
-        }
     }
 }

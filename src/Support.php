@@ -90,8 +90,8 @@ class Support
     public function setTargets(array $targets): void
     {
         // Hardcode Vanilla file support (all = yes).
-        $this->targets['Vanilla (file)'] = [
-            'name' => 'Vanilla (file)',
+        $this->targets['file'] = [
+            'name' => 'Vanilla',
             'features' => array_fill_keys(self::SUPPORTED_FEATURES, 1),
         ];
 
@@ -113,22 +113,22 @@ class Support
     public function getFeatureStatusHtml(array $supported, string $package, string $feature, bool $notes = true): string
     {
         if (!isset($supported[$package]['features'])) {
-            return '<span class="No">No</span>';
+            return 'No';
         }
 
         $available = $supported[$package]['features'];
 
         // Calculate feature availability.
-        $status = '<span class="NA"></span>';
+        $status = '';
         if (isset($available[$feature])) {
             if ($available[$feature] === 0) {
-                $status = '<span class="No">&#x2717;</span>';
+                $status = 'No';
             } elseif ($available[$feature]) {
                 // Say 'yes' for table shorthand
-                $status = '<span class="Yes">&#x2713;</span>';
+                $status = 'Yes';
                 if ($notes && $available[$feature] !== 1) {
                     // Send the text of the note
-                    $status = '<pre>' . $available[$feature] . '</pre>';
+                    $status = $available[$feature];
                 }
             }
         }

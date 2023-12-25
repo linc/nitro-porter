@@ -31,7 +31,7 @@ Nitro Porter is based on PHP 8.0+. For the full requirements, see the [user guid
 
 ## Getting Started
 
-Nitro Porter can run via the web browser or the command line. For the installation steps, see the [user guide](https://nitroporter.org/guide).
+Nitro Porter runs via the command line. For the installation steps, see the [user guide](https://nitroporter.org/guide).
 
 
 ## Contribute

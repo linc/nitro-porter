@@ -1,21 +1,3 @@
 #!/usr/bin/env php
 <?php
-
-// Disable HTML errors.
-ini_set('html_errors', 'off');
-
-// Bootstrap.
-define('CONSOLE', true);
 require_once dirname(__DIR__) . '/bootstrap.php';
-
-// Parse CLI request.
-$input = \Porter\Request::instance()->parseCli();
-
-// Run if a request was found.
-if (count($input)) {
-    \Porter\Request::instance()->load($input);
-    \Porter\Controller::run(\Porter\Request::instance());
-}
-
-// Console output should end in newline.
-echo "\n";
