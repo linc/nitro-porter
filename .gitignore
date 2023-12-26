@@ -27,3 +27,6 @@ vendor
 build/current
 .phpunit.cache
 seed_database.php
+node_modules
+docs/.vitepress/dist
+docs/.vitepress/cache
