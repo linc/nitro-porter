@@ -4,7 +4,6 @@
  *
  * Overwrites src/Bundle/Vanilla.php
  * Run from doc root: `php -f build/s9e-text-formatter/vanilla-bundle-config.php`
- * Then add at top of file: `namespace Porter\Bundle;`
  *
  * @see https://s9etextformatter.readthedocs.io/Bundles/Your_own_bundle/
  */
@@ -30,5 +29,5 @@ $configurator->HTMLElements->allowElement('br');
 $configurator->HTMLElements->allowElement('img');
 $configurator->HTMLElements->allowElement('div');
 
-// Save it as new Vanilla bundle.
-$configurator->saveBundle('Vanilla', __DIR__ . '/../../src/Bundle/Vanilla.php');
+// Save it as new Vanilla bundle in the Porter\Bundle namespace.
+$configurator->saveBundle('Porter\\Bundle\\Vanilla', __DIR__ . '/../../src/Bundle/Vanilla.php');
