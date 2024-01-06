@@ -106,7 +106,9 @@ abstract class Storage
             foreach ($row as $columnName => $value) {
                 if ($columnName === $src) {
                     $row[$dest] = $value; // Add column with new name.
-                    unset($row[$columnName]); // Remove old column.
+                    if ($dest !== $columnName) {
+                        unset($row[$columnName]); // Remove old column.
+                    }
                 }
             }
         }
