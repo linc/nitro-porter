@@ -39,7 +39,7 @@
         "illuminate/database": "^8.0",
         "monolog/monolog": "^2",
         "adhocore/cli": "^1",
-        "s9e/text-formatter": "^2",
+        "s9e/text-formatter": "2.15.*",
         "nadar/quill-delta-parser": "^2"
     },
     "require-dev": {
