@@ -54,7 +54,14 @@ class ShowCommand extends Command
         }
 
         $writer = new Writer();
-        $writer->bold->green->write("\n\n" . 'Support for ' . $type . ' ' . $supported[$name]['name'] . "\n");
-        $writer->table($list, ['head' => 'bold']);
+
+        if ($type === 'target' && strtolower($name) === 'vanilla2') {
+            $writer->bold->green->write("\n" . 'All features are supported for target Vanilla2.' . "\n");
+        } elseif (!array_key_exists($name, $supported)) {
+            $writer->bold->yellow->write("\n" . 'Unknown package "' . $name . '". Package is case-sensitive.' . "\n");
+        } else {
+            $writer->bold->green->write("\n" . 'Support for ' . $type . ' ' . $supported[$name]['name'] . "\n");
+            $writer->table($list, ['head' => 'bold']);
+        }
     }
 }
