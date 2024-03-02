@@ -13,9 +13,9 @@ Nitro Porter runs via the command line. For the installation steps, see the [use
 
 Supported [targets](https://nitroporter.org/targets): 
 
-![](assets/logos/flarum-300x100.png)
-![](assets/logos/vanilla-300x100.png)
-![](assets/logos/waterhole-300x100.png)
+![Flarum](assets/logos/flarum-300x100.png)
+![Vanilla](assets/logos/vanilla-300x100.png)
+![Waterhole](assets/logos/waterhole-300x100.png)
 
 Supported [sources](https://nitroporter.org/sources):
 * Drupal
