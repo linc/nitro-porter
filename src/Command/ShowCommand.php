@@ -16,7 +16,10 @@ class ShowCommand extends Command
             ->argument('<type>', 'One of "source" or "target"')
             ->argument('<name>', 'Name of package.')
             ->usage(
-                '<bold>  show</end> <type> <name></end> ## Show features of a package.<eol/>'
+                '<bold>  show</end> <comment>[type] [name]</end> ## Show features of a package.<eol/>' .
+                '<bold>  show</end> <comment>source vanilla2</end> ' .
+                '## Show what features can be migrated from Vanilla.<eol/>' .
+                '<bold>  show</end> <comment>target flarum</end> ## Show what features can be migrated to Flarum.<eol/>'
             );
     }
 
