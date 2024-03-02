@@ -93,7 +93,7 @@ class Controller
         $exportModel = exportModelFactory($request, $exportSourceCM, $storage, $importSourceCM);
 
         // No permissions warning.
-        $exportModel->comment('Permissions are not migrated. Verify all permissions afterward.');
+        $exportModel->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n");
 
         // Log source.
         $exportModel->comment("Source: " . $source::SUPPORTED['name'] . " (" . $exportSourceCM->getAlias() . ")");
