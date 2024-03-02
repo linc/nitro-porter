@@ -40,6 +40,7 @@ class ShowCommand extends Command
      */
     public static function viewFeatureList(string $type, string $name)
     {
+        // Build list of features.
         if ($type === 'source') {
             $supported = \Porter\Support::getInstance()->getSources();
         } elseif ($type === 'target') {
@@ -53,13 +54,16 @@ class ShowCommand extends Command
             ];
         }
 
+        // Output.
         $writer = new Writer();
-
         if ($type === 'target' && strtolower($name) === 'vanilla2') {
+            // Vanilla is the intermediary format, so all features are supported by necessity.
             $writer->bold->green->write("\n" . 'All features are supported for target Vanilla2.' . "\n");
         } elseif (!array_key_exists($name, $supported)) {
+            // Error message for invalid package names.
             $writer->bold->yellow->write("\n" . 'Unknown package "' . $name . '". Package is case-sensitive.' . "\n");
         } else {
+            // Support table.
             $writer->bold->green->write("\n" . 'Support for ' . $type . ' ' . $supported[$name]['name'] . "\n");
             $writer->table($list, ['head' => 'bold']);
         }
