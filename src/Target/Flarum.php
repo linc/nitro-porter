@@ -82,7 +82,6 @@ class Flarum extends Target
         'user_id' => 'int',
         'title' => 'varchar(200)',
         'slug' => 'varchar(200)',
-        'tag_id' => 'int',
         'created_at' => 'datetime',
         'first_post_id' => 'int',
         'last_post_id' => 'int',
