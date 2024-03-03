@@ -241,7 +241,10 @@ class Flarum extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $ex->dbImport()->table('PORT_User')->select('*');
+        $query = $ex->dbImport()->table('PORT_User')->select(
+            '*',
+            $ex->dbImport()->raw('COALESCE(Confirmed, 0) as is_email_confirmed') // Cannot be null.
+        );
 
         $ex->import('users', $query, $structure, $map, $filters);
     }
