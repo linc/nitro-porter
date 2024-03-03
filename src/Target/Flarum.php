@@ -278,9 +278,12 @@ class Flarum extends Target
         $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
 
         $query = $ex->dbImport()->table('PORT_Role')->select(
-            $ex->dbImport()->raw("(RoleID + 4) as id"), // Flarum reserves 1-3 & uses 4 for mods by default.
-            'Name as name_singular',
-            'Name as name_plural',
+            // Flarum reserves 1-3 & uses 4 for mods by default.
+            $ex->dbImport()->raw("(RoleID + 4) as id"),
+            // Singular vs plural is an uncommon feature; don't guess at it, just duplicate the Name.
+            $ex->dbImport()->raw('COALESCE(Name, CONCAT("role", RoleID)) as name_singular'), // Cannot be null.
+            $ex->dbImport()->raw('COALESCE(Name, CONCAT("role", RoleID)) as name_plural'), // Cannot be null.
+            // Hiding roles is an uncommon feature; hide none.
             $ex->dbImport()->raw('0 as is_hidden')
         );
 
