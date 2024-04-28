@@ -184,6 +184,11 @@ class PhpBb3 extends Source
         );
     }
 
+    public static function entityDecode($value)
+    {
+        return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    }
+
     /**
      * @param mixed $r
      * @param string $field
@@ -631,7 +636,7 @@ class PhpBb3 extends Source
             'RealSubject' => array(
                 'Column' => 'Subject',
                 'Type' => 'varchar(250)',
-                'Filter' => array('Phpbb2', 'EntityDecode')
+                'Filter' => array($this, 'EntityDecode')
             )
         );
         $ex->export(

@@ -368,7 +368,7 @@ class PhpBb2 extends Source
             'RealSubject' => array(
                 'Column' => 'Subject',
                 'Type' => 'varchar(250)',
-                'Filter' => array('Phpbb2', 'EntityDecode')
+                'Filter' => array($this, 'EntityDecode')
             )
         );
 
