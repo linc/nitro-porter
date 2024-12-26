@@ -17,9 +17,9 @@ class ShowCommand extends Command
             ->argument('<name>', 'Name of package.')
             ->usage(
                 '<bold>  show</end> <comment>[type] [name]</end> ## Show features of a package.<eol/>' .
-                '<bold>  show</end> <comment>source vanilla2</end> ' .
+                '<bold>  show</end> <comment>source Vanilla</end> ' .
                 '## Show what features can be migrated from Vanilla.<eol/>' .
-                '<bold>  show</end> <comment>target flarum</end> ## Show what features can be migrated to Flarum.<eol/>'
+                '<bold>  show</end> <comment>target Flarum</end> ## Show what features can be migrated to Flarum.<eol/>'
             );
     }
 
@@ -56,9 +56,9 @@ class ShowCommand extends Command
 
         // Output.
         $writer = new Writer();
-        if ($type === 'target' && strtolower($name) === 'vanilla2') {
+        if ($type === 'target' && strtolower($name) === 'vanilla') {
             // Vanilla is the intermediary format, so all features are supported by necessity.
-            $writer->bold->green->write("\n" . 'All features are supported for target Vanilla2.' . "\n");
+            $writer->bold->green->write("\n" . 'All features are supported for target Vanilla.' . "\n");
         } elseif (!array_key_exists($name, $supported)) {
             // Error message for invalid package names.
             $writer->bold->yellow->write("\n" . 'Unknown package "' . $name . '". Package is case-sensitive.' . "\n");

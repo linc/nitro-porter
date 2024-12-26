@@ -19,7 +19,7 @@ return [
             ],
         ],
         [
-            'alias' => 'test',
+            'alias' => 'target',
             'type' => 'database',
             'adapter' => 'mysql',
             'host' => '127.0.0.1',
