@@ -4,6 +4,15 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.4.1](https://github.com/linc/nitro-porter/compare/v3.4.0...v3.4.1) (2024-12-26)
+
+### Bug Fixes
+
+* Update autoload path to work in more scenarios ([49f22e](https://github.com/linc/nitro-porter/commit/49f22e1214131da4e1738e9ff14c5879a79eb1ab))
+
+
+---
+
 ## [3.4.0](https://github.com/linc/nitro-porter/compare/v3.3.0...v3.4.0) (2024-12-26)
 
 ### Features
