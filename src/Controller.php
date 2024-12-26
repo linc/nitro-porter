@@ -133,6 +133,9 @@ class Controller
             } else {
                 $exportModel->comment("No Postscript found.");
             }
+
+            // Doing this cleanup automatically is complex, so tell them to do it manually for now.
+            $exportModel->comment("After testing import, you may delete `PORT_` database tables.");
         }
 
         // End timer & report.
