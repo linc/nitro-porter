@@ -1,7 +1,20 @@
 <?php
 
 // Autoload.
-require_once __DIR__ . '/vendor/autoload.php';
+if (isset($GLOBALS['_composer_autoload_path'])) {
+    // If running via Composer, use provided location.
+    require_once $GLOBALS['_composer_autoload_path'];
+} else {
+    // If running locally, guess the location.
+    foreach (['../..', '../vendor', 'vendor'] as $path) {
+        $autoloader = __DIR__ . '/' . $path . '/autoload.php';
+        if (file_exists($autoloader)) {
+            require_once $autoloader;
+            unset($autoloader);
+            break;
+        }
+    }
+}
 
 // Environment.
 const ROOT_DIR = __DIR__;
