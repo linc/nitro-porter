@@ -4,6 +4,33 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.4.0](https://github.com/linc/nitro-porter/compare/v3.3.0...v3.4.0) (2024-12-26)
+
+### Features
+
+* Improved README ([56cf16](https://github.com/linc/nitro-porter/commit/56cf161303c7375a7945268ead5814d8fb92cce5))
+
+### Bug Fixes
+
+* Add alt text to README logos ([da6c31](https://github.com/linc/nitro-porter/commit/da6c313bce980cbe6b8b82f9f4faf8de43997876))
+* Add context and errors to 'show' command ([e44a97](https://github.com/linc/nitro-porter/commit/e44a97664b9f66942a4b354f5d5acaf85bd50cff))
+* Add missing waterhole as target ([5e27b9](https://github.com/linc/nitro-porter/commit/5e27b9bd4625f5c21a3fa1afd682c74c02021635))
+* Clarify no-permission message ([fadd2a](https://github.com/linc/nitro-porter/commit/fadd2a8127bdbbe5c501b49c0eaf6a99cd2dde1e))
+* Do not force [*@covers*](https://github.com/covers) annotation ([221fc3](https://github.com/linc/nitro-porter/commit/221fc355f174b08617b65d11dbef9554d3931e15))
+* Filter location for phpBB ([11d7eb](https://github.com/linc/nitro-porter/commit/11d7eb4fdd3e007fa1f9951e462114adb6eddb68))
+* Flarum role names cannot be null ([ac3ec6](https://github.com/linc/nitro-porter/commit/ac3ec6a231925f0a399e4592d35c4f7518304586))
+* Flarum users.is_email_confirmed cannot be null ([267ea5](https://github.com/linc/nitro-porter/commit/267ea5dbb0dbce3f0fab4c5c999d54135083f2c4))
+* Force Flarum tag names to not be null. ([db5d54](https://github.com/linc/nitro-porter/commit/db5d542f99a2b63d921b372ea7e8aad45574fa42))
+* Prevent deletion of mapped row data ([8f3479](https://github.com/linc/nitro-porter/commit/8f3479f3bf1836c6183a37ac470ab5dd3bb692f8))
+* Remove incorrect tag_id in Flarum discussion table definition ([bb55c6](https://github.com/linc/nitro-porter/commit/bb55c63db29f85c61eb34fb6bb14f7eb06112400))
+* Remove utf8_encode usage and improve encoding logic ([1e28c8](https://github.com/linc/nitro-porter/commit/1e28c836abc8328d351154a43afb37c7bdb3e675))
+* Remove web index ([7b41e0](https://github.com/linc/nitro-porter/commit/7b41e095bb2f15e93fdd3b92b711d11c19a93992))
+* Usage examples for show command ([0b92e0](https://github.com/linc/nitro-porter/commit/0b92e0ed19b09bbda0bae751d9cb18c1c5ff6958))
+* Vanilla html/wysiwyg format conversion to Flarum ([d34292](https://github.com/linc/nitro-porter/commit/d342925175c0df4e224295ad03088ccfdae29d3a))
+
+
+---
+
 ## [3.3.0](https://github.com/linc/nitro-porter/compare/v3.2.0...v3.3.0) (2023-04-23)
 
 ### Features
