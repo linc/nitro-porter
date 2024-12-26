@@ -4,6 +4,18 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.4.2](https://github.com/linc/nitro-porter/compare/v3.4.1...v3.4.2) (2024-12-26)
+
+### Bug Fixes
+
+* More prominently inform PORT_ tables may be deleted ([f2fdc7](https://github.com/linc/nitro-porter/commit/f2fdc7c9c48c5a5b4690ce1756ecda4514c336cb))
+* Rename dedault target connection to 'target' ([d2df79](https://github.com/linc/nitro-porter/commit/d2df798c74b4d7a1bf84eeb45cd453d9eb40b266))
+* Rename Vanilla2 source to Vanilla ([6afe61](https://github.com/linc/nitro-porter/commit/6afe61b6331f33deb4eab0a216fb40af28a47e54))
+* Use the source's default database prefix ([aac125](https://github.com/linc/nitro-porter/commit/aac125ab0759cfa875c3f000af47517fb788b9d6))
+
+
+---
+
 ## [3.4.1](https://github.com/linc/nitro-porter/compare/v3.4.0...v3.4.1) (2024-12-26)
 
 ### Bug Fixes
