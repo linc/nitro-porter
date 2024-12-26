@@ -12,7 +12,7 @@ namespace Porter\Source;
 use Porter\Source;
 use Porter\ExportModel;
 
-class Vanilla2 extends Source
+class Vanilla extends Source
 {
     public const SUPPORTED = [
         'name' => 'Vanilla 2+',
