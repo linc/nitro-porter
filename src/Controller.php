@@ -90,7 +90,7 @@ class Controller
         $exportSourceCM = new ConnectionManager($request->get('source'));
         $importSourceCM = new ConnectionManager($request->get('target') ?? '');
         // @todo Pass options not Request
-        $exportModel = exportModelFactory($request, $exportSourceCM, $storage, $importSourceCM);
+        $exportModel = exportModelFactory($request, $source, $exportSourceCM, $storage, $importSourceCM);
 
         // No permissions warning.
         $exportModel->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n");

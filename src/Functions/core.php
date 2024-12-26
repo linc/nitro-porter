@@ -116,6 +116,7 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
 
 /**
  * @param Request $request
+ * @param Source $source
  * @param ConnectionManager $exportSourceCM
  * @param Storage $storage
  * @param ConnectionManager $importSourceCM
@@ -123,6 +124,7 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
  */
 function exportModelFactory(
     Request $request,
+    Source $source,
     ConnectionManager $exportSourceCM,
     Storage $storage,
     ConnectionManager $importSourceCM
@@ -134,7 +136,7 @@ function exportModelFactory(
     $model = new ExportModel($db, $map, $storage, $importSourceCM);
 
     // Set model properties.
-    $model->srcPrefix = $request->get('src-prefix') ?? '';
+    $model->srcPrefix = $request->get('src-prefix') ?? $source::SUPPORTED['prefix'];
     $model->testMode = $request->get('test') ?? false;
     $model->limitTables((string) $request->get('tables'));
     $model->captureOnly = $request->get('dumpsql') ?? false;
