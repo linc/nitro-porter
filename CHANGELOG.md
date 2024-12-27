@@ -4,6 +4,15 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.5.2](https://github.com/linc/nitro-porter/compare/v3.5.1...v3.5.2) (2024-12-27)
+
+### Bug Fixes
+
+* Fix Flarum target column name error ([a6b36c](https://github.com/linc/nitro-porter/commit/a6b36cc9fa2c913571b28d92481c1ad8b99c2e96))
+
+
+---
+
 ## [3.5.1](https://github.com/linc/nitro-porter/compare/v3.5.0...v3.5.1) (2024-12-27)
 
 ### Bug Fixes
