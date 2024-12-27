@@ -69,8 +69,36 @@ class Config
         foreach ($this->config['connections'] as $connection) {
             if ($alias === $connection['alias']) {
                 $result = $connection;
+                break;
             }
         }
+
+        $this->validateConnectionInfo($alias, $result);
+
         return $result;
+    }
+
+    /**
+     * Validate config has required info.
+     *
+     * @param string $alias
+     * @param array $info
+     */
+    protected function validateConnectionInfo(string $alias, array $info): void
+    {
+        // Type is required.
+        if (empty($info['type'])) {
+            trigger_error('Config error: No connection `type` for alias "' . $alias . '"', E_USER_ERROR);
+        }
+
+        // Database required fields.
+        if ($info['type'] === 'database') {
+            foreach (['adapter', 'host','name','user'] as $required_field) {
+                if (!array_key_exists($required_field, $info)) {
+                    trigger_error('Config error: Database `' . $required_field .
+                        '` missing for alias "' . $alias . '"', E_USER_ERROR);
+                }
+            }
+        }
     }
 }

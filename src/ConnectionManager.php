@@ -38,10 +38,6 @@ class ConnectionManager
             $info = Config::getInstance()->getTestConnection();
         }
 
-        if (!isset($info['type'])) {
-            trigger_error('Config error: Connection `type` not found for  "' . $alias . '"', E_USER_ERROR);
-        }
-
         $this->setInfo($info);
         $this->setType($info['type']);
 
