@@ -65,7 +65,6 @@ class Vanilla extends Source
             'Role',
             'Tag',
             'TagDiscussion',
-            'User',
             'UserComment',
             'UserConversation',
             'UserDiscussion',
@@ -82,6 +81,17 @@ class Vanilla extends Source
         $this->ranks($ex);
         $this->reactions($ex);
         $this->polls($ex);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    public function users(ExportModel $ex)
+    {
+        $map = [
+            'Photo' => ['Column' => 'Photo', 'Type' => 'string', 'Filter' => 'vanillaPhoto'],
+        ];
+        $ex->export('User', "select * from :_User u", $map);
     }
 
     /**
