@@ -4,6 +4,17 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.5.1](https://github.com/linc/nitro-porter/compare/v3.5.0...v3.5.1) (2024-12-27)
+
+### Bug Fixes
+
+* Add config error for invalid alias ([9c426d](https://github.com/linc/nitro-porter/commit/9c426df13f32460d0b9d9d02f2b36efe9cffcdc4))
+* Clarify config run command help ([3c0553](https://github.com/linc/nitro-porter/commit/3c05531cd695e6cc64fc8cb466448fe74fffd786))
+* Handle Vanilla avatar filename processing ([db400c](https://github.com/linc/nitro-porter/commit/db400c4bddc9ab91994fad02967554c3c9cd4f1b))
+
+
+---
+
 ## [3.5.0](https://github.com/linc/nitro-porter/compare/v3.4.2...v3.5.0) (2024-12-27)
 
 ### Features
