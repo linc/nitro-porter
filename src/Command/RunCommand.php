@@ -15,8 +15,8 @@ class RunCommand extends Command
         $this
             ->option('-s --source', 'Name of source package')
             ->option('-t --target', 'Name of target package')
-            ->option('-i --input', 'Source connection (defined in config)')
-            ->option('-o --output', 'Target connection (defined in config)')
+            ->option('-i --input', 'Source connection alias (defined in config)')
+            ->option('-o --output', 'Target connection alias (defined in config)')
             ->option('-x --sourceprefix', 'Source prefix')
             ->option('--cdn', 'CDN prefix')
             ->option('--dumpsql', 'Output SQL instead of migrating')
