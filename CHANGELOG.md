@@ -4,6 +4,15 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.5.0](https://github.com/linc/nitro-porter/compare/v3.4.2...v3.5.0) (2024-12-27)
+
+### Features
+
+* Add config validation ([c20d9e](https://github.com/linc/nitro-porter/commit/c20d9e998bc304485a76e4e479ae5896a66f9915))
+
+
+---
+
 ## [3.4.2](https://github.com/linc/nitro-porter/compare/v3.4.1...v3.4.2) (2024-12-26)
 
 ### Bug Fixes
