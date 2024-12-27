@@ -86,6 +86,11 @@ class Config
      */
     protected function validateConnectionInfo(string $alias, array $info): void
     {
+        // Alias not in config.
+        if (empty($info)) {
+            trigger_error('Config error: Alias "' . $alias . '" not found', E_USER_ERROR);
+        }
+
         // Type is required.
         if (empty($info['type'])) {
             trigger_error('Config error: No connection `type` for alias "' . $alias . '"', E_USER_ERROR);
