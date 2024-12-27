@@ -334,7 +334,7 @@ class Flarum extends Target
         $query = $ex->dbImport()->table('PORT_Category')
             ->select(
                 '*',
-                $ex->dbImport()->raw('COALESCE(Name, CONCAT("category", id)) as name'), // Cannot be null.
+                $ex->dbImport()->raw('COALESCE(Name, CONCAT("category", CategoryID)) as name'), // Cannot be null.
                 $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID"),
                 $ex->dbImport()->raw("0 as is_hidden"),
                 $ex->dbImport()->raw("0 as is_restricted")
