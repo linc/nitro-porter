@@ -58,6 +58,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
+* Convert UI to be CLI-only ([#36](https://github.com/linc/nitro-porter/pull/36))
 * Improved README ([56cf16](https://github.com/linc/nitro-porter/commit/56cf161303c7375a7945268ead5814d8fb92cce5))
 
 ### Bug Fixes
