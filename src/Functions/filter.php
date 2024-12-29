@@ -609,6 +609,11 @@ function bb_Decodeit($matches)
  */
 function vanillaPhoto($path)
 {
+    // Skip processing for blank entries.
+    if ($path === '') {
+        return '';
+    }
+
     // Vanilla can have URLs in the Photo field.
     if (strrpos($path, 'http') === 0) {
         return $path;
