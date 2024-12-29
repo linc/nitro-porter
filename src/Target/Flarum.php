@@ -797,9 +797,15 @@ class Flarum extends Target
      */
     protected function privateMessages(ExportModel $ex)
     {
-        // Verify support.
+        // Verify source support.
         if (!$ex->targetExists('PORT_Conversation')) {
             $ex->comment('Skipping import: Private messages (Source lacks support)');
+            return;
+        }
+
+        // Verify target support.
+        if (!$ex->targetExists('recipients')) {
+            $ex->comment('Skipping import: Private messages (Target lacks support - Enable the plugin first)');
             return;
         }
 
