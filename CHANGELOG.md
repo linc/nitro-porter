@@ -4,6 +4,21 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.6.0](https://github.com/linc/nitro-porter/compare/v3.5.2...v3.6.0) (2024-12-29)
+
+### Features
+
+* Update README ([4d7d590](https://github.com/linc/nitro-porter/commit/4d7d590f010c1d85b58eaffa80c380ad69f51336)) & CHANGELOG ([e2f4027](https://github.com/linc/nitro-porter/commit/e2f40272875a7cfd47ed1c08895b2c5095146489))
+* Update Vanilla structure to match upstream ([0f2f3dd](https://github.com/linc/nitro-porter/pull/69/commits/0f2f3ddcf1ffda112ae07d80e16d7419fda4e521), [2ab5736](https://github.com/linc/nitro-porter/pull/69/commits/2ab57369f317ed2c0826f72194a531bd94adcf51))
+
+
+### Bug Fixes
+
+* Missing call to Vanilla Users method ([560aad](https://github.com/linc/nitro-porter/commit/560aad548dddaee1e57c5218bc8b362a8fd11caf))
+
+
+---
+
 ## [3.5.2](https://github.com/linc/nitro-porter/compare/v3.5.1...v3.5.2) (2024-12-27)
 
 ### Bug Fixes
