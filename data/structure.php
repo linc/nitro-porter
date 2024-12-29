@@ -231,6 +231,7 @@ return array(
         'Type' => 'varchar(10)',
         'ForeignID' => 'varchar(200)',
         'CategoryID' => 'int',
+        "statusID" => "int",
         'InsertUserID' => 'int',
         'UpdateUserID' => 'int',
         'FirstCommentID' => 'int',
@@ -705,7 +706,10 @@ return array(
         'UserID' => 'int',
         'CategoryID' => 'int',
         'DateMarkedRead' => 'datetime',
-        'Unfollow' => 'tinyint'
+        "Followed" => "tinyint",
+        'Unfollow' => 'tinyint',
+        "DateFollowed" => "datetime",
+        "DateUnfollowed" => "datetime",
     ),
     'UserComment' => array(
         'UserID' => 'int',
