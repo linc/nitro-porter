@@ -184,6 +184,9 @@ return array(
     'Comment' => array(
         'CommentID' => 'int',
         'DiscussionID' => 'int',
+        "parentRecordType" => "varchar(10)",
+        "parentRecordID" => "int",
+        "parentCommentID" => "int",
         'InsertUserID' => 'int',
         'UpdateUserID' => 'int',
         'DeleteUserID' => 'int',
