@@ -77,6 +77,7 @@ class Vanilla extends Source
             }
         }
 
+        $this->users($ex);
         $this->badges($ex);
         $this->ranks($ex);
         $this->reactions($ex);
