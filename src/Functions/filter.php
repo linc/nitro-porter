@@ -621,8 +621,13 @@ function vanillaPhoto($path)
 
     $filename = basename($path);
     // Only convert Vanilla-processed avatars (skip previous imports)
+    // OR vBulletin-imported avatars (which got special post-processing in Vanilla, along with SM2 imports)
     // @see Vanilla\FileUtils::generateUniqueUploadPath()
-    if (preg_match('/[A-Z0-9]{12}\.(jpg|jpeg|gif|png)/', $filename) !== 1) {
+    // @see \vBulletinImportModel::processAvatars()
+    if (
+        preg_match('/[A-Z0-9]{12}\.(jpg|jpeg|gif|png)/', $filename) !== 1
+        && preg_match('/avatar[0-9_]+\.(jpg|jpeg|gif)/', $filename) !== 1
+    ) {
         return $path;
     }
     // Don't recursively add 'p' to filenames.
