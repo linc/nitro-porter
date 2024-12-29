@@ -58,4 +58,16 @@ Send a pull request with a proposed fix! It's greatly appreciated. Please docume
 
 ### Add support for a new source or target
 
-Check the [developer guide](https://nitroporter.org/develop) for info on extending Nitro Porter to support a new source or target. It's pretty straightforward!
+Check the [developer guide](https://nitroporter.org/develop) for info on extending Nitro Porter to support a new source or target. 
+It's pretty straightforward! We'll help clean it up if you run into challenges, just get the first draft up in a PR.
+
+### Work on core maintenance
+
+Check the [maintainer guide](https://nitroporter.org/maintain) for doing advanced work on the core of this project.
+It currently needs integration tests setup and could use a number of additional database connectors configured.
+More aspirations are articulated in the [informal roadmap](https://github.com/users/linc/projects/2).
+If you're taking on this level of work there are higher expectations, but Linc is happy to help guide.
+
+## Colophon
+
+Project history and goals are on the [homepage](https://nitroporter.org/).
