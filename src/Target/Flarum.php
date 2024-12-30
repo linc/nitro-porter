@@ -474,12 +474,12 @@ class Flarum extends Target
                 ->first();
 
             // Save value for other associations (e.g. attachments).
-            $this->discussionPostOffset = $result->LastCommentID;
+            $this->discussionPostOffset = $result->LastCommentID ?? 0;
 
             // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
             $discussions = $ex->dbImport()->table('PORT_Discussion')
                 ->select(
-                    $ex->dbImport()->raw('(DiscussionID + ' . $result->LastCommentID . ') as CommentID'),
+                    $ex->dbImport()->raw('(DiscussionID + ' . $this->discussionPostOffset . ') as CommentID'),
                     'DiscussionID',
                     'InsertUserID',
                     'DateInserted',
@@ -772,11 +772,12 @@ class Flarum extends Target
                 ->table('PORT_Comment')
                 ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
                 ->first();
+            $lastCommentID = $result->LastCommentID ?? 0;
 
             /* @see Target\Flarum::comments() —  replicate our math in the post split */
             $discussionReactions = $ex->dbImport()->table('PORT_UserTag')
                 ->select(
-                    $ex->dbImport()->raw('(RecordID + ' . $result->LastCommentID . ') as RecordID'),
+                    $ex->dbImport()->raw('(RecordID + ' . $lastCommentID . ') as RecordID'),
                     'UserID',
                     'TagID',
                     $ex->dbImport()->raw('TIMESTAMP(DateInserted) as DateInserted'),
