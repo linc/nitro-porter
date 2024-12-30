@@ -3,21 +3,45 @@ Nitro Porter 🚀
 
 The only multi-platform community migration tool. Free your forum!
 
-Nitro Porter is based on PHP 8.0+ and runs via the command line. 
-For the full requirements and installation steps, see the [user guide](https://nitroporter.org/guide).
+Nitro Porter is based on PHP 8.2+ and runs via the command line.
 
-If you run into problems, check the logs & [start a discussion on GitHub](https://github.com/linc/nitro-porter/discussions).
-Check the [changelog](https://github.com/linc/nitro-porter/blob/main/CHANGELOG.md) for the latest fixes & updates.
+## Documentation
+
+### Getting started
+
+* [User Guide](https://nitroporter.org/guide) for requirements & install steps.
+* [Migration Guide](https://nitroporter.org/migrations) to plan a community migration.
+* [Sources](https://nitroporter.org/sources) & [Targets](https://nitroporter.org/targets) detail what's supported.
+* [Start a Discussion](https://github.com/linc/nitro-porter/discussions) to share how it went.
+
+### Getting involved
+
+* [Contribute](docs/contribute.md) data, requests, fixes, or success stories.
+* [Changelog](CHANGELOG.md) has latest fixes & updates.
+* [Roadmap](https://github.com/users/linc/projects/2) contains informal goals, not ETAs.
+* [History](docs/history.md) gives more context to the project.
+
+### Mission statement
+
+Community history is vitally important, and being able to change software is important for the health of the ecosystem.
+However, community software often has high lock-in due to the difficulty of a data migration.
+
+Nitro Porter exists because your community deserves both the best tools available and its unique history.
+It uses the GNU Public License 2.0 to ensure it remains freely available to anyone who needs it.
+
+This tool is designed for ease of extensibility to allow anyone with basic programming skills to add a source or target.
+Any generally available forum software (commercial or free) may be added as a source or target.
+It does not include bespoke or custom forum software, but is designed to allow individuals to create such support easily for their private use.
 
 ## What's Supported So Far?
 
-### [Supported Targets](https://nitroporter.org/targets) (3)
+### Targets ([3](https://nitroporter.org/targets))
 
 ![Flarum](assets/logos/flarum-300x100.png)
 ![Vanilla](assets/logos/vanilla-300x100.png)
 ![Waterhole](assets/logos/waterhole-300x100.png)
 
-### [Supported Sources](https://nitroporter.org/sources) (37)
+### Sources ([37](https://nitroporter.org/sources))
 * bbPress
 * Drupal
 * Flarum
@@ -32,42 +56,36 @@ Check the [changelog](https://github.com/linc/nitro-porter/blob/main/CHANGELOG.m
 * XenForo
 * _...[and MORE](https://nitroporter.org/sources)!_
 
-Follow the above links for a list of **supported features per platform**. Both the source and target must support a feature for the data to transfer.
+### What gets migrated?
+
+All sources & targets support migrating:
+* users & roles
+* discussions (or _threads_)
+* posts (or _comments_)
+* categories (or _subforums_, _channels_, etc.)
+
+Beyond that, each supports **different types of data** depending on feature availability, extension choice, and maturity of the source/target package.
+These include things like badges, reactions, bookmarks, and polls.
+
+**_Both the source and target must support a data type for it to transfer!_**
+
+Nitro Porter **never** transfers permissions. It's not safe to do so automatically due to variations in how platforms implement them.
+You will **always** need to reassign permissions after a migration.
+
+### Future support
 
 Don't see your software? [Start a discussion](https://github.com/linc/nitro-porter/discussions/new) to request it and keep an eye on our [informal roadmap](https://github.com/users/linc/projects/2).
+We're happy to add a new **Source** for any software, provided it is not bespoke.
+For a new **Target**, we require support from the vendor if it is not free and open source software.
 
-## How to Contribute
+Currently, all data sources and targets are based on SQL databases (except the Vanilla target's flat file)
+and only natively supports MySQL-compatible connections. All other storage formats (like mbox or ASP Playground's MSSQL) 
+requires pre-work to convert the data to a MySQL database.
 
-In ascending order of effort:
+In the future, we plan to natively support:
+* PostgreSQL
+* MSSQL
+* MongoDB
+* Web-based APIs
 
-### Send data!
-
-We greatly appreciate donated data from existing forums to improve the migration and its testing (using partial, anonymized records). A complete database dump is best way to do this. We protect privacy, but you're welcome to anonymize personally-identifiable information first. Willing to sign an extremely narrow NDA for the purpose if necessary. Contact lincoln@icrontic.com.
-
-### Report a problem
-
-[Start a discussion](https://github.com/linc/nitro-porter/discussions/new) if you've hit a problem, including as much detail as possible and any error message or logs available. We don't currently maintain a formal issue tracker.
-
-### Report a _success_!
-
-Did you successfully use Nitro Porter? [Start a discussion](https://github.com/linc/nitro-porter/discussions/new) to tell us all about it! What platforms were you migrating between and how much data was involved? Was it confusing at all?
-
-### Submit a fix or improvement
-
-Send a pull request with a proposed fix! It's greatly appreciated. Please document your understanding of the change, it makes review much easier! Try using [conventional commits](https://www.conventionalcommits.org) for a nicer changelog.
-
-### Add support for a new source or target
-
-Check the [developer guide](https://nitroporter.org/develop) for info on extending Nitro Porter to support a new source or target. 
-It's pretty straightforward! We'll help clean it up if you run into challenges, just get the first draft up in a PR.
-
-### Work on core maintenance
-
-Check the [maintainer guide](https://nitroporter.org/maintain) for doing advanced work on the core of this project.
-It currently needs integration tests setup and could use a number of additional database connectors configured.
-More aspirations are articulated in the [informal roadmap](https://github.com/users/linc/projects/2).
-If you're taking on this level of work there are higher expectations, but Linc is happy to help guide.
-
-## Colophon
-
-Project history and goals are on the [homepage](https://nitroporter.org/).
+The 3.0 rewrite of Nitro Porter was done with that future in mind.
