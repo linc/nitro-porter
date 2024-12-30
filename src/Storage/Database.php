@@ -186,7 +186,12 @@ class Database extends Storage
     {
         $tableName = $this->getBatchTable();
         $action = (in_array($tableName, $this->ignoreErrorsTables)) ? 'insertOrIgnore' : 'insert';
-        $this->connection->connection()->table($tableName)->$action($batch);
+        try {
+            $this->connection->connection()->table($tableName)->$action($batch);
+        } catch (\Illuminate\Database\QueryException $e) {
+            echo "\n\nBatch insert error: " . substr($e->getMessage(), 0, 500);
+            echo "\n[...]\n" . substr($e->getMessage(), -300) . "\n";
+        }
     }
 
     /**
