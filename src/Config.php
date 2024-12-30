@@ -2,6 +2,8 @@
 
 namespace Porter;
 
+use http\Exception;
+
 class Config
 {
     private static $instance = null;
@@ -83,25 +85,26 @@ class Config
      *
      * @param string $alias
      * @param array $info
+     * @throws \Exception
      */
     protected function validateConnectionInfo(string $alias, array $info): void
     {
         // Alias not in config.
         if (empty($info)) {
-            trigger_error('Config error: Alias "' . $alias . '" not found', E_USER_ERROR);
+            //trigger_error('Config error: Alias "' . $alias . '" not found', E_USER_ERROR);
+            throw new \Exception('Alias "' . $alias . '" not found in config');
         }
 
         // Type is required.
         if (empty($info['type'])) {
-            trigger_error('Config error: No connection `type` for alias "' . $alias . '"', E_USER_ERROR);
+            throw new \Exception('No connection `type` for alias "' . $alias . '" in config');
         }
 
         // Database required fields.
         if ($info['type'] === 'database') {
-            foreach (['adapter', 'host','name','user'] as $required_field) {
-                if (!array_key_exists($required_field, $info)) {
-                    trigger_error('Config error: Database `' . $required_field .
-                        '` missing for alias "' . $alias . '"', E_USER_ERROR);
+            foreach (['adapter', 'host','name','user'] as $property) {
+                if (!array_key_exists($property, $info)) {
+                    throw new \Exception('Database `' . $property . '` missing for alias "' . $alias . '" in config');
                 }
             }
         }
