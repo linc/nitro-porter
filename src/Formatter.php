@@ -78,6 +78,10 @@ class Formatter
      */
     public static function closeTags(?string $text): ?string
     {
+        if (empty($text)) {
+            return $text;
+        }
+
         // <br>
         $text = str_replace('<br>', '<br/>', $text);
         // <img src="">
