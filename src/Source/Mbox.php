@@ -17,7 +17,6 @@
  * Import all CSVs to 1 table named ‘mbox’ with text fields:
  *    Subject, Sender, Body, Date, Folder (manually set to name of each mbox)
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 

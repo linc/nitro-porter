@@ -3,7 +3,6 @@
 /**
  * Vanilla 2+ exporter tool
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 

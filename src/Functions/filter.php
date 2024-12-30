@@ -2,8 +2,6 @@
 
 /**
  * Filter functions for passing thru values during export.
- *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  */
 
 /**

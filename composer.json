@@ -2,7 +2,7 @@
     "name": "linc/nitro-porter",
     "type": "project",
     "description": "The only multi-platform community migration tool. Free your forum!",
-    "license": "GPL-2.0-or-later",
+    "license": "AGPL-3.0-only",
     "authors": [
         {
             "name": "Lincoln Russell",
