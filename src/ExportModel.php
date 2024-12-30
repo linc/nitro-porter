@@ -131,13 +131,9 @@ class ExportModel
     {
         if (!empty($tables)) {
             $tables = explode(',', $tables);
-
-            if (is_array($tables)) {
-                $tables = array_map('trim', $tables);
-                $tables = array_map('strtolower', $tables);
-
-                $this->limitedTables = $tables;
-            }
+            $tables = array_map('trim', $tables);
+            $tables = array_map('strtolower', $tables);
+            $this->limitedTables = $tables;
         }
     }
 
