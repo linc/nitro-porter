@@ -26,6 +26,13 @@ if (ini_get('date.timezone') == '') {
 // Require & load config.
 \Porter\Config::getInstance()->set(loadConfig());
 
+// See deprecation notices in debug mode only.
+if (\Porter\Config::getInstance()->debugEnabled()) {
+    error_reporting(E_ALL);
+} else {
+    error_reporting(E_ALL & ~E_DEPRECATED);
+}
+
 // Load source & target support.
 \Porter\Support::getInstance()->setSources(loadSources());
 \Porter\Support::getInstance()->setTargets(loadTargets());
