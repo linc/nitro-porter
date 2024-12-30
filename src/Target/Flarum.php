@@ -124,7 +124,7 @@ class Flarum extends Target
 
     /**
      * @param ExportModel $ex
-     * @return string[]
+     * @return array
      */
     protected function getStructureDiscussions(ExportModel $ex)
     {
