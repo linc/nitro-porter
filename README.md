@@ -90,4 +90,6 @@ In the future, we plan to natively support:
 * MongoDB
 * Web-based APIs
 
-The 3.0 rewrite of Nitro Porter was done with that future in mind.
+The 3.0 rewrite of Nitro Porter was done with that future in mind.[^1]
+
+[^1]: 🚀 Forked 27 Sep 2021 [in memory of Kyle](https://icrontic.com/discussion/101265)
