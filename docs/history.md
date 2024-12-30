@@ -18,7 +18,7 @@ it contains a detailed record of how Web software databases evolved over decades
 
 By late 2019, Vanilla had ceased creating packaged open source releases and Vanilla Porter was receiving only minimal updates.
 
-In September 2021, [Lincoln](https://lincolnwebs.com/about/) forked the GPL2 project as Nitro Porter and rebuilt it into a general-purpose migration pipeline.
+On 27 September 2021, [Lincoln](https://lincolnwebs.com/about/) forked the project as Nitro Porter and rebuilt it into a general-purpose migration pipeline.
 It continues to use Vanilla's database schema as an intermediary format to allow backwards compatibility with the source packages already created.
 
 In 2022, this documentation site launched and Flarum was added as the second available target.
