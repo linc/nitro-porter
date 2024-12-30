@@ -608,8 +608,8 @@ function bb_Decodeit($matches)
 function vanillaPhoto($path)
 {
     // Skip processing for blank entries.
-    if ($path === '') {
-        return '';
+    if (empty($path)) {
+        return $path;
     }
 
     // Vanilla can have URLs in the Photo field.
