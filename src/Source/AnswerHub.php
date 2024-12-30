@@ -4,7 +4,6 @@
  * AnswerHub exporter tool.
  * Assume https://github.com/vanilla/addons/tree/master/plugins/QnA will be enabled.
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Alexandre Chouinard
  */
 

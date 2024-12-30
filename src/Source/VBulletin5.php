@@ -7,7 +7,6 @@
  *    Expression: forumdisplay\.php\?([0-9]+)-([a-zA-Z0-9-_]+)
  *    Target: /categories/$2
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
