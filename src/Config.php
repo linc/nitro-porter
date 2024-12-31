@@ -8,7 +8,11 @@ class Config
 {
     private static $instance = null;
 
-    protected array $config = [];
+    protected array $config = [
+        'debug' => false,
+        'test_alias' => 'test',
+        'connections' => [],
+    ];
 
     /**
      * Make it a singleton; there's only 1 config.
