@@ -24,7 +24,7 @@ function loadConfig(): array
     if (file_exists(ROOT_DIR . '/config.php')) {
         return require(ROOT_DIR . '/config.php');
     } else {
-        trigger_error('Missing config.php — Make a copy of config-sample.php!');
+        //trigger_error('Missing config.php — Make a copy of config-sample.php!');
         return require(ROOT_DIR . '/config-sample.php');
     }
 }
