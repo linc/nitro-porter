@@ -47,7 +47,7 @@ class Config
      */
     public function debugEnabled(): bool
     {
-        return $this->config['debug'];
+        return $this->config['debug'] ?? false;
     }
 
     /**
