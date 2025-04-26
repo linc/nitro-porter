@@ -1,21 +1,14 @@
 #!/usr/bin/env php
 <?php
-
-// Disable HTML errors.
-ini_set('html_errors', 'off');
-
-// Bootstrap.
-define('CONSOLE', true);
 require_once dirname(__DIR__) . '/bootstrap.php';
 
-// Parse CLI request.
-$input = \Porter\Request::instance()->parseCli();
+// CLI app setup.
+$app = new Ahc\Cli\Application('Nitro Porter', 'v4.0');
 
-// Run if a request was found.
-if (count($input)) {
-    \Porter\Request::instance()->load($input);
-    \Porter\Controller::run(\Porter\Request::instance());
-}
+// Add commands.
+$app->add(new Porter\Command\ListCommand());
+$app->add(new Porter\Command\ShowCommand());
+$app->add(new Porter\Command\RunCommand());
 
-// Console output should end in newline.
-echo "\n";
+// Execute command.
+$app->handle($_SERVER['argv']);

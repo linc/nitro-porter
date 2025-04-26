@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ *
  */
 
 namespace Porter;
@@ -90,13 +90,25 @@ class Controller
         $exportSourceCM = new ConnectionManager($request->get('source'));
         $importSourceCM = new ConnectionManager($request->get('target') ?? '');
         // @todo Pass options not Request
-        $exportModel = exportModelFactory($request, $exportSourceCM, $storage, $importSourceCM);
+        $exportModel = exportModelFactory($request, $source, $exportSourceCM, $storage, $importSourceCM);
+
+        // No permissions warning.
+        $exportModel->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n");
+
+        // Log source.
+        $exportModel->comment("Source: " . $source::SUPPORTED['name'] . " (" . $exportSourceCM->getAlias() . ")");
 
         // Setup target & modes.
         $target = false;
         if ($request->get('output') !== 'file') {
             $target = targetFactory($request->get('output'));
+            // Log target.
+            $exportModel->comment("Target: " . $target::SUPPORTED['name'] . " (" . $importSourceCM->getAlias() . ")");
+
             self::setModes($source, $target);
+            // Log flags.
+            $exportModel->comment("Flag: Use Discussion Body: " .
+                ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
 
         // Start timer.
@@ -116,8 +128,14 @@ class Controller
             $postConnection = new ConnectionManager($request->get('target') ?? '');
             $postscript = postscriptFactory($request->get('output'), $storage, $postConnection);
             if ($postscript) {
+                $exportModel->comment("Postscript found and running...");
                 $postscript->run($exportModel);
+            } else {
+                $exportModel->comment("No Postscript found.");
             }
+
+            // Doing this cleanup automatically is complex, so tell them to do it manually for now.
+            $exportModel->comment("After testing import, you may delete `PORT_` database tables.");
         }
 
         // End timer & report.
@@ -125,10 +143,5 @@ class Controller
             sprintf('ELAPSED — %s', formatElapsed(microtime(true) - $start)) .
             ' (' . date('H:i:s', (int)$start) . ' - ' . date('H:i:s') . ')'
         );
-
-        // Write the results (web only).
-        if (!defined('CONSOLE')) {
-            Render::viewResult($exportModel->comments);
-        }
     }
 }

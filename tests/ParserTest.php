@@ -3,9 +3,11 @@
 namespace PorterTest;
 
 use nadar\quill\Lexer as Quill;
+use Porter\Formatter;
 use s9e\TextFormatter\Bundles\Fatdown as Markdown;
 use PHPUnit\Framework\TestCase;
 use Porter\Parser\Flarum\ImageEmbed;
+use Porter\Bundle\Vanilla as Vanilla;
 
 final class ParserTest extends TestCase
 {
@@ -46,5 +48,52 @@ final class ParserTest extends TestCase
             vie/niveau technique. Pas besoin de faire un roman mais expliquez pourquoi vous en êtes venu à la 4G nous
             permet de vous donner de bons conseils. <br></span></p>';
         $this->assertStringContainsString($expected, $result);
+    }
+
+    /**
+     * @dataProvider getParseRenderTests()
+     */
+    public function testParseRender($text, $expected)
+    {
+        $xml  = Vanilla::parse($text);
+        $html = Vanilla::render($xml);
+
+        $this->assertEquals($expected, $html);
+    }
+
+    public function getParseRenderTests()
+    {
+        return [
+            [   // Allow headings
+                '<h1>Title</h1>Text <h2>subheading</h2>Text 2',
+                '<h1>Title</h1><p>Text</p> <h2>subheading</h2><p>Text 2</p>'
+            ],
+            [   // Allow divs
+                'Text<div class="someClass">content</div>Text 2',
+                '<p>Text</p><div class="someClass"><p>content</p></div><p>Text 2</p>',
+            ],
+        ];
+    }
+
+    /**
+     * @covers \Porter\Formatter::closeTags
+     */
+    public function testTagClose()
+    {
+        $stored = 'text <img alt="" src="https://routeur4g.fr/discussions/uploads/editor/bf/ytfu9hvmqp3u.jpg">';
+        $result  = Formatter::closeTags($stored);
+        $expected = 'text <img alt="" src="https://routeur4g.fr/discussions/uploads/editor/bf/ytfu9hvmqp3u.jpg" />';
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * @covers \Porter\Formatter::fixIllegalTags
+     */
+    public function testFixIllegalTags()
+    {
+        $stored = '<span><div class="post-text-align-center"><br><br>&nbsp;Administrateur<br>version </div></span>';
+        $result  = Formatter::fixIllegalTags($stored);
+        $expected = '<div class="post-text-align-center"><br><br>&nbsp;Administrateur<br>version </div>';
+        $this->assertEquals($expected, $result);
     }
 }

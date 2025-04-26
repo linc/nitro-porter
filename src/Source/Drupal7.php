@@ -3,7 +3,6 @@
 /**
  * Drupal 7 export support.
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Francis Caisse
  */
 
@@ -77,8 +76,7 @@ class Drupal7 extends Source
         preg_replace_callback(
             self::PATTERN,
             function ($matches) use ($postId) {
-                $file = base64_decode($matches[1]);
-                if ($file !== false) {
+                if ($file = base64_decode($matches[1])) {
                     $filename = "{$postId}_{$this->imageCount}.png";
                     $this->imageCount++;
                     file_put_contents($this->param('attach-source', null) . '/' . $filename, $file);

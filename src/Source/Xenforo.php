@@ -5,7 +5,6 @@
  *
  * To export avatars, provide ?avatars=1&folder=/path/to/avatars
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
@@ -645,7 +644,7 @@ class Xenforo extends Source
         );
         $ex->export(
             'Conversation',
-            "select * from :_conversation_master",
+            "select *, substring(title, 1, 200) as title from :_conversation_master",
             $conversation_Map
         );
 

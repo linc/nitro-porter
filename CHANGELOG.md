@@ -4,6 +4,123 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.6.0](https://github.com/linc/nitro-porter/compare/v3.5.2...v3.6.0) (2024-12-29)
+
+### Features
+
+* Update README ([4d7d590](https://github.com/linc/nitro-porter/commit/4d7d590f010c1d85b58eaffa80c380ad69f51336)) & CHANGELOG ([e2f4027](https://github.com/linc/nitro-porter/commit/e2f40272875a7cfd47ed1c08895b2c5095146489))
+* Update Vanilla structure to match upstream ([0f2f3dd](https://github.com/linc/nitro-porter/pull/69/commits/0f2f3ddcf1ffda112ae07d80e16d7419fda4e521), [2ab5736](https://github.com/linc/nitro-porter/pull/69/commits/2ab57369f317ed2c0826f72194a531bd94adcf51))
+
+
+### Bug Fixes
+
+* Missing call to Vanilla Users method ([560aad](https://github.com/linc/nitro-porter/commit/560aad548dddaee1e57c5218bc8b362a8fd11caf))
+
+
+---
+
+## [3.5.2](https://github.com/linc/nitro-porter/compare/v3.5.1...v3.5.2) (2024-12-27)
+
+### Bug Fixes
+
+* Fix Flarum target column name error ([a6b36c](https://github.com/linc/nitro-porter/commit/a6b36cc9fa2c913571b28d92481c1ad8b99c2e96))
+
+
+---
+
+## [3.5.1](https://github.com/linc/nitro-porter/compare/v3.5.0...v3.5.1) (2024-12-27)
+
+### Bug Fixes
+
+* Add config error for invalid alias ([9c426d](https://github.com/linc/nitro-porter/commit/9c426df13f32460d0b9d9d02f2b36efe9cffcdc4))
+* Clarify config run command help ([3c0553](https://github.com/linc/nitro-porter/commit/3c05531cd695e6cc64fc8cb466448fe74fffd786))
+* Handle Vanilla avatar filename processing ([db400c](https://github.com/linc/nitro-porter/commit/db400c4bddc9ab91994fad02967554c3c9cd4f1b))
+
+
+---
+
+## [3.5.0](https://github.com/linc/nitro-porter/compare/v3.4.2...v3.5.0) (2024-12-27)
+
+### Features
+
+* Add config validation ([c20d9e](https://github.com/linc/nitro-porter/commit/c20d9e998bc304485a76e4e479ae5896a66f9915))
+
+
+---
+
+## [3.4.2](https://github.com/linc/nitro-porter/compare/v3.4.1...v3.4.2) (2024-12-26)
+
+### Bug Fixes
+
+* More prominently inform PORT_ tables may be deleted ([f2fdc7](https://github.com/linc/nitro-porter/commit/f2fdc7c9c48c5a5b4690ce1756ecda4514c336cb))
+* Rename dedault target connection to 'target' ([d2df79](https://github.com/linc/nitro-porter/commit/d2df798c74b4d7a1bf84eeb45cd453d9eb40b266))
+* Rename Vanilla2 source to Vanilla ([6afe61](https://github.com/linc/nitro-porter/commit/6afe61b6331f33deb4eab0a216fb40af28a47e54))
+* Use the source's default database prefix ([aac125](https://github.com/linc/nitro-porter/commit/aac125ab0759cfa875c3f000af47517fb788b9d6))
+
+
+---
+
+## [3.4.1](https://github.com/linc/nitro-porter/compare/v3.4.0...v3.4.1) (2024-12-26)
+
+### Bug Fixes
+
+* Update autoload path to work in more scenarios ([49f22e](https://github.com/linc/nitro-porter/commit/49f22e1214131da4e1738e9ff14c5879a79eb1ab))
+
+
+---
+
+## [3.4.0](https://github.com/linc/nitro-porter/compare/v3.3.0...v3.4.0) (2024-12-26)
+
+### Features
+
+* Convert UI to be CLI-only ([#36](https://github.com/linc/nitro-porter/pull/36))
+* Improved README ([56cf16](https://github.com/linc/nitro-porter/commit/56cf161303c7375a7945268ead5814d8fb92cce5))
+
+### Bug Fixes
+
+* Add alt text to README logos ([da6c31](https://github.com/linc/nitro-porter/commit/da6c313bce980cbe6b8b82f9f4faf8de43997876))
+* Add context and errors to 'show' command ([e44a97](https://github.com/linc/nitro-porter/commit/e44a97664b9f66942a4b354f5d5acaf85bd50cff))
+* Add missing waterhole as target ([5e27b9](https://github.com/linc/nitro-porter/commit/5e27b9bd4625f5c21a3fa1afd682c74c02021635))
+* Clarify no-permission message ([fadd2a](https://github.com/linc/nitro-porter/commit/fadd2a8127bdbbe5c501b49c0eaf6a99cd2dde1e))
+* Do not force [*@covers*](https://github.com/covers) annotation ([221fc3](https://github.com/linc/nitro-porter/commit/221fc355f174b08617b65d11dbef9554d3931e15))
+* Filter location for phpBB ([11d7eb](https://github.com/linc/nitro-porter/commit/11d7eb4fdd3e007fa1f9951e462114adb6eddb68))
+* Flarum role names cannot be null ([ac3ec6](https://github.com/linc/nitro-porter/commit/ac3ec6a231925f0a399e4592d35c4f7518304586))
+* Flarum users.is_email_confirmed cannot be null ([267ea5](https://github.com/linc/nitro-porter/commit/267ea5dbb0dbce3f0fab4c5c999d54135083f2c4))
+* Force Flarum tag names to not be null. ([db5d54](https://github.com/linc/nitro-porter/commit/db5d542f99a2b63d921b372ea7e8aad45574fa42))
+* Prevent deletion of mapped row data ([8f3479](https://github.com/linc/nitro-porter/commit/8f3479f3bf1836c6183a37ac470ab5dd3bb692f8))
+* Remove incorrect tag_id in Flarum discussion table definition ([bb55c6](https://github.com/linc/nitro-porter/commit/bb55c63db29f85c61eb34fb6bb14f7eb06112400))
+* Remove utf8_encode usage and improve encoding logic ([1e28c8](https://github.com/linc/nitro-porter/commit/1e28c836abc8328d351154a43afb37c7bdb3e675))
+* Remove web index ([7b41e0](https://github.com/linc/nitro-porter/commit/7b41e095bb2f15e93fdd3b92b711d11c19a93992))
+* Usage examples for show command ([0b92e0](https://github.com/linc/nitro-porter/commit/0b92e0ed19b09bbda0bae751d9cb18c1c5ff6958))
+* Vanilla html/wysiwyg format conversion to Flarum ([d34292](https://github.com/linc/nitro-porter/commit/d342925175c0df4e224295ad03088ccfdae29d3a))
+
+
+---
+
+## [3.3.0](https://github.com/linc/nitro-porter/compare/v3.2.0...v3.3.0) (2023-04-23)
+
+### Features
+
+* Add support for IPB4. ([28f69b](28f69bd17b0cab9b18eb753f9107e934eb1ae7d1))
+* Allow run without config.php and give notice. ([70e268](https://github.com/linc/nitro-porter/commit/70e268bb4fd58df4752e5616970326aac088aa4e))
+* Condense global src/target logging format. ([b9b053](https://github.com/linc/nitro-porter/commit/b9b0535ce544e0c8f680ecd21a27c859fd55dff0))
+* Make 'no permission' warning global. ([0d5f56](https://github.com/linc/nitro-porter/commit/0d5f5668dd419575e904cd1f8f684d390e0e222a))
+* Add a bunch of logging to core. ([a4003d](https://github.com/linc/nitro-porter/commit/a4003da2e02c0178b195a701fbc12bf5346648fa))
+* Add clarity and data checks to Flarum target. ([86e05e](https://github.com/linc/nitro-porter/commit/86e05eefd1da7ab2642bd6fd4df4bc6a0c49e80f))
+
+### Bug Fixes
+
+* Fix limit for Xenforo PM subject lines. ([ab9b03](https://github.com/linc/nitro-porter/commit/ab9b0312cdbdc883c22814a7c9ac6dcd51dc5019))
+* Enforce primary key on Flarum discussions.id (fixes post numbering performance). ([bf20d1](https://github.com/linc/nitro-porter/commit/bf20d1c99f4fec08ac4a61d9f4fb23190564cd87))
+* Fix Flarum Postscript for migrations without discussion read records. ([f37b0f](https://github.com/linc/nitro-porter/commit/f37b0f85bc4b7f09e84976eb7d31a1fb9da3ce6f))
+* Fix ASP comment body transfer. ([9fda19](https://github.com/linc/nitro-porter/commit/9fda192fcb4005fcdbaedd9b8f54e945d0c540b9)) and cleanup formatting. ([0953ac](https://github.com/linc/nitro-porter/commit/0953acd737ebf76b0dbbdc4aa5136fc8e3b9ffbe))
+* Modify Flarum target to always output role tables. ([73c717](https://github.com/linc/nitro-porter/commit/73c717b1d63ccaaeffcf52a00fc7df0d359f3c1d))
+* Gate MySQL-only optimizations. ([6a037a](https://github.com/linc/nitro-porter/commit/6a037a0a430ace0d18ce322945a1f986dd07d140))
+* Improve old db exists() function to do what you think it does. ([198ae7](https://github.com/linc/nitro-porter/commit/198ae728e6d7b012cb7872e0279515b20b01134a))
+* Reach PHPStan level 5 by fixing param typing. ([b81182](https://github.com/linc/nitro-porter/commit/b811821ccecdf9e4029793224dcf765fd0c58fc9))
+
+---
+
 ## [3.2.0](https://github.com/linc/nitro-porter/compare/v3.1.2...v3.2.0) (2022-12-10)
 
 * Improve CLI output with progress logs and valid parameter values. ([42e942](https://github.com/linc/nitro-porter/commit/42e9426ca8fc9bafb6c598fed2ca881aa603b178))

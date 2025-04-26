@@ -3,7 +3,6 @@
 /**
  * phpBB exporter tool
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
@@ -182,6 +181,11 @@ class PhpBb3 extends Source
                 where bl.ban_userid = 0
                     and (ban_ip!='' or ban_email!='')"
         );
+    }
+
+    public static function entityDecode($value)
+    {
+        return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
     }
 
     /**
@@ -631,7 +635,7 @@ class PhpBb3 extends Source
             'RealSubject' => array(
                 'Column' => 'Subject',
                 'Type' => 'varchar(250)',
-                'Filter' => array('Phpbb2', 'EntityDecode')
+                'Filter' => array($this, 'EntityDecode')
             )
         );
         $ex->export(

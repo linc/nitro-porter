@@ -3,7 +3,6 @@
 /**
  * phpBB exporter tool
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
@@ -368,7 +367,7 @@ class PhpBb2 extends Source
             'RealSubject' => array(
                 'Column' => 'Subject',
                 'Type' => 'varchar(250)',
-                'Filter' => array('Phpbb2', 'EntityDecode')
+                'Filter' => array($this, 'EntityDecode')
             )
         );
 

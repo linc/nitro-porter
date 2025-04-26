@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ *
  * @author Lincoln Russell, lincolnwebs.com
  */
 
@@ -73,13 +73,15 @@ class Flarum extends Target
         ],
     ];
 
-    /** @var string[] Table structure for 'discussions`. */
+    /**
+     * @var array Table structure for 'discussions`.
+     * @see \Porter\Postscript\Flarum::numberPosts() for 'keys' requirement.
+     */
     protected const DB_STRUCTURE_DISCUSSIONS = [
         'id' => 'int',
         'user_id' => 'int',
         'title' => 'varchar(200)',
         'slug' => 'varchar(200)',
-        'tag_id' => 'int',
         'created_at' => 'datetime',
         'first_post_id' => 'int',
         'last_post_id' => 'int',
@@ -92,6 +94,12 @@ class Flarum extends Target
         //'votes' => 'int', // fof/polls
         //'hotness' => 'double', // fof/gamification
         //'view_count' => 'int', // flarumite/simple-discussion-views
+        'keys' => [
+            'FLA_discussions_id_primary' => [
+                'type' => 'primary',
+                'columns' => ['id'],
+            ]
+        ],
     ];
 
     /** @var int Offset for inserting OP content into the posts table. */
@@ -116,7 +124,7 @@ class Flarum extends Target
 
     /**
      * @param ExportModel $ex
-     * @return string[]
+     * @return array
      */
     protected function getStructureDiscussions(ExportModel $ex)
     {
@@ -180,29 +188,21 @@ class Flarum extends Target
         $ex->ignoreDuplicates('users');
 
         $this->users($ex);
-        $this->roles($ex); // Groups
-        $this->categories($ex); // Tags
-
-        // No permissions warning.
-        $ex->comment('Permissions are not migrated. Verify all permissions afterward.');
+        $this->roles($ex); // 'Groups' in Flarum
+        $this->categories($ex); // 'Tags' in Flarum
 
         // Singleton factory; big timing issue; depends on Users being done.
         Formatter::instance($ex); // @todo Hook for pre-UGC import?
 
         $this->discussions($ex);
-        $this->bookmarks($ex); // flarum/subscriptions
-        $this->comments($ex); // Posts
+        $this->bookmarks($ex); // Requires addon `flarum/subscriptions`
+        $this->comments($ex); // 'Posts' in Flarum
 
-        if ($ex->targetExists('PORT_Badge')) {
-            $this->badges($ex); // 17development/flarum-user-badges
-        }
-        if ($ex->targetExists('PORT_Poll')) {
-            $this->polls($ex); // fof/pollsx
-        }
-        if ($ex->targetExists('PORT_ReactionType')) {
-            $this->reactions($ex); //
-        }
-        $this->privateMessages($ex);
+        $this->badges($ex); // Requires addon `17development/flarum-user-badges`
+        $this->polls($ex); // Requires addon `fof/pollsx`
+        $this->reactions($ex); // Requires addon `fof/reactions`
+
+        $this->privateMessages($ex); // Requires addon `fof/byobu`
 
         $this->attachments($ex); // Requires discussions, comments, and PMs have imported.
     }
@@ -240,7 +240,10 @@ class Flarum extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $ex->dbImport()->table('PORT_User')->select('*');
+        $query = $ex->dbImport()->table('PORT_User')->select(
+            '*',
+            $ex->dbImport()->raw('COALESCE(Confirmed, 0) as is_email_confirmed') // Cannot be null.
+        );
 
         $ex->import('users', $query, $structure, $map, $filters);
     }
@@ -255,9 +258,6 @@ class Flarum extends Target
      */
     protected function roles(ExportModel $ex): void
     {
-        // Delete orphaned user role associations (deleted users).
-        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
-
         $structure = [
             'id' => 'int',
             'name_singular' => 'varchar(100)',
@@ -268,10 +268,24 @@ class Flarum extends Target
         ];
         $map = [];
 
+        // Verify support.
+        if (!$ex->targetExists('PORT_UserRole')) {
+            $ex->comment('Skipping import: Roles (Source lacks support)');
+            $ex->importEmpty('groups', $structure);
+            $ex->importEmpty('group_user', $structure);
+            return;
+        }
+
+        // Delete orphaned user role associations (deleted users).
+        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
+
         $query = $ex->dbImport()->table('PORT_Role')->select(
-            $ex->dbImport()->raw("(RoleID + 4) as id"), // Flarum reserves 1-3 & uses 4 for mods by default.
-            'Name as name_singular',
-            'Name as name_plural',
+            // Flarum reserves 1-3 & uses 4 for mods by default.
+            $ex->dbImport()->raw("(RoleID + 4) as id"),
+            // Singular vs plural is an uncommon feature; don't guess at it, just duplicate the Name.
+            $ex->dbImport()->raw('COALESCE(Name, CONCAT("role", RoleID)) as name_singular'), // Cannot be null.
+            $ex->dbImport()->raw('COALESCE(Name, CONCAT("role", RoleID)) as name_plural'), // Cannot be null.
+            // Hiding roles is an uncommon feature; hide none.
             $ex->dbImport()->raw('0 as is_hidden')
         );
 
@@ -320,6 +334,7 @@ class Flarum extends Target
         $query = $ex->dbImport()->table('PORT_Category')
             ->select(
                 '*',
+                $ex->dbImport()->raw('COALESCE(Name, CONCAT("category", CategoryID)) as name'), // Cannot be null.
                 $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID"),
                 $ex->dbImport()->raw("0 as is_hidden"),
                 $ex->dbImport()->raw("0 as is_restricted")
@@ -388,6 +403,12 @@ class Flarum extends Target
      */
     protected function bookmarks(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_UserDiscussion')) {
+            $ex->comment('Skipping import: Bookmarks (Source lacks support)');
+            return;
+        }
+
         $structure = [
             'discussion_id' => 'int',
             'user_id' => 'int',
@@ -453,12 +474,12 @@ class Flarum extends Target
                 ->first();
 
             // Save value for other associations (e.g. attachments).
-            $this->discussionPostOffset = $result->LastCommentID;
+            $this->discussionPostOffset = $result->LastCommentID ?? 0;
 
             // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
             $discussions = $ex->dbImport()->table('PORT_Discussion')
                 ->select(
-                    $ex->dbImport()->raw('(DiscussionID + ' . $result->LastCommentID . ') as CommentID'),
+                    $ex->dbImport()->raw('(DiscussionID + ' . $this->discussionPostOffset . ') as CommentID'),
                     'DiscussionID',
                     'InsertUserID',
                     'DateInserted',
@@ -486,6 +507,12 @@ class Flarum extends Target
      */
     protected function attachments(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Media')) {
+            $ex->comment('Skipping import: Attachments (Source lacks support)');
+            return;
+        }
+
         $structure = [
             'id' => 'int',
             'actor_id' => 'int',
@@ -539,6 +566,12 @@ class Flarum extends Target
      */
     protected function badges(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Badge')) {
+            $ex->comment('Skipping import: Badges (Source lacks support)');
+            return;
+        }
+
         // Badge Categories
         // One category is added in postscript.
 
@@ -595,6 +628,12 @@ class Flarum extends Target
      */
     protected function polls(ExportModel $ex): void
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_Poll')) {
+            $ex->comment('Skipping import: Polls (Source lacks support)');
+            return;
+        }
+
         // Polls
         $structure = [
             'id' => 'int',
@@ -677,6 +716,12 @@ class Flarum extends Target
      */
     public function reactions(ExportModel $ex)
     {
+        // Verify support.
+        if (!$ex->targetExists('PORT_ReactionType')) {
+            $ex->comment('Skipping import: Reactions (Source lacks support)');
+            return;
+        }
+
         // Reaction Types
         $structure = [
             'id' => 'int',
@@ -727,11 +772,12 @@ class Flarum extends Target
                 ->table('PORT_Comment')
                 ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
                 ->first();
+            $lastCommentID = $result->LastCommentID ?? 0;
 
             /* @see Target\Flarum::comments() —  replicate our math in the post split */
             $discussionReactions = $ex->dbImport()->table('PORT_UserTag')
                 ->select(
-                    $ex->dbImport()->raw('(RecordID + ' . $result->LastCommentID . ') as RecordID'),
+                    $ex->dbImport()->raw('(RecordID + ' . $lastCommentID . ') as RecordID'),
                     'UserID',
                     'TagID',
                     $ex->dbImport()->raw('TIMESTAMP(DateInserted) as DateInserted'),
@@ -752,6 +798,18 @@ class Flarum extends Target
      */
     protected function privateMessages(ExportModel $ex)
     {
+        // Verify source support.
+        if (!$ex->targetExists('PORT_Conversation')) {
+            $ex->comment('Skipping import: Private messages (Source lacks support)');
+            return;
+        }
+
+        // Verify target support.
+        if (!$ex->targetExists('recipients')) {
+            $ex->comment('Skipping import: Private messages (Target lacks support - Enable the plugin first)');
+            return;
+        }
+
         // Messages — Discussions
         $MaxDiscussionID = $this->messageDiscussionOffset = $this->getMaxDiscussionID($ex);
         $ex->comment('Discussions offset for PMs is ' . $MaxDiscussionID);

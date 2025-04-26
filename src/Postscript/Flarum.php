@@ -282,6 +282,11 @@ class Flarum extends Postscript
      */
     protected function setLastRead(ExportModel $ex)
     {
+        // Verify table exists.
+        if (! $ex->targetExists($ex->tarPrefix . 'discussion_user')) {
+            return;
+        }
+
         // Start timer.
         $start = microtime(true);
         $rows = 0;

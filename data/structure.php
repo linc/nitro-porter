@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ *
  */
 
 /**
@@ -184,6 +184,9 @@ return array(
     'Comment' => array(
         'CommentID' => 'int',
         'DiscussionID' => 'int',
+        "parentRecordType" => "varchar(10)",
+        "parentRecordID" => "int",
+        "parentCommentID" => "int",
         'InsertUserID' => 'int',
         'UpdateUserID' => 'int',
         'DeleteUserID' => 'int',
@@ -203,7 +206,7 @@ return array(
         'ConversationID' => 'int',
         'Type' => 'varchar(10)',
         'ForeignID' => 'varchar(40)',
-        'Subject' => 'varchar(100)',
+        'Subject' => 'varchar(255)',
         'Contributors' => 'varchar(255)',
         'FirstMessageID' => 'int',
         'InsertUserID' => 'int',
@@ -231,6 +234,7 @@ return array(
         'Type' => 'varchar(10)',
         'ForeignID' => 'varchar(200)',
         'CategoryID' => 'int',
+        "statusID" => "int",
         'InsertUserID' => 'int',
         'UpdateUserID' => 'int',
         'FirstCommentID' => 'int',
@@ -705,7 +709,10 @@ return array(
         'UserID' => 'int',
         'CategoryID' => 'int',
         'DateMarkedRead' => 'datetime',
-        'Unfollow' => 'tinyint'
+        "Followed" => "tinyint",
+        'Unfollow' => 'tinyint',
+        "DateFollowed" => "datetime",
+        "DateUnfollowed" => "datetime",
     ),
     'UserComment' => array(
         'UserID' => 'int',

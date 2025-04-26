@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ *
  */
 
 namespace Porter;
@@ -146,13 +146,9 @@ class ExportModel
     {
         if (!empty($tables)) {
             $tables = explode(',', $tables);
-
-            if (is_array($tables)) {
-                $tables = array_map('trim', $tables);
-                $tables = array_map('strtolower', $tables);
-
-                $this->limitedTables = $tables;
-            }
+            $tables = array_map('trim', $tables);
+            $tables = array_map('strtolower', $tables);
+            $this->limitedTables = $tables;
         }
     }
 
@@ -187,13 +183,7 @@ class ExportModel
     public function comment($message, $echo = true)
     {
         Log::comment($message);
-        if (defined('CONSOLE')) {
-            // Give full log output if using CLI.
-            echo "\n" . $message;
-        } elseif ($echo) {
-            // Summarize for web output.
-            $this->comments[] = $message;
-        }
+        echo "\n" . $message;
     }
 
     /**
@@ -271,6 +261,17 @@ class ExportModel
 
         // Report.
         $this->reportStorage('import', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
+    }
+
+    /**
+     * Create empty import tables.
+     *
+     * @param string $tableName
+     * @param $structure
+     */
+    public function importEmpty(string $tableName, $structure): void
+    {
+        $this->storage->prepare($tableName, $structure);
     }
 
     /**
@@ -604,7 +605,7 @@ class ExportModel
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->executeQuery('describe :_' . $reqTable);
+            $tableDescriptions = $this->executeQuery('describe `:_' . $reqTable . '`');
             if ($tableDescriptions === false) { // Table doesn't exist
                 $countMissingTables++;
                 if ($missingTables !== false) {

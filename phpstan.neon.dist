@@ -3,5 +3,7 @@ parameters:
     paths:
         - src
         - tests
+    excludePaths:
+        - src/Command
     bootstrapFiles:
         - bootstrap.php

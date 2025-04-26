@@ -3,7 +3,6 @@
 /**
  * Vanilla 2+ exporter tool
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 
@@ -12,7 +11,7 @@ namespace Porter\Source;
 use Porter\Source;
 use Porter\ExportModel;
 
-class Vanilla2 extends Source
+class Vanilla extends Source
 {
     public const SUPPORTED = [
         'name' => 'Vanilla 2+',
@@ -65,7 +64,6 @@ class Vanilla2 extends Source
             'Role',
             'Tag',
             'TagDiscussion',
-            'User',
             'UserComment',
             'UserConversation',
             'UserDiscussion',
@@ -78,10 +76,22 @@ class Vanilla2 extends Source
             }
         }
 
+        $this->users($ex);
         $this->badges($ex);
         $this->ranks($ex);
         $this->reactions($ex);
         $this->polls($ex);
+    }
+
+    /**
+     * @param ExportModel $ex
+     */
+    public function users(ExportModel $ex)
+    {
+        $map = [
+            'Photo' => ['Column' => 'Photo', 'Type' => 'string', 'Filter' => 'vanillaPhoto'],
+        ];
+        $ex->export('User', "select * from :_User u", $map);
     }
 
     /**

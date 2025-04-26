@@ -26,7 +26,6 @@
  * files-source - Command line option to fix / check files are on disk.  Files named .attach are renamed
  * to the proper name and missing files are reported in missing-files.txt.
  *
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
  * @author  Lincoln Russell, lincolnwebs.com
  */
 

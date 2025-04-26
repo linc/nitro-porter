@@ -5,6 +5,7 @@ namespace Porter;
 use nadar\quill\Lexer as Quill;
 use s9e\TextFormatter\Bundles\Fatdown as Markdown;
 use s9e\TextFormatter\Bundles\Forum as BBCode;
+use Porter\Bundle\Vanilla as Vanilla;
 
 class Formatter
 {
@@ -49,8 +50,12 @@ class Formatter
             case 'Html':
             case 'Wysiwyg':
             case 'Raw': // Unfiltered — these could break.
+                // Custom bundle to enable more HTML elements than Markdown.
+                $text = self::closeTags($text);
+                $text = self::fixIllegalTags($text);
+                return $this->fixRawMentions(Vanilla::parse($text));
             case 'Markdown':
-                // Fatdown bundle allows (filtered) HTML.
+                // Markdown bundle allows some (filtered) HTML.
                 return $this->fixRawMentions(Markdown::parse($text));
             case 'BBCode':
                 return $this->fixRawMentions(BBCode::parse($text));
@@ -63,6 +68,43 @@ class Formatter
                 // May require more refined detection for other cases but too many breaks is safer than too few.
                 return self::wrap('t', $this->fixRawMentions(nl2br($text)));
         }
+    }
+
+    /**
+     * s9e/textformatter loses its mind about unclosed HTML tags.
+     *
+     * @param ?string $text
+     * @return ?string
+     */
+    public static function closeTags(?string $text): ?string
+    {
+        if (empty($text)) {
+            return $text;
+        }
+
+        // <br>
+        $text = str_replace('<br>', '<br/>', $text);
+        // <img src="">
+        $text = preg_replace('#<img ([^>]+[^/])>#', '<img $1 />', $text);
+
+        return $text;
+    }
+
+    /**
+     * s9e/textformatter loses its mind about illegal span tags wrapping a div.
+     *
+     * This is a very tricky hack, so it needs to be rather narrow and therefore won't fix every scenario.
+     * Class-less spans directly wrapping a div are the only condition we'll address for now.
+     *
+     * @param ?string $text
+     * @return ?string
+     */
+    public static function fixIllegalTags(?string $text): ?string
+    {
+        // <span><div ... </div></span>
+        $text = preg_replace('#<span><div ([^>]+[^/])>(.+)</div></span>#U', '<div $1>$2</div>', $text);
+
+        return $text;
     }
 
     /**

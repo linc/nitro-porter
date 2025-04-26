@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @license http://opensource.org/licenses/gpl-2.0.php GNU GPL2
+ *
  */
 
 use Porter\ConnectionManager;
@@ -24,7 +24,7 @@ function loadConfig(): array
     if (file_exists(ROOT_DIR . '/config.php')) {
         return require(ROOT_DIR . '/config.php');
     } else {
-        trigger_error('Missing config.php — Make a copy of config-sample.php!');
+        //trigger_error('Missing config.php — Make a copy of config-sample.php!');
         return require(ROOT_DIR . '/config-sample.php');
     }
 }
@@ -116,6 +116,7 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
 
 /**
  * @param Request $request
+ * @param Source $source
  * @param ConnectionManager $exportSourceCM
  * @param Storage $storage
  * @param ConnectionManager $importSourceCM
@@ -123,6 +124,7 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
  */
 function exportModelFactory(
     Request $request,
+    Source $source,
     ConnectionManager $exportSourceCM,
     Storage $storage,
     ConnectionManager $importSourceCM
@@ -131,7 +133,7 @@ function exportModelFactory(
     $model = new ExportModel($exportSourceCM, $map, $storage, $importSourceCM);
 
     // Set model properties.
-    $model->srcPrefix = $request->get('src-prefix') ?? '';
+    $model->srcPrefix = $request->get('src-prefix') ?? $source::SUPPORTED['prefix'];
     $model->testMode = $request->get('test') ?? false;
     $model->limitTables((string) $request->get('tables'));
     $model->captureOnly = $request->get('dumpsql') ?? false;
