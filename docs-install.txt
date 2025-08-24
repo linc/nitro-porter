@@ -1,0 +1,6 @@
+mkdocs-material
+mkdocs-static-i18n
+markdown-callouts
+mdx_linkify
+python-dotenv
+deepl
