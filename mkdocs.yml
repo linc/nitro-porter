@@ -63,6 +63,9 @@ nav:
       - Prepare Your Community: migrations.md
       - Add a Package: develop.md
       - Maintain Nitro Porter: maintain.md
+  - Packages:
+      - Sources: sources.md
+      - Targets: targets.md
   - About:
       - Contribute: contribute.md
       - History: history.md
