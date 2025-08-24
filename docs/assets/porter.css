@@ -6,7 +6,7 @@ table.Features td {
 }
 .Platform {
     text-align: left;
-    width: 150px;
+    min-width: 180px;
 }
 .No {
     color: #A17E61;
