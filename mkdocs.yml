@@ -53,8 +53,6 @@ markdown_extensions:
   - callouts
   - toc:
       title: On this page
-watch:
-  - includes
 
 nav:
   - Introduction: index.md
