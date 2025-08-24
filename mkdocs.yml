@@ -1,7 +1,8 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 
 site_name: Nitro Porter
-docs_dir: docs/
+docs_dir: docs
+use_directory_urls: true
 theme:
   name: material
   features:
