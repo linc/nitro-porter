@@ -122,8 +122,17 @@ class Formatter
         // Fix invalid Quill Delta.
         $text = self::fixQuillHeaders($text);
 
-        // Fix the JSON.
-        $text = '{"ops":' . $text . '}';
+        // Quill data is invalid, but check first in case they fix it in a future version.
+        if (false === json_validate($text)) {
+            // Fix the JSON.
+            $text = '{"ops":' . $text . '}';
+
+            // Re-check we have valid JSON now and give up if we don't.
+            if (false === json_validate($text)) {
+                Log::comment(json_last_error_msg() . PHP_EOL);
+                return '';
+            }
+        }
 
         // Use the Quill renderer.
         $lexer = new Quill($text);
