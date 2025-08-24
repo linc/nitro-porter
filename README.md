@@ -1,9 +1,9 @@
-Nitro Porter 🚀
+Nitro Porter — free your community! 🚀
 ==============
 
-The only multi-platform community migration tool. Free your forum!
+Nitro Porter is the only multi-platform community migration tool. 
 
-Nitro Porter is based on PHP 8.2+ and runs via the command line.
+Nitro Porter is built in PHP 8.2+ and runs via command line.
 
 ## Documentation
 
@@ -39,9 +39,9 @@ That means code for all new packages written for it must likewise be made freely
 
 ### 📥 Targets ([3](https://nitroporter.org/targets))
 
-![Flarum](assets/logos/flarum-300x100.png)
-![Vanilla](assets/logos/vanilla-300x100.png)
-![Waterhole](assets/logos/waterhole-300x100.png)
+![Flarum](docs/assets/logos/flarum-300x100.png)
+![Vanilla](docs/assets/logos/vanilla-300x100.png)
+![Waterhole](docs/assets/logos/waterhole-300x100.png)
 
 ### 📤 Sources ([37](https://nitroporter.org/sources))
 * bbPress
