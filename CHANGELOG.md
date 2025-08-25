@@ -4,6 +4,40 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.7.0](https://github.com/linc/nitro-porter/compare/v3.6.0...v3.7.0) (2025-08-25)
+
+### Features
+
+* License now AGPLv3 ([1cd2e1](https://github.com/linc/nitro-porter/commit/1cd2e16895832e75c2b776b0b066f6cd2e6bce54))
+* Require PHP 8.2 ([c8e262](https://github.com/linc/nitro-porter/commit/c8e262da1c16c01adb982152b01e6c7490d17b73))
+
+### Bug Fixes
+
+* Add a small optimization to vanillaPhoto processing ([4f587e](https://github.com/linc/nitro-porter/commit/4f587e933e69a2d2baa9183f10a2f4ccc8e06fe4))
+* Add clear message when PMs will be skipped because Flarum Byobu isn't on (#74) ([b1e0d2](https://github.com/linc/nitro-porter/commit/b1e0d285027d14846c1cc13d490d44dc64c57333))
+* Avatars imported to Vanilla from vBulletin need the 'p' prefix ([25295d](https://github.com/linc/nitro-porter/commit/25295d1bd19137e2d65497245fe4cb5e84715776))
+* Cleanup empty check for vanillPhoto() ([36457a](https://github.com/linc/nitro-porter/commit/36457a55e804c9b86d3dcb7f596b7d50d0a8084f))
+* Default config debug to false ([afab2e](https://github.com/linc/nitro-porter/commit/afab2e5cf02334eb97772150c6eb956c569f382a))
+* Deprecation warning in Formatter ([f236b7](https://github.com/linc/nitro-porter/commit/f236b7101cf9ad81b1c2e374f41441c0bcd0f101))
+* Ensure Flarum target gets non-null SQL math values ([065fdf](https://github.com/linc/nitro-porter/commit/065fdf97170b0a5b6ee146a303e5cd3d75cbdde0))
+* Flarum target non-null enforcement for discussions & tags ([69d481](https://github.com/linc/nitro-porter/commit/69d4813a00db0c560340b802b1ae2501d499f796))
+* Only show deprecation notices in debug mode ([ac3d1e](https://github.com/linc/nitro-porter/commit/ac3d1eceb05e9a19ebee6e338765b3705f6dc591))
+* Preserve discussion comment counts in Flarum target ([a4fcc6](https://github.com/linc/nitro-porter/commit/a4fcc64740f5f586a6c4610c58c413a40f846c6c))
+* Remove duplicate discussions caused by revisions from Drupal6 source ([cfd0bd](https://github.com/linc/nitro-porter/commit/cfd0bd5efbbf21365672d254c9f52cd19ac3df74))
+* Remove redundant is_array in ExportModel ([206a8d](https://github.com/linc/nitro-porter/commit/206a8dc866f2d8961b22af2000a3c804854af8be))
+* Remove strict comparison in Drupal7 source to quiet PHPStan ([62b746](https://github.com/linc/nitro-porter/commit/62b746afd57ebb622a4143b2b55ce85a3b9d2d22))
+* Remove timezones (str) used as hour offsets (int) ([575878](https://github.com/linc/nitro-porter/commit/575878c12efa3d6ab4ccdac54745e1a0a9f22640))
+* Remove trigger_error for not coping config ([359477](https://github.com/linc/nitro-porter/commit/35947765517653d49da421daa067996799446953))
+* Restore commentID to Drupal 6 source ([4b411e](https://github.com/linc/nitro-porter/commit/4b411ebc75e789f2f495dddd21aa47e0467056ec))
+* Set config array defaults ([f66b4b](https://github.com/linc/nitro-porter/commit/f66b4bc191b8ec579c1cc29f29f2b365301e6052))
+* Skip invalid JSON in Vanilla 'rich' comments if they cannot be fixed ([9e5a9b](https://github.com/linc/nitro-porter/commit/9e5a9bd207b7f72eda638340975f2c71a86a64e4))
+* Throw exceptions in Config rather than triggering errors ([ada3f4](https://github.com/linc/nitro-porter/commit/ada3f4d06f721c241372735213aae50c5e7e0055))
+* Update return type in Flarum source ([6e648a](https://github.com/linc/nitro-porter/commit/6e648a2402b67a38ed920927d4c735fc33ffdd9f))
+* Use a digestable error when massive batch inserts fail ([03a3b4](https://github.com/linc/nitro-porter/commit/03a3b45a8e0db609f6f34985cac3e049780551b5))
+
+
+---
+
 ## [3.6.0](https://github.com/linc/nitro-porter/compare/v3.5.2...v3.6.0) (2024-12-29)
 
 ### Features
