@@ -362,7 +362,7 @@ class Flarum extends Target
             'LastCommentID' => 'last_post_id',
             'DateLastComment' => 'last_posted_at',
             'LastCommentUserID' => 'last_posted_user_id',
-            'CountComments' => 'last_post_number',
+            'CountComments' => 'comment_count',
             'Announce' => 'is_sticky', // Flarum doesn't mind if this is '2' so straight map it.
             'Closed' => 'is_locked',
         ];
@@ -385,6 +385,7 @@ class Flarum extends Target
                 '*',
                 $ex->dbImport()->raw('COALESCE(CountComments, 0) as post_number_index'),
                 $ex->dbImport()->raw('DiscussionID as slug'),
+                $ex->dbImport()->raw('CountComments as last_post_number'),
                 $ex->dbImport()->raw('0 as votes'),
                 $ex->dbImport()->raw('0 as hotness')
             );
