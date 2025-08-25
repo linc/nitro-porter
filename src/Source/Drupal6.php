@@ -161,7 +161,8 @@ class Drupal6 extends Source
                  left join node n
                     on f.nid = n.nid
                  left join node_revisions r
-                    on r.nid = n.nid",
+                    on r.nid = n.nid
+                group by n.nid",
             $discussion_Map
         );
     }
