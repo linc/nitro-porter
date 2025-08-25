@@ -181,6 +181,7 @@ class Drupal6 extends Source
         $ex->export(
             'Comment',
             "select
+                    c.cid,
                     n.created,
                     n.uid,
                     r.body,
