@@ -426,6 +426,19 @@ function notFilter($value)
 }
 
 /**
+ * Convert empty values to zero.
+ *
+ * Useful for 'not null' columns with default=0.
+ *
+ * @param mixed $value
+ * @return mixed Original $value or zero if empty.
+ */
+function emptyToZero($value)
+{
+    return empty($value) ? 0 : $value;
+}
+
+/**
  * Convert a timestamp to MySQL date format.
  *
  * Do this in MySQL with FROM_UNIXTIME() instead whenever possible.

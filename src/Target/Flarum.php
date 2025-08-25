@@ -331,16 +331,20 @@ class Flarum extends Target
             'Sort' => 'position',
             'CountDiscussions' => 'discussion_count',
         ];
+        $filters = [
+            'discussion_count' => 'emptyToZero',
+        ];
         $query = $ex->dbImport()->table('PORT_Category')
             ->select(
                 '*',
                 $ex->dbImport()->raw('COALESCE(Name, CONCAT("category", CategoryID)) as name'), // Cannot be null.
+                $ex->dbImport()->raw('COALESCE(UrlCode, CategoryID) as slug'), // Cannot be null.
                 $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID"),
                 $ex->dbImport()->raw("0 as is_hidden"),
                 $ex->dbImport()->raw("0 as is_restricted")
             )->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
-        $ex->import('tags', $query, $structure, $map);
+        $ex->import('tags', $query, $structure, $map, $filters);
     }
 
     /**
@@ -364,19 +368,22 @@ class Flarum extends Target
         ];
         $filters = [
             'slug' => 'createDiscussionSlugs',
+            'is_sticky' => 'emptyToZero',
+            'is_locked' => 'emptyToZero',
         ];
 
         // flarumite/simple-discussion-views
         if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
             $structure['view_count'] = 'int';
             $map['CountViews'] = 'view_count';
+            $filters['view_count'] = 'emptyToZero';
         }
 
         // CountComments needs to be double-mapped so it's included as an alias also.
         $query = $ex->dbImport()->table('PORT_Discussion')
             ->select(
                 '*',
-                $ex->dbImport()->raw('CountComments as post_number_index'),
+                $ex->dbImport()->raw('COALESCE(CountComments, 0) as post_number_index'),
                 $ex->dbImport()->raw('DiscussionID as slug'),
                 $ex->dbImport()->raw('0 as votes'),
                 $ex->dbImport()->raw('0 as hotness')
