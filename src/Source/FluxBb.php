@@ -159,7 +159,6 @@ class FluxBb extends Source
                     u.id as UserID,
                     u.username as UserID,
                     u.email as Email,
-                    u.timezone as HourOffset,
                     u.registration_ip as InsertIPAddress,
                     u.id as AvatarID,
                     u.password as Password,

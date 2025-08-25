@@ -345,7 +345,7 @@ class ExpressionEngine extends Source
             'ipaddress' => 'InsertIPAddress',
             'join_date' => array('Column' => 'DateInserted', 'Filter' => array($ex, 'timestampToDate')),
             'last_activity' => array('Column' => 'DateLastActive', 'Filter' => array($ex, 'timestampToDate')),
-            'timezone' => 'HourOffset',
+            //'timezone' => 'HourOffset',
             'location' => 'Location'
         );
         $ex->export(

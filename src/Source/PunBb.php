@@ -391,7 +391,7 @@ class PunBb extends Source
             'id' => 'UserID',
             'username' => 'Name',
             'email' => 'Email',
-            'timezone' => 'HourOffset',
+            //'timezone' => 'HourOffset',
             'registration_ip' => 'InsertIPAddress',
             'PasswordHash' => 'Password'
         );

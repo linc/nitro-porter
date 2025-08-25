@@ -266,7 +266,7 @@ class PhpBb3 extends Source
             'username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
             'user_password' => 'Password',
             'user_email' => 'Email',
-            'user_timezone' => 'HourOffset',
+            //'user_timezone' => 'HourOffset',
             'user_posts' => array('Column' => 'CountComments', 'Type' => 'int'),
             'photo' => 'Photo',
             'user_rank' => 'RankID',

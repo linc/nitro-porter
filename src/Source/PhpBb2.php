@@ -135,7 +135,7 @@ class PhpBb2 extends Source
             'username' => 'Name',
             'user_password' => 'Password',
             'user_email' => 'Email',
-            'user_timezone' => 'HourOffset',
+            //'user_timezone' => 'HourOffset',
             'user_posts' => array('Column' => 'CountComments', 'Type' => 'int')
         );
         $ex->export(
