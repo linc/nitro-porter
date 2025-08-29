@@ -332,7 +332,7 @@ class Flarum extends Target
             'CountDiscussions' => 'discussion_count',
         ];
         $filters = [
-            'discussion_count' => 'emptyToZero',
+            'CountDiscussions' => 'emptyToZero',
         ];
         $query = $ex->dbImport()->table('PORT_Category')
             ->select(
@@ -367,16 +367,16 @@ class Flarum extends Target
             'Closed' => 'is_locked',
         ];
         $filters = [
-            'slug' => 'createDiscussionSlugs',
-            'is_sticky' => 'emptyToZero',
-            'is_locked' => 'emptyToZero',
+            'slug' => 'createDiscussionSlugs', // 'DiscussionID as slug' (below).
+            'Announce' => 'emptyToZero',
+            'Closed' => 'emptyToZero',
         ];
 
         // flarumite/simple-discussion-views
         if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
             $structure['view_count'] = 'int';
             $map['CountViews'] = 'view_count';
-            $filters['view_count'] = 'emptyToZero';
+            $filters['CountViews'] = 'emptyToZero';
         }
 
         // CountComments needs to be double-mapped so it's included as an alias also.
