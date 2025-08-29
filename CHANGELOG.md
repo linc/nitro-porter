@@ -4,6 +4,14 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.7.1](https://github.com/linc/nitro-porter/compare/v3.7.0...v3.7.1) (2025-08-29)
+
+### Bug Fixes
+
+* Flarum target filter names for preventing nulls ([fb216a](https://github.com/linc/nitro-porter/commit/fb216abaa086149d3573ad906c51bb0e17550ca6))
+
+---
+
 ## [3.7.0](https://github.com/linc/nitro-porter/compare/v3.6.0...v3.7.0) (2025-08-25)
 
 ### Features
