@@ -541,7 +541,6 @@ class Flarum extends Target
             'Name' => 'base_name',
             'InsertUserID' => 'actor_id',
             'DateInserted' => 'created_at',
-            'Type' => 'type',
             'Size' => 'size',
         ];
         $query = $ex->dbImport()->table('PORT_Media')->select(
@@ -560,6 +559,8 @@ class Flarum extends Target
                 when ForeignTable = 'message' then ifnull((ForeignID + " . $this->messagePostOffset . "), 0)
                 end as post_id"),
             $ex->dbImport()->raw('"local" as upload_method'),
+            // MIME type cannot be null, so default to "application/octet-stream" as most generic default.
+            $ex->dbImport()->raw('COALESCE(Type, "application/octet-stream") as type'),
             // @see packages/upload/src/Providers/DownloadProvider.php
             $ex->dbImport()->raw("case
                 when Type like 'image/%' then 'image-preview'
