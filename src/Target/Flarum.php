@@ -321,11 +321,12 @@ class Flarum extends Target
             'parent_id' => 'int',
             'position' => 'int',
             'discussion_count' => 'int',
+            'is_hidden' => 'tinyint',
+            'is_restricted' => 'tinyint',
         ];
         $map = [
             'CategoryID' => 'id',
             'Name' => 'name',
-            'UrlCode' => 'slug',
             'Description' => 'description',
             'ParentCategoryID' => 'parent_id',
             'Sort' => 'position',
