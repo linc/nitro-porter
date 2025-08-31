@@ -4,6 +4,17 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.7.2](https://github.com/linc/nitro-porter/compare/v3.7.1...v3.7.2) (2025-08-31)
+
+### Bug Fixes
+
+* Flarum target category import structure ([1dd9af](https://github.com/linc/nitro-porter/commit/1dd9afb20d86d78b6d33c2114d8352e3e41b17b1))
+* Flarum target default MIME type on attachments ([d65774](https://github.com/linc/nitro-porter/commit/d6577412c51f6ef2c865d02dd24d295631dc8d2a))
+* Resolve ctype_digit deprecation warning ([8e2dcc](https://github.com/linc/nitro-porter/commit/8e2dcceec95019e19b465189ac22b95267e928ac))
+
+
+---
+
 ## [3.7.1](https://github.com/linc/nitro-porter/compare/v3.7.0...v3.7.1) (2025-08-29)
 
 ### Bug Fixes
