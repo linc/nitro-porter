@@ -94,6 +94,7 @@ class Flarum extends Target
         //'votes' => 'int', // fof/polls
         //'hotness' => 'double', // fof/gamification
         //'view_count' => 'int', // flarumite/simple-discussion-views
+        //'best_answer_notified' => 'tinyint', // fof/best-answer
         'keys' => [
             'FLA_discussions_id_primary' => [
                 'type' => 'primary',
@@ -388,7 +389,8 @@ class Flarum extends Target
                 $ex->dbImport()->raw('DiscussionID as slug'),
                 $ex->dbImport()->raw('CountComments as last_post_number'),
                 $ex->dbImport()->raw('0 as votes'),
-                $ex->dbImport()->raw('0 as hotness')
+                $ex->dbImport()->raw('0 as hotness'),
+                $ex->dbImport()->raw('1 as best_answer_notified')
             );
 
         $ex->import('discussions', $query, $structure, $map, $filters);
