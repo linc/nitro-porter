@@ -463,11 +463,7 @@ function timestampToDate($value)
  */
 function long2ipf($value)
 {
-    if (!ctype_digit($value)) {
-        return null;
-    }
-
-    return long2ip($value);
+    return (!empty($value) && ctype_digit($value)) ? long2ip($value) : null;
 }
 
 /**
