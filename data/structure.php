@@ -54,7 +54,7 @@ return array(
         'Views' => 'int',
         'EmbedViews' => 'int'
     ),
-    'article' => array(
+    /*'article' => array(
         'articleID' => 'int',
         'foreignID' => 'varchar(32)',
         'knowledgeCategoryID' => 'int',
@@ -94,7 +94,7 @@ return array(
         'translationStatus' => array('not-translated','out-of-date','up-to-date'),
         'insertUserID' => 'int',
         'dateInserted' => 'datetime',
-    ),
+    ),*/
     'Attachment' => array(
         'AttachmentID' => 'int',
         'Type' => 'varchar(64)',
@@ -328,7 +328,7 @@ return array(
         'DateUpdated' => 'datetime',
         'UpdateUserID' => 'int'
     ),
-    'Invitation' => array(
+    /*'Invitation' => array(
         'InvitationID' => 'int',
         'Email' => 'varchar(200)',
         'Name' => 'varchar(50)',
@@ -338,8 +338,8 @@ return array(
         'DateInserted' => 'datetime',
         'AcceptedUserID' => 'int',
         'DateExpires' => 'datetime'
-    ),
-    'knowledgeBase' => array(
+    ),*/
+    /*'knowledgeBase' => array(
         'knowledgeBaseID' => 'int',
         'foreignID' => 'varchar(32)',
         'name' => 'varchar(255)',
@@ -388,7 +388,7 @@ return array(
     'knowledgeUniversalSource' => array(
         'sourceKnowledgeBaseID' => 'int',
         'targetKnowledgeBaseID' => 'int'
-    ),
+    ),*/
     'Log' => array(
         'LogID' => 'int',
         //'Operation' => array('Delete','Edit','Spam','Moderate','Pending','Ban','Error'),
@@ -550,7 +550,7 @@ return array(
         'CanSession' => 'tinyint',
         'PersonalInfo' => 'tinyint'
     ),
-    'Session' => array(
+    /*'Session' => array(
         'SessionID' => 'char(32)',
         'UserID' => 'int',
         'DateInserted' => 'datetime',
@@ -562,8 +562,8 @@ return array(
         'UserID' => 'int',
         'CountSpam' => 'smallint',
         'CountDeletedSpam' => 'smallint'
-    ),
-    'Subcommunity' => array(
+    ),*/
+    /*'Subcommunity' => array(
         'SubcommunityID' => 'int',
         'Name' => 'varchar(255)',
         'Description' => 'varchar(500)',
@@ -582,7 +582,7 @@ return array(
         'knowledgeBase' => 'tinyint',
         'forum' => 'tinyint',
         'themeID' => 'varchar(30)'
-    ),
+    ),*/
     'Status' => array( // Ideation
         'StatusID' => 'int',
         'Name' => 'varchar(100)',
@@ -654,7 +654,7 @@ return array(
         'CountBookmarks' => 'int',
         'RankID' => 'int'
     ),
-    'UserAuthentication' => array(
+    /*'UserAuthentication' => array(
         'ForeignUserKey' => 'varchar(255)',
         'ProviderKey' => 'varchar(64)',
         'UserID' => 'int'
@@ -690,7 +690,7 @@ return array(
         'Authorized' => 'tinyint',
         'Timestamp' => 'timestamp',
         'Lifetime' => 'int'
-    ),
+    ),*/
     'UserBadge' => array(
         'UserID' => 'int',
         'BadgeID' => 'int',
