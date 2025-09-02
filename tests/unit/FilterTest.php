@@ -1,7 +1,5 @@
 <?php
 
-namespace PorterTest;
-
 use PHPUnit\Framework\TestCase;
 
 final class FilterTest extends TestCase
@@ -19,7 +17,7 @@ final class FilterTest extends TestCase
             'userpics/avatar11_4.gif' => 'userpics/pavatar11_4.gif',
             // No change; URL
             'https://example.com/forum/uploads/userpics/396/YGIC427MJADQ.jpg'
-                => 'https://example.com/forum/uploads/userpics/396/YGIC427MJADQ.jpg',
+            => 'https://example.com/forum/uploads/userpics/396/YGIC427MJADQ.jpg',
             // No change; not Vanilla origin - filename pattern
             'userpics/aaa919.gif' => 'userpics/aaa919.gif',
             // No change; not Vanilla origin - extension

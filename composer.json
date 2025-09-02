@@ -20,7 +20,8 @@
     "scripts": {
         "lint": "vendor/bin/phpcs --standard=PSR12 ./src",
         "delint": "vendor/bin/phpcbf --standard=PSR12 ./src",
-        "test": "vendor/bin/phpunit --no-coverage --no-extensions --colors=always",
+        "test": "vendor/bin/phpunit --no-coverage --no-extensions --colors=always --testsuite=unit",
+        "testall": "vendor/bin/phpunit --no-coverage --no-extensions --colors=always",
         "build": "cd build; ../vendor/bin/phing; cd ..",
         "phinx": "vendor/bin/phinx",
         "seed": "vendor/bin/phinx seed:run",
@@ -53,8 +54,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Porter\\": "src/",
-            "PorterTest\\": "tests/"
+            "Porter\\": "src/"
         },
         "files": [
             "src/Functions/core.php",
