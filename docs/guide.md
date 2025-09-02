@@ -27,6 +27,10 @@ A quick way to get all of the above would be installing MAMP or XAMPP on your la
 
 ## Basic Usage
 
+It's normal for a migration to take a while. You're learning a new tool, and you might find bugs from edge cases in you content or more recent changes in the source or target software. 
+If you want free help, expect the back-and-forth to potentially take months depending on the scope of the issues and volunteer availability.
+If you're in a hurry, contract a developer to manage the process for you. As usual, mind the axiom: "You can have it fast, good, or cheap — pick 2."
+
 ### Get oriented
 
 Get the "short" names of the packages and connections you want to use.
