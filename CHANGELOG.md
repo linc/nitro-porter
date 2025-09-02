@@ -4,6 +4,17 @@
 All notable changes to this project will be documented in this file.
 <!--- END HEADER -->
 
+## [3.7.3](https://github.com/linc/nitro-porter/compare/v3.7.2...v3.7.3) (2025-09-02)
+
+### Bug Fixes
+
+* Comment out intermediary structure no port is using (and may never) ([2bf657](https://github.com/linc/nitro-porter/commit/2bf65754d6d270e66d9aa40e84b6c860d374a03a))
+* Flarum target partial support for fof/best-answer ([5b2293](https://github.com/linc/nitro-porter/commit/5b2293d56c8443f6a3e272062db8df6607d4d391))
+* Flarum target prefix for Byobu PM table check ([69d1e9](https://github.com/linc/nitro-porter/commit/69d1e962254b7ecb0a6c8e28b2510cfeb025bf18))
+
+
+---
+
 ## [3.7.2](https://github.com/linc/nitro-porter/compare/v3.7.1...v3.7.2) (2025-08-31)
 
 ### Bug Fixes
