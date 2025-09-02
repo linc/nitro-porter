@@ -145,30 +145,6 @@ function exportModelFactory(
 }
 
 /**
- * Error handler.
- *
- * @param int $level
- * @param string $msg
- * @param string $file
- * @param int $line
- * @param array $context
- */
-function errorHandler(int $level, string $msg, string $file, int $line, array $context = []): void
-{
-    $reportingLevel = error_reporting();
-    if (!$reportingLevel) {
-        return; // Error reporting is off or suppressed.
-    }
-
-    if (defined('DEBUG') || ($level !== E_DEPRECATED && $level !== E_USER_DEPRECATED)) {
-        $baseDir = realpath(__DIR__ . '/../') . '/';
-        $errFile = str_replace($baseDir, '', $file);
-        echo "Error in $errFile line $line: ($level) $msg\n";
-        die();
-    }
-}
-
-/**
  * Test filesystem permissions.
  */
 function testWrite(): bool
