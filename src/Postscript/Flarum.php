@@ -326,7 +326,7 @@ class Flarum extends Postscript
     {
         $db = $this->connection->newConnection();
         $db->table($ex->tarPrefix . 'groups')
-            ->insert([
+            ->insertOrIgnore([
                 ['id' => 1, 'name_singular' => 'Admin', 'name_plural' => 'Admins', 'is_hidden' => 0],
                 ['id' => 2, 'name_singular' => 'Guest', 'name_plural' => 'Guests', 'is_hidden' => 0],
                 ['id' => 3, 'name_singular' => 'Member', 'name_plural' => 'Members', 'is_hidden' => 0],
