@@ -817,7 +817,7 @@ class Flarum extends Target
         }
 
         // Verify target support.
-        if (!$ex->targetExists('recipients')) {
+        if (!$ex->targetExists($ex->tarPrefix . 'recipients')) {
             $ex->comment('Skipping import: Private messages (Target lacks support - Enable the plugin first)');
             return;
         }
