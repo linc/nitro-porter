@@ -19,11 +19,12 @@ to customize them as needed (without committing them — they are ignored by git
 
 ## Testing Tools
 
-Use `composer test` to run the unit test (PHPUnit) suite as defined in `phpunit.xml.dist`.
+Use `composer test` to run the _unit_ test suite (_only_ — see `phpunit.xml.dist`). This runs in the CI pipeline.
 
-This project desperately needs **integration tests** that simulate an actual migration. 
-Faker & Phinx are available for this purpose (see `composer phinx` and `composer seed`), 
-but they are not implemented as of this writing.
+Use `composer testall` to _also_ run _integration_ tests. It runs mock data tests against databases and takes more time to run. It does **NOT** run in the CI pipeline.
+
+This project desperately needs more **integration tests** that simulate an actual migration. 
+Faker & Phinx are available for this purpose (see `composer phinx` and `composer seed`).
 
 ## Commits & PRs
 
