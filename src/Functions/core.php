@@ -136,10 +136,10 @@ function exportModelFactory(
     $model = new ExportModel($db, $map, $storage, $importSourceCM);
 
     // Set model properties.
-    $model->srcPrefix = $request->get('src-prefix') ?? $source::SUPPORTED['prefix'];
-    $model->testMode = $request->get('test') ?? false;
-    $model->limitTables((string) $request->get('tables'));
-    $model->captureOnly = $request->get('dumpsql') ?? false;
+    $model->srcPrefix = empty($request->getInputTablePrefix()) ?
+        $source::SUPPORTED['prefix'] : $request->getInputTablePrefix();
+    $model->limitTables($request->getDatatypes());
+    $model->captureOnly = ($request->getOutput() === 'sql');
 
     return $model;
 }

@@ -22,12 +22,7 @@ class ExportModel
     public bool $captureOnly = false;
 
     /**
-     * @var bool Whether to limit results to the $testLimit.
-     */
-    public bool $testMode = false;
-
-    /**
-     * @var int How many records to limit when $testMode is enabled.
+     * @var int How many records to limit when debugMode is enabled.
      */
     public int $testLimit = 10;
 
@@ -381,7 +376,7 @@ class ExportModel
         $query = str_replace('{to}', '2000000000', $query);
 
         // If we are in test mode then limit the query.
-        if ($this->testMode && $this->testLimit) {
+        if (\Porter\Config::getInstance()->debugEnabled() && $this->testLimit) {
             $query = rtrim($query, ';');
             if (stripos($query, 'select') !== false && stripos($query, 'limit') === false) {
                 $query .= " limit {$this->testLimit}";

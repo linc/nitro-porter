@@ -13,15 +13,14 @@ class RunCommand extends Command
     {
         parent::__construct('run', 'Run a migration.');
         $this
-            ->option('-s --source', 'Name of source package')
-            ->option('-t --target', 'Name of target package')
+            ->option('-s --source', 'Source package alias (or "port")')
+            ->option('-t --target', 'Target package alias (or "sql" or "file")')
             ->option('-i --input', 'Source connection alias (defined in config)')
             ->option('-o --output', 'Target connection alias (defined in config)')
-            ->option('-x --sourceprefix', 'Source prefix')
+            ->option('--sp', 'Source table prefix (override package default)')
+            ->option('--tp', 'Target table prefix (override package default)')
             ->option('--cdn', 'CDN prefix')
-            ->option('--dumpsql', 'Output SQL instead of migrating')
-            //->option('-y --targetprefix', 'Target prefix')
-            //->option('-l --limit', 'Limits export to specified data')
+            ->option('-d --data', 'Limit to specified data types (CSV)')
             ->usage(
                 '<bold>  run</end> <comment><source> <source-connection> <target> <target-connection></end>' .
                 ' ## Migrate data from source to target<eol/>'
@@ -34,19 +33,19 @@ class RunCommand extends Command
     public function interact(Interactor $io): void
     {
         if (!$this->source) {
-            $this->set('source', $io->prompt('Source package'));
+            $this->set('source', $io->prompt('Source package alias (see `porter list -n=sources`)'));
         }
 
         if (!$this->target) {
-            $this->set('target', $io->prompt('Target package'));
+            $this->set('target', $io->prompt('Target package alias (see `porter list -n=targets`)'));
         }
 
         if (!$this->input) {
-            $this->set('input', $io->prompt('Source connection (from config)'));
+            $this->set('input', $io->prompt('Source connection alias (see config.php)'));
         }
 
         if (!$this->output && $this->source !== 'file') {
-            $this->set('output', $io->prompt('Target connection (from config)'));
+            $this->set('output', $io->prompt('Target connection alias (see config.php)'));
         }
     }
 
@@ -55,19 +54,16 @@ class RunCommand extends Command
      */
     public function execute()
     {
-        // @todo validate
-        $request = \Porter\Request::instance();
-        $request->load([
-            // @todo fix this name madness in Request object.
-            'output' => $this->target,
-            'package' => $this->source,
-            'source' => $this->input,
-            'target' => $this->output,
-            'src-prefix' => $this->sourceprefix,
-            'tables' => $this->tables,
-            'dumpsql' => $this->dumpsql,
-            'cdn' => $this->cdn,
-        ]);
+        $request = new \Porter\Request(
+            $this->source ?? '',
+            $this->target ?? '',
+            $this->input ?? '',
+            $this->output ?? '',
+            $this->sp ?? '',
+            $this->tp ?? '',
+            $this->cdn ?? '',
+            $this->data ?? ''
+        );
 
         \Porter\Controller::run($request);
     }
