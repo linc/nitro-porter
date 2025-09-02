@@ -58,10 +58,10 @@ class IpBoard3 extends Source
     public function doAvatars($ex)
     {
         // Source table
-        $sourceTable = $this->param('users-source', 'profile_portal');
+        $sourceTable = 'profile_portal'; //$this->param('users-source', 'profile_portal');
 
         // Check source folder
-        $sourceFolder = $this->param('avatars-source');
+        $sourceFolder = ''; //$this->param('avatars-source');
         if (!is_dir($sourceFolder)) {
             trigger_error("Source avatar folder '{$sourceFolder}' does not exist.");
         }
@@ -182,9 +182,9 @@ class IpBoard3 extends Source
     public function run(ExportModel $ex)
     {
         // Export avatars
-        if ($this->param('avatars')) {
-            $this->doAvatars($ex);
-        }
+        //if ($this->param('avatars')) {
+            //$this->doAvatars($ex);
+        //}
 
         if ($ex->exists('members', 'member_id') === true) {
             $memberID = 'member_id';
@@ -555,7 +555,7 @@ EOT;
             $showEmail = '0';
         }
 
-        $cdn = $this->cdnPrefix();
+        $cdn = ''; // @todo CDN support
 
         if ($ex->exists('member_extra') === true) {
             $sql = "select m.*,

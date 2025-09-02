@@ -82,16 +82,16 @@ class VBulletin5 extends VBulletin
      */
     public function run($ex)
     {
-        $this->doFileExport(
+        /*$this->doFileExport(
             $this->param('db-files'),
             $this->param('db-avatars')
         );
         if ($this->param('noexport')) {
             $ex->comment('Skipping the export.');
             return;
-        }
+        }*/
 
-        $cdn = $this->param('cdn', '');
+        $cdn = ''; //$this->param('cdn', '');
 
         // Grab all of the ranks.
         $ranks = $ex->get("select * from :_usertitle order by minposts desc", 'usertitleid');

@@ -70,14 +70,14 @@ class PunBb extends Source
      */
     public function run($ex)
     {
-        $this->cdn = $this->param('cdn', '');
-        if ($avatarPath = $this->param('avatars-source', false)) {
+        $this->cdn = ''; //$this->param('cdn', '');
+        /*if ($avatarPath = $this->param('avatars-source', false)) {
             if (!$avatarPath = realpath($avatarPath)) {
                 echo "Unable to access path to avatars: $avatarPath\n";
                 exit(1);
             }
             $this->avatarPath = $avatarPath;
-        }
+        }*/
 
         $this->users($ex);
         $this->roles($ex);

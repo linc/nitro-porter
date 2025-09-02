@@ -70,12 +70,12 @@ class FluxBb extends Source
      */
     public function run($ex)
     {
-        $this->cdn = $this->param('cdn', '');
-        if ($this->avatarPath = $this->param('avatars-source')) {
+        $this->cdn = ''; //$this->param('cdn', '');
+        /*if ($this->avatarPath = '') { //$this->param('avatars-source')) {
             if (!$this->avatarPath = realpath($this->avatarPath)) {
                 exit("Unable to access path to avatars: $this->avatarPath\n");
             }
-        }
+        }*/
 
         $this->users($ex);
         //$this->permissions($ex);

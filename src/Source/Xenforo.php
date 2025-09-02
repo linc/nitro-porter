@@ -63,7 +63,7 @@ class Xenforo extends Source
     public function attachmentFiles($ex)
     {
         // Check source folder
-        $this->sourceFolder = $this->param('attach-source');
+        $this->sourceFolder = ''; //$this->param('attach-source');
         if (!is_dir($this->sourceFolder)) {
             trigger_error("Source attachment folder '{$this->sourceFolder}' does not exist.");
         }
@@ -114,7 +114,7 @@ class Xenforo extends Source
     public function avatars()
     {
         // Check source folder
-        $this->sourceFolder = $this->param('avatars-source');
+        $this->sourceFolder = ''; //$this->param('avatars-source');
         if (!is_dir($this->sourceFolder)) {
             trigger_error("Source avatar folder '{$this->sourceFolder}' does not exist.");
         }
@@ -224,15 +224,11 @@ class Xenforo extends Source
     public function run(ExportModel $ex)
     {
         // Export avatars
-        if ($this->param('avatars')) {
-            $this->avatars();
-        }
+        // $this->avatars();
         // Export attachments
-        if ($this->param('attach-rename')) {
-            $this->attachmentFiles($ex);
-        }
+        // $this->attachmentFiles($ex);
 
-        $this->users($ex, $this->cdnPrefix());
+        $this->users($ex);
         $this->roles($ex);
         //$this->permissions($ex);
         $this->userMeta($ex);
@@ -431,9 +427,8 @@ class Xenforo extends Source
 
     /**
      * @param ExportModel $ex
-     * @param string $cdn
      */
-    protected function users(ExportModel $ex, string $cdn): void
+    protected function users(ExportModel $ex): void
     {
         $user_Map = array(
             'user_id' => 'UserID',
@@ -466,7 +461,7 @@ class Xenforo extends Source
             "select u.*,
                     ua.data as password,
                     'xenforo' as hash_method,
-                    case when u.avatar_date > 0 then concat('{$cdn}xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
+                    case when u.avatar_date > 0 then concat('xf/', u.user_id div 1000, '/', u.user_id, '.jpg')
                         else null end as avatar
                 from :_user u
                 left join :_user_authenticate ua

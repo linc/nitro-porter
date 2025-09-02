@@ -259,7 +259,7 @@ class PhpBb3 extends Source
             $px = array_shift($data); // first column
         }
 
-        $cdn = $this->param('cdn', '');
+        $cdn = ''; //$this->param('cdn', '');
 
         $user_Map = array(
             'user_id' => 'UserID',
@@ -749,7 +749,7 @@ class PhpBb3 extends Source
      */
     protected function attachments(ExportModel $ex): void
     {
-        $cdn = $this->param('cdn', '');
+        $cdn = ''; //$this->param('cdn', '');
         $media_Map = array(
             'attach_id' => 'MediaID',
             'real_filename' => 'Name',

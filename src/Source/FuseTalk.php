@@ -79,7 +79,7 @@ class FuseTalk extends Source
         static $smileyReplace;
 
         if ($smileyReplace === null) {
-            $smileyReplace = '<img src=' . rtrim($this->cdnPrefix(), '/') . '/expressions/';
+            $smileyReplace = '<img src=' . '/expressions/'; // @todo CDN support
         }
 
         if (strpos($value, $smileySearch) !== false) {
