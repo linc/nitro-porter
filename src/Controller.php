@@ -29,7 +29,7 @@ class Controller
         $source->run($model);
         $model->end();
 
-        if ($model->testMode || $model->captureOnly) {
+        if (\Porter\Config::getInstance()->debugEnabled() || $model->captureOnly) {
             $queries = implode("\n\n", $model->queryRecord);
             $model->comment($queries, true);
         }
@@ -78,18 +78,17 @@ class Controller
         ini_set('memory_limit', '256M');
 
         // Set up export storage.
-        if ($request->get('output') === 'file') { // @todo Perhaps abstract to a storageFactory
+        if ($request->getTarget() === 'file') { // @todo Perhaps abstract to a storageFactory
             $storage = new Storage\File();
         } else {
-            $targetCM = new ConnectionManager($request->get('target') ?? '');
+            $targetCM = new ConnectionManager($request->getOutput());
             $storage = new Storage\Database($targetCM);
         }
 
         // Setup source & model.
-        $source = sourceFactory($request->get('package'));
-        $exportSourceCM = new ConnectionManager($request->get('source'));
-        $importSourceCM = new ConnectionManager($request->get('target') ?? '');
-        // @todo Pass options not Request
+        $source = sourceFactory($request->getSource());
+        $importSourceCM = new ConnectionManager($request->getOutput());
+        $exportSourceCM = new ConnectionManager($request->getInput());
         $exportModel = exportModelFactory($request, $source, $exportSourceCM, $storage, $importSourceCM);
 
         // No permissions warning.
@@ -100,8 +99,8 @@ class Controller
 
         // Setup target & modes.
         $target = false;
-        if ($request->get('output') !== 'file') {
-            $target = targetFactory($request->get('output'));
+        if ($request->getTarget() !== 'file') {
+            $target = targetFactory($request->getTarget());
             // Log target.
             $exportModel->comment("Target: " . $target::SUPPORTED['name'] . " (" . $importSourceCM->getAlias() . ")");
 
@@ -125,8 +124,8 @@ class Controller
             // Finalize the import (if the optional postscript class exists).
             // Use a separate database connection since re-querying data may be necessary.
             // -> "Cannot execute queries while other unbuffered queries are active."
-            $postConnection = new ConnectionManager($request->get('target') ?? '');
-            $postscript = postscriptFactory($request->get('output'), $storage, $postConnection);
+            $postConnection = new ConnectionManager($request->getOutput());
+            $postscript = postscriptFactory($request->getTarget(), $storage, $postConnection);
             if ($postscript) {
                 $exportModel->comment("Postscript found and running...");
                 $postscript->run($exportModel);

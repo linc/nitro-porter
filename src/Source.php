@@ -95,37 +95,4 @@ abstract class Source
         }
         return $charset;
     }
-
-    /**
-     * Set CDN file prefix if one is given.
-     *
-     * @deprecated
-     * @return string
-     */
-    public function cdnPrefix()
-    {
-        $cdn = rtrim(Request::instance()->get('cdn') ?? '', '/');
-        if ($cdn) {
-            $cdn .= '/';
-        }
-
-        return $cdn;
-    }
-
-    /**
-     * Retrieve a parameter passed to the export process.
-     * @deprecated
-     *
-     * @param  string $name
-     * @param  mixed  $default Fallback value.
-     * @return mixed Value of the parameter.
-     */
-    public function param($name, $default = false)
-    {
-        $value = Request::instance()->get($name);
-        if ($value === '') {
-            $value = $default;
-        }
-        return $value;
-    }
 }
