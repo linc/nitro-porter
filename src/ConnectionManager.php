@@ -50,8 +50,6 @@ class ConnectionManager
             $this->dbm = $capsule;
             $this->newConnection();
         }
-
-        return $info;
     }
 
     public function setType(string $type)
