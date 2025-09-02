@@ -28,14 +28,16 @@ class ConnectionManager
      * If no connect alias is give, initiate a test connection.
      *
      * @param string $alias
+     * @return array Connection info.
      */
     public function __construct(string $alias = '')
     {
         if (!empty($alias)) {
-            $this->alias = $alias;
             $info = Config::getInstance()->getConnectionAlias($alias);
+            $this->alias = $alias; // Provided alias.
         } else {
             $info = Config::getInstance()->getTestConnection();
+            $this->alias = $info['alias']; // Test alias from config.
         }
 
         $this->setInfo($info);
@@ -48,6 +50,8 @@ class ConnectionManager
             $this->dbm = $capsule;
             $this->newConnection();
         }
+
+        return $info;
     }
 
     public function setType(string $type)

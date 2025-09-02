@@ -24,12 +24,13 @@ class VanillaTest extends TestCase
         $configArray = require('phinx.php');
         $config = new Config($configArray);
         $manager = new Manager($config, new StringInput(' '), new NullOutput());
-        $manager->seed('testing');
+        $manager->migrate('test');
+        $manager->seed('test');
     }
 
     public function testItSeedsDatabaseLol(): bool
     {
-        //$this->seed();
+        $this->seed();
         $this->markTestIncomplete('Not written yet.');
     }
 }
