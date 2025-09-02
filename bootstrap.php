@@ -18,7 +18,6 @@ if (isset($GLOBALS['_composer_autoload_path'])) {
 
 // Environment.
 const ROOT_DIR = __DIR__;
-//set_error_handler("ErrorHandler");
 if (ini_get('date.timezone') == '') {
     date_default_timezone_set('America/Detroit');
 }
