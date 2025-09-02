@@ -227,35 +227,30 @@ class VBulletin extends Source
         $this->exportModel = $ex; // @todo
 
         // Allow limited export of 1 category via ?forumid=ID
-        $forumID = $this->param('forumid');
+        /*$forumID = $this->param('forumid');
         if ($forumID) {
             $forumWhere = ' and t.forumid ' . (strpos($forumID, ', ') === false ? "= $forumID" : "in ($forumID)");
         } else {
             $forumWhere = '';
-        }
+        }*/
 
-        $this->doFileExport(
+        /*$this->doFileExport(
             $ex,
             $this->param('db-files'),
             $this->param('db-avatars')
-        );
+        );*/
 
-        if ($this->param('files-only')) {
+        /*if ($this->param('files-only')) {
             $ex->comment('Skipping the export.');
             return;
-        }
+        }*/
 
         $minDiscussionID = 0;
         $minDiscussionWhere = 0;
 
-        // Check to see if there is a max date.
-        $minDate = $this->param('mindate');
-        if ($minDate) {
-            $minDate = strtotime($minDate);
-            $ex->comment("Min topic date ($minDate): " . date('c', $minDate));
-        }
 
-        $cdn = $this->param('cdn', '');
+
+        $cdn = ''; //$this->param('cdn', '');
 
         // Ranks
         $ranks = $this->ranks($ex);
@@ -264,10 +259,10 @@ class VBulletin extends Source
 
         $this->roles($ex);
         //$this->permissions($ex);
-        $this->userMeta($ex, $forumWhere, $minDate);
+        $this->userMeta($ex, '');
 
-        $this->discussions($ex, $minDiscussionID, $forumWhere);
-        $this->comments($ex, $minDiscussionID, $forumWhere);
+        $this->discussions($ex, $minDiscussionID, '');
+        $this->comments($ex, $minDiscussionID, '');
 
         // UserDiscussion
         //if ($minDiscussionID) {
@@ -596,15 +591,15 @@ class VBulletin extends Source
         // files named .attach need to be named properly.
         // file needs to be renamed and db updated.
         // if its an images; we need to include .thumb
-        $attachmentPath = $this->param('files-source');
-        if ($attachmentPath) {
+        $attachmentPath = ''; //$this->param('files-source');
+        /*if ($attachmentPath) {
             $missingFiles = array();
             if (is_dir($attachmentPath)) {
                 $ex->comment("Checking files");
                 $result = $ex->query($mediaSql);
                 while ($row = $result->nextResultRow()) {
                     $filePath = $this->buildMediaPath('', '', $row);
-                    $cdn = $this->param('cdn', '');
+                    $cdn = ''; //$this->param('cdn', '');
 
                     if (!empty($cdn)) {
                         $filePath = str_replace($cdn, '', $filePath);
@@ -644,7 +639,7 @@ class VBulletin extends Source
                 $ex->comment(sprintf('Total missing files %d', $totalMissingFiles));
                 file_put_contents('missing-files.txt', implode("\n", $missingFiles));
             }
-        }
+        }*/
     }
 
     protected function polls(ExportModel $ex)
@@ -851,12 +846,12 @@ class VBulletin extends Source
 
             // If we're exporting blobs, simplify the folder structure.
             // Otherwise, we need to preserve vBulletin's eleventy subfolders.
-            $separator = $this->param('separator', '');
+            $separator = ''; //$this->param('separator', '');
             $filePath = implode($separator, $dirParts) . '/' . $identity . '.' . $row['extension'];
         }
 
         // Use 'cdn' parameter to define path prefix, ex: ?cdn=~cf/
-        $cdn = $this->param('cdn', '');
+        $cdn = ''; //$this->param('cdn', '');
 
         return $cdn . 'attachments/' . $filePath;
     }
@@ -1123,7 +1118,7 @@ class VBulletin extends Source
      */
     protected function ipbans(ExportModel $ex): void
     {
-        $ipBanlist = $this->param('ipbanlist');
+        /*$ipBanlist = ''; //$this->param('ipbanlist');
         if ($ipBanlist) {
             $ex->query("drop table if exists z_ipbanlist");
             $ex->query(
@@ -1163,7 +1158,7 @@ class VBulletin extends Source
                 );
                 //$ex->query('drop table if exists z_ipbanlist');
             }
-        }
+        }*/
     }
 
     /**
@@ -1338,9 +1333,8 @@ class VBulletin extends Source
     /**
      * @param ExportModel $ex
      * @param string $forumWhere
-     * @param string $minDate
      */
-    protected function userMeta(ExportModel $ex, string $forumWhere, $minDate): void
+    protected function userMeta(ExportModel $ex, string $forumWhere): void
     {
         $ex->query("drop table if exists VbulletinUserMeta");
         $ex->query(

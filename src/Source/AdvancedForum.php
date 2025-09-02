@@ -45,7 +45,7 @@ class AdvancedForum extends Source
      */
     public function run($ex)
     {
-        $this->users($ex, $this->param('avatars-prefix', ''));
+        $this->users($ex);
         $this->roles($ex);
         $this->categories($ex);
         $this->discussions($ex);
@@ -73,10 +73,10 @@ class AdvancedForum extends Source
 
     /**
      * @param ExportModel $ex
-     * @param string $filePath
      */
-    protected function users(ExportModel $ex, $filePath): void
+    protected function users(ExportModel $ex): void
     {
+        $filePath = ''; // @todo Avatar path support
         $ex->export(
             'User',
             "select `u`.`uid` as `UserID`, `u`.`name` as `Name`, `u`.`mail` as `Email`, `u`.`pass` as `Password`,

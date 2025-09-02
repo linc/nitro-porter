@@ -53,11 +53,11 @@ class Drupal7 extends Source
      */
     public function run($ex)
     {
-        $this->path = $this->param('attach-target', null) . '/uploads/';
-        $origin = $this->param('attach-source', null);
+        $this->path = '/uploads/'; //$this->param('attach-target', null) . '/uploads/';
+        /*$origin = ''; //$this->param('attach-source', null);
         if ($origin && !is_dir($origin)) {
             mkdir($origin);
-        }
+        }*/
 
         $this->users($ex);
         $this->signatures($ex);
@@ -79,7 +79,7 @@ class Drupal7 extends Source
                 if ($file = base64_decode($matches[1])) {
                     $filename = "{$postId}_{$this->imageCount}.png";
                     $this->imageCount++;
-                    file_put_contents($this->param('attach-source', null) . '/' . $filename, $file);
+                    //file_put_contents($this->param('attach-source', null) . '/' . $filename, $file);
                     return "\"$this->path/$filename\"";
                 }
             },
