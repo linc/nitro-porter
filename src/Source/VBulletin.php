@@ -61,9 +61,6 @@ class VBulletin extends Source
             'forumid' => [
                 'Only export 1 forum (category) with given ID.'
             ],
-            //'ipbanlist' => [
-            //    'Export IP ban list, which is a terrible idea.'
-            //],
             'files-source' => [
                 'Full path of file attachments to be renamed.',
                 'Sx' => '::'
@@ -300,7 +297,6 @@ class VBulletin extends Source
             $this->attachments($ex, $minDiscussionID);
         }
 
-        $this->ipbans($ex);
         $this->tags($ex);
 
         // Reactions
@@ -1110,55 +1106,6 @@ class VBulletin extends Source
                 where parentpmid > 0
             	group by userid, parentpmid"
         );
-    }
-
-    /**
-     * @param ExportModel $ex
-     * @return void
-     */
-    protected function ipbans(ExportModel $ex): void
-    {
-        /*$ipBanlist = ''; //$this->param('ipbanlist');
-        if ($ipBanlist) {
-            $ex->query("drop table if exists z_ipbanlist");
-            $ex->query(
-                "create table z_ipbanlist(
-                    id int(11) unsigned not null auto_increment,
-                    ipaddress varchar(50) default null,
-                    primary key (id),
-                    unique key ipaddress (ipaddress)
-                ) engine=InnoDB default charset=utf8"
-            );
-
-            $result = $ex->query("select value from :_setting where varname = 'banip'");
-            $row = $result->nextResultRow();
-
-            if ($row) {
-                $insertSql = 'insert ignore into z_ipbanlist(ipaddress) values ';
-                $ipString = str_replace("\r", "", $row['value']);
-                $IPs = explode(" ", $ipString);
-                foreach ($IPs as $IP) {
-                    $IP = trim($IP);
-                    if (empty($IP)) {
-                        continue;
-                    }
-                    $insertSql .= "({$ex->escape($IP)}), ";
-                }
-                $insertSql = substr($insertSql, 0, -2);
-                $ex->query($insertSql);
-
-                $ex->export(
-                    'Ban',
-                    "select
-                            'IPAddress' as BanType,
-                            ipaddress as BanValue,
-                            'Imported ban' as Notes,
-                            NOW() as DateInserted
-                        from z_ipbanlist"
-                );
-                //$ex->query('drop table if exists z_ipbanlist');
-            }
-        }*/
     }
 
     /**
