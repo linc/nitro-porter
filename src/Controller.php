@@ -87,22 +87,22 @@ class Controller
 
         // Setup source & model.
         $source = sourceFactory($request->getSource());
-        $importSourceCM = new ConnectionManager($request->getOutput());
-        $exportSourceCM = new ConnectionManager($request->getInput());
-        $exportModel = exportModelFactory($request, $source, $exportSourceCM, $storage, $importSourceCM);
+        $outputCM = new ConnectionManager($request->getOutput());
+        $inputCM = new ConnectionManager($request->getInput());
+        $exportModel = exportModelFactory($request, $source, $inputCM, $storage, $outputCM);
 
         // No permissions warning.
         $exportModel->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n");
 
         // Log source.
-        $exportModel->comment("Source: " . $source::SUPPORTED['name'] . " (" . $exportSourceCM->getAlias() . ")");
+        $exportModel->comment("Source: " . $source::SUPPORTED['name'] . " (" . $inputCM->getAlias() . ")");
 
         // Setup target & modes.
         $target = false;
         if ($request->getTarget() !== 'file') {
             $target = targetFactory($request->getTarget());
             // Log target.
-            $exportModel->comment("Target: " . $target::SUPPORTED['name'] . " (" . $importSourceCM->getAlias() . ")");
+            $exportModel->comment("Target: " . $target::SUPPORTED['name'] . " (" . $outputCM->getAlias() . ")");
 
             self::setModes($source, $target);
             // Log flags.
