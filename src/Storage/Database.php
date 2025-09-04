@@ -60,6 +60,19 @@ class Database extends Storage
     }
 
     /**
+     * @return ConnectionManager
+     */
+    public function getConnection(): ConnectionManager
+    {
+        return $this->connection;
+    }
+
+    public function getAlias(): string
+    {
+        return $this->connection->getAlias();
+    }
+
+    /**
      * Save the given records to the database. Use prefix.
      *
      * @param string $name
@@ -187,7 +200,7 @@ class Database extends Storage
         $tableName = $this->getBatchTable();
         $action = (in_array($tableName, $this->ignoreErrorsTables)) ? 'insertOrIgnore' : 'insert';
         try {
-            $this->connection->connection()->table($tableName)->$action($batch);
+            $this->connection->writeConnection()->table($tableName)->$action($batch);
         } catch (\Illuminate\Database\QueryException $e) {
             echo "\n\nBatch insert error: " . substr($e->getMessage(), 0, 500);
             echo "\n[...]\n" . substr($e->getMessage(), -300) . "\n";
