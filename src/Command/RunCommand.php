@@ -59,10 +59,10 @@ class RunCommand extends Command
             $this->target ?? '',
             $this->input ?? '',
             $this->output ?? '',
-            $this->sp ?? '',
-            $this->tp ?? '',
-            $this->cdn ?? '',
-            $this->data ?? ''
+            $this->sp,
+            $this->tp,
+            $this->cdn,
+            $this->data
         );
 
         \Porter\Controller::run($request);
