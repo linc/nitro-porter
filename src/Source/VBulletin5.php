@@ -350,7 +350,7 @@ class VBulletin5 extends VBulletin
 
         // We have to generate a sort order so let's do the exportation manually line by line....
         list($revMappings, $legacyFilter) = $ex->normalizeDataMap($pollOption_Map);
-        $exportStructure = $ex->mapStructure['PollOption'];
+        //$exportStructure = $ex->porterStructure['PollOption'];
         //$exportStructure = getExportStructure($pollOption_Map, $ex->mapStructure['PollOption'], $pollOption_Map);
         //$revMappings = flipMappings($pollOption_Map);
 
