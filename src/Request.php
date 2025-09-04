@@ -24,10 +24,10 @@ class Request
     private string $targetPackage;
     private string $inputConnection;
     private string $outputConnection;
-    private string $inputTablePrefix;
-    private string $outputTablePrefix;
-    private string $cdnPrefix;
-    private string $dataTypes;
+    private ?string $inputTablePrefix;
+    private ?string $outputTablePrefix;
+    private ?string $cdnPrefix;
+    private ?string $dataTypes;
 
     /**
      * Build a valid Porter request.
@@ -36,20 +36,21 @@ class Request
      * @param string $targetPackage Target package alias (or 'file', 'sql')
      * @param string $inputConnection Connection alias in config.php
      * @param string $outputConnection Connection alias in config.php
-     * @param string $inputTablePrefix If the input is a database, override source package with this table prefix.
-     * @param string $outputTablePrefix If the output is a database, override target package with this table prefix.
-     * @param string $cdnPrefix Text to prepend to attachment URIs.
-     * @param string $dataTypes CSV of types or 'all' (ex: `users,categories,discussions`)
+     * @param ?string $inputTablePrefix If the input is a database, override source package with this table prefix.
+     * @param ?string $outputTablePrefix If the output is a database, override target package with this table prefix.
+     * @param ?string $cdnPrefix Text to prepend to attachment URIs.
+     * @param ?string $dataTypes CSV of types or 'all' (ex: `users,categories,discussions`)
+     * @throws \Exception
      */
     public function __construct(
         string $sourcePackage,
         string $targetPackage,
         string $inputConnection,
         string $outputConnection,
-        string $inputTablePrefix,
-        string $outputTablePrefix,
-        string $cdnPrefix,
-        string $dataTypes,
+        ?string $inputTablePrefix = null,
+        ?string $outputTablePrefix = null,
+        ?string $cdnPrefix = null,
+        ?string $dataTypes = null,
     ) {
         $this->sourcePackage = $sourcePackage;
         $this->targetPackage = $targetPackage;
@@ -66,7 +67,7 @@ class Request
         } elseif (!empty($dataTypes)) {
             throw new \Exception('Invalid data types in request.');
         } else {
-            $this->dataTypes = '';
+            $this->dataTypes = null;
         }
     }
 
@@ -90,22 +91,22 @@ class Request
         return $this->outputConnection;
     }
 
-    public function getInputTablePrefix(): string
+    public function getInputTablePrefix(): ?string
     {
         return $this->inputTablePrefix;
     }
 
-    public function getOutputTablePrefix(): string
+    public function getOutputTablePrefix(): ?string
     {
         return $this->outputTablePrefix;
     }
 
-    public function getCdnPrefix(): string
+    public function getCdnPrefix(): ?string
     {
         return $this->cdnPrefix;
     }
 
-    public function getDataTypes(): string
+    public function getDataTypes(): ?string
     {
         return $this->dataTypes;
     }
