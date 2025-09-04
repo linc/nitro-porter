@@ -65,6 +65,8 @@ class Request
             $this->dataTypes = $dataTypes;
         } elseif (!empty($dataTypes)) {
             throw new \Exception('Invalid data types in request.');
+        } else {
+            $this->dataTypes = '';
         }
     }
 
