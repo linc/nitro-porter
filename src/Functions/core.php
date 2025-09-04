@@ -84,10 +84,14 @@ function sourceFactory(string $source): Source
  * Get valid target class. Exit app if invalid name is given.
  *
  * @param string $target
- * @return Target
+ * @return ?Target
  */
-function targetFactory(string $target): Target
+function targetFactory(string $target): ?Target
 {
+    if ('file' === $target) {
+        return null;
+    }
+
     $class = '\Porter\Target\\' . ucwords($target);
     if (!class_exists($class)) {
         exit('Unsupported target: ' . $target);
@@ -115,31 +119,37 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
 }
 
 /**
- * @param Request $request
- * @param Source $source
- * @param ConnectionManager $exportSourceCM
- * @param Storage $storage
- * @param ConnectionManager $importSourceCM
+ * @param ConnectionManager $inputCM
+ * @param Storage $porterStorage
+ * @param Storage $outputStorage
+ * @param string $sourcePrefix
+ * @param string $targetPrefix
+ * @param string|null $limitTables
+ * @param bool $captureOnly
  * @return ExportModel
  */
 function exportModelFactory(
-    Request $request,
-    Source $source,
-    ConnectionManager $exportSourceCM,
-    Storage $storage,
-    ConnectionManager $importSourceCM
+    ConnectionManager $inputCM,
+    Storage $porterStorage,
+    Storage $outputStorage,
+    string $sourcePrefix = '',
+    string $targetPrefix = '',
+    ?string $limitTables = '',
+    bool $captureOnly = false
 ): ExportModel {
     // Wire old database / model mess.
-    $info = $exportSourceCM->getAllInfo();
-    $db = new DbFactory($info, 'pdo');
-    $map = loadStructure();
-    $model = new ExportModel($db, $map, $storage, $importSourceCM);
-
-    // Set model properties.
-    $model->srcPrefix = empty($request->getInputTablePrefix()) ?
-        $source::SUPPORTED['prefix'] : $request->getInputTablePrefix();
-    $model->limitTables($request->getDatatypes());
-    $model->captureOnly = ($request->getOutput() === 'sql');
+    $info = $inputCM->getAllInfo();
+    $inputDB = new DbFactory($info, 'pdo'); // initial read only
+    $model = new ExportModel(
+        $inputDB,
+        $porterStorage,
+        $outputStorage,
+        loadStructure(),
+        $sourcePrefix,
+        $targetPrefix,
+        $limitTables,
+        $captureOnly
+    );
 
     return $model;
 }

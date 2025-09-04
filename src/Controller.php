@@ -17,7 +17,7 @@ class Controller
      * @param Source $source
      * @param ExportModel $model
      */
-    public static function doExport(Source $source, ExportModel $model)
+    public static function doExport(Source $source, ExportModel $model): void
     {
         $model->verifySource($source->sourceTables);
 
@@ -31,7 +31,7 @@ class Controller
 
         if (\Porter\Config::getInstance()->debugEnabled() || $model->captureOnly) {
             $queries = implode("\n\n", $model->queryRecord);
-            $model->comment($queries, true);
+            //$model->comment($queries, true);
         }
     }
 
@@ -41,7 +41,7 @@ class Controller
      * @param Target $target
      * @param ExportModel $model
      */
-    public static function doImport(Target $target, ExportModel $model)
+    public static function doImport(Target $target, ExportModel $model): void
     {
         $model->begin();
         $target->validate($model);
@@ -50,12 +50,34 @@ class Controller
     }
 
     /**
+     * Finalize the import (if the optional postscript class exists).
+     *
+     * Use a separate database connection since re-querying data may be necessary.
+     *    -> "Cannot execute queries while other unbuffered queries are active."
+     *
+     * @param string $target
+     * @param string $output
+     * @param ExportModel $exportModel
+     */
+    protected static function doPostscript(string $target, string $output, ExportModel $exportModel): void
+    {
+        $postConnection = new ConnectionManager($output);
+        $postscript = postscriptFactory($target, $exportModel->getOutputStorage(), $postConnection);
+        if ($postscript) {
+            $exportModel->comment("Postscript found and running...");
+            $postscript->run($exportModel);
+        } else {
+            $exportModel->comment("No Postscript found.");
+        }
+    }
+
+    /**
      * Do some intelligent configuration of the migration process.
      *
      * @param Source $source
      * @param Target $target
      */
-    public static function setModes(Source $source, Target $target)
+    public static function setFlags(Source $source, Target $target): void
     {
         // If both the source and target don't store content/body on the discussion/thread record,
         // skip the conversion on both sides so we don't do joins and renumber keys for nothing.
@@ -69,78 +91,74 @@ class Controller
     }
 
     /**
-     * Called by router to set up and run main export process.
+     * Setup & run the requested migration process.
+     *
+     * Translates `Request` into action (i.e. `Request` object should not pass beyond here).
      */
-    public static function run(Request $request)
+    public static function run(Request $request): void
     {
-        // Remove time limit.
-        set_time_limit(0);
-        ini_set('memory_limit', '256M');
-
-        // Set up export storage.
-        if ($request->getTarget() === 'file') { // @todo Perhaps abstract to a storageFactory
-            $storage = new Storage\File();
-        } else {
-            $targetCM = new ConnectionManager($request->getOutput());
-            $storage = new Storage\Database($targetCM);
-        }
-
-        // Setup source & model.
+        // Setup model.
         $source = sourceFactory($request->getSource());
-        $outputCM = new ConnectionManager($request->getOutput());
-        $inputCM = new ConnectionManager($request->getInput());
-        $exportModel = exportModelFactory($request, $source, $inputCM, $storage, $outputCM);
+        $inputCM = new ConnectionManager($request->getInput()); // @todo Storage for $input too.
+        $target = targetFactory($request->getTarget());
+        if ($request->getTarget() === 'file') { // @todo storageFactory
+            $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
+            $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
+        } else {
+            $porterStorage = new Storage\Database(new ConnectionManager($request->getOutput())); // @todo Separate
+            $outputStorage = new Storage\Database(new ConnectionManager($request->getOutput()));
+        }
+        $sourcePrefix = $request->getInputTablePrefix() ?? $source::SUPPORTED['prefix'];
+        $targetPrefix = $request->getOutputTablePrefix() ?? $target::SUPPORTED['prefix'];
+        $model = exportModelFactory(
+            $inputCM,
+            $porterStorage,
+            $outputStorage,
+            $sourcePrefix,
+            $targetPrefix,
+            $request->getDatatypes(),
+            ($request->getOutput() === 'sql')
+        );
 
-        // No permissions warning.
-        $exportModel->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n");
+        // Log request.
+        $model->comment("NITRO PORTER RUNNING...");
+        $model->comment("Porting " . $source::SUPPORTED['name'] . " to " . $target::SUPPORTED['name']);
+        $model->comment("Input: " . $inputCM->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
+        $model->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
+        $model->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
 
-        // Log source.
-        $exportModel->comment("Source: " . $source::SUPPORTED['name'] . " (" . $inputCM->getAlias() . ")");
-
-        // Setup target & modes.
-        $target = false;
-        if ($request->getTarget() !== 'file') {
-            $target = targetFactory($request->getTarget());
-            // Log target.
-            $exportModel->comment("Target: " . $target::SUPPORTED['name'] . " (" . $outputCM->getAlias() . ")");
-
-            self::setModes($source, $target);
-            // Log flags.
-            $exportModel->comment("Flag: Use Discussion Body: " .
+        // Setup & log flags.
+        if ($target) {
+            self::setFlags($source, $target);
+            $model->comment("? 'Use Discussion Body' = " .
                 ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
 
-        // Start timer.
+        // Remove limits & start timer.
+        set_time_limit(0);
+        ini_set('memory_limit', '256M');
         $start = microtime(true);
+        $model->comment("\n" . sprintf(
+            '[ STARTED at %s ]',
+            date('H:i:s e')
+        ) . "\n");
 
-        // Export.
-        self::doExport($source, $exportModel);
+        // Export (Source -> `PORT_`).
+        self::doExport($source, $model);
 
-        // Import.
+        // Import (`PORT_` -> Target).
         if ($target) {
-            $exportModel->tarPrefix = $target::SUPPORTED['prefix']; // @todo Wrap these refs.
-            self::doImport($target, $exportModel);
-
-            // Finalize the import (if the optional postscript class exists).
-            // Use a separate database connection since re-querying data may be necessary.
-            // -> "Cannot execute queries while other unbuffered queries are active."
-            $postConnection = new ConnectionManager($request->getOutput());
-            $postscript = postscriptFactory($request->getTarget(), $storage, $postConnection);
-            if ($postscript) {
-                $exportModel->comment("Postscript found and running...");
-                $postscript->run($exportModel);
-            } else {
-                $exportModel->comment("No Postscript found.");
-            }
-
-            // Doing this cleanup automatically is complex, so tell them to do it manually for now.
-            $exportModel->comment("After testing import, you may delete `PORT_` database tables.");
+            self::doImport($target, $model);
+            self::doPostscript($request->getTarget(), $request->getOutput(), $model);
         }
 
-        // End timer & report.
-        $exportModel->comment(
-            sprintf('ELAPSED — %s', formatElapsed(microtime(true) - $start)) .
-            ' (' . date('H:i:s', (int)$start) . ' - ' . date('H:i:s') . ')'
-        );
+        // Report.
+        $model->comment("\n" . sprintf(
+            '[ FINISHED at %s after running for %s ]',
+            date('H:i:s e'),
+            formatElapsed(microtime(true) - $start)
+        ));
+        $model->comment("[ After testing, you may delete any `PORT_` database tables. ]");
+        $model->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n\n");
     }
 }

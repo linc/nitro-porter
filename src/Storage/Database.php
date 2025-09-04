@@ -96,7 +96,6 @@ class Database extends Storage
             'memory' => 0,
         ];
         $this->setBatchTable($name);
-        $this->connection->newConnection();
 
         if (is_a($data, '\Porter\Database\ResultSet')) {
             // Iterate on old ResultSet.
@@ -200,7 +199,7 @@ class Database extends Storage
         $tableName = $this->getBatchTable();
         $action = (in_array($tableName, $this->ignoreErrorsTables)) ? 'insertOrIgnore' : 'insert';
         try {
-            $this->connection->writeConnection()->table($tableName)->$action($batch);
+            $this->connection->connection()->table($tableName)->$action($batch);
         } catch (\Illuminate\Database\QueryException $e) {
             echo "\n\nBatch insert error: " . substr($e->getMessage(), 0, 500);
             echo "\n[...]\n" . substr($e->getMessage(), -300) . "\n";
