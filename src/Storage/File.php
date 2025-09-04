@@ -43,6 +43,14 @@ class File extends Storage
     protected bool $useCompression = true;
 
     /**
+     * @return string
+     */
+    public function getAlias(): string
+    {
+        return 'file';
+    }
+
+    /**
      * Whether or not to use compression on the output file.
      *
      * @param  bool $value The value to set or NULL to just return the value.

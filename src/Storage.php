@@ -45,6 +45,8 @@ abstract class Storage
 
     abstract public function endStream();
 
+    abstract public function getAlias(): string;
+
     /**
      * Prepare a row of data for storage.
      *
