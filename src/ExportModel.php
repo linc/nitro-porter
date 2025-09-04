@@ -40,12 +40,12 @@ class ExportModel
      * @var string DB prefix of source. Queries passed to export() will replace `:_` with this.
      * @see ExportModel::export()
      */
-    public string $srcPrefix = '';
+    protected string $srcPrefix = '';
 
     /**
      * @var string DB prefix of the intermediate storage. @todo Should be a constant; don't alter.
      */
-    public string $intPrefix = 'PORT_';
+    protected string $porterPrefix = 'PORT_';
 
     /**
      * @var string DB prefix of the final target. Blindly prepended to give table name.
@@ -65,7 +65,7 @@ class ExportModel
     /**
      * @var array Table structures that define the format of the intermediary export tables.
      */
-    public array $mapStructure = [];
+    protected array $porterStructure = [];
 
     /**
      * @var DbFactory Instance DbFactory
@@ -74,42 +74,58 @@ class ExportModel
     protected DbFactory $database;
 
     /**
-     * Source connection for the import step.
-     *
-     * @var ConnectionManager
+     * @var Storage Where the mapping data is sent.
      */
-    protected ConnectionManager $importSourceCM;
+    protected Storage $porterStorage;
 
     /**
-     * @var Storage Where the data is being sent.
+     * @var Storage Where the target data is sent.
      */
-    protected Storage $storage;
+    protected Storage $outputStorage;
 
     /**
      * Setup.
      *
-     * @param $db
-     * @param $map
-     * @param $storage
-     * @param ConnectionManager $importSourceCM
+     * @param DbFactory $inputDB Deprecated database connector used in Source packages.
+     * @param Storage $porterStorage
+     * @param Storage $outputStorage
+     * @param array $porterStructure
+     * @param string $sourcePrefix
+     * @param string $targetPrefix
+     * @param bool $captureOnly
      */
-    public function __construct($db, $map, $storage, ConnectionManager $importSourceCM)
-    {
-        $this->database = $db;
-        $this->mapStructure = $map;
-        $this->storage = $storage;
-        $importSourceCM->newConnection();
-        $this->importSourceCM = $importSourceCM;
+    public function __construct(
+        DbFactory $inputDB,
+        Storage $porterStorage,
+        Storage $outputStorage,
+        array $porterStructure,
+        string $sourcePrefix = '',
+        string $targetPrefix = '',
+        ?string $limitTables = '',
+        bool $captureOnly = false
+    ) {
+        $this->database = $inputDB;
+        $this->porterStorage = $porterStorage;
+        $this->outputStorage = $outputStorage;
+        $this->porterStructure = $porterStructure;
+        $this->srcPrefix = $sourcePrefix;
+        $this->tarPrefix = $targetPrefix;
+        $this->limitTables($limitTables);
+        $this->captureOnly = $captureOnly;
     }
 
     /**
-     * Provide the import database.
+     * Provide the porter database.
      *
      * @return Connection
+     * @throws \Exception
      */
     public function dbImport(): Connection
     {
-        return $this->importSourceCM->connection();
+        if (!is_a($this->porterStorage, '\Porter\Storage\Database')) {
+            throw new \Exception('Porter storage can only be a database currently.');
+        }
+        return $this->porterStorage->getConnection()->connection(); // @todo jank double-call
     }
 
     /**
@@ -120,9 +136,9 @@ class ExportModel
      * 3. Normalize case to lower
      * 4. Save to the ExportModel instance
      *
-     * @param string $tables
+     * @param ?string $tables
      */
-    public function limitTables(string $tables)
+    public function limitTables(?string $tables)
     {
         if (!empty($tables)) {
             $tables = explode(',', $tables);
@@ -140,7 +156,7 @@ class ExportModel
         if ($this->captureOnly) {
             return;
         }
-        $this->storage->begin();
+        $this->outputStorage->begin();
     }
 
     /**
@@ -151,7 +167,7 @@ class ExportModel
         if ($this->captureOnly) {
             return;
         }
-        $this->storage->end();
+        $this->outputStorage->end();
     }
 
     /**
@@ -191,7 +207,7 @@ class ExportModel
         $start = microtime(true);
 
         // Validate table for export.
-        if (!array_key_exists($tableName, $this->mapStructure)) {
+        if (!array_key_exists($tableName, $this->porterStructure)) {
             $this->comment("Error: $tableName is not a valid export.");
             return;
         }
@@ -204,20 +220,20 @@ class ExportModel
             return;
         }
 
-        $structure = $this->mapStructure[$tableName];
+        $structure = $this->porterStructure[$tableName];
 
         // Reconcile data structure to be written to storage.
         list($map, $legacyFilter) = $this->normalizeDataMap($map); // @todo Update legacy filter usage and remove.
         $filters = array_merge($filters, $legacyFilter);
 
         // Set storage prefix.
-        $this->storage->setPrefix($this->intPrefix);
+        $this->outputStorage->setPrefix($this->porterPrefix);
 
         // Prepare the storage medium for the incoming structure.
-        $this->storage->prepare($tableName, $structure);
+        $this->outputStorage->prepare($tableName, $structure);
 
         // Store the data.
-        $info = $this->storage->store($tableName, $map, $structure, $data, $filters, $this);
+        $info = $this->outputStorage->store($tableName, $map, $structure, $data, $filters, $this);
 
         // Report.
         $this->reportStorage('export', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
@@ -236,13 +252,13 @@ class ExportModel
         $start = microtime(true);
 
         // Set storage prefix.
-        $this->storage->setPrefix($this->tarPrefix);
+        $this->outputStorage->setPrefix($this->tarPrefix);
 
         // Prepare the storage medium for the incoming structure.
-        $this->storage->prepare($tableName, $structure);
+        $this->outputStorage->prepare($tableName, $structure);
 
         // Store the data.
-        $info = $this->storage->store($tableName, $map, $structure, $exp, $filters, $this);
+        $info = $this->outputStorage->store($tableName, $map, $structure, $exp, $filters, $this);
 
         // Report.
         $this->reportStorage('import', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
@@ -256,7 +272,7 @@ class ExportModel
      */
     public function importEmpty(string $tableName, $structure): void
     {
-        $this->storage->prepare($tableName, $structure);
+        $this->outputStorage->prepare($tableName, $structure);
     }
 
     /**
@@ -291,7 +307,15 @@ class ExportModel
      */
     public function normalizeDataMap(array $dataMap): array
     {
-        return $this->storage->normalizeDataMap($dataMap);
+        return $this->outputStorage->normalizeDataMap($dataMap);
+    }
+
+    /**
+     * @return Storage
+     */
+    public function getOutputStorage(): Storage
+    {
+        return $this->outputStorage;
     }
 
     /**
@@ -412,8 +436,8 @@ class ExportModel
      */
     public function ignoreDuplicates(string $tableName)
     {
-        if (method_exists($this->storage, 'ignoreTable')) {
-            $this->storage->ignoreTable($this->tarPrefix . $tableName);
+        if (method_exists($this->outputStorage, 'ignoreTable')) {
+            $this->outputStorage->ignoreTable($this->tarPrefix . $tableName);
         }
     }
 
@@ -524,7 +548,7 @@ class ExportModel
      */
     public function targetExists(string $table, array $columns = []): bool
     {
-        return $this->storage->exists($table, $columns);
+        return $this->outputStorage->exists($table, $columns);
     }
 
     /**

@@ -20,10 +20,7 @@ class ConnectionManager
     protected array $info = [];
 
     /** @var Connection Connection used for reads. */
-    protected Connection $readConnection;
-
-    /** @var Connection Connection used for writes. */
-    protected Connection $writeConnection;
+    protected Connection $connection;
 
     public Capsule $dbm;
 
@@ -31,7 +28,6 @@ class ConnectionManager
      * If no connect alias is give, initiate a test connection.
      *
      * @param string $alias
-     * @return array Connection info.
      */
     public function __construct(string $alias = '')
     {
@@ -51,9 +47,7 @@ class ConnectionManager
             $capsule = new Capsule();
             $capsule->addConnection($this->translateConfig($info), $info['alias']);
             $this->dbm = $capsule;
-            // Separate read/write connections for unbuffered queries.
-            $this->readConnection = $this->newConnection();
-            $this->writeConnection = $this->newConnection();
+            $this->connection = $this->newConnection();
         }
     }
 
@@ -95,19 +89,9 @@ class ConnectionManager
      *
      * @return Connection
      */
-    public function readConnection(): Connection
+    public function connection(): Connection
     {
-        return $this->readConnection;
-    }
-
-    /**
-     * Get the current DBM connection.
-     *
-     * @return Connection
-     */
-    public function writeConnection(): Connection
-    {
-        return $this->writeConnection;
+        return $this->connection;
     }
 
     /**
