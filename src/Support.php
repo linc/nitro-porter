@@ -91,7 +91,7 @@ class Support
     {
         // Hardcode Vanilla file support (all = yes).
         $this->targets['file'] = [
-            'name' => 'Vanilla',
+            'name' => 'Vanilla (file)',
             'features' => array_fill_keys(self::SUPPORTED_FEATURES, 1),
         ];
 
