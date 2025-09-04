@@ -19,8 +19,11 @@ class ConnectionManager
 
     protected array $info = [];
 
-    /** @var Connection Current connection being used. */
-    protected Connection $connection;
+    /** @var Connection Connection used for reads. */
+    protected Connection $readConnection;
+
+    /** @var Connection Connection used for writes. */
+    protected Connection $writeConnection;
 
     public Capsule $dbm;
 
@@ -48,7 +51,9 @@ class ConnectionManager
             $capsule = new Capsule();
             $capsule->addConnection($this->translateConfig($info), $info['alias']);
             $this->dbm = $capsule;
-            $this->newConnection();
+            // Separate read/write connections for unbuffered queries.
+            $this->readConnection = $this->newConnection();
+            $this->writeConnection = $this->newConnection();
         }
     }
 
@@ -90,9 +95,19 @@ class ConnectionManager
      *
      * @return Connection
      */
-    public function connection(): Connection
+    public function readConnection(): Connection
     {
-        return $this->connection;
+        return $this->readConnection;
+    }
+
+    /**
+     * Get the current DBM connection.
+     *
+     * @return Connection
+     */
+    public function writeConnection(): Connection
+    {
+        return $this->writeConnection;
     }
 
     /**
@@ -102,13 +117,13 @@ class ConnectionManager
      */
     public function newConnection(): Connection
     {
-        $this->connection = $this->dbm->getConnection($this->alias);
+        $connection = $this->dbm->getConnection($this->alias);
 
-        if ($this->connection->getDriverName() === 'mysql') {
-            $this->optimizeMySQL();
+        if ($connection->getDriverName() === 'mysql') {
+            $this->optimizeMySQL($connection);
         }
 
-        return $this->connection;
+        return $connection;
     }
 
     /**
@@ -130,19 +145,24 @@ class ConnectionManager
 
     /**
      * Perform MySQL-specific connection optimizations.
+     *
+     * @param Connection $connection
+     * @return Connection
      */
-    protected function optimizeMySQL(): void
+    protected function optimizeMySQL(Connection $connection): Connection
     {
         // Always disable data integrity checks.
-        $this->connection->unprepared("SET foreign_key_checks = 0");
+        $connection->unprepared("SET foreign_key_checks = 0");
 
         // Set the timezone to UTC. Avoid named timezones because they may not be loaded.
-        $this->connection->unprepared("SET time_zone = '+00:00'");
+        $connection->unprepared("SET time_zone = '+00:00'");
 
         // Log all queries if debug mode is enabled.
         if (\Porter\Config::getInstance()->debugEnabled()) {
             // See ${hostname}.log in datadir (find with `SHOW GLOBAL VARIABLES LIKE 'datadir'`)
-            $this->connection->unprepared("SET GLOBAL general_log = 1");
+            $connection->unprepared("SET GLOBAL general_log = 1");
         }
+
+        return $connection;
     }
 }
