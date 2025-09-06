@@ -29,11 +29,23 @@ abstract class Target
     public ConnectionManager $connection;
 
     /**
-     * Register supported features.
+     * Get name of the target package.
+     *
+     * @return string
      */
-    public static function getSupport(): array
+    public static function getName(): string
     {
-        return static::SUPPORTED;
+        return static::SUPPORTED['name'];
+    }
+
+    /**
+     * Get default table prefix of the target package.
+     *
+     * @return string
+     */
+    public static function getPrefix(): string
+    {
+        return static::SUPPORTED['prefix'];
     }
 
     /**

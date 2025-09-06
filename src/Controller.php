@@ -21,8 +21,8 @@ class Controller
     {
         $model->verifySource($source->sourceTables);
 
-        if ($source::getCharSetTable()) {
-            $model->setCharacterSet($source::getCharSetTable());
+        if ($source::getCharsetTable()) {
+            $model->setCharacterSet($source::getCharsetTable());
         }
 
         $model->begin();
@@ -55,14 +55,14 @@ class Controller
      * Use a separate database connection since re-querying data may be necessary.
      *    -> "Cannot execute queries while other unbuffered queries are active."
      *
-     * @param string $target
+     * @param string $postscript
      * @param string $output
      * @param ExportModel $exportModel
      */
-    protected static function doPostscript(string $target, string $output, ExportModel $exportModel): void
+    protected static function doPostscript(string $postscript, string $output, ExportModel $exportModel): void
     {
         $postConnection = new ConnectionManager($output);
-        $postscript = postscriptFactory($target, $exportModel->getOutputStorage(), $postConnection);
+        $postscript = postscriptFactory($postscript, $exportModel->getOutputStorage(), $postConnection);
         if ($postscript) {
             $exportModel->comment("Postscript found and running...");
             $postscript->run($exportModel);
@@ -97,20 +97,18 @@ class Controller
      */
     public static function run(Request $request): void
     {
-        // Reconcile request with config & defaults.
-        $sourceName = $request->getSource();
-        $targetName = $request->getTarget();
-        $source = sourceFactory($sourceName);
-        $target = targetFactory($targetName);
+        // Break down the Request.
+        $source = sourceFactory($request->getSource());
+        $target = targetFactory($request->getTarget());
         $inputName = $request->getInput();
         $outputName = $request->getOutput();
         $sourcePrefix = $request->getInputTablePrefix();
-        $targetPrefix = (empty($target)) ? '' : $request->getOutputTablePrefix();
+        $targetPrefix = (empty($target)) ? '' : $request->getOutputTablePrefix(); // @todo Make 'file' explicit output.
         $dataTypes = $request->getDatatypes();
 
         // Setup model.
         $inputCM = new ConnectionManager($inputName); // @todo Storage for $input too.
-        if ($targetName === 'file') { // @todo storageFactory
+        if (empty($target)) { // @todo storageFactory
             $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
             $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
         } else {
@@ -129,7 +127,7 @@ class Controller
 
         // Log request.
         $model->comment("NITRO PORTER RUNNING...");
-        $model->comment("Porting " . $source::SUPPORTED['name'] . " to " . $target::SUPPORTED['name']);
+        $model->comment("Porting " . $source->getName() . " to " . $target->getName());
         $model->comment("Input: " . $inputCM->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
         $model->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
         $model->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
@@ -156,7 +154,8 @@ class Controller
         // Import (`PORT_` -> Target).
         if ($target) {
             self::doImport($target, $model);
-            self::doPostscript($targetName, $outputName, $model);
+            // Postscript names must match target names currently.
+            self::doPostscript($target->getName(), $outputName, $model);
         }
 
         // Report.

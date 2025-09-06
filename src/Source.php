@@ -46,11 +46,23 @@ abstract class Source
     abstract public function run(ExportModel $ex); // @phpstan-ignore missingType.return
 
     /**
-     * Register supported features.
+     * Get name of the source package.
+     *
+     * @return string
      */
-    public static function getSupport(): array
+    public static function getName(): string
     {
-        return static::SUPPORTED;
+        return static::SUPPORTED['name'];
+    }
+
+    /**
+     * Get default table prefix of the source package.
+     *
+     * @return string
+     */
+    public static function getPrefix(): string
+    {
+        return static::SUPPORTED['prefix'];
     }
 
     /**
@@ -87,11 +99,11 @@ abstract class Source
     /**
      * @return string
      */
-    public static function getCharSetTable(): string
+    public static function getCharsetTable(): string
     {
         $charset = '';
-        if (isset(self::getSupport()['charset_table'])) {
-            $charset = self::getSupport()['charset_table'];
+        if (isset(self::SUPPORTED['charset_table'])) {
+            $charset = self::SUPPORTED['charset_table'];
         }
         return $charset;
     }
