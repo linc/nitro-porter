@@ -394,7 +394,7 @@ function formatUrl($str)
 /**
  * Decode the HTML out of a value.
  */
-function HTMLDecoder($value)
+function HTMLDecoder(string $value): string
 {
     $characterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
 

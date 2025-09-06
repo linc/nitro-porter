@@ -45,7 +45,7 @@ class Mvc extends Source
      *
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'MembershipUser' => array(),
         'Catagory' => array(),
         'Post' => array(),

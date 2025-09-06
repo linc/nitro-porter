@@ -18,9 +18,9 @@ class Formatter
     /**
      * Singleton accessor.
      *
-     * @return Formatter
+     * @return self Formatter
      */
-    public static function instance($ex = null): self
+    public static function instance(?ExportModel $ex = null): self
     {
         if (null === self::$instance) {
             self::$instance = new self();

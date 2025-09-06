@@ -33,17 +33,17 @@ abstract class Storage
      */
     abstract public function prepare(string $name, array $structure): void;
 
-    abstract public function begin();
+    abstract public function begin(): void;
 
-    abstract public function end();
+    abstract public function end(): void;
 
     abstract public function setPrefix(string $prefix): void;
 
     abstract public function exists(string $tableName, array $columns = []): bool;
 
-    abstract public function stream(array $row, array $structure);
+    abstract public function stream(array $row, array $structure): void;
 
-    abstract public function endStream();
+    abstract public function endStream(): void;
 
     abstract public function getAlias(): string;
 

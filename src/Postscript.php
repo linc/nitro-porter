@@ -19,11 +19,12 @@ abstract class Postscript
     protected Storage $storage;
 
     /** Main process, custom per package. */
-    abstract public function run(ExportModel $ex);
+    abstract public function run(ExportModel $ex): void;
 
     /**
      * Only Target database connection required; don't care what Source was.
      *
+     * @param Storage $storage
      * @param ConnectionManager $connection
      */
     public function __construct(Storage $storage, ConnectionManager $connection)

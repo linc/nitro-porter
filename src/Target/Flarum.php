@@ -117,7 +117,7 @@ class Flarum extends Target
      *
      * @param ExportModel $ex
      */
-    public function validate(ExportModel $ex)
+    public function validate(ExportModel $ex): void
     {
         $this->uniqueUserNames($ex);
         $this->uniqueUserEmails($ex);
@@ -149,8 +149,9 @@ class Flarum extends Target
      * Folks are just gonna need to manually edit their existing forum data for now to rectify dupe issues.
      *
      * @param ExportModel $ex
+     * @throws \Exception
      */
-    public function uniqueUserNames(ExportModel $ex)
+    public function uniqueUserNames(ExportModel $ex): void
     {
         $allowlist = [
             '[Deleted User]',
@@ -168,11 +169,12 @@ class Flarum extends Target
     /**
      * Flarum must have unique emails. Report users skipped (because of `insert ignore`).
      *
+     * @param ExportModel $ex
+     * @throws \Exception
      * @see uniqueUserNames
      *
-     * @param ExportModel $ex
      */
-    public function uniqueUserEmails(ExportModel $ex)
+    public function uniqueUserEmails(ExportModel $ex): void
     {
         $dupes = $ex->findDuplicates('PORT_User', 'Email');
         if (!empty($dupes)) {
@@ -183,7 +185,7 @@ class Flarum extends Target
     /**
      * Main import process.
      */
-    public function run(ExportModel $ex)
+    public function run(ExportModel $ex): void
     {
         // Ignore constraints on tables that block import.
         $ex->ignoreDuplicates('users');
@@ -725,8 +727,9 @@ class Flarum extends Target
 
     /**
      * @param ExportModel $ex
+     * @throws \Exception
      */
-    public function reactions(ExportModel $ex)
+    public function reactions(ExportModel $ex): void
     {
         // Verify support.
         if (!$ex->targetExists('PORT_ReactionType')) {
@@ -807,8 +810,9 @@ class Flarum extends Target
      * Export PMs to fof/byobu format, which uses the `posts` & `discussions` tables.
      *
      * @param ExportModel $ex
+     * @throws \Exception
      */
-    protected function privateMessages(ExportModel $ex)
+    protected function privateMessages(ExportModel $ex): void
     {
         // Verify source support.
         if (!$ex->targetExists('PORT_Conversation')) {

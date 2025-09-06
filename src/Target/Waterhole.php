@@ -83,7 +83,7 @@ class Waterhole extends Target
      *
      * @param ExportModel $ex
      */
-    public function validate(ExportModel $ex)
+    public function validate(ExportModel $ex): void
     {
         $this->uniqueUserNames($ex);
         $this->uniqueUserEmails($ex);
@@ -108,7 +108,7 @@ class Waterhole extends Target
      *
      * @param ExportModel $ex
      */
-    public function uniqueUserNames(ExportModel $ex)
+    public function uniqueUserNames(ExportModel $ex): void
     {
         $allowlist = [
             '[Deleted User]',
@@ -130,7 +130,7 @@ class Waterhole extends Target
      *
      * @param ExportModel $ex
      */
-    public function uniqueUserEmails(ExportModel $ex)
+    public function uniqueUserEmails(ExportModel $ex): void
     {
         $dupes = $ex->findDuplicates('PORT_User', 'Email');
         if (!empty($dupes)) {
@@ -141,7 +141,7 @@ class Waterhole extends Target
     /**
      * Main import process.
      */
-    public function run(ExportModel $ex)
+    public function run(ExportModel $ex): void
     {
         // Ignore constraints on tables that block import.
         $ex->ignoreDuplicates('users');

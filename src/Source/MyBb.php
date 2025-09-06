@@ -40,7 +40,7 @@ class MyBb extends Source
      *
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'forums' => array(),
         'posts' => array(),
         'threads' => array(),

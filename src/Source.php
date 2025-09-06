@@ -30,20 +30,20 @@ abstract class Source
 
     /**
      * @deprecated
-     * @var ExportModel
+     * @var ?ExportModel
      */
-    public $exportModel = null;
+    public ?ExportModel $exportModel = null;
 
     /**
      * @deprecated
      * @var array Required tables, columns set per exporter
      */
-    public $sourceTables = array();
+    public array $sourceTables = [];
 
     /**
      * Forum-specific export routine
      */
-    abstract public function run(ExportModel $ex);
+    abstract public function run(ExportModel $ex); // @phpstan-ignore missingType.return
 
     /**
      * Register supported features.
@@ -57,9 +57,9 @@ abstract class Source
      * Retrieve characteristics of the package.
      *
      * @param string $name
-     * @return mixed|null
+     * @return mixed
      */
-    public static function getFlag(string $name)
+    public static function getFlag(string $name): mixed
     {
         return (isset(static::FLAGS[$name])) ? static::FLAGS[$name] : null;
     }

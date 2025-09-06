@@ -158,7 +158,7 @@ class VBulletin extends Source
     /**
      * @var array Required tables => columns. Commented values are optional.
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         //'attachment'
         //'contenttype'
         //'customavatar'

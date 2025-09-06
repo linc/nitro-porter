@@ -40,7 +40,7 @@ class SimplePress extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'sfforums' => array(),
         'sfposts' => array(),
         'sftopics' => array(),

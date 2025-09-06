@@ -40,7 +40,7 @@ class ModxDiscuss extends Source
      *
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'categories' => array(), // This just requires the 'forum' table without caring about columns.
         'boards' => array(),
         'posts' => array(),

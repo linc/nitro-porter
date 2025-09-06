@@ -68,7 +68,7 @@ class File extends Storage
     /**
      * Create the export file and begin the export.
      */
-    public function begin()
+    public function begin(): void
     {
         // Build file name.
         $this->path = 'export_' . date('Y-m-d_His') . '.txt' . ($this->useCompression() ? '.gz' : '');
@@ -90,7 +90,7 @@ class File extends Storage
      *
      * This method must be called if BeginExport() has been called or else the export file will not be closed.
      */
-    public function end()
+    public function end(): void
     {
         if ($this->useCompression()) {
             gzclose($this->file);
@@ -109,9 +109,9 @@ class File extends Storage
      *
      * @param resource $fp
      * @param string $tableName
-     * @param array $exportStructure
+     * @param mixed[] $exportStructure
      */
-    public function writeBeginTable($fp, $tableName, $exportStructure)
+    public function writeBeginTable(mixed $fp, string $tableName, array $exportStructure): void
     {
         $tableHeader = '';
 
@@ -144,7 +144,7 @@ class File extends Storage
      *
      * @param resource $fp
      */
-    public function writeEndTable($fp)
+    public function writeEndTable(mixed $fp): void
     {
         fwrite($fp, self::NEWLINE . self::NEWLINE);
     }
@@ -156,7 +156,7 @@ class File extends Storage
      * @param array $row
      * @param array $structure
      */
-    public function writeRow($fp, array $row, array $structure)
+    public function writeRow($fp, array $row, array $structure): void
     {
         // Loop through the columns in the export structure and grab their values from the row.
         $exRow = array();
@@ -203,12 +203,12 @@ class File extends Storage
         return $info;
     }
 
-    public function stream(array $row, array $structure)
+    public function stream(array $row, array $structure): void
     {
         $this->writeRow($this->file, $row, $structure);
     }
 
-    public function endStream()
+    public function endStream(): void
     {
         // Required.
     }
@@ -241,7 +241,7 @@ class File extends Storage
      * @param mixed $value
      * @return string
      */
-    public function escapedValue($value): string
+    public function escapedValue(mixed $value): string
     {
         // Set the search and replace to escape strings.
         $escapeSearch = [
@@ -268,7 +268,7 @@ class File extends Storage
      * @param mixed $value
      * @return int|string
      */
-    public function formatValue($value)
+    public function formatValue(mixed $value): int|string
     {
         if (is_integer($value)) {
             // Do nothing, formats as is.

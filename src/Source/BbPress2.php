@@ -34,7 +34,7 @@ class BbPress2 extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'postmeta' => array(),
         'posts' => array(),
         'usermeta' => array(),

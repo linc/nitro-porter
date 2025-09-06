@@ -66,8 +66,8 @@ abstract class Target
     }
 
     /** Do the main process for imports, table by table. */
-    abstract public function run(ExportModel $ex);
+    abstract public function run(ExportModel $ex): void;
 
     /** Enforce data constraints required by the target platform. */
-    abstract public function validate(ExportModel $ex);
+    abstract public function validate(ExportModel $ex): void;
 }

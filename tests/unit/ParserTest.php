@@ -51,7 +51,7 @@ final class ParserTest extends TestCase
     /**
      * @dataProvider getParseRenderTests()
      */
-    public function testParseRender($text, $expected)
+    public function testParseRender(string $text, string $expected): void
     {
         $xml = Vanilla::parse($text);
         $html = Vanilla::render($xml);
@@ -59,7 +59,7 @@ final class ParserTest extends TestCase
         $this->assertEquals($expected, $html);
     }
 
-    public function getParseRenderTests()
+    public function getParseRenderTests(): array
     {
         return [
             [   // Allow headings
@@ -76,7 +76,7 @@ final class ParserTest extends TestCase
     /**
      * @covers \Porter\Formatter::closeTags
      */
-    public function testTagClose()
+    public function testTagClose(): void
     {
         $stored = 'text <img alt="" src="https://routeur4g.fr/discussions/uploads/editor/bf/ytfu9hvmqp3u.jpg">';
         $result = Formatter::closeTags($stored);
@@ -87,7 +87,7 @@ final class ParserTest extends TestCase
     /**
      * @covers \Porter\Formatter::fixIllegalTags
      */
-    public function testFixIllegalTags()
+    public function testFixIllegalTags(): void
     {
         $stored = '<span><div class="post-text-align-center"><br><br>&nbsp;Administrateur<br>version </div></span>';
         $result = Formatter::fixIllegalTags($stored);

@@ -7,7 +7,7 @@ final class FilterTest extends TestCase
     /**
      * @covers \vanillaPhoto
      */
-    public function testParseRender()
+    public function testParseRender(): void
     {
         $photoTests = [
             // Add 'p' - Vanilla origin

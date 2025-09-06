@@ -43,7 +43,7 @@ class JForum extends Source
      *
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'forums' => array(), // This just requires the 'forum' table without caring about columns.
         'posts' => array(),
         'topics' => array(),

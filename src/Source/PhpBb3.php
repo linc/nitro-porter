@@ -43,7 +43,7 @@ class PhpBb3 extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'users' => array(
             'user_id',
             'username',

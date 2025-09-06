@@ -1,9 +1,13 @@
 parameters:
-    level: 5
+    level: 6
+    ignoreErrors:
+        - identifier: missingType.iterableValue
     paths:
         - src
         - tests
     excludePaths:
         - src/Command
+        - src/Source
+        - src/Database
     bootstrapFiles:
         - bootstrap.php

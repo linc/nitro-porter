@@ -16,7 +16,7 @@ use Monolog\Handler\FirePHPHandler;
  */
 class Log
 {
-    public static $logger = null;
+    public static ?Logger $logger = null;
 
     /**
      * Only need one logger for now.
@@ -44,7 +44,7 @@ class Log
      *
      * @param string $message
      */
-    public static function comment(string $message)
+    public static function comment(string $message): void
     {
         self::getInstance()->info($message);
     }

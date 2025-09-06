@@ -59,7 +59,7 @@ class FluxBb extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array();
+    public array $sourceTables = array();
 
     /**
      * Forum-specific export format

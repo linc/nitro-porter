@@ -10,13 +10,13 @@ use Porter\Postscript;
 class Flarum extends Postscript
 {
     /** @var string[] Database structure for the table post_mentions_user. */
-    public const DB_STRUCTURE_POST_MENTIONS_USER = [
+    public const array DB_STRUCTURE_POST_MENTIONS_USER = [
         'post_id' => 'int',
         'mentions_user_id' => 'int',
     ];
 
     /** @var string[] Database structure for the table post_mentions_post. */
-    public const DB_STRUCTURE_POST_MENTIONS_POST = [
+    public const array DB_STRUCTURE_POST_MENTIONS_POST = [
         'post_id' => 'int',
         'mentions_post_id' => 'int',
     ];
@@ -29,7 +29,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    public function run(ExportModel $ex)
+    public function run(ExportModel $ex): void
     {
         $this->buildUserMentions($ex);
         $this->numberPosts($ex);
@@ -43,7 +43,7 @@ class Flarum extends Postscript
     /**
      * Find mentions in posts and record to database table.
      */
-    protected function buildUserMentions(ExportModel $ex)
+    protected function buildUserMentions(ExportModel $ex): void
     {
         // Start timer.
         $start = microtime(true);
@@ -95,7 +95,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function numberPosts(ExportModel $ex)
+    protected function numberPosts(ExportModel $ex): void
     {
         // Start timer.
         $start = microtime(true);
@@ -132,7 +132,7 @@ class Flarum extends Postscript
      *
      * @see QuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
      */
-    protected function buildPostMentions(ExportModel $ex)
+    protected function buildPostMentions(ExportModel $ex): void
     {
         // Start timer.
         $start = microtime(true);
@@ -222,7 +222,7 @@ class Flarum extends Postscript
      * @param int $quoteID The post referenced in the content.
      * @param string $quoteType One of 'post' or 'discussion'.
      * @return bool Whether the post mention was repaired.
-     *@see QuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
+     * @see QuoteEmbed — '<POSTMENTION id="{postid}" discussionid="" number="" displayname="{author}">'
      */
     protected function repairPostMention(ExportModel $ex, int $postid, string $content, int $quoteID, string $quoteType)
     {
@@ -280,7 +280,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function setLastRead(ExportModel $ex)
+    protected function setLastRead(ExportModel $ex): void
     {
         // Verify table exists.
         if (! $ex->targetExists($ex->tarPrefix . 'discussion_user')) {
@@ -322,7 +322,7 @@ class Flarum extends Postscript
      *
      * @param ExportModel $ex
      */
-    protected function addDefaultGroups(ExportModel $ex)
+    protected function addDefaultGroups(ExportModel $ex): void
     {
         $db = $this->connection->newConnection();
         $db->table($ex->tarPrefix . 'groups')
@@ -341,8 +341,9 @@ class Flarum extends Postscript
      * Badges are automatically added to badge_category_id = 1 during import.
      *
      * @param ExportModel $ex
+     * @throws \Exception
      */
-    protected function addDefaultBadgeCategory(ExportModel $ex)
+    protected function addDefaultBadgeCategory(ExportModel $ex): void
     {
         if ($ex->targetExists($ex->tarPrefix . 'badge_category')) {
             $ex->dbImport()
@@ -356,8 +357,9 @@ class Flarum extends Postscript
      * Promote the superadmin to the Flarum admin role.
      *
      * @param ExportModel $ex
+     * @throws \Exception
      */
-    protected function promoteAdmin(ExportModel $ex)
+    protected function promoteAdmin(ExportModel $ex): void
     {
         // Find the Vanlla superadmin (User.Admin = 1) and make them an Admin.
         $result = $ex->dbImport()

@@ -45,7 +45,7 @@ class Smf1 extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'boards' => array(),
         'messages' => array(),
         'personal_messages' => array(),

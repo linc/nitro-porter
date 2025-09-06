@@ -33,7 +33,7 @@ class Q2a extends Source
     ];
 
     /** @var array[] List of required tables. */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'blobs' => array(),
         'categories' => array(),
         'posts' => array(),

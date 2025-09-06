@@ -42,7 +42,7 @@ class Mbox extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'mbox' => array('Subject', 'Sender', 'Date', 'Body', 'Folder')
     );
 

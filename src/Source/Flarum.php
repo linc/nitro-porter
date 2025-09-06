@@ -39,7 +39,7 @@ class Flarum extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = [
+    public array $sourceTables = [
         'discussions' => [],
         'groups' => [],
         'posts' => [],

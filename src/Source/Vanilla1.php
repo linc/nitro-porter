@@ -37,7 +37,7 @@ class Vanilla1 extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'User' => array('UserID', 'Name', 'Password', 'Email', 'CountComments'),
         'Role' => array('RoleID', 'Name', 'Description'),
         'Category' => array('CategoryID', 'Name', 'Description'),

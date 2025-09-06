@@ -50,7 +50,7 @@ class Example extends Source
      *
      * @var array Required tables => columns
      */
-    public $sourceTables = [
+    public array $sourceTables = [
         'forums' => [], // This just requires the 'forum' table without caring about columns.
         'posts' => [],
         'topics' => [],

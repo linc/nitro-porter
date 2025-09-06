@@ -34,7 +34,7 @@ class CodoForum extends Source
     /**
      * @var array Required tables => columns
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'users' => array('id', 'username', 'mail', 'user_status', 'pass', 'signature'),
         'roles' => array('rid', 'rname'),
         'user_roles' => array('uid', 'rid'),

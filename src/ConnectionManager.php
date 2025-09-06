@@ -51,14 +51,14 @@ class ConnectionManager
         }
     }
 
-    public function setType(string $type)
+    public function setType(string $type): void
     {
         if (in_array($type, self::ALLOWED_TYPES)) {
             $this->type = $type;
         }
     }
 
-    public function setInfo(array $info)
+    public function setInfo(array $info): void
     {
         $this->info = $info;
     }

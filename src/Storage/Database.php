@@ -130,7 +130,7 @@ class Database extends Storage
      * @param int $rows
      * @param ExportModel $exportModel
      */
-    public function logBatchProgress(string $name, int $rows, ExportModel $exportModel)
+    public function logBatchProgress(string $name, int $rows, ExportModel $exportModel): void
     {
         if ($rows >= self::LOG_THRESHOLD && ($rows % self::LOG_INCREMENT) === 0) {
             $exportModel->comment("inserting '" . $name . "': " . number_format($rows) . ' done...', false);
@@ -147,21 +147,18 @@ class Database extends Storage
      *
      * @param array $row
      * @param array $structure
-     * @return int
      */
-    public function stream(array $row, array $structure): int
+    public function stream(array $row, array $structure): void
     {
-        return $this->batchInsert($row);
+        $this->batchInsert($row);
     }
 
     /**
      * Send remaining batched records for insert.
-     *
-     * @return int
      */
-    public function endStream(): int
+    public function endStream(): void
     {
-        return $this->batchInsert([], true);
+        $this->batchInsert([], true);
     }
 
     /**
@@ -194,7 +191,7 @@ class Database extends Storage
      *
      * @param array $batch
      */
-    private function sendBatch(array $batch)
+    private function sendBatch(array $batch): void
     {
         $tableName = $this->getBatchTable();
         $action = (in_array($tableName, $this->ignoreErrorsTables)) ? 'insertOrIgnore' : 'insert';
@@ -211,7 +208,7 @@ class Database extends Storage
      *
      * @param string $tableName
      */
-    public function ignoreTable(string $tableName)
+    public function ignoreTable(string $tableName): void
     {
         $this->ignoreErrorsTables[] = $tableName;
     }
@@ -221,7 +218,7 @@ class Database extends Storage
      *
      * @param string $tableName
      */
-    private function setBatchTable(string $tableName)
+    private function setBatchTable(string $tableName): void
     {
         $this->batchTable = $this->prefix . $tableName;
     }
@@ -258,7 +255,7 @@ class Database extends Storage
      * @param string $name
      * @param array $structure
      */
-    public function createOrUpdateTable(string $name, array $structure)
+    public function createOrUpdateTable(string $name, array $structure): void
     {
         $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
         $schema = $dbm->getSchemaBuilder();
@@ -374,7 +371,7 @@ class Database extends Storage
      * Does not disable primary unique key enforcement (which is not possible).
      * Required by interface.
      */
-    public function begin()
+    public function begin(): void
     {
         $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
         $dbm->unprepared("SET foreign_key_checks = 0");
@@ -387,7 +384,7 @@ class Database extends Storage
      * Does not enforce constraints on existing data.
      * Required by interface.
      */
-    public function end()
+    public function end(): void
     {
         $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
         $dbm->unprepared("SET foreign_key_checks = 1");

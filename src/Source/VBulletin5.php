@@ -51,7 +51,7 @@ class VBulletin5 extends VBulletin
     /**
      * @var array Required tables => columns.
      */
-    public $sourceTables = array(
+    public array $sourceTables = array(
         'contenttype' => array('contenttypeid', 'class'),
         'node' => array('nodeid', 'description', 'title', 'description', 'userid', 'publishdate'),
         'text' => array('nodeid', 'rawtext'),

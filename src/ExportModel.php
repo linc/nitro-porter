@@ -138,7 +138,7 @@ class ExportModel
      *
      * @param ?string $tables
      */
-    public function limitTables(?string $tables)
+    public function limitTables(?string $tables): void
     {
         if (!empty($tables)) {
             $tables = explode(',', $tables);
@@ -151,7 +151,7 @@ class ExportModel
     /**
      * Prepare the target.
      */
-    public function begin()
+    public function begin(): void
     {
         if ($this->captureOnly) {
             return;
@@ -162,7 +162,7 @@ class ExportModel
     /**
      * Cleanup the target.
      */
-    public function end()
+    public function end(): void
     {
         if ($this->captureOnly) {
             return;
@@ -176,7 +176,7 @@ class ExportModel
      * @param string $message The message to write.
      * @param bool $echo Whether or not to echo the message in addition to writing it to the file.
      */
-    public function comment($message, $echo = true)
+    public function comment($message, $echo = true): void
     {
         Log::comment($message);
         echo "\n" . $message;
@@ -196,7 +196,7 @@ class ExportModel
      *      Filter (the callable function name to process the data with)
      *      Type (the MySQL type)
      */
-    public function export(string $tableName, string $query, array $map = [], array $filters = [])
+    public function export(string $tableName, string $query, array $map = [], array $filters = []): void
     {
         if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
@@ -242,11 +242,11 @@ class ExportModel
     /**
      * @param string $tableName
      * @param Builder $exp
-     * @param array $structure
+     * @param array $struct
      * @param array $map
      * @param array $filters
      */
-    public function import(string $tableName, Builder $exp, array $structure, array $map = [], array $filters = [])
+    public function import(string $tableName, Builder $exp, array $struct, array $map = [], array $filters = []): void
     {
         // Start timer.
         $start = microtime(true);
@@ -255,10 +255,10 @@ class ExportModel
         $this->outputStorage->setPrefix($this->tarPrefix);
 
         // Prepare the storage medium for the incoming structure.
-        $this->outputStorage->prepare($tableName, $structure);
+        $this->outputStorage->prepare($tableName, $struct);
 
         // Store the data.
-        $info = $this->outputStorage->store($tableName, $map, $structure, $exp, $filters, $this);
+        $info = $this->outputStorage->store($tableName, $map, $struct, $exp, $filters, $this);
 
         // Report.
         $this->reportStorage('import', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
@@ -268,9 +268,9 @@ class ExportModel
      * Create empty import tables.
      *
      * @param string $tableName
-     * @param $structure
+     * @param mixed[] $structure
      */
-    public function importEmpty(string $tableName, $structure): void
+    public function importEmpty(string $tableName, array $structure): void
     {
         $this->outputStorage->prepare($tableName, $structure);
     }
@@ -282,9 +282,9 @@ class ExportModel
      * @param string $table
      * @param float $timeElapsed
      * @param int $rowCount
-     * @param int $memoryPeak
+     * @param int $memPeak
      */
-    public function reportStorage(string $action, string $table, float $timeElapsed, int $rowCount, int $memoryPeak)
+    public function reportStorage(string $action, string $table, float $timeElapsed, int $rowCount, int $memPeak): void
     {
         // Format output.
         $report = sprintf(
@@ -293,7 +293,7 @@ class ExportModel
             $table,
             $rowCount,
             formatElapsed($timeElapsed),
-            formatBytes($memoryPeak)
+            formatBytes($memPeak)
         );
         $this->comment($report);
     }
@@ -302,8 +302,8 @@ class ExportModel
      * Shim for storage method access.
      *
      * @deprecated
-     * @param array $dataMap
-     * @return array
+     * @param mixed[] $dataMap
+     * @return mixed[]
      */
     public function normalizeDataMap(array $dataMap): array
     {
@@ -324,6 +324,7 @@ class ExportModel
      * @todo This strategy likely won't scale past 100K users. 18K users @ +8mb memory use.
      *
      * @return array
+     * @throws \Exception
      */
     public function buildUserMap(): array
     {
@@ -350,7 +351,8 @@ class ExportModel
      *
      * @param string $table
      * @param string $column
-     * @return array
+     * @return mixed[]
+     * @throws \Exception
      */
     public function findDuplicates(string $table, string $column): array
     {
@@ -377,8 +379,9 @@ class ExportModel
      * @param string $column Column (likely a key) to be compared to the foreign key for its existence.
      * @param string $fnTable Foreign table to check for corresponding key.
      * @param string $fnColumn Foreign key to select.
+     * @throws \Exception
      */
-    public function pruneOrphanedRecords(string $table, string $column, string $fnTable, string $fnColumn)
+    public function pruneOrphanedRecords(string $table, string $column, string $fnTable, string $fnColumn): void
     {
         // `DELETE FROM $table WHERE $column NOT IN (SELECT $fnColumn FROM $fnTable)`
         $db = $this->dbImport();
@@ -392,6 +395,7 @@ class ExportModel
      *
      * @param string $query
      * @return string
+     * @deprecated
      */
     protected function processQuery(string $query): string
     {
@@ -412,11 +416,11 @@ class ExportModel
     /**
      * Applying filter to permission column.
      *
-     * @param array $columns
-     * @return array
+     * @param mixed[] $columns
+     * @return mixed[]
      * @deprecated
      */
-    public function fixPermissionColumns(array $columns)
+    public function fixPermissionColumns(array $columns): array
     {
         $result = array();
         foreach ($columns as $index => $value) {
@@ -434,7 +438,7 @@ class ExportModel
      *
      * @param string $tableName
      */
-    public function ignoreDuplicates(string $tableName)
+    public function ignoreDuplicates(string $tableName): void
     {
         if (method_exists($this->outputStorage, 'ignoreTable')) {
             $this->outputStorage->ignoreTable($this->tarPrefix . $tableName);
@@ -449,7 +453,7 @@ class ExportModel
      * @return array
      * @deprecated
      */
-    public function get($sql, $indexColumn = false)
+    public function get(string $sql, bool|string $indexColumn = false): array
     {
         $r = $this->executeQuery($sql);
         $result = [];
@@ -470,7 +474,7 @@ class ExportModel
      *
      * @param string $table Table to derive charset from.
      */
-    public function setCharacterSet(string $table)
+    public function setCharacterSet(string $table): void
     {
         $characterSet = 'utf8mb4'; // Default.
 
@@ -509,8 +513,9 @@ class ExportModel
      *
      * @param string $query The sql to execute.
      * @return ResultSet|false The query cursor.
+     * @deprecated
      */
-    public function query(string $query)
+    public function query(string $query): ResultSet|false
     {
         if (!preg_match('`limit 1;$`', $query)) {
             $this->queryRecord[] = $query;
@@ -524,7 +529,7 @@ class ExportModel
      * @param string|array $sqlList An array of single query strings or a string of queries terminated with semi-colons.
      * @deprecated
      */
-    public function queryN($sqlList)
+    public function queryN(string|array $sqlList): void
     {
         if (!is_array($sqlList)) {
             $sqlList = explode(';', $sqlList);
@@ -558,7 +563,7 @@ class ExportModel
      * @param array|string $columns An array of column names to check.
      * @return bool Whether the table and all columns exist.
      */
-    public function exists(string $table, $columns = [])
+    public function exists(string $table, array|string $columns = []): bool
     {
         static $_exists = array();
 
@@ -607,7 +612,7 @@ class ExportModel
      *
      * @param array $requiredTables
      */
-    public function verifySource(array $requiredTables)
+    public function verifySource(array $requiredTables): void
     {
         $missingTables = false;
         $countMissingTables = 0;
@@ -660,8 +665,9 @@ class ExportModel
      *
      * @param string $sql
      * @return ResultSet|false instance of ResultSet of success false on failure
+     * @deprecated
      */
-    private function executeQuery(string $sql)
+    private function executeQuery(string $sql): ResultSet|false
     {
         $sql = str_replace(':_', $this->srcPrefix, $sql); // replace prefix.
         $sql = rtrim($sql, ';') . ';'; // guarantee semicolon.
