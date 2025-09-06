@@ -20,14 +20,14 @@ class Request
         'badges',
     ];
 
-    private ?string $sourceName;
-    private ?string $targetName;
-    private ?string $inputConnection;
-    private ?string $outputConnection;
-    private ?string $inputTablePrefix;
-    private ?string $outputTablePrefix;
-    private ?string $cdnPrefix;
-    private ?string $dataTypes;
+    private string $sourceName;
+    private string $targetName;
+    private string $inputConnection;
+    private string $outputConnection;
+    private string $inputTablePrefix;
+    private string $outputTablePrefix;
+    private string $cdnPrefix;
+    private string $dataTypes;
 
     /**
      * Build a valid Porter request.
@@ -58,8 +58,8 @@ class Request
         $this->inputConnection = $inputConnection ?? Config::getInstance()->get('input_alias');
         $this->outputConnection = $outputConnection ?? Config::getInstance()->get('output_alias');
 
-        $this->inputTablePrefix = $inputTablePrefix ?? sourceFactory($this->sourceName)::SUPPORTED['prefix'] ?? null;
-        $this->outputTablePrefix = $outputTablePrefix ?? sourceFactory($this->targetName)::SUPPORTED['prefix'] ?? null;
+        $this->inputTablePrefix = $inputTablePrefix ?? sourceFactory($this->sourceName)->getPrefix();
+        $this->outputTablePrefix = $outputTablePrefix ?? sourceFactory($this->targetName)->getPrefix();
         $this->cdnPrefix = $cdnPrefix ?? Config::getInstance()->get('option_cdn_prefix');
 
         if (!empty($dataTypes) && !count(array_diff(explode(',', $dataTypes), self::VALID_DATA_TYPES))) {
@@ -67,7 +67,7 @@ class Request
         } elseif (!empty($dataTypes)) {
             throw new \Exception('Invalid data types in request.');
         } else {
-            $this->dataTypes = Config::getInstance()->get('option_data_types') ?? null;
+            $this->dataTypes = Config::getInstance()->get('option_data_types');
         }
     }
 
