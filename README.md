@@ -23,17 +23,19 @@ Nitro Porter is built in PHP 8.2+ and runs via command line.
 
 ### 🚀 Mission statement
 
-Community history is vitally important, and being able to change software is important for the health of the ecosystem.
-However, community software often has high lock-in due to the difficulty of a data migration.
-
 Nitro Porter exists because your community deserves to both use the best tools available and preserve its unique history.
+
+Community history is vitally important and being able to change software is important for the health of the ecosystem.
+However, community software has high lock-in due to the difficulty of data migrations, which creates stagnation in the ecosystem.
+Nitro Porter seeks to lower that friction and automate as much of the migration as possible.
+When everyone owns their own data and can freely choose their platform, everyone wins.
 
 This tool is designed for ease of extensibility to allow anyone with basic programming skills to add a source or target.
 Any generally available forum software (commercial or free) may be added as a source or target.
 It does not include bespoke or custom forum software, but is designed to allow individuals to create such support easily for their private use.
 
 Nitro Porter uses the [GNU AGPL 3.0 license](COPYING) to ensure it remains freely available to anyone who needs it.
-That means code for all new packages written for it must likewise be made freely available.
+That means code for **all new packages written for it must likewise be made freely available**.
 
 ## What's Supported?
 
