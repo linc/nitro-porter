@@ -1,9 +1,7 @@
 Nitro Porter — free your community! 🚀
 ==============
 
-Nitro Porter is the only multi-platform community migration tool. 
-
-Nitro Porter is built in PHP 8.2+ and runs via command line.
+Nitro Porter is the _only_ multi-platform community migration tool.
 
 ## Documentation
 
