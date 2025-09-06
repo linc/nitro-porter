@@ -17,6 +17,12 @@ to customize them as needed (without committing them — they are ignored by git
 * `composer delint` runs a fix for linting issues (PHPCBF). It does its best.
 * `composer stan` runs static analysis (PHPStan) as defined in `phpstan.neon.dist`.
 
+PHPStan is currently at level 6 with exceptions for the deprecated `src/Database`,
+the `src/Source/*` packages that need updating (still at level 5),
+and rule `missingType.iterableValue` which wants `mixed[]` all over the docblocks (which should get solved with nicer
+array use / reducing usage of them, which should likely wait for the previous 2 issues to get updated).
+Those same issues are the primary hurdles to level 7, it seems.
+
 ## Testing Tools
 
 Use `composer test` to run the _unit_ test suite (_only_ — see `phpunit.xml.dist`). This runs in the CI pipeline.
