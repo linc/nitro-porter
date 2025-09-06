@@ -43,7 +43,6 @@ class IpBoard3 extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 0,
-            'Permissions' => 1,
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 0,
@@ -194,7 +193,6 @@ class IpBoard3 extends Source
 
         $this->users($memberID, $ex);
         $this->roles($ex, $memberID);
-        //$this->permissions($ex);
         $this->userMeta($ex);
 
         $this->categories($ex);
@@ -593,38 +591,6 @@ EOT;
         }
         $this->clearFilters('members', $user_Map, $sql);
         $ex->export('User', $sql, $user_Map);
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $permission_Map = array(
-            'g_id' => 'RoleID',
-            'g_view_board' => 'Garden.SignIn.Allow',
-            'g_view_board2' => 'Garden.Profiles.View',
-            'g_view_board3' => 'Garden.Activity.View',
-            'g_view_board4' => 'Vanilla.Discussions.View',
-            'g_edit_profile' => 'Garden.Profiles.Edit',
-            'g_post_new_topics' => 'Vanilla.Discussions.Add',
-            'g_reply_other_topics' => 'Vanilla.Comments.Add',
-            //          'g_edit_posts' => 'Vanilla.Comments.Edit', // alias
-            'g_open_close_posts' => 'Vanilla.Discussions.Close',
-            'g_is_supmod' => 'Garden.Moderation.Manage',
-            'g_access_cp' => 'Garden.Settings.View',
-            //          'g_edit_topic' => 'Vanilla.Discussions.Edit'
-        );
-        $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        $ex->export(
-            'Permission',
-            "select r.*,
-                    r.g_view_board as g_view_board2,
-                    r.g_view_board as g_view_board3,
-                    r.g_view_board as g_view_board4
-                from :_groups r",
-            $permission_Map
-        );
     }
 
     /**

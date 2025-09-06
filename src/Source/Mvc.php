@@ -31,7 +31,6 @@ class Mvc extends Source
             'Signatures' => 1,
             'Attachments' => 0,
             'Bookmarks' => 0,
-            'Permissions' => 0,
             'Badges' => 1,
             'UserNotes' => 0,
             'Ranks' => 0,

@@ -99,8 +99,6 @@ class ModxDiscuss extends Source
     protected function roles(ExportModel $ex): void
     {
         // Roles do not exist in Discuss. Really simple matchup.
-        // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
-        // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
         $ex->export(
             'UserRole',
             "select

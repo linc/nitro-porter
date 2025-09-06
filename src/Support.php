@@ -25,7 +25,6 @@ class Support
         'Signatures',
         'Polls',
         'Tags',
-        //'Permissions',
         'Reactions',
         'Badges',
         'UserNotes',

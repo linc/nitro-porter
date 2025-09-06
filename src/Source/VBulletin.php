@@ -79,7 +79,6 @@ class VBulletin extends Source
             'Avatars' => 1,
             'Attachments' => 1,
             'PrivateMessages' => 1,
-            'Permissions' => 1,
             'UserWall' => 1,
             'UserNotes' => 1,
             'Bookmarks' => 1,
@@ -109,51 +108,6 @@ class VBulletin extends Source
             else null
         end as customphoto
     ";
-    /* @var array Default permissions to map. */
-    public static $permissions = array(
-
-        'genericpermissions' => array(
-            1 => array('Garden.Profiles.View', 'Garden.Activity.View'),
-            2 => 'Garden.Profiles.Edit',
-            1024 => 'Plugins.Signatures.Edit'
-        ),
-        'forumpermissions' => array(
-            1 => 'Vanilla.Discussions.View',
-            16 => 'Vanilla.Discussions.Add',
-            64 => 'Vanilla.Comments.Add',
-            4096 => 'Plugins.Attachments.Download',
-            8192 => 'Plugins.Attachments.Upload'
-        ),
-        'adminpermissions' => array(
-            1 => array(
-                'Garden.Moderation.Manage',
-                'Vanilla.Discussions.Announce',
-                'Vanilla.Discussions.Close',
-                'Vanilla.Discussions.Delete',
-                'Vanilla.Comments.Delete',
-                'Vanilla.Comments.Edit',
-                'Vanilla.Discussions.Edit',
-                'Vanilla.Discussions.Sink',
-                'Garden.Activity.Delete',
-                'Garden.Users.Add',
-                'Garden.Users.Edit',
-                'Garden.Users.Approve',
-                'Garden.Users.Delete',
-                'Garden.Applicants.Manage'
-            ),
-            2 => array(
-                'Garden.Settings.View',
-                'Garden.Settings.Manage',
-                'Garden.Messages.Manage',
-                'Vanilla.Spam.Manage'
-            )
-        //          4 => 'Garden.Settings.Manage',),
-        ),
-    //      'wolpermissions' => array(
-    //          16 => 'Plugins.WhosOnline.ViewHidden')
-    );
-
-    public static $permissions2 = array();
 
     /**
      * @var array Required tables => columns. Commented values are optional.
@@ -245,26 +199,17 @@ class VBulletin extends Source
         $minDiscussionID = 0;
         $minDiscussionWhere = 0;
 
-
-
         $cdn = ''; //$this->param('cdn', '');
 
         // Ranks
         $ranks = $this->ranks($ex);
 
         $this->users($ex, $ranks, $cdn);
-
         $this->roles($ex);
-        //$this->permissions($ex);
         $this->userMeta($ex, '');
 
         $this->discussions($ex, $minDiscussionID, '');
         $this->comments($ex, $minDiscussionID, '');
-
-        // UserDiscussion
-        //if ($minDiscussionID) {
-        //    $minDiscussionWhere = "where st.threadid > $minDiscussionID";
-        //}
 
         if ($ex->exists('threadread', array('readtime')) === true) {
             $threadReadTime = 'from_unixtime(tr.readtime)';
@@ -933,26 +878,6 @@ class VBulletin extends Source
     }
 
     /**
-     * Determine if this usergroup could likely sign in to forum based on its name.
-     *
-     * @param mixed $value
-     * @param string $field
-     * @param array $row
-     * @return bool
-     */
-    public function signInPermission($value, $field, $row)
-    {
-        $result = true;
-        if (stripos($row['title'], 'unregistered') !== false) {
-            $result = false;
-        } elseif (stripos($row['title'], 'banned') !== false) {
-            $result = false;
-        }
-
-        return $result;
-    }
-
-    /**
      * Retrieve a value from the vBulletin setting table.
      *
      * @param ExportModel $ex
@@ -968,51 +893,6 @@ class VBulletin extends Source
         }
 
         return false;
-    }
-
-    /**
-     * @param mixed $value
-     * @param string $field
-     * @param array $row
-     * @return bool|int
-     */
-    public function filterPermissions($value, $field, $row)
-    {
-        if (!isset(self::$permissions2[$field])) {
-            return 0;
-        }
-
-        $column = self::$permissions2[$field][0];
-        $mask = self::$permissions2[$field][1];
-
-        $value = ($row[$column] & $mask) == $mask;
-
-        return $value;
-    }
-
-    /**
-     * @param array $columnGroups
-     * @param array $map
-     */
-    public function addPermissionColumns($columnGroups, &$map)
-    {
-        $permissions2 = array();
-
-        foreach ($columnGroups as $columnGroup => $columns) {
-            foreach ($columns as $mask => $columnArray) {
-                $columnArray = (array)$columnArray;
-                foreach ($columnArray as $column) {
-                    $map[$column] = array(
-                        'Column' => $column,
-                        'Type' => 'tinyint(1)',
-                        'Filter' => array($this, 'filterPermissions')
-                    );
-
-                    $permissions2[$column] = array($columnGroup, $mask);
-                }
-            }
-        }
-        self::$permissions2 = $permissions2;
     }
 
     /**
@@ -1520,20 +1400,5 @@ class VBulletin extends Source
                 $forumWhere",
             $discussion_Map
         );
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $permissions_Map = array(
-            'usergroupid' => 'RoleID',
-            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
-            'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
-            'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
-        );
-        $this->addPermissionColumns(self::$permissions, $permissions_Map);
-        $ex->export('Permission', 'select * from :_usergroup', $permissions_Map);
     }
 }

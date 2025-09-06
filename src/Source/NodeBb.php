@@ -31,7 +31,6 @@ class NodeBb extends Source
             'Signatures' => 1,
             'Attachments' => 0,
             'Bookmarks' => 1,
-            'Permissions' => 0,
             'Badges' => 0,
             'UserNotes' => 1,
             'Ranks' => 0,

@@ -30,7 +30,6 @@ class Yaf extends Source
             'Signatures' => 1,
             'Attachments' => 0,
             'Bookmarks' => 0,
-            'Permissions' => 0,
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 1,

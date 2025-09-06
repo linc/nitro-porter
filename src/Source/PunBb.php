@@ -37,7 +37,6 @@ class PunBb extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 0,
-            'Permissions' => 1,
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 0,
@@ -81,7 +80,6 @@ class PunBb extends Source
 
         $this->users($ex);
         $this->roles($ex);
-        //$this->permissions($ex);
         $this->signatures($ex);
 
         $this->categories($ex);
@@ -347,37 +345,6 @@ class PunBb extends Source
                     u.group_id
                 FROM :_users u",
             $userRole_Map
-        );
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $permission_Map = array(
-            'g_id' => 'RoleID',
-            'g_modertor' => 'Garden.Moderation.Manage',
-            'g_mod_edit_users' => 'Garden.Users.Edit',
-            'g_mod_rename_users' => 'Garden.Users.Delete',
-            'g_read_board' => 'Vanilla.Discussions.View',
-            'g_view_users' => 'Garden.Profiles.View',
-            'g_post_topics' => 'Vanilla.Discussions.Add',
-            'g_post_replies' => 'Vanilla.Comments.Add',
-            'g_pun_attachment_allow_download' => 'Plugins.Attachments.Download.Allow',
-            'g_pun_attachment_allow_upload' => 'Plugins.Attachments.Upload.Allow',
-
-        );
-        $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        $ex->export(
-            'Permission',
-            "SELECT
-                    g.*,
-                    g_post_replies AS `Garden.SignIn.Allow`,
-                    g_mod_edit_users AS `Garden.Users.Add`,
-                    CASE WHEN g_title = 'Administrators' THEN 'All' ELSE NULL END AS _Permissions
-                FROM :_groups g",
-            $permission_Map
         );
     }
 

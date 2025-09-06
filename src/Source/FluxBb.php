@@ -37,7 +37,6 @@ class FluxBb extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 0,
-            'Permissions' => 1,
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 0,
@@ -78,7 +77,6 @@ class FluxBb extends Source
         }*/
 
         $this->users($ex);
-        //$this->permissions($ex);
         $this->roles($ex);
         $this->signatures($ex);
         $this->categories($ex);
@@ -167,31 +165,6 @@ class FluxBb extends Source
                 from :_users u
                 where group_id <> 2",
             $user_Map
-        );
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $ex->export(
-            'Permission',
-            "select
-                    g_id,
-                    g_moderator as 'Garden.Moderation.Manage',
-                    g_mod_edit_users as 'Garden.Users.Edit',
-                    g_mod_rename_users as 'Garden.Users.Delete',
-                    g_read_board as 'Vanilla.Discussions.View',
-                    g_view_users as 'Garden.Profiles.View',
-                    g_post_topics as 'Vanilla.Discussions.Add',
-                    g_post_replies as 'Vanilla.Comments.Add',
-                    g_post_replies as 'Garden.SignIn.Allow',
-                    g_mod_edit_users as 'Garden.Users.Add',
-                    case
-                        when g_title = 'Administrators' then 'All' else NULL
-                    end as _Permissions
-                from :_groups"
         );
     }
 

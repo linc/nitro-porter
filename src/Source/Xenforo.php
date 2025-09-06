@@ -47,7 +47,6 @@ class Xenforo extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 0,
-            //'Permissions' => 1,
         ]
     ];
 
@@ -230,7 +229,6 @@ class Xenforo extends Source
 
         $this->users($ex);
         $this->roles($ex);
-        //$this->permissions($ex);
         $this->userMeta($ex);
 
         $this->categories($ex);
@@ -238,59 +236,6 @@ class Xenforo extends Source
         $this->comments($ex);
         $this->attachments($ex);
         $this->conversations($ex);
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    public function permissions(ExportModel $ex)
-    {
-        /*
-        $permissions = array();
-
-        // Export the global permissions.
-        $r = $ex->query(
-            "select pe.*, g.title
-            from :_permission_entry pe
-            join :_user_group g
-                on pe.user_group_id = g.user_group_id"
-        );
-        $this->exportPermissionsMap($r, $permissions);
-
-        $r = $ex->query(
-            "select pe.*, g.title
-            from :_permission_entry_content pe
-            join :_user_group g
-                on pe.user_group_id = g.user_group_id"
-        );
-        $this->exportPermissionsMap($r, $permissions);
-
-        if (count($permissions) == 0) {
-            return;
-        }
-
-        $permissions = array_values($permissions);
-
-        // Now that we have all of the permission in an array let's export them.
-        $columns = $this->exportPermissionsMap(false);
-
-        foreach ($columns as $index => $column) {
-            if (strpos($column, '.') !== false) {
-                $columns[$index] = array('Column' => $column, 'Type' => 'tinyint');
-            }
-        }
-        $structure = getExportStructure($columns, $ex->mapStructure['Permission'], $columns, 'Permission');
-        $revMappings = flipMappings($columns);
-
-        $ex->writeBeginTable($ex->file, 'Permission', $structure);
-        $count = 0;
-        foreach ($permissions as $row) {
-            $ex->writeRow($ex->file, $row, $structure, $revMappings);
-            $count++;
-        }
-        $ex->writeEndTable($ex->file);
-        $ex->comment("Exported Table: Permission ($count rows)");
-        */
     }
 
     /**
@@ -312,117 +257,6 @@ class Xenforo extends Source
             from :_user_profile
             where nullif(signature, '') is not null";
         $ex->export('UserMeta', $sql);
-    }
-
-    /**
-     * @param mixed $r
-     * @param mixed $perms
-     * @return string[]|void
-     */
-    protected function exportPermissionsMap($r, &$perms = null)
-    {
-        $map = array(
-            'general.viewNode' => 'Vanilla.Discussions.View',
-            'forum.deleteAnyPost' => 'Vanilla.Comments.Delete',
-            'forum.deleteAnyThread' => 'Vanilla.Discussions.Delete',
-            'forum.editAnyPost' => array('Vanilla.Discussions.Edit', 'Vanilla.Comments.Edit'),
-            'forum.lockUnlockThread' => 'Vanilla.Discussions.Close',
-            'forum.postReply' => array('Vanilla.Comments.Add'),
-            'forum.postThread' => 'Vanilla.Discussions.Add',
-            'forum.stickUnstickThread' => array('Vanilla.Discussions.Announce', 'Vanilla.Discussions.Sink'),
-            'forum.uploadAttachment' => 'Plugins.Attachments.Upload.Allow',
-            'forum.viewAttachment' => 'Plugins.Attachments.Download.Allow',
-            'general.editSignature' => 'Plugins.Signatures.Edit',
-            'general.viewProfile' => 'Garden.Profiles.View',
-            'profilePost.deleteAny' => 'Garden.Activity.Delete',
-            'profilePost.post' => array('Garden.Email.View', 'Garden.SignIn.Allow', 'Garden.Profiles.Edit')
-        );
-
-        if ($r === false) {
-            $result = array(
-                'RoleID' => 'RoleID',
-                'JunctionTable' => 'JunctionTable',
-                'JunctionColumn' => 'JunctionColumn',
-                'JunctionID' => 'JunctionID',
-                '_Permissions' => '_Permissions',
-                'Garden.Moderation.Manage' => 'Garden.Moderation.Manage'
-            );
-
-            // Return an array of fieldnames.
-            foreach ($map as $columns) {
-                $columns = (array)$columns;
-                foreach ($columns as $column) {
-                    $result[$column] = $column;
-                }
-            }
-
-            return $result;
-        }
-
-        while ($row = $r->nextResultRow()) {
-            $roleID = $row['user_group_id'];
-
-            $perm = "{$row['permission_group_id']}.{$row['permission_id']}";
-
-            if (!isset($map[$perm])) {
-                continue;
-            }
-
-            $names = (array)$map[$perm];
-
-            foreach ($names as $name) {
-                if (isset($row['content_id'])) {
-                    if ($row['content_type'] != 'node') {
-                        continue;
-                    }
-
-                    $categoryID = $row['content_id'];
-                } else {
-                    $categoryID = null;
-                }
-
-                // Is this a per-category permission?
-                if (strpos($name, 'Vanilla.Discussions.') !== false || strpos($name, 'Vanilla.Comments.') !== false) {
-                    if (!$categoryID) {
-                        $categoryID = -1;
-                    }
-                } else {
-                    $categoryID = null;
-                }
-
-
-                $key = "{$roleID}_{$categoryID}";
-
-                $perms[$key]['RoleID'] = $roleID;
-                $permRow = &$perms[$key];
-                if ($categoryID) {
-                    $permRow['JunctionTable'] = 'Category';
-                    $permRow['JunctionColumn'] = 'PermissionCategoryID';
-                    $permRow['JunctionID'] = $categoryID;
-                }
-
-                $title = $row['title'];
-                $permRow['Title'] = $title;
-                if (stripos($title, 'Admin') !== false) {
-                    $permRow['_Permissions'] = 'all';
-                }
-                if (!$categoryID && stripos($title, 'Mod') !== false) {
-                    $permRow['Garden.Moderation.Manage'] = true;
-                }
-
-                // Set all of the permissions.
-                $permValue = $row['permission_value'];
-                if ($permValue == 'deny') {
-                    $permRow[$name] = false;
-                } elseif (in_array($permValue, array('allow', 'content_allow'))) {
-                    if (!isset($permRow[$name]) || $permRow[$name] !== false) {
-                        $permRow[$name] = true;
-                    }
-                } elseif (!isset($permRow[$name])) {
-                    $permRow[$name] = null;
-                }
-            }
-        }
     }
 
     /**

@@ -30,7 +30,6 @@ class ExpressionEngine extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 1,
-            'Permissions' => 1,
         ]
     ];
 
@@ -41,7 +40,6 @@ class ExpressionEngine extends Source
     public function run(ExportModel $ex)
     {
         $this->conversations($ex);
-        //$this->permissions($ex);
         $this->users($ex);
         $this->roles($ex);
         $this->signatures($ex);
@@ -287,48 +285,6 @@ class ExpressionEngine extends Source
             return $value;
         }
         return null;
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex)
-    {
-        $permission_Map = array(
-            'group_id' => 'RoleID',
-            'can_access_cp' => 'Garden.Settings.View',
-            'can_access_edit' => 'Vanilla.Discussions.Edit',
-            'can_edit_all_comments' => 'Vanilla.Comments.Edit',
-            'can_access_admin' => 'Garden.Settings.Manage',
-            'can_admin_members' => 'Garden.Users.Edit',
-            'can_moderate_comments' => 'Garden.Moderation.Manage',
-            'can_view_profiles' => 'Garden.Profiles.View',
-            'can_post_comments' => 'Vanilla.Comments.Add',
-            'can_view_online_system' => 'Vanilla.Discussions.View',
-            'can_sign_in' => 'Garden.SignIn.Allow',
-            'can_view_profiles3' => 'Garden.Activity.View',
-            'can_post_comments2' => 'Vanilla.Discussions.Add'
-        );
-        $permission_Map = $ex->fixPermissionColumns($permission_Map);
-        foreach ($permission_Map as &$info) {
-            if (is_array($info) && isset($info['Column'])) {
-                $info['Filter'] = array($this, 'YNBool');
-            }
-        }
-
-        $ex->export(
-            'Permission',
-            "SELECT
-                    g.can_view_profiles AS can_view_profiles2,
-                    g.can_view_profiles AS can_view_profiles3,
-                    g.can_post_comments AS can_post_comments2,
-                    g.can_post_comments AS can_sign_in,
-                    CASE WHEN can_access_admin = 'y' THEN 'all'
-                        WHEN can_view_online_system = 'y' THEN 'view' END AS _Permissions,
-                    g.*
-                 FROM forum_member_groups g",
-            $permission_Map
-        );
     }
 
     /**

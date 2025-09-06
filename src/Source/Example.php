@@ -31,7 +31,6 @@ class Example extends Source
             'Signatures' => 0,
             'Attachments' => 0,
             'Bookmarks' => 0,
-            'Permissions' => 0,
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 0,
@@ -68,10 +67,6 @@ class Example extends Source
         // It's usually a good idea to do the porting in the approximate order laid out here.
         $this->users($ex); // Always pass $ex to these methods.
         $this->roles($ex);
-
-        // Permission.
-        // Feel free to add a permission export if this is a major platform or it will see reuse.
-        // For small or custom jobs, it's usually not worth it. Just fix them afterward.
 
         $this->userMeta($ex);
         $this->categories($ex);
@@ -136,8 +131,6 @@ class Example extends Source
 
         // User Role.
         // Really simple matchup.
-        // Note that setting Admin=1 on the User table trumps all roles & permissions with "owner" privileges.
-        // Whatever account you select during the import will get the Admin=1 flag to prevent permissions issues.
         $userRole_Map = [
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID',

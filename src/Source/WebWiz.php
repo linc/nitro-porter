@@ -214,49 +214,6 @@ class WebWiz extends Source
 
     /**
      * @param ExportModel $ex
-     * @return array|mixed
-     */
-    protected function permissions(ExportModel $ex)
-    {
-        $Permission_Map = array(
-            'group_id' => 'RoleID',
-            'can_access_cp' => 'Garden.Settings.View',
-            'can_access_edit' => 'Vanilla.Discussions.Edit',
-            'can_edit_all_comments' => 'Vanilla.Comments.Edit',
-            'can_access_admin' => 'Garden.Settings.Manage',
-            'can_admin_members' => 'Garden.Users.Edit',
-            'can_moderate_comments' => 'Garden.Moderation.Manage',
-            'can_view_profiles' => 'Garden.Profiles.View',
-            'can_post_comments' => 'Vanilla.Comments.Add',
-            'can_view_online_system' => 'Vanilla.Discussions.View',
-            'can_sign_in' => 'Garden.SignIn.Allow',
-            'can_view_profiles3' => 'Garden.Activity.View',
-            'can_post_comments2' => 'Vanilla.Discussions.Add'
-        );
-        $Permission_Map = $ex->FixPermissionColumns($Permission_Map);
-        foreach ($Permission_Map as $Column => &$Info) {
-            if (is_array($Info) && isset($Info['Column'])) {
-                $Info['Filter'] = array($this, 'Bool');
-            }
-        }
-
-        $ex->export(
-            'Permission',
-            "select
-                    g.can_view_profiles as can_view_profiles2,
-                    g.can_view_profiles as can_view_profiles3,
-                    g.can_post_comments as can_post_comments2,
-                    g.can_post_comments as can_sign_in,
-                    case when can_access_admin = 'y' then 'all'
-                        when can_view_online_system = 'y' then 'view' end as _Permissions,
-                    g.*
-                from forum_member_groups g",
-            $Permission_Map
-        );
-    }
-
-    /**
-     * @param ExportModel $ex
      */
     protected function users(ExportModel $ex): void
     {

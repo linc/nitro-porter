@@ -98,7 +98,6 @@ class VBulletin5 extends VBulletin
 
         $this->usersV5($ex, $ranks, $cdn);
         $this->rolesV5($ex);
-        //$this->permissionsV5($ex);
         $this->ranksV5($ex);
 
         list($categoryIDs, $privateMessagesID) = $this->categoryV5($ex);
@@ -506,21 +505,6 @@ class VBulletin5 extends VBulletin
         // Export from our tmp table and drop
         $ex->export('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
         $ex->query("DROP TABLE IF EXISTS VbulletinRoles");
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    public function permissionsV5(ExportModel $ex): void
-    {
-        $permissions_Map = array(
-            'usergroupid' => 'RoleID',
-            'title' => array('Column' => 'Garden.SignIn.Allow', 'Filter' => array($this, 'signInPermission')),
-            'genericpermissions' => array('Column' => 'GenericPermissions', 'type' => 'int'),
-            'forumpermissions' => array('Column' => 'ForumPermissions', 'type' => 'int')
-        );
-        $this->addPermissionColumns(self::$permissions, $permissions_Map);
-        $ex->export('Permission', 'select * from :_usergroup', $permissions_Map);
     }
 
     /**

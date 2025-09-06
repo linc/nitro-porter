@@ -33,7 +33,6 @@ class PhpBb3 extends Source
             'Signatures' => 1,
             'Attachments' => 1,
             'Bookmarks' => 1,
-            'Permissions' => 1,
             'Badges' => 0,
             'UserNotes' => 1,
             'Ranks' => 1,
@@ -94,7 +93,6 @@ class PhpBb3 extends Source
         $this->roles($ex);
         $this->userNotes($ex);
         $this->ranks($ex);
-        //$this->permissions($ex);
         $this->signatures($ex);
 
         $this->categories($ex);
@@ -338,28 +336,6 @@ class PhpBb3 extends Source
                     rank_special,
                     rank_min;",
             $rank_Map
-        );
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $member = 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add';
-        $ex->export(
-            'Permission',
-            "select
-                    group_id as RoleID,
-                    case
-                        when group_name like '%Guest%' or group_name like 'BOTS' then 'View'
-                        when group_name like '%Mod%'
-                            then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
-                                'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
-                        when group_name like '%Admin%' then 'All'
-                        else $member
-                    end as _Permissions
-                from :_groups"
         );
     }
 

@@ -414,26 +414,6 @@ class ExportModel
     }
 
     /**
-     * Applying filter to permission column.
-     *
-     * @param mixed[] $columns
-     * @return mixed[]
-     * @deprecated
-     */
-    public function fixPermissionColumns(array $columns): array
-    {
-        $result = array();
-        foreach ($columns as $index => $value) {
-            if (is_string($value) && strpos($value, '.') !== false) {
-                $value = array('Column' => $value, 'Type' => 'tinyint(1)');
-            }
-            $result[$index] = $value;
-        }
-
-        return $result;
-    }
-
-    /**
      * Ignore duplicates for a SQL storage target table. Adds prefix for you.
      *
      * @param string $tableName

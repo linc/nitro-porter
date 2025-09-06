@@ -626,7 +626,7 @@ return array(
         'InviteUserID' => 'int',
         'DiscoveryText' => 'text',
         'Preferences' => 'text',
-        'Permissions' => 'text',
+        //'Permissions' => 'text',
         'Attributes' => 'text',
         'DateSetInvitations' => 'datetime',
         'DateOfBirth' => 'datetime',

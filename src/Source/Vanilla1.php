@@ -30,7 +30,6 @@ class Vanilla1 extends Source
             'Signatures' => 0,
             'Attachments' => 1,
             'Bookmarks' => 1,
-            'Permissions' => 1,
         ]
     ];
 
@@ -80,7 +79,6 @@ class Vanilla1 extends Source
         $this->discussions($ex);
         $this->conversations($ex);
         $this->comments($ex);
-        //$this->permissions($ex);
         $this->attachments($ex);
     }
 
@@ -95,30 +93,6 @@ class Vanilla1 extends Source
         }
 
         return $absPath;
-    }
-
-    /**
-     * @param mixed $permissions
-     * @param string $columnName
-     * @param array $row
-     * @return false|mixed
-     */
-    public function filterPermissions($permissions, $columnName, &$row)
-    {
-        $permissions2 = unserialize($permissions);
-
-        foreach ($permissions2 as $name => $value) {
-            if (is_null($value)) {
-                $permissions2[$name] = false;
-            }
-        }
-
-        if (is_array($permissions2)) {
-            $row = array_merge($row, $permissions2);
-            return isset($permissions2['PERMISSION_ADD_COMMENTS']) ? $permissions2['PERMISSION_ADD_COMMENTS'] : false;
-        }
-
-        return false;
     }
 
     /**
@@ -487,67 +461,5 @@ class Vanilla1 extends Source
                 $media_Map
             );
         }
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $permission_Map = array(
-            'RoleID' => 'RoleID',
-            'PERMISSION_SIGN_IN' => 'Garden.SignIn.Allow',
-            'Permissions' => array(
-                'Column' => 'Vanilla.Comments.Add',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'filterPermissions')
-            ),
-            'PERMISSION_START_DISCUSSION' => array(
-                'Column' => 'Vanilla.Discussions.Add',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_SINK_DISCUSSION' => array(
-                'Column' => 'Vanilla.Discussions.Sink',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_STICK_DISCUSSIONS' => array(
-                'Column' => 'Vanilla.Discussions.Announce',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_CLOSE_DISCUSSIONS' => array(
-                'Column' => 'Vanilla.Discussions.Close',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_EDIT_DISCUSSIONS' => array(
-                'Column' => 'Vanilla.Discussions.Edit',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_EDIT_COMMENTS' => array(
-                'Column' => 'Vanilla.Comments.Edit',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_APPROVE_APPLICANTS' => array(
-                'Column' => 'Garden.Moderation.Manage',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_EDIT_USERS' => array(
-                'Column' => 'Garden.Users.Edit',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            ),
-            'PERMISSION_CHANGE_APPLICATION_SETTINGS' => array(
-                'Column' => 'Garden.Settings.Manage',
-                'Type' => 'tinyint',
-                'Filter' => array($this, 'forceBool')
-            )
-        );
-        $ex->export('Permission', "select * from :_Role", $permission_Map);
     }
 }

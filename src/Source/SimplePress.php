@@ -33,7 +33,6 @@ class SimplePress extends Source
             'Signatures' => 0,
             'Attachments' => 0,
             'Bookmarks' => 0,
-            'Permissions' => 1,
         ]
     ];
 
@@ -56,8 +55,6 @@ class SimplePress extends Source
     {
         $this->users($ex);
         $this->roles($ex);
-        //$this->permissions($ex);
-
         $this->categories($ex);
         $this->discussions($ex);
         $this->tags($ex);
@@ -132,29 +129,6 @@ class SimplePress extends Source
                 where um.meta_key = 'wp_capabilities'
                     and um.meta_value like '%PF Manage Forums%'",
             $userRole_Map
-        );
-    }
-
-    /**
-     * @param ExportModel $ex
-     */
-    protected function permissions(ExportModel $ex): void
-    {
-        $member = 'View,Garden.SignIn.Allow,Garden.Profiles.Edit,Vanilla.Discussions.Add,Vanilla.Comments.Add';
-        $ex->export(
-            'Permission',
-            "select usergroup_id as RoleID,
-                    case
-                       when usergroup_name like 'Guest%' then 'View'
-                       when usergroup_name like 'Member%'
-                            then $member
-                       when usergroup_name like 'Mod%'
-                            then concat('View,Garden.SignIn.Allow,Garden.Profiles.Edit,Garden.Settings.View,',
-                                'Vanilla.Discussions.Add,Vanilla.Comments.Add,Garden.Moderation.Manage')
-                    end as _Permissions
-                             from :_sfusergroups
-                union
-                select 100, 'All'"
         );
     }
 

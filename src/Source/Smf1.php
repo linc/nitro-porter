@@ -31,7 +31,6 @@ class Smf1 extends Source
             'Signatures' => 0,
             'Attachments' => 1,
             'Bookmarks' => 0,
-            'Permissions' => 0,
             'Badges' => 0,
             'UserNotes' => 0,
             'Ranks' => 0,
