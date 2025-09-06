@@ -90,14 +90,7 @@ For a new **Target**, we require support from the vendor if it is not free and o
 
 Currently, all data sources and targets are based on SQL databases (except the Vanilla target's flat file)
 and only natively supports MySQL-compatible connections. All other storage formats (like mbox or ASP Playground's MSSQL) 
-requires pre-work to convert the data to a MySQL database.
+requires pre-work to convert the data to a MySQL database. In the future, we plan to natively support MongoDB, PostgreSQL, MSSQL, & Web APIs. 
+The 3.0 rewrite of Nitro Porter[^1] was done with that future in mind.
 
-In the future, we plan to natively support:
-* PostgreSQL
-* MSSQL
-* MongoDB
-* Web-based APIs
-
-The 3.0 rewrite of Nitro Porter was done with that future in mind.[^1]
-
-[^1]: 🚀 Forked 27 Sep 2021 [in memory of Kyle](https://icrontic.com/discussion/101265)
+[^1]: 🚀 Forked 27 Sep 2021 in memory of Kyle
