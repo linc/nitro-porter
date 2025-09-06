@@ -6,8 +6,9 @@ use http\Exception;
 
 class Config
 {
-    private static $instance = null;
+    private static ?self $instance = null;
 
+    /** @var mixed[] */
     protected array $config = [
         'debug' => false,
         'test_alias' => 'test',
@@ -25,7 +26,10 @@ class Config
         return self::$instance;
     }
 
-    public function set(array $config)
+    /**
+     * @param mixed[] $config
+     */
+    public function set(array $config): void
     {
         $this->config = $config;
     }
@@ -33,7 +37,7 @@ class Config
     /**
      * Get all connections available.
      *
-     * @return array
+     * @return mixed[]
      */
     public function getConnections(): array
     {
@@ -53,7 +57,8 @@ class Config
     /**
      * Get designated test connection.
      *
-     * @return array
+     * @return mixed[]
+     * @throws \Exception
      */
     public function getTestConnection(): array
     {
@@ -67,7 +72,8 @@ class Config
      * Get config data for a connection by its alias.
      *
      * @param string $alias
-     * @return array
+     * @return mixed[]
+     * @throws \Exception
      */
     public function getConnectionAlias(string $alias): array
     {
@@ -88,7 +94,7 @@ class Config
      * Validate config has required info.
      *
      * @param string $alias
-     * @param array $info
+     * @param mixed[] $info
      * @throws \Exception
      */
     protected function validateConnectionInfo(string $alias, array $info): void
