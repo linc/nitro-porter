@@ -29,6 +29,17 @@ abstract class Target
     public ConnectionManager $connection;
 
     /**
+     * Get name of the source package.
+     *
+     * @return array
+     * @see Target::setSources()
+     */
+    public static function getSupport(): array
+    {
+        return static::SUPPORTED;
+    }
+
+    /**
      * Get name of the target package.
      *
      * @return string

@@ -48,6 +48,17 @@ abstract class Source
     /**
      * Get name of the source package.
      *
+     * @return array
+     * @see Support::setSources()
+     */
+    public static function getSupport(): array
+    {
+        return static::SUPPORTED;
+    }
+
+    /**
+     * Get name of the source package.
+     *
      * @return string
      */
     public static function getName(): string
