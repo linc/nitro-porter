@@ -20,10 +20,10 @@ class Request
         'badges',
     ];
 
-    private string $sourcePackage;
-    private string $targetPackage;
-    private string $inputConnection;
-    private string $outputConnection;
+    private ?string $sourceName;
+    private ?string $targetName;
+    private ?string $inputConnection;
+    private ?string $outputConnection;
     private ?string $inputTablePrefix;
     private ?string $outputTablePrefix;
     private ?string $cdnPrefix;
@@ -32,10 +32,10 @@ class Request
     /**
      * Build a valid Porter request.
      *
-     * @param string $sourcePackage Source package alias (or 'port')
-     * @param string $targetPackage Target package alias (or 'file', 'sql')
-     * @param string $inputConnection Connection alias in config.php
-     * @param string $outputConnection Connection alias in config.php
+     * @param ?string $sourcePackage Source package alias (or 'port')
+     * @param ?string $targetPackage Target package alias (or 'file', 'sql')
+     * @param ?string $inputConnection Connection alias in config.php
+     * @param ?string $outputConnection Connection alias in config.php
      * @param ?string $inputTablePrefix If the input is a database, override source package with this table prefix.
      * @param ?string $outputTablePrefix If the output is a database, override target package with this table prefix.
      * @param ?string $cdnPrefix Text to prepend to attachment URIs.
@@ -43,50 +43,50 @@ class Request
      * @throws \Exception
      */
     public function __construct(
-        string $sourcePackage,
-        string $targetPackage,
-        string $inputConnection,
-        string $outputConnection,
+        ?string $sourcePackage = null,
+        ?string $targetPackage = null,
+        ?string $inputConnection = null,
+        ?string $outputConnection = null,
         ?string $inputTablePrefix = null,
         ?string $outputTablePrefix = null,
         ?string $cdnPrefix = null,
         ?string $dataTypes = null,
     ) {
-        $this->sourcePackage = $sourcePackage;
-        $this->targetPackage = $targetPackage;
+        $this->sourceName = $sourcePackage ?? Config::getInstance()->get('source');
+        $this->targetName = $targetPackage ?? Config::getInstance()->get('target');
 
-        $this->inputConnection = $inputConnection;
-        $this->outputConnection = $outputConnection;
+        $this->inputConnection = $inputConnection ?? Config::getInstance()->get('input_alias');
+        $this->outputConnection = $outputConnection ?? Config::getInstance()->get('output_alias');
 
-        $this->inputTablePrefix = $inputTablePrefix;
-        $this->outputTablePrefix = $outputTablePrefix;
-        $this->cdnPrefix = $cdnPrefix;
+        $this->inputTablePrefix = $inputTablePrefix ?? sourceFactory($this->sourceName)::SUPPORTED['prefix'] ?? null;
+        $this->outputTablePrefix = $outputTablePrefix ?? sourceFactory($this->targetName)::SUPPORTED['prefix'] ?? null;
+        $this->cdnPrefix = $cdnPrefix ?? Config::getInstance()->get('option_cdn_prefix');
 
         if (!empty($dataTypes) && !count(array_diff(explode(',', $dataTypes), self::VALID_DATA_TYPES))) {
             $this->dataTypes = $dataTypes;
         } elseif (!empty($dataTypes)) {
             throw new \Exception('Invalid data types in request.');
         } else {
-            $this->dataTypes = null;
+            $this->dataTypes = Config::getInstance()->get('option_data_types') ?? null;
         }
     }
 
-    public function getSource(): string
+    public function getSource(): ?string
     {
-        return $this->sourcePackage;
+        return $this->sourceName;
     }
 
-    public function getTarget(): string
+    public function getTarget(): ?string
     {
-        return $this->targetPackage;
+        return $this->targetName;
     }
 
-    public function getInput(): string
+    public function getInput(): ?string
     {
         return $this->inputConnection;
     }
 
-    public function getOutput(): string
+    public function getOutput(): ?string
     {
         return $this->outputConnection;
     }

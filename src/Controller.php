@@ -97,27 +97,34 @@ class Controller
      */
     public static function run(Request $request): void
     {
+        // Reconcile request with config & defaults.
+        $sourceName = $request->getSource();
+        $targetName = $request->getTarget();
+        $source = sourceFactory($sourceName);
+        $target = targetFactory($targetName);
+        $inputName = $request->getInput();
+        $outputName = $request->getOutput();
+        $sourcePrefix = $request->getInputTablePrefix();
+        $targetPrefix = (empty($target)) ? '' : $request->getOutputTablePrefix();
+        $dataTypes = $request->getDatatypes();
+
         // Setup model.
-        $source = sourceFactory($request->getSource());
-        $inputCM = new ConnectionManager($request->getInput()); // @todo Storage for $input too.
-        $target = targetFactory($request->getTarget());
-        if ($request->getTarget() === 'file') { // @todo storageFactory
+        $inputCM = new ConnectionManager($inputName); // @todo Storage for $input too.
+        if ($targetName === 'file') { // @todo storageFactory
             $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
             $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
         } else {
-            $porterStorage = new Storage\Database(new ConnectionManager($request->getOutput())); // @todo Separate
-            $outputStorage = new Storage\Database(new ConnectionManager($request->getOutput()));
+            $porterStorage = new Storage\Database(new ConnectionManager($outputName)); // @todo Separate
+            $outputStorage = new Storage\Database(new ConnectionManager($outputName));
         }
-        $sourcePrefix = $request->getInputTablePrefix() ?? $source::SUPPORTED['prefix'];
-        $targetPrefix = $request->getOutputTablePrefix() ?? $target::SUPPORTED['prefix'];
         $model = exportModelFactory(
             $inputCM,
             $porterStorage,
             $outputStorage,
             $sourcePrefix,
             $targetPrefix,
-            $request->getDatatypes(),
-            ($request->getOutput() === 'sql')
+            $dataTypes,
+            ($outputName === 'sql')
         );
 
         // Log request.
@@ -149,7 +156,7 @@ class Controller
         // Import (`PORT_` -> Target).
         if ($target) {
             self::doImport($target, $model);
-            self::doPostscript($request->getTarget(), $request->getOutput(), $model);
+            self::doPostscript($targetName, $outputName, $model);
         }
 
         // Report.

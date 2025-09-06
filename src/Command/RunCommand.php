@@ -5,6 +5,7 @@ namespace Porter\Command;
 use Porter;
 use Ahc\Cli\Input\Command;
 use Ahc\Cli\IO\Interactor;
+use Porter\Config;
 use Porter\Support;
 
 class RunCommand extends Command
@@ -32,20 +33,20 @@ class RunCommand extends Command
      */
     public function interact(Interactor $io): void
     {
-        if (!$this->source) {
+        if (!$this->source && !Config::getInstance()->get('source')) {
             $this->set('source', $io->prompt('Source package alias (see `porter list -n=sources`)'));
         }
 
-        if (!$this->target) {
+        if (!$this->target && !Config::getInstance()->get('target')) {
             $this->set('target', $io->prompt('Target package alias (see `porter list -n=targets`)'));
         }
 
-        if (!$this->input) {
-            $this->set('input', $io->prompt('Source connection alias (see config.php)'));
+        if (!$this->input && !Config::getInstance()->get('input_alias')) {
+            $this->set('input', $io->prompt('Input connection alias (see config.php)'));
         }
 
-        if (!$this->output && $this->source !== 'file') {
-            $this->set('output', $io->prompt('Target connection alias (see config.php)'));
+        if (!$this->output && $this->source !== 'file' && !Config::getInstance()->get('output_alias')) {
+            $this->set('output', $io->prompt('Output connection alias (see config.php)'));
         }
     }
 
@@ -55,10 +56,10 @@ class RunCommand extends Command
     public function execute()
     {
         $request = new \Porter\Request(
-            $this->source ?? '',
-            $this->target ?? '',
-            $this->input ?? '',
-            $this->output ?? '',
+            $this->source,
+            $this->target,
+            $this->input,
+            $this->output,
             $this->sp,
             $this->tp,
             $this->cdn,
