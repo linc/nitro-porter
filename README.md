@@ -44,19 +44,20 @@ That means code for all new packages written for it must likewise be made freely
 ![Waterhole](docs/assets/logos/waterhole-300x100.png)
 
 ### 📤 Sources ([37](https://nitroporter.org/sources))
-* bbPress
-* Drupal
-* Flarum
-* FluxBB
-* IPBoard
-* MyBB
-* NodeBB
-* phpBB
-* Simple Machines (SMF)
-* Vanilla
-* vBulletin
-* XenForo
-* _...[and MORE](https://nitroporter.org/sources)!_
+
+![bbPress](docs/assets/logos/bbpress-150x50.png)
+![Drupal](docs/assets/logos/drupal-150x50.jpeg)
+![Flarum](docs/assets/logos/flarum-150x50.png)
+![FluxBB](docs/assets/logos/fluxbb-150x50.png)
+![IPBoard](docs/assets/logos/ipboard-150x50.png)
+![MyBB](docs/assets/logos/mybb-150x50.png)
+![NodeBB](docs/assets/logos/nodebb-150x50.png)
+![phpBB](docs/assets/logos/phpbb-150x50.png)
+![Simple Machines (SMF)](docs/assets/logos/smf-150x50.jpeg)
+![Vanilla](docs/assets/logos/vanilla-150x50.png)
+![vBulletin](docs/assets/logos/vbulletin-150x50.jpeg)
+![XenForo](docs/assets/logos/xenforo-150x50.jpeg)
+_...[and MANY MORE](https://nitroporter.org/sources)!_
 
 ### ✔ What data gets migrated?
 
