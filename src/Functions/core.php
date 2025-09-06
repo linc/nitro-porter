@@ -7,9 +7,7 @@
 use Porter\ConnectionManager;
 use Porter\Database\DbFactory;
 use Porter\ExportModel;
-use Porter\ImportModel;
 use Porter\Postscript;
-use Porter\Request;
 use Porter\Source;
 use Porter\Target;
 use Porter\Storage;
@@ -104,6 +102,7 @@ function targetFactory(string $target): ?Target
  * Get postscript class if it exists.
  *
  * @param string $target
+ * @param Storage $storage
  * @param ConnectionManager $connection
  * @return Postscript|null
  */
