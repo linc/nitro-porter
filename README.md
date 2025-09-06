@@ -45,8 +45,10 @@ That means code for all new packages written for it must likewise be made freely
 
 ### 📤 Sources ([37](https://nitroporter.org/sources))
 
+![AnswerHub](docs/assets/logos/answerhub-150x50.jpg)
 ![bbPress](docs/assets/logos/bbpress-150x50.png)
 ![Drupal](docs/assets/logos/drupal-150x50.jpeg)
+![esoTalk](docs/assets/logos/esotalk-150x50.png)
 ![Flarum](docs/assets/logos/flarum-150x50.png)
 ![FluxBB](docs/assets/logos/fluxbb-150x50.png)
 ![IPBoard](docs/assets/logos/ipboard-150x50.png)
@@ -54,10 +56,13 @@ That means code for all new packages written for it must likewise be made freely
 ![NodeBB](docs/assets/logos/nodebb-150x50.png)
 ![phpBB](docs/assets/logos/phpbb-150x50.png)
 ![Simple Machines (SMF)](docs/assets/logos/smf-150x50.jpeg)
+![SimplePress](docs/assets/logos/simplepress-150x50.png)
+![Uservoice](docs/assets/logos/uservoice-150x50.jpeg)
 ![Vanilla](docs/assets/logos/vanilla-150x50.png)
 ![vBulletin](docs/assets/logos/vbulletin-150x50.jpeg)
 ![XenForo](docs/assets/logos/xenforo-150x50.jpeg)
-_...[and MANY MORE](https://nitroporter.org/sources)!_
+
+_...[and MORE](https://nitroporter.org/sources)!_
 
 ### ✔ What data gets migrated?
 
