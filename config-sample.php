@@ -1,11 +1,29 @@
 <?php
-
+// Values here are overridden by CLI inputs.
 return [
-    'debug' => false,
-    'test_alias' => 'test',
+    // Package names (e.g. 'Xenforo').
+    'source' => '',
+    'target' => '',
+
+    // Database table prefixes (leave blank for default).
+    'source_prefix' => '',
+    'target_prefix' => '',
+
+    // Paths to folders (optional).
+    'source_attachments' => '',
+    'target_attachments' => '',
+    'source_avatars' => '',
+    'target_avatars' => '',
+
+    // Aliases of connections.
+    // (If you're just editing the 2 default connections below, don't change these.)
+    'input_alias' => 'input',
+    'output_alias' => 'output',
+
+    // Data connections.
     'connections' => [
         [
-            'alias' => 'source',
+            'alias' => 'input',
             'type' => 'database',
             'adapter' => 'mysql',
             'host' => 'localhost',
@@ -19,7 +37,7 @@ return [
             ],
         ],
         [
-            'alias' => 'target',
+            'alias' => 'output',
             'type' => 'database',
             'adapter' => 'mysql',
             'host' => '127.0.0.1',
@@ -33,4 +51,10 @@ return [
             ],
         ],
     ],
+
+    // Advanced options.
+    'option_cdn_prefix' => '',
+    'option_data_types' => '',
+    'debug' => false,
+    'test_alias' => 'test',
 ];
