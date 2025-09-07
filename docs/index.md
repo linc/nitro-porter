@@ -11,18 +11,25 @@ Nitro Porter can currently migrate your community to these platforms:
 ## Source software supported
 Nitro Porter can migrate your community away from these platforms:
 
-* bbPress
-* Drupal
-* Flarum
-* FluxBB
-* IPBoard
-* MyBB
-* NodeBB
-* phpBB
-* Simple Machines (SMF)
-* Vanilla
-* vBulletin
-* XenForo
+![AnswerHub](assets/logos/answerhub-150x50.jpg)
+![ASPPlayground.NET](assets/logos/aspplayground-150x50.png)
+![bbPress](assets/logos/bbpress-150x50.png)
+![Drupal](assets/logos/drupal-150x50.jpeg)
+![esoTalk](assets/logos/esotalk-150x50.png)
+![Flarum](assets/logos/flarum-150x50.png)
+![FluxBB](assets/logos/fluxbb-150x50.png)
+![IPBoard](assets/logos/ipboard-150x50.png)
+![Kunena](assets/logos/kunena-150x50.jpg)
+![MyBB](assets/logos/mybb-150x50.png)
+![NodeBB](assets/logos/nodebb-150x50.png)
+![phpBB](assets/logos/phpbb-150x50.png)
+![Simple Machines (SMF)](assets/logos/smf-150x50.jpeg)
+![SimplePress](assets/logos/simplepress-150x50.png)
+![Uservoice](assets/logos/uservoice-150x50.jpeg)
+![Vanilla](assets/logos/vanilla-150x50.png)
+![vBulletin](assets/logos/vbulletin-150x50.jpeg)
+![XenForo](assets/logos/xenforo-150x50.jpeg)
+
 * _...[and MORE](https://nitroporter.org/sources)!_
 
 ## What data gets migrated?
