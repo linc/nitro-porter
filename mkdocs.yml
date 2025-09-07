@@ -63,6 +63,7 @@ nav:
       - Prepare Your Community: migrations.md
       - Add a Package: develop.md
       - Maintain Nitro Porter: maintain.md
+      - Domain Concepts: domain.md
   - Packages:
       - Sources: sources.md
       - Targets: targets.md
