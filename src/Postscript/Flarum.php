@@ -100,6 +100,7 @@ class Flarum extends Postscript
         // Start timer.
         $start = microtime(true);
         $rows = 0;
+        $ex->comment("Building 'post number' info for discussions...");
 
         // Get discussion id list (avoiding empty discussions).
         $db = $this->connection->newConnection();
@@ -124,7 +125,7 @@ class Flarum extends Postscript
         }
 
         // Report.
-        $ex->reportStorage('build', 'post numbers', microtime(true) - $start, $rows, $memory);
+        $ex->reportStorage('build', 'discussions.post_number_index', microtime(true) - $start, $rows, $memory);
     }
 
     /**
@@ -290,6 +291,7 @@ class Flarum extends Postscript
         // Start timer.
         $start = microtime(true);
         $rows = 0;
+        $ex->comment("Building 'last read' info for user bookmarks...");
 
         // Calculate & set discussion_user.last_read_post_number.
         $db = $this->connection->newConnection();
@@ -314,7 +316,7 @@ class Flarum extends Postscript
         }
 
         // Report.
-        $ex->reportStorage('build', 'following last read', microtime(true) - $start, $rows, $memory);
+        $ex->reportStorage('build', 'discussion_user.last_read_post_number', microtime(true) - $start, $rows, $memory);
     }
 
     /**
