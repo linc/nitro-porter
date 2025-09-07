@@ -127,7 +127,7 @@ class Controller
 
         // Log request.
         $model->comment("NITRO PORTER RUNNING...");
-        $model->comment("Porting " . $source->getName() . " to " . $target->getName());
+        $model->comment("Porting " . $source->getName() . " to " . ($target ? $target->getName() : 'file'));
         $model->comment("Input: " . $inputCM->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
         $model->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
         $model->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
