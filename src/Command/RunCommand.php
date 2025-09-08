@@ -52,8 +52,10 @@ class RunCommand extends Command
 
     /**
      * Command execution.
+     *
+     * @throws \Exception
      */
-    public function execute()
+    public function execute(): void
     {
         $request = new \Porter\Request(
             $this->source,
@@ -66,14 +68,14 @@ class RunCommand extends Command
             $this->data
         );
 
-        \Porter\Controller::run($request);
+        (new \Porter\Controller())->run($request);
     }
 
     /**
      * @param bool $sections
      * @return array
      */
-    public function getAllOptions($sections = false): array
+    public function getAllOptions(bool $sections = false): array
     {
         $options['package']['Values'] = array_keys(Support::getInstance()->getSources());
         $globalOptions = $options;

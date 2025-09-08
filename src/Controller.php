@@ -17,7 +17,7 @@ class Controller
      * @param Source $source
      * @param ExportModel $model
      */
-    public static function doExport(Source $source, ExportModel $model): void
+    protected function doExport(Source $source, ExportModel $model): void
     {
         $model->verifySource($source->sourceTables);
 
@@ -41,7 +41,7 @@ class Controller
      * @param Target $target
      * @param ExportModel $model
      */
-    public static function doImport(Target $target, ExportModel $model): void
+    protected function doImport(Target $target, ExportModel $model): void
     {
         $model->begin();
         $target->validate($model);
@@ -59,7 +59,7 @@ class Controller
      * @param string $output
      * @param ExportModel $exportModel
      */
-    protected static function doPostscript(string $postscript, string $output, ExportModel $exportModel): void
+    protected function doPostscript(string $postscript, string $output, ExportModel $exportModel): void
     {
         $postConnection = new ConnectionManager($output);
         $postscript = postscriptFactory($postscript, $exportModel->getOutputStorage(), $postConnection);
@@ -77,7 +77,7 @@ class Controller
      * @param Source $source
      * @param Target $target
      */
-    public static function setFlags(Source $source, Target $target): void
+    protected function setFlags(Source $source, Target $target): void
     {
         // If both the source and target don't store content/body on the discussion/thread record,
         // skip the conversion on both sides so we don't do joins and renumber keys for nothing.
@@ -95,7 +95,7 @@ class Controller
      *
      * Translates `Request` into action (i.e. `Request` object should not pass beyond here).
      */
-    public static function run(Request $request): void
+    public function run(Request $request): void
     {
         // Break down the Request.
         $source = sourceFactory($request->getSource());
@@ -140,7 +140,7 @@ class Controller
 
         // Setup & log flags.
         if ($target) {
-            self::setFlags($source, $target);
+            $this->setFlags($source, $target);
             $model->comment("? 'Use Discussion Body' = " .
                 ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
@@ -155,13 +155,13 @@ class Controller
         ) . "\n");
 
         // Export (Source -> `PORT_`).
-        self::doExport($source, $model);
+        $this->doExport($source, $model);
 
         // Import (`PORT_` -> Target).
         if ($target) {
-            self::doImport($target, $model);
+            $this->doImport($target, $model);
             // Postscript names must match target names currently.
-            self::doPostscript($target->getName(), $outputName, $model);
+            $this->doPostscript($target->getName(), $outputName, $model);
         }
 
         // File transfer.
