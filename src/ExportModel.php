@@ -230,13 +230,13 @@ class ExportModel
         $filters = array_merge($filters, $legacyFilter);
 
         // Set storage prefix.
-        $this->outputStorage->setPrefix($this->porterPrefix);
+        $this->porterStorage->setPrefix($this->porterPrefix);
 
         // Prepare the storage medium for the incoming structure.
-        $this->outputStorage->prepare($tableName, $structure);
+        $this->porterStorage->prepare($tableName, $structure);
 
         // Store the data.
-        $info = $this->outputStorage->store($tableName, $map, $structure, $data, $filters, $this);
+        $info = $this->porterStorage->store($tableName, $map, $structure, $data, $filters, $this);
 
         // Report.
         $this->reportStorage('export', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
@@ -244,7 +244,7 @@ class ExportModel
 
     /**
      * @param string $tableName
-     * @param Builder $exp
+     * @param Builder $exp Connected to porterStorage.
      * @param array $struct
      * @param array $map
      * @param array $filters
