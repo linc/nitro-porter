@@ -476,6 +476,7 @@ class ExportModel
      * Determine the character set of the origin database.
      *
      * @param string $table Table to derive charset from.
+     * @todo Use $inputStorage
      */
     public function setCharacterSet(string $table): void
     {
@@ -565,6 +566,7 @@ class ExportModel
      * @param string $table The name of the table to check.
      * @param array|string $columns An array of column names to check.
      * @return bool Whether the table and all columns exist.
+     * @deprecated
      */
     public function exists(string $table, array|string $columns = []): bool
     {
@@ -710,6 +712,7 @@ class ExportModel
      *
      * @param string $tableName
      * @return bool
+     * @deprecated
      */
     public function tableExists(string $tableName): bool
     {
@@ -723,6 +726,7 @@ class ExportModel
      * @param string $tableName
      * @param string $columnName
      * @return bool
+     * @deprecated
      */
     public function columnExists(string $tableName, string $columnName): bool
     {
