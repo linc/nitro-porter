@@ -107,16 +107,19 @@ class Controller
         $dataTypes = $request->getDatatypes();
 
         // Setup model.
-        $inputCM = new ConnectionManager($inputName); // @todo Storage for $input too.
+        $inputCM = new ConnectionManager($inputName); // @todo Delete after Sources are all moved to $inputStorage.
+        $inputDB = new \Porter\Database\DbFactory($inputCM->getAllInfo(), 'pdo');
+        $inputStorage = new Storage\Database(new ConnectionManager($inputName));
         if (empty($target)) { // @todo storageFactory
             $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
             $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
         } else {
-            $porterStorage = new Storage\Database(new ConnectionManager($outputName)); // @todo Separate
+            $porterStorage = new Storage\Database(new ConnectionManager($outputName));
             $outputStorage = new Storage\Database(new ConnectionManager($outputName));
         }
         $model = exportModelFactory(
-            $inputCM,
+            $inputDB, // @deprecated
+            $inputStorage,
             $porterStorage,
             $outputStorage,
             $sourcePrefix,

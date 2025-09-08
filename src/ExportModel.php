@@ -74,6 +74,11 @@ class ExportModel
     protected DbFactory $database;
 
     /**
+     * @var Storage Where the source data is from (read-only).
+     */
+    protected Storage $inputStorage;
+
+    /**
      * @var Storage Where the mapping data is sent.
      */
     protected Storage $porterStorage;
@@ -90,15 +95,18 @@ class ExportModel
      * Setup.
      *
      * @param DbFactory $inputDB Deprecated database connector used in Source packages.
+     * @param Storage $inputStorage
      * @param Storage $porterStorage
      * @param Storage $outputStorage
      * @param array $porterStructure
      * @param string $sourcePrefix
      * @param string $targetPrefix
+     * @param string|null $limitTables
      * @param bool $captureOnly
      */
     public function __construct(
-        DbFactory $inputDB,
+        DbFactory $inputDB, // @todo $inputStorage
+        Storage $inputStorage,
         Storage $porterStorage,
         Storage $outputStorage,
         array $porterStructure,
@@ -108,6 +116,7 @@ class ExportModel
         bool $captureOnly = false
     ) {
         $this->database = $inputDB;
+        $this->inputStorage = $inputStorage;
         $this->porterStorage = $porterStorage;
         $this->outputStorage = $outputStorage;
         $this->porterStructure = $porterStructure;
@@ -115,6 +124,20 @@ class ExportModel
         $this->tarPrefix = $targetPrefix;
         $this->limitTables($limitTables);
         $this->captureOnly = $captureOnly;
+    }
+
+    /**
+     * Provide the input database.
+     *
+     * @return Connection
+     * @throws \Exception
+     */
+    public function dbExport(): Connection
+    {
+        if (!is_a($this->inputStorage, '\Porter\Storage\Database')) {
+            throw new \Exception('Input storage can only be a database currently.');
+        }
+        return $this->inputStorage->getConnection()->connection(); // @todo jank double-call
     }
 
     /**

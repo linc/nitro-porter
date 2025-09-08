@@ -118,7 +118,8 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
 }
 
 /**
- * @param ConnectionManager $inputCM
+ * @param DbFactory $inputDB
+ * @param Storage $inputStorage
  * @param Storage $porterStorage
  * @param Storage $outputStorage
  * @param string $sourcePrefix
@@ -128,7 +129,8 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
  * @return ExportModel
  */
 function exportModelFactory(
-    ConnectionManager $inputCM,
+    DbFactory $inputDB, // @todo remove
+    Storage $inputStorage,
     Storage $porterStorage,
     Storage $outputStorage,
     string $sourcePrefix = '',
@@ -136,11 +138,9 @@ function exportModelFactory(
     ?string $limitTables = '',
     bool $captureOnly = false
 ): ExportModel {
-    // Wire old database / model mess.
-    $info = $inputCM->getAllInfo();
-    $inputDB = new DbFactory($info, 'pdo'); // initial read only
-    $model = new ExportModel(
+    return new ExportModel(
         $inputDB,
+        $inputStorage,
         $porterStorage,
         $outputStorage,
         loadStructure(),
@@ -149,8 +149,6 @@ function exportModelFactory(
         $limitTables,
         $captureOnly
     );
-
-    return $model;
 }
 
 /**
