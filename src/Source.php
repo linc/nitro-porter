@@ -103,7 +103,7 @@ abstract class Source
     /**
      * Set `useDiscussionBody` to false.
      */
-    public function skipDiscussionBody()
+    public function skipDiscussionBody(): void
     {
         $this->useDiscussionBody = false;
     }
