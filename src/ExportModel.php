@@ -83,6 +83,9 @@ class ExportModel
      */
     protected Storage $outputStorage;
 
+    /** @var FileManager Manages files during the migration (optionally). */
+    protected FileManager $fileManager;
+
     /**
      * Setup.
      *
