@@ -18,6 +18,8 @@ class Vanilla extends Source
         'prefix' => 'GDN_',
         'charset_table' => 'Comment',
         'hashmethod' => 'Vanilla',
+        'avatarsPrefix' => 'p',
+        'avatarThumbnailsPrefix' => 'n',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
@@ -27,6 +29,7 @@ class Vanilla extends Source
             'Polls' => 'Cloud only',
             'Roles' => 1,
             'Avatars' => 1,
+            'AvatarThumbnails' => 1,
             'PrivateMessages' => 1,
             'Signatures' => 1,
             'Attachments' => 1,
@@ -34,7 +37,7 @@ class Vanilla extends Source
             'Badges' => 'Cloud or YAGA',
             'UserNotes' => 1,
             'Ranks' => 'Cloud or YAGA',
-            'Groups' => 0,
+            'Groups' => 0, // @todo
             'Tags' => 1,
             'Reactions' => 'Cloud or YAGA',
         ]

@@ -128,6 +128,9 @@ class Controller
             ($outputName === 'sql')
         );
 
+        // Setup file transfer.
+        $fileTransfer = new FileTransfer($source, $target, $inputStorage);
+
         // Log request.
         $model->comment("NITRO PORTER RUNNING...");
         $model->comment("Porting " . $source->getName() . " to " . ($target ? $target->getName() : 'file'));
@@ -160,6 +163,9 @@ class Controller
             // Postscript names must match target names currently.
             self::doPostscript($target->getName(), $outputName, $model);
         }
+
+        // File transfer.
+        $fileTransfer->run();
 
         // Report.
         $model->comment("\n" . sprintf(

@@ -8,6 +8,8 @@ abstract class Target
         'name' => '',
         'prefix' => '',
         'charset_table' => '',
+        'avatarsPrefix' => '',
+        'avatarThumbnailsPrefix' => '',
         'features' => [],
     ];
 

@@ -2,6 +2,9 @@
 
 namespace Porter;
 
+use Illuminate\Database\Connection;
+use Illuminate\Database\Query\Builder;
+
 abstract class Source
 {
     public const SUPPORTED = [
@@ -99,8 +102,6 @@ abstract class Source
 
     /**
      * Set `useDiscussionBody` to false.
-     *
-     * @return void
      */
     public function skipDiscussionBody()
     {
@@ -117,5 +118,16 @@ abstract class Source
             $charset = self::SUPPORTED['charset_table'];
         }
         return $charset;
+    }
+
+    /**
+     * Query builder that selects values `sourcename` & `targetname`.
+     *
+     * @param Connection $c
+     * @return ?Builder
+     */
+    public function attachmentsData(Connection $c): ?Builder
+    {
+        return null;
     }
 }

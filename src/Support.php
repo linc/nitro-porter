@@ -22,6 +22,7 @@ class Support
         'Attachments',
         'Bookmarks',
         'Avatars',
+        'AvatarThumbnails',
         'Signatures',
         'Polls',
         'Tags',
@@ -91,6 +92,8 @@ class Support
         // Hardcode Vanilla file support (all = yes).
         $this->targets['file'] = [
             'name' => 'Vanilla (file)',
+            'avatarsPrefix' => 'p',
+            'avatarThumbnailsPrefix' => 'n',
             'features' => array_fill_keys(self::SUPPORTED_FEATURES, 1),
         ];
 
