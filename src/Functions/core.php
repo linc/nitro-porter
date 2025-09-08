@@ -58,17 +58,6 @@ function runPorter(Request $request): void
 }
 
 /**
- * Retrieve test db creds from main config for Phinx.
- *
- * @return array
- */
-function getTestDatabaseCredentials(): array
-{
-    $c = new \Porter\ConnectionManager();
-    return $c->getAllInfo();
-}
-
-/**
  * Get valid source class. Exit app if invalid name is given.
  *
  * @param string $source
@@ -155,56 +144,6 @@ function exportModelFactory(
         $limitTables,
         $captureOnly
     );
-}
-
-/**
- * Test filesystem permissions.
- */
-function testWrite(): bool
-{
-    $file = 'portertest.txt';
-    @touch($file);
-    if (is_writable($file)) {
-        @unlink($file);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-/**
- * @deprecated
- * @param  string $key
- * @param  array $collection
- * @param  string $default
- * @return mixed
- */
-function getValue(string $key, array $collection = [], string $default = '')
-{
-    if (!$collection) {
-        $collection = $_POST;
-    }
-    if (array_key_exists($key, $collection)) {
-        return $collection[$key];
-    }
-
-    return $default;
-}
-
-/**
- * @deprecated
- * @param string $name
- * @param array $array
- * @param mixed $default
- * @return mixed|null
- */
-function v(string $name, array $array, $default = '')
-{
-    if (isset($array[$name])) {
-        return $array[$name];
-    }
-
-    return $default;
 }
 
 /**

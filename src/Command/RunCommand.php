@@ -89,7 +89,7 @@ class RunCommand extends Command
         }
 
         foreach ($supported as $type => $options) {
-            $commandLine = v('options', $options);
+            $commandLine = $options['options'] ?? '';
             if (!$commandLine) {
                 continue;
             }
