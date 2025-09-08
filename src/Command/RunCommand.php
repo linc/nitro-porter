@@ -68,7 +68,7 @@ class RunCommand extends Command
             $this->data
         );
 
-        (new \Porter\Controller())->run($request);
+        runPorter($request);
     }
 
     /**

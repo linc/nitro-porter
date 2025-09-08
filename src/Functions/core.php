@@ -8,6 +8,7 @@ use Porter\ConnectionManager;
 use Porter\Database\DbFactory;
 use Porter\ExportModel;
 use Porter\Postscript;
+use Porter\Request;
 use Porter\Source;
 use Porter\Target;
 use Porter\Storage;
@@ -49,6 +50,11 @@ function loadTargets(): array
 function loadStructure(): array
 {
     return include(ROOT_DIR . '/data/structure.php');
+}
+
+function runPorter(Request $request): void
+{
+    (new \Porter\Controller())->run($request);
 }
 
 /**
