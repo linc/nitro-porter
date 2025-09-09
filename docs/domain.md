@@ -49,6 +49,8 @@ the transformed data being written (defined by Porter or a Target).</dd>
 (May also refer to a "database schema migration", an industry term for altering database schema in a reversible way 
 using coded definitions, done with the library `Phinx` in Nitro Porter's automated tests.)</dd>
 
+![Domain Model diagram](assets/domain.png)
+
 ## Porter Format Terms
 
 Because every platform uses its own nomenclature, it's important to standardize within Nitro Porter for clarity.
