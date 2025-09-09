@@ -95,4 +95,22 @@ abstract class Target
 
     /** Enforce data constraints required by the target platform. */
     abstract public function validate(ExportModel $ex): void;
+
+    /**
+     * Get current max value of a column on a table in output (target).
+     *
+     * Do not use porter (PORT_) tables because we may have added records elsewhere.
+     *
+     * @param string $name
+     * @param string $table
+     * @param ExportModel $ex
+     * @return int
+     */
+    protected function getMaxValue(string $name, string $table, ExportModel $ex): int
+    {
+        $max = $ex->dbOutput()->table($table)
+            ->selectRaw('max(`' . $name . '`) as id')
+            ->limit(1)->get()->pluck('id');
+        return $max[0] ?? 0;
+    }
 }

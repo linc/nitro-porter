@@ -10,13 +10,11 @@ namespace Porter;
  */
 abstract class Postscript
 {
-    /** @var ConnectionManager */
-    protected ConnectionManager $connection;
-
     /**
      * @var Storage Where the data is being sent.
      */
-    protected Storage $storage;
+    protected Storage $outputStorage;
+    protected Storage $postscriptStorage;
 
     /** Main process, custom per package. */
     abstract public function run(ExportModel $ex): void;
@@ -24,12 +22,12 @@ abstract class Postscript
     /**
      * Only Target database connection required; don't care what Source was.
      *
-     * @param Storage $storage
-     * @param ConnectionManager $connection
+     * @param Storage $outputStorage
+     * @param Storage $postscriptStorage
      */
-    public function __construct(Storage $storage, ConnectionManager $connection)
+    public function __construct(Storage $outputStorage, Storage $postscriptStorage)
     {
-        $this->storage = $storage;
-        $this->connection = $connection;
+        $this->outputStorage = $outputStorage;
+        $this->postscriptStorage = $postscriptStorage;
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
+use Porter\Storage\Database;
 
 /**
  * Object for exporting other database structures into a format that can be imported.
@@ -41,16 +42,6 @@ class ExportModel
      * @see ExportModel::export()
      */
     protected string $srcPrefix = '';
-
-    /**
-     * @var string DB prefix of the intermediate storage. @todo Should be a constant; don't alter.
-     */
-    protected string $porterPrefix = 'PORT_';
-
-    /**
-     * @var string DB prefix of the final target. Blindly prepended to give table name.
-     */
-    public string $tarPrefix = '';
 
     /**
      * @var array Log of all queries done in this run for debugging / test mode.
@@ -87,6 +78,9 @@ class ExportModel
      * @var Storage Where the target data is sent.
      */
     protected Storage $outputStorage;
+    protected Storage $postscriptStorage;
+
+    protected Connection $dbInput;
 
     /**
      * Setup.
@@ -95,9 +89,9 @@ class ExportModel
      * @param Storage $inputStorage
      * @param Storage $porterStorage
      * @param Storage $outputStorage
+     * @param Storage $postscriptStorage
      * @param array $porterStructure
      * @param string $sourcePrefix
-     * @param string $targetPrefix
      * @param string|null $limitTables
      * @param bool $captureOnly
      */
@@ -106,9 +100,9 @@ class ExportModel
         Storage $inputStorage,
         Storage $porterStorage,
         Storage $outputStorage,
+        Storage $postscriptStorage,
         array $porterStructure,
         string $sourcePrefix = '',
-        string $targetPrefix = '',
         ?string $limitTables = '',
         bool $captureOnly = false
     ) {
@@ -116,39 +110,51 @@ class ExportModel
         $this->inputStorage = $inputStorage;
         $this->porterStorage = $porterStorage;
         $this->outputStorage = $outputStorage;
+        $this->postscriptStorage = $postscriptStorage;
         $this->porterStructure = $porterStructure;
         $this->srcPrefix = $sourcePrefix;
-        $this->tarPrefix = $targetPrefix;
         $this->limitTables($limitTables);
         $this->captureOnly = $captureOnly;
     }
 
     /**
-     * Provide the input database.
+     * Provide the input database connection.
      *
      * @return Connection
-     * @throws \Exception
      */
-    public function dbExport(): Connection
+    public function dbInput(): Connection
     {
-        if (!is_a($this->inputStorage, '\Porter\Storage\Database')) {
-            throw new \Exception('Input storage can only be a database currently.');
-        }
-        return $this->inputStorage->getConnection()->connection(); // @todo jank double-call
+        return $this->inputStorage->getConnection();
     }
 
     /**
-     * Provide the porter database.
+     * Provide the porter database connection.
      *
      * @return Connection
-     * @throws \Exception
      */
-    public function dbImport(): Connection
+    public function dbPorter(): Connection
     {
-        if (!is_a($this->porterStorage, '\Porter\Storage\Database')) {
-            throw new \Exception('Porter storage can only be a database currently.');
-        }
-        return $this->porterStorage->getConnection()->connection(); // @todo jank double-call
+        return $this->porterStorage->getConnection();
+    }
+
+    /**
+     * Provide the output database connection.
+     *
+     * @return Connection
+     */
+    public function dbOutput(): Connection
+    {
+        return $this->outputStorage->getConnection();
+    }
+
+    /**
+     * Provide the postscript database connection.
+     *
+     * @return Connection
+     */
+    public function dbPostscript(): Connection
+    {
+        return $this->postscriptStorage->getConnection();
     }
 
     /**
@@ -221,10 +227,10 @@ class ExportModel
      */
     public function export(string $tableName, string $query, array $map = [], array $filters = []): void
     {
-        if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
+        /*if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
             return;
-        }
+        }*/
 
         // Start timer.
         $start = microtime(true);
@@ -249,9 +255,6 @@ class ExportModel
         list($map, $legacyFilter) = $this->normalizeDataMap($map); // @todo Update legacy filter usage and remove.
         $filters = array_merge($filters, $legacyFilter);
 
-        // Set storage prefix.
-        $this->porterStorage->setPrefix($this->porterPrefix);
-
         // Prepare the storage medium for the incoming structure.
         $this->porterStorage->prepare($tableName, $structure);
 
@@ -273,9 +276,6 @@ class ExportModel
     {
         // Start timer.
         $start = microtime(true);
-
-        // Set storage prefix.
-        $this->outputStorage->setPrefix($this->tarPrefix);
 
         // Prepare the storage medium for the incoming structure.
         $this->outputStorage->prepare($tableName, $struct);
@@ -342,6 +342,14 @@ class ExportModel
     }
 
     /**
+     * @return Storage
+     */
+    public function getPostscriptStorage(): Storage
+    {
+        return $this->postscriptStorage;
+    }
+
+    /**
      * Create an array of `strtolower(name)` => ID for doing lookups later.
      *
      * @todo This strategy likely won't scale past 100K users. 18K users @ +8mb memory use.
@@ -351,8 +359,8 @@ class ExportModel
      */
     public function buildUserMap(): array
     {
-        $userMap = $this->dbImport()
-            ->table($this->tarPrefix . 'users')
+        $userMap = $this->dbOutput()
+            ->table('users')
             ->get(['id', 'username']);
 
         $users = [];
@@ -375,12 +383,11 @@ class ExportModel
      * @param string $table
      * @param string $column
      * @return mixed[]
-     * @throws \Exception
      */
     public function findDuplicates(string $table, string $column): array
     {
         $results = [];
-        $db = $this->dbImport();
+        $db = $this->dbPorter();
         $duplicates = $db->table($table)
             ->select($column, $db->raw('count(' . $column . ') as found_count'))
             ->groupBy($column)
@@ -402,12 +409,11 @@ class ExportModel
      * @param string $column Column (likely a key) to be compared to the foreign key for its existence.
      * @param string $fnTable Foreign table to check for corresponding key.
      * @param string $fnColumn Foreign key to select.
-     * @throws \Exception
      */
     public function pruneOrphanedRecords(string $table, string $column, string $fnTable, string $fnColumn): void
     {
         // `DELETE FROM $table WHERE $column NOT IN (SELECT $fnColumn FROM $fnTable)`
-        $db = $this->dbImport();
+        $db = $this->dbPorter();
         $duplicates = $db->table($table)
             ->whereNotIn($column, $db->table($fnTable)->pluck($fnColumn))
             ->delete();
@@ -444,7 +450,7 @@ class ExportModel
     public function ignoreDuplicates(string $tableName): void
     {
         if (method_exists($this->outputStorage, 'ignoreTable')) {
-            $this->outputStorage->ignoreTable($this->tarPrefix . $tableName);
+            $this->outputStorage->ignoreTable($tableName);
         }
     }
 
@@ -548,7 +554,7 @@ class ExportModel
     }
 
     /**
-     * Check if the storage container exists for this data.
+     * Check if the output storage container exists for this data.
      *
      * @see ExportModel::exists() — Equivalent for source.
      * @param string $table
@@ -558,6 +564,31 @@ class ExportModel
     public function targetExists(string $table, array $columns = []): bool
     {
         return $this->outputStorage->exists($table, $columns);
+    }
+
+    /**
+     * Check if the porter storage container exists for this data.
+     *
+     * @param string $table
+     * @param array $columns
+     * @return bool
+     *
+     * USE THIS INSTEAD HERE:
+     * PREFIX=FLA_UserRole
+     * Skipping import: Roles (Source lacks support)
+     * import: tags — 24 rows, 00.00s (7.8mb)
+     * Mentions map memory usage at 10.6mb
+     * PREFIX=FLA_discussions
+     * PREFIX=FLA_discussions
+     * PREFIX=FLA_discussions
+     * import: discussions — 2259 rows, 00.15s (9.3mb)
+     * import: discussion_tag — 2259 rows, 00.02s (8.8mb)
+     * PREFIX=FLA_UserDiscussion
+     * Skipping import: Bookmarks (Source lacks support)
+     */
+    public function portExists(string $table, array $columns = []): bool
+    {
+        return $this->porterStorage->exists($table, $columns);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Porter\Storage;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Porter\ConnectionManager;
@@ -29,7 +30,7 @@ class Database extends Storage
     /**
      * @var string Prefix for the storage database.
      */
-    public string $prefix = '';
+    protected string $prefix = '';
 
     /**
      * @var string Table name currently targeted by the batcher.
@@ -39,7 +40,7 @@ class Database extends Storage
     /**
      * @var array List of tables that have already been reset to avoid dropping multipart import data.
      */
-    public array $resetTables = [];
+    protected array $resetTables = [];
 
     /**
      * @var array List of tables to ignore errors on insert.
@@ -49,27 +50,27 @@ class Database extends Storage
     /**
      * @var ConnectionManager
      */
-    public ConnectionManager $connection;
+    protected ConnectionManager $connectionManager;
 
     /**
      * @param ConnectionManager $c
      */
     public function __construct(ConnectionManager $c)
     {
-        $this->connection = $c;
+        $this->connectionManager = $c;
     }
 
     /**
-     * @return ConnectionManager
+     * @return Connection
      */
-    public function getConnection(): ConnectionManager
+    public function getConnection(): Connection
     {
-        return $this->connection;
+        return $this->connectionManager->connection();
     }
 
     public function getAlias(): string
     {
-        return $this->connection->getAlias();
+        return $this->connectionManager->getAlias();
     }
 
     /**
@@ -196,7 +197,7 @@ class Database extends Storage
         $tableName = $this->getBatchTable();
         $action = (in_array($tableName, $this->ignoreErrorsTables)) ? 'insertOrIgnore' : 'insert';
         try {
-            $this->connection->connection()->table($tableName)->$action($batch);
+            $this->connectionManager->connection()->table($tableName)->$action($batch);
         } catch (\Illuminate\Database\QueryException $e) {
             echo "\n\nBatch insert error: " . substr($e->getMessage(), 0, 500);
             echo "\n[...]\n" . substr($e->getMessage(), -300) . "\n";
@@ -257,7 +258,7 @@ class Database extends Storage
      */
     public function createOrUpdateTable(string $name, array $structure): void
     {
-        $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $dbm = $this->connectionManager->dbm->getConnection($this->connectionManager->getAlias());
         $schema = $dbm->getSchemaBuilder();
         if ($this->exists($name)) {
             // Empty the table if it already exists.
@@ -290,7 +291,7 @@ class Database extends Storage
      */
     public function exists(string $tableName, array $columns = []): bool
     {
-        $schema = $this->connection->dbm->getConnection($this->connection->getAlias())->getSchemaBuilder();
+        $schema = $this->connectionManager->connection()->getSchemaBuilder();
         if (empty($columns)) {
             // No columns requested.
             return $schema->hasTable($tableName);
@@ -373,7 +374,7 @@ class Database extends Storage
      */
     public function begin(): void
     {
-        $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $dbm = $this->connectionManager->dbm->getConnection($this->connectionManager->getAlias());
         $dbm->unprepared("SET foreign_key_checks = 0");
         $dbm->unprepared("SET unique_checks = 0");
     }
@@ -386,7 +387,7 @@ class Database extends Storage
      */
     public function end(): void
     {
-        $dbm = $this->connection->dbm->getConnection($this->connection->getAlias());
+        $dbm = $this->connectionManager->dbm->getConnection($this->connectionManager->getAlias());
         $dbm->unprepared("SET foreign_key_checks = 1");
         $dbm->unprepared("SET unique_checks = 1");
     }

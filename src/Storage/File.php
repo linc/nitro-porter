@@ -213,6 +213,12 @@ class File extends Storage
         // Required.
     }
 
+    public function getConnection(): null
+    {
+        trigger_error('Incorrect Storage type: File object has no Connection.');
+        return null;
+    }
+
     /**
      * Write CSV header row.
      *

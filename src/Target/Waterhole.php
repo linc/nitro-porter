@@ -93,10 +93,9 @@ class Waterhole extends Target
      * @param ExportModel $ex
      * @return string[]
      */
-    protected function getStructurePosts(ExportModel $ex)
+    protected function getStructurePosts(ExportModel $ex): array
     {
-        $structure = self::DB_STRUCTURE_POSTS;
-        return $structure;
+        return self::DB_STRUCTURE_POSTS;
     }
 
     /**
@@ -117,7 +116,7 @@ class Waterhole extends Target
             '[Slettet bruker]', // Norwegian
             '[Utilisateur supprimé]', // French
         ]; // @see fixDuplicateDeletedNames()
-        $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
+        $dupes = array_diff($ex->findDuplicates('User', 'Name'), $allowlist);
         if (!empty($dupes)) {
             $ex->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
@@ -132,7 +131,7 @@ class Waterhole extends Target
      */
     public function uniqueUserEmails(ExportModel $ex): void
     {
-        $dupes = $ex->findDuplicates('PORT_User', 'Email');
+        $dupes = $ex->findDuplicates('User', 'Email');
         if (!empty($dupes)) {
             $ex->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
@@ -149,10 +148,6 @@ class Waterhole extends Target
         $this->users($ex);
         $this->roles($ex); // 'Groups' in Waterhole
         $this->categories($ex); // 'Channels' in Waterhole
-
-        // Singleton factory; big timing issue; depends on Users being done.
-        // Formatter::instance($ex); // @todo Hook for pre-UGC import?
-
         $this->discussions($ex); // 'Posts' in Waterhole
         $this->comments($ex);
     }
@@ -186,7 +181,7 @@ class Waterhole extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $ex->dbImport()->table('PORT_User')->select('*');
+        $query = $ex->dbPorter()->table('User')->select();
 
         $ex->import('users', $query, $structure, $map, $filters);
     }
@@ -210,7 +205,7 @@ class Waterhole extends Target
         $map = [];
 
         // Verify support.
-        if (!$ex->targetExists('PORT_UserRole')) {
+        if (!$ex->targetExists('UserRole')) {
             $ex->comment('Skipping import: Roles (Source lacks support)');
             $ex->importEmpty('groups', $structure);
             $ex->importEmpty('group_user', $structure);
@@ -218,13 +213,12 @@ class Waterhole extends Target
         }
 
         // Delete orphaned user role associations (deleted users).
-        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
+        $ex->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID');
 
-        $query = $ex->dbImport()->table('PORT_Role')->select(
-            $ex->dbImport()->raw("(RoleID + 4) as id"), // Flarum reserves 1-3 & uses 4 for mods by default.
-            'Name as name',
-            $ex->dbImport()->raw('0 as is_public')
-        );
+        $query = $ex->dbPorter()->table('Role')
+            ->selectRaw("(RoleID + 4) as id") // Flarum reserves 1-3 & uses 4 for mods by default.
+            ->selectRaw('Name as name')
+            ->selectRaw('0 as is_public');
 
         $ex->import('groups', $query, $structure, $map);
 
@@ -237,10 +231,9 @@ class Waterhole extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $query = $ex->dbImport()->table('PORT_UserRole')->select(
-            '*',
-            $ex->dbImport()->raw("(RoleID + 4) as RoleID") // Match above offset
-        );
+        $query = $ex->dbPorter()->table('UserRole')
+            ->select()
+            ->selectRaw("(RoleID + 4) as RoleID"); // Match above offset
 
         $ex->import('group_user', $query, $structure, $map);
     }
@@ -262,10 +255,9 @@ class Waterhole extends Target
             'UrlCode' => 'slug',
             'Description' => 'description',
         ];
-        $query = $ex->dbImport()->table('PORT_Category')
-            ->select(
-                '*',
-            )->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
+        $query = $ex->dbPorter()->table('Category')
+            ->select()
+            ->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
         $ex->import('channels', $query, $structure, $map);
     }
@@ -291,11 +283,9 @@ class Waterhole extends Target
         ];
 
         // CountComments needs to be double-mapped so it's included as an alias also.
-        $query = $ex->dbImport()->table('PORT_Discussion')
-            ->select(
-                '*',
-                $ex->dbImport()->raw('DiscussionID as slug'),
-            );
+        $query = $ex->dbPorter()->table('Discussion')
+            ->select()
+            ->selectRaw('DiscussionID as slug');
 
         $ex->import('posts', $query, $structure, $map, $filters);
     }
@@ -316,16 +306,14 @@ class Waterhole extends Target
         $filters = [
             // 'Body' => 'filterFlarumContent',
         ];
-        $query = $ex->dbImport()->table('PORT_Comment')
-            ->select(
-                'CommentID',
+        $query = $ex->dbPorter()->table('Comment')
+            ->select(['CommentID',
                 'DiscussionID',
                 'InsertUserID',
                 'DateInserted',
                 'DateUpdated',
                 'Body',
-                'Format',
-            );
+                'Format']);
 
         $ex->import('comments', $query, self::DB_STRUCTURE_COMMENTS, $map, $filters);
     }

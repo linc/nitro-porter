@@ -28,8 +28,10 @@ class ConnectionManager
      * If no connect alias is give, initiate a test connection.
      *
      * @param string $alias
+     * @param string $prefix
+     * @throws \Exception
      */
-    public function __construct(string $alias = '')
+    public function __construct(string $alias = '', string $prefix = '')
     {
         if (!empty($alias)) {
             $info = Config::getInstance()->getConnectionAlias($alias);
@@ -49,6 +51,9 @@ class ConnectionManager
             $this->dbm = $capsule;
             $this->connection = $this->newConnection();
         }
+
+        // Set prefix after connection is generated.
+        $this->connection()->setTablePrefix($prefix);
     }
 
     public function setType(string $type): void
@@ -99,7 +104,7 @@ class ConnectionManager
      *
      * @return Connection
      */
-    public function newConnection(): Connection
+    protected function newConnection(): Connection
     {
         $connection = $this->dbm->getConnection($this->alias);
 

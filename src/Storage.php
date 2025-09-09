@@ -2,6 +2,7 @@
 
 namespace Porter;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
 use Porter\Database\ResultSet;
 
@@ -46,6 +47,8 @@ abstract class Storage
     abstract public function endStream(): void;
 
     abstract public function getAlias(): string;
+
+    abstract public function getConnection(): ?Connection;
 
     /**
      * Prepare a row of data for storage.

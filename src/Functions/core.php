@@ -97,16 +97,16 @@ function targetFactory(string $target): ?Target
  * Get postscript class if it exists.
  *
  * @param string $target
- * @param Storage $storage
- * @param ConnectionManager $connection
+ * @param Storage $outputStorage
+ * @param Storage $postscriptStorage
  * @return Postscript|null
  */
-function postscriptFactory(string $target, Storage $storage, ConnectionManager $connection): ?Postscript
+function postscriptFactory(string $target, Storage $outputStorage, Storage $postscriptStorage): ?Postscript
 {
     $postscript = null;
     $class = '\Porter\Postscript\\' . ucwords($target);
     if (class_exists($class)) {
-        $postscript = new $class($storage, $connection);
+        $postscript = new $class($outputStorage, $postscriptStorage);
     }
 
     return $postscript;
@@ -118,7 +118,6 @@ function postscriptFactory(string $target, Storage $storage, ConnectionManager $
  * @param Storage $porterStorage
  * @param Storage $outputStorage
  * @param string $sourcePrefix
- * @param string $targetPrefix
  * @param string|null $limitTables
  * @param bool $captureOnly
  * @return ExportModel
@@ -128,8 +127,8 @@ function exportModelFactory(
     Storage $inputStorage,
     Storage $porterStorage,
     Storage $outputStorage,
+    Storage $postscriptStorage,
     string $sourcePrefix = '',
-    string $targetPrefix = '',
     ?string $limitTables = '',
     bool $captureOnly = false
 ): ExportModel {
@@ -138,9 +137,9 @@ function exportModelFactory(
         $inputStorage,
         $porterStorage,
         $outputStorage,
+        $postscriptStorage,
         loadStructure(),
         $sourcePrefix,
-        $targetPrefix,
         $limitTables,
         $captureOnly
     );

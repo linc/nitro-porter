@@ -36,7 +36,7 @@ class FileTransfer
 
         $data = null;
         if (is_a($this->inputStorage, '\Porter\Storage\Database')) {
-            $data = $this->source->attachmentsData($this->inputStorage->getConnection()->connection());
+            $data = $this->source->attachmentsData($this->inputStorage->getConnection());
         }
         $this->attachments($data);
     }

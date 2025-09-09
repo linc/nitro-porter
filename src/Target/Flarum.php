@@ -131,11 +131,11 @@ class Flarum extends Target
     {
         $structure = self::DB_STRUCTURE_DISCUSSIONS;
         // fof/gamification — no data, just prevent failure (no default values are set)
-        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['votes'])) {
+        if ($ex->targetExists('discussions', ['votes'])) {
             $structure['votes'] = 'int';
             $structure['hotness'] = 'double';
         }
-        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
+        if ($ex->targetExists('discussions', ['view_count'])) {
             $structure['view_count'] = 'int'; // flarumite/simple-discussion-views
         }
         return $structure;
@@ -160,7 +160,7 @@ class Flarum extends Target
             '[Slettet bruker]', // Norwegian
             '[Utilisateur supprimé]', // French
         ]; // @see fixDuplicateDeletedNames()
-        $dupes = array_diff($ex->findDuplicates('PORT_User', 'Name'), $allowlist);
+        $dupes = array_diff($ex->findDuplicates('User', 'Name'), $allowlist);
         if (!empty($dupes)) {
             $ex->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
@@ -176,7 +176,7 @@ class Flarum extends Target
      */
     public function uniqueUserEmails(ExportModel $ex): void
     {
-        $dupes = $ex->findDuplicates('PORT_User', 'Email');
+        $dupes = $ex->findDuplicates('User', 'Email');
         if (!empty($dupes)) {
             $ex->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
@@ -243,10 +243,10 @@ class Flarum extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $ex->dbImport()->table('PORT_User')->select(
-            '*',
-            $ex->dbImport()->raw('COALESCE(Confirmed, 0) as is_email_confirmed') // Cannot be null.
-        );
+        $query = $ex->dbPorter()
+            ->table('User')
+            ->select()
+            ->selectRaw('COALESCE(Confirmed, 0) as is_email_confirmed'); // Cannot be null.
 
         $ex->import('users', $query, $structure, $map, $filters);
     }
@@ -272,7 +272,7 @@ class Flarum extends Target
         $map = [];
 
         // Verify support.
-        if (!$ex->targetExists('PORT_UserRole')) {
+        if (!$ex->portExists('UserRole')) {
             $ex->comment('Skipping import: Roles (Source lacks support)');
             $ex->importEmpty('groups', $structure);
             $ex->importEmpty('group_user', $structure);
@@ -280,17 +280,17 @@ class Flarum extends Target
         }
 
         // Delete orphaned user role associations (deleted users).
-        $ex->pruneOrphanedRecords('PORT_UserRole', 'UserID', 'PORT_User', 'UserID');
+        $ex->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID');
 
-        $query = $ex->dbImport()->table('PORT_Role')->select(
+        $query = $ex->dbPorter()
+            ->table('Role')
             // Flarum reserves 1-3 & uses 4 for mods by default.
-            $ex->dbImport()->raw("(RoleID + 4) as id"),
+            ->selectRaw("(RoleID + 4) as id")
             // Singular vs plural is an uncommon feature; don't guess at it, just duplicate the Name.
-            $ex->dbImport()->raw('COALESCE(Name, CONCAT("role", RoleID)) as name_singular'), // Cannot be null.
-            $ex->dbImport()->raw('COALESCE(Name, CONCAT("role", RoleID)) as name_plural'), // Cannot be null.
+            ->selectRaw('COALESCE(Name, CONCAT("role", RoleID)) as name_singular') // Cannot be null.
+            ->selectRaw('COALESCE(Name, CONCAT("role", RoleID)) as name_plural') // Cannot be null.
             // Hiding roles is an uncommon feature; hide none.
-            $ex->dbImport()->raw('0 as is_hidden')
-        );
+            ->selectRaw('0 as is_hidden');
 
         $ex->import('groups', $query, $structure, $map);
 
@@ -303,10 +303,10 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $query = $ex->dbImport()->table('PORT_UserRole')->select(
-            '*',
-            $ex->dbImport()->raw("(RoleID + 4) as RoleID") // Match above offset
-        );
+        $query = $ex->dbPorter()
+            ->table('UserRole')
+            ->select()
+            ->selectRaw("(RoleID + 4) as RoleID"); // Match above offset
 
         $ex->import('group_user', $query, $structure, $map);
     }
@@ -338,15 +338,15 @@ class Flarum extends Target
         $filters = [
             'CountDiscussions' => 'emptyToZero',
         ];
-        $query = $ex->dbImport()->table('PORT_Category')
-            ->select(
-                '*',
-                $ex->dbImport()->raw('COALESCE(Name, CONCAT("category", CategoryID)) as name'), // Cannot be null.
-                $ex->dbImport()->raw('COALESCE(UrlCode, CategoryID) as slug'), // Cannot be null.
-                $ex->dbImport()->raw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID"),
-                $ex->dbImport()->raw("0 as is_hidden"),
-                $ex->dbImport()->raw("0 as is_restricted")
-            )->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
+        $query = $ex->dbPorter()
+            ->table('Category')
+            ->select()
+            ->selectRaw('COALESCE(Name, CONCAT("category", CategoryID)) as name') // Cannot be null.
+            ->selectRaw('COALESCE(UrlCode, CategoryID) as slug') // Cannot be null.
+            ->selectRaw("if(ParentCategoryID = -1, null, ParentCategoryID) as ParentCategoryID")
+            ->selectRaw("0 as is_hidden")
+            ->selectRaw("0 as is_restricted")
+            ->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
         $ex->import('tags', $query, $structure, $map, $filters);
     }
@@ -377,23 +377,22 @@ class Flarum extends Target
         ];
 
         // flarumite/simple-discussion-views
-        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['view_count'])) {
+        if ($ex->targetExists('discussions', ['view_count'])) {
             $structure['view_count'] = 'int';
             $map['CountViews'] = 'view_count';
             $filters['CountViews'] = 'emptyToZero';
         }
 
         // CountComments needs to be double-mapped so it's included as an alias also.
-        $query = $ex->dbImport()->table('PORT_Discussion')
-            ->select(
-                '*',
-                $ex->dbImport()->raw('COALESCE(CountComments, 0) as post_number_index'),
-                $ex->dbImport()->raw('DiscussionID as slug'),
-                $ex->dbImport()->raw('CountComments as last_post_number'),
-                $ex->dbImport()->raw('0 as votes'),
-                $ex->dbImport()->raw('0 as hotness'),
-                $ex->dbImport()->raw('1 as best_answer_notified')
-            );
+        $query = $ex->dbPorter()
+            ->table('Discussion')
+            ->select()
+            ->selectRaw('COALESCE(CountComments, 0) as post_number_index')
+            ->selectRaw('DiscussionID as slug')
+            ->selectRaw('CountComments as last_post_number')
+            ->selectRaw('0 as votes')
+            ->selectRaw('0 as hotness')
+            ->selectRaw('1 as best_answer_notified');
 
         $ex->import('discussions', $query, $structure, $map, $filters);
 
@@ -406,7 +405,7 @@ class Flarum extends Target
             'DiscussionID' => 'discussion_id',
             'CategoryID' => 'tag_id',
         ];
-        $query = $ex->dbImport()->table('PORT_Discussion')->select(['DiscussionID', 'CategoryID']);
+        $query = $ex->dbPorter()->table('Discussion')->select(['DiscussionID', 'CategoryID']);
 
         $ex->import('discussion_tag', $query, $structure, $map, $filters);
     }
@@ -417,7 +416,7 @@ class Flarum extends Target
     protected function bookmarks(ExportModel $ex): void
     {
         // Verify support.
-        if (!$ex->targetExists('PORT_UserDiscussion')) {
+        if (!$ex->portExists('UserDiscussion')) {
             $ex->comment('Skipping import: Bookmarks (Source lacks support)');
             return;
         }
@@ -440,8 +439,10 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'DateLastViewed' => 'last_read_at',
         ];
-        $query = $ex->dbImport()->table('PORT_UserDiscussion')
-            ->select('*', ($ex->dbImport()->raw("if (Bookmarked > 0, 'follow', null) as subscription")))
+        $query = $ex->dbPorter()
+            ->table('UserDiscussion')
+            ->select()
+            ->selectRaw("if (Bookmarked > 0, 'follow', null) as subscription")
             ->where('UserID', '>', 0); // Vanilla can have zeroes here, can't remember why.
 
         $ex->import('discussion_user', $query, $structure, $map);
@@ -464,45 +465,45 @@ class Flarum extends Target
         $filters = [
             'Body' => 'filterFlarumContent',
         ];
-        $query = $ex->dbImport()->table('PORT_Comment')
-            ->select(
-                'CommentID',
+        $query = $ex->dbPorter()
+            ->table('Comment')
+            // SELECT ORDER IS SENSITIVE DUE TO THE UNION() BELOW.
+            ->select([
                 'DiscussionID',
                 'InsertUserID',
                 'DateInserted',
                 'DateUpdated',
                 'UpdateUserID',
                 'Body',
-                'Format',
-                $ex->dbImport()->raw('"comment" as type'),
-                $ex->dbImport()->raw('null as number')
-            );
+                'Format'])
+            ->selectRaw('CommentID as CommentID')
+            ->selectRaw('"comment" as type')
+            ->selectRaw('null as number');
 
         // Extract OP from the discussion.
         if ($this->getDiscussionBodyMode()) {
             // Get highest CommentID.
-            $result = $ex->dbImport()
-                ->table('PORT_Comment')
-                ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
+            $result = $ex->dbPorter()
+                ->table('Comment')
+                ->selectRaw('max(CommentID) as LastCommentID')
                 ->first();
 
             // Save value for other associations (e.g. attachments).
             $this->discussionPostOffset = $result->LastCommentID ?? 0;
 
             // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
-            $discussions = $ex->dbImport()->table('PORT_Discussion')
-                ->select(
-                    $ex->dbImport()->raw('(DiscussionID + ' . $this->discussionPostOffset . ') as CommentID'),
+            $discussions = $ex->dbPorter()->table('Discussion')
+                ->select([
                     'DiscussionID',
                     'InsertUserID',
                     'DateInserted',
                     'DateUpdated',
                     'UpdateUserID',
                     'Body',
-                    'Format',
-                    $ex->dbImport()->raw('"comment" as type'),
-                    $ex->dbImport()->raw('null as number')
-                );
+                    'Format'])
+                ->selectRaw('(DiscussionID + ' . $this->discussionPostOffset . ') as CommentID')
+                ->selectRaw('"comment" as type')
+                ->selectRaw('null as number');
 
             // Combine discussions.body with the comments to get all posts.
             $query->union($discussions);
@@ -521,7 +522,7 @@ class Flarum extends Target
     protected function attachments(ExportModel $ex): void
     {
         // Verify support.
-        if (!$ex->targetExists('PORT_Media')) {
+        if (!$ex->portExists('Media')) {
             $ex->comment('Skipping import: Attachments (Source lacks support)');
             return;
         }
@@ -547,30 +548,29 @@ class Flarum extends Target
             'DateInserted' => 'created_at',
             'Size' => 'size',
         ];
-        $query = $ex->dbImport()->table('PORT_Media')->select(
-            '*',
-            $ex->dbImport()->raw('0 as discussion_id'),
-            $ex->dbImport()->raw('trim(leading "/" from Path) as path'),
+        $query = $ex->dbPorter()->table('Media')
+            ->select()
+            ->selectRaw('0 as discussion_id')
+            ->selectRaw('trim(leading "/" from Path) as path')
             // @todo Not a URL yet.
-            $ex->dbImport()->raw('concat("/assets/files/", trim(leading "/" from Path)) as url'),
+            ->selectRaw('concat("/assets/files/", trim(leading "/" from Path)) as url')
             // Untangle the Media.ForeignID & Media.ForeignTable [comment, discussion, message]
-            $ex->dbImport()->raw("case
+            ->selectRaw("case
                 when ForeignID is null then 0
                 when ForeignTable = 'comment' then ForeignID
                 when ForeignTable = 'Comment' then ForeignID
                 when ForeignTable = 'discussion' then ifnull((ForeignID + " . $this->discussionPostOffset . "), 0)
                 when ForeignTable = 'embed' then 0
                 when ForeignTable = 'message' then ifnull((ForeignID + " . $this->messagePostOffset . "), 0)
-                end as post_id"),
-            $ex->dbImport()->raw('"local" as upload_method'),
+                end as post_id")
+            ->selectRaw('"local" as upload_method')
             // MIME type cannot be null, so default to "application/octet-stream" as most generic default.
-            $ex->dbImport()->raw('COALESCE(Type, "application/octet-stream") as type'),
+            ->selectRaw('COALESCE(Type, "application/octet-stream") as type')
             // @see packages/upload/src/Providers/DownloadProvider.php
-            $ex->dbImport()->raw("case
+            ->selectRaw("case
                 when Type like 'image/%' then 'image-preview'
                 else 'file'
-                end as tag")
-        );
+                end as tag");
 
         $ex->import('fof_upload_files', $query, $structure, $map);
     }
@@ -581,7 +581,7 @@ class Flarum extends Target
     protected function badges(ExportModel $ex): void
     {
         // Verify support.
-        if (!$ex->targetExists('PORT_Badge')) {
+        if (!$ex->portExists('Badge')) {
             $ex->comment('Skipping import: Badges (Source lacks support)');
             return;
         }
@@ -611,11 +611,9 @@ class Flarum extends Target
             'DateLastViewed' => 'last_read_at',
             'Visible' => 'is_visible',
         ];
-        $query = $ex->dbImport()->table('PORT_Badge')
-            ->select(
-                '*',
-                $ex->dbImport()->raw('1 as badge_category_id')
-            );
+        $query = $ex->dbPorter()->table('Badge')
+            ->select()
+            ->selectRaw('1 as badge_category_id');
 
         $ex->import('badges', $query, $structure, $map);
 
@@ -632,7 +630,7 @@ class Flarum extends Target
             'Reason' => 'description',
             'DateCompleted' => 'assigned_at',
         ];
-        $query = $ex->dbImport()->table('PORT_UserBadge')->select('*');
+        $query = $ex->dbPorter()->table('UserBadge')->select('*');
 
         $ex->import('badge_user', $query, $structure, $map);
     }
@@ -643,7 +641,7 @@ class Flarum extends Target
     protected function polls(ExportModel $ex): void
     {
         // Verify support.
-        if (!$ex->targetExists('PORT_Poll')) {
+        if (!$ex->portExists('Poll')) {
             $ex->comment('Skipping import: Polls (Source lacks support)');
             return;
         }
@@ -669,13 +667,11 @@ class Flarum extends Target
             'DateUpdated' => 'updated_at',
             'CountVotes' => 'vote_count',
         ];
-        $query = $ex->dbImport()->table('PORT_Poll')
-            ->select(
-                '*',
-                'DateInserted as end_date',
+        $query = $ex->dbPorter()->table('Poll')
+            ->select('*')
+            ->select('DateInserted as end_date')
                 // Whether its public or anonymous are inverse conditions, so flip the value.
-                $ex->dbImport()->raw('if(Anonymous>0, 0, 1) as public_poll')
-            );
+            ->selectRaw('if(Anonymous>0, 0, 1) as public_poll');
 
         $ex->import('polls', $query, $structure, $map);
 
@@ -696,7 +692,7 @@ class Flarum extends Target
             'DateUpdated' => 'updated_at',
             'CountVotes' => 'vote_count',
         ];
-        $query = $ex->dbImport()->table('PORT_PollOption')->select('*');
+        $query = $ex->dbPorter()->table('PollOption')->select('*');
 
         $ex->import('poll_options', $query, $structure, $map);
 
@@ -713,26 +709,23 @@ class Flarum extends Target
             'PollOptionID' => 'option_id',
             'UserID' => 'user_id',
         ];
-        $query = $ex->dbImport()->table('PORT_PollVote')
-            ->leftJoin('PORT_PollOption', 'PORT_PollVote.PollOptionID', '=', 'PORT_PollOption.PollOptionID')
-            ->select(
-                'PORT_PollVote.*',
-                'PORT_PollOption.PollID as poll_id',
-                'PORT_PollOption.DateInserted as created_at', // Total hack for approximate vote dates.
-                'PORT_PollOption.DateUpdated as updated_at',
-            );
+        $query = $ex->dbPorter()->table('PollVote')
+            ->leftJoin('PollOption', 'PollVote.PollOptionID', '=', 'PollOption.PollOptionID')
+            ->select(['PollVote.*',
+                'PollOption.PollID as poll_id',
+                'PollOption.DateInserted as created_at', // Total hack for approximate vote dates.
+                'PollOption.DateUpdated as updated_at']);
 
         $ex->import('poll_votes', $query, $structure, $map);
     }
 
     /**
      * @param ExportModel $ex
-     * @throws \Exception
      */
     public function reactions(ExportModel $ex): void
     {
         // Verify support.
-        if (!$ex->targetExists('PORT_ReactionType')) {
+        if (!$ex->portExists('ReactionType')) {
             $ex->comment('Skipping import: Reactions (Source lacks support)');
             return;
         }
@@ -750,9 +743,10 @@ class Flarum extends Target
             'Name' => 'identifier',
             'Active' => 'enabled',
         ];
-        $query = $ex->dbImport()->table('PORT_ReactionType')
+        $query = $ex->dbPorter()->table('ReactionType')
             // @todo Setting type='emoji' is a kludge since it won't render Vanilla defaults that way.
-            ->select('*', $ex->dbImport()->raw('"emoji" as type'));
+            ->select('*')
+            ->selectRaw('"emoji" as type');
 
         $ex->import('reactions', $query, $structure, $map);
 
@@ -771,32 +765,29 @@ class Flarum extends Target
             'TagID' => 'reaction_id',
             'DateInserted' => 'created_at',
         ];
-        $query = $ex->dbImport()->table('PORT_UserTag')
-            ->select(
-                'RecordID',
-                'UserID',
-                'TagID',
-                $ex->dbImport()->raw('TIMESTAMP(DateInserted) as DateInserted'),
-            )->where('RecordType', '=', 'Comment')
+        // SELECT ORDER IS SENSITIVE DUE TO THE UNION() BELOW.
+        $query = $ex->dbPorter()->table('UserTag')
+            ->select(['UserID', 'TagID'])
+            ->selectRaw('RecordID as RecordID')
+            ->selectRaw('TIMESTAMP(DateInserted) as DateInserted')
+            ->where('RecordType', '=', 'Comment')
             ->where('UserID', '>', 0);
 
         // Get reactions for discussions (OPs).
         if ($this->getDiscussionBodyMode()) {
             // Get highest CommentID.
-            $result = $ex->dbImport()
-                ->table('PORT_Comment')
-                ->select($ex->dbImport()->raw('max(CommentID) as LastCommentID'))
+            $result = $ex->dbPorter()
+                ->table('Comment')
+                ->selectRaw('max(CommentID) as LastCommentID')
                 ->first();
             $lastCommentID = $result->LastCommentID ?? 0;
 
             /* @see Target\Flarum::comments() —  replicate our math in the post split */
-            $discussionReactions = $ex->dbImport()->table('PORT_UserTag')
-                ->select(
-                    $ex->dbImport()->raw('(RecordID + ' . $lastCommentID . ') as RecordID'),
-                    'UserID',
-                    'TagID',
-                    $ex->dbImport()->raw('TIMESTAMP(DateInserted) as DateInserted'),
-                )->where('RecordType', '=', 'Discussion')
+            $discussionReactions = $ex->dbPorter()->table('UserTag')
+                ->select(['UserID', 'TagID'])
+                ->selectRaw('(RecordID + ' . $lastCommentID . ') as RecordID')
+                ->selectRaw('TIMESTAMP(DateInserted) as DateInserted')
+                ->where('RecordType', '=', 'Discussion')
                 ->where('UserID', '>', 0);
 
             // Combine discussion reactions + comment reactions => post reactions.
@@ -810,24 +801,23 @@ class Flarum extends Target
      * Export PMs to fof/byobu format, which uses the `posts` & `discussions` tables.
      *
      * @param ExportModel $ex
-     * @throws \Exception
      */
     protected function privateMessages(ExportModel $ex): void
     {
         // Verify source support.
-        if (!$ex->targetExists('PORT_Conversation')) {
+        if (!$ex->portExists('Conversation')) {
             $ex->comment('Skipping import: Private messages (Source lacks support)');
             return;
         }
 
         // Verify target support.
-        if (!$ex->targetExists($ex->tarPrefix . 'recipients')) {
+        if (!$ex->targetExists('recipients')) {
             $ex->comment('Skipping import: Private messages (Target lacks support - Enable the plugin first)');
             return;
         }
 
         // Messages — Discussions
-        $MaxDiscussionID = $this->messageDiscussionOffset = $this->getMaxDiscussionID($ex);
+        $MaxDiscussionID = $this->messageDiscussionOffset = $this->getMaxValue('id', 'discussions', $ex);
         $ex->comment('Discussions offset for PMs is ' . $MaxDiscussionID);
         $structure = $this->getStructureDiscussions($ex);
         $map = [
@@ -839,29 +829,27 @@ class Flarum extends Target
         ];
 
         // fof/gamification — no data, just prevent failure (no default value is set)
-        if ($ex->targetExists($ex->tarPrefix . 'discussions', ['votes'])) {
+        if ($ex->targetExists('discussions', ['votes'])) {
             $structure['votes'] = 'int';
         }
 
-        $query = $ex->dbImport()->table('PORT_Conversation')->select(
-            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as id'),
-            'InsertUserID',
-            'DateInserted',
-            'DateInserted as last_posted_at', // @todo Orders old PMs by OP instead of last comment.
-            $ex->dbImport()->raw('1 as is_private'),
-            $ex->dbImport()->raw('0 as votes'), // Hedge against fof/gamification
-            $ex->dbImport()->raw('0 as hotness'), // Hedge against fof/gamification
-            $ex->dbImport()->raw('0 as view_count'),
-            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as slug'),
+        $query = $ex->dbPorter()->table('Conversation')
+            ->select(['InsertUserID', 'DateInserted'])
+            ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as id')
+            ->selectRaw('DateInserted as last_posted_at') // @todo Orders old PMs by OP instead of last comment.
+            ->selectRaw('1 as is_private')
+            ->selectRaw('0 as votes') // Hedge against fof/gamification
+            ->selectRaw('0 as hotness') // Hedge against fof/gamification
+            ->selectRaw('0 as view_count')
+            ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as slug')
             // Use a numbered title "Private discussion 1234" if there's no Subject line.
-            $ex->dbImport()->raw('ifnull(Subject,
-                concat("Private discussion ", (ConversationID + ' . $MaxDiscussionID . '))) as title')
-        );
+            ->selectRaw('ifnull(Subject,
+                concat("Private discussion ", (ConversationID + ' . $MaxDiscussionID . '))) as title');
 
         $ex->import('discussions', $query, $structure, $map, $filters);
 
         // Messages — Comments
-        $MaxCommentID = $this->messagePostOffset = $this->getMaxCommentID($ex);
+        $MaxCommentID = $this->messagePostOffset = $this->getMaxValue('id', 'posts', $ex);
         $ex->comment('Posts offset for PMs is ' . $MaxCommentID);
         $map = [
             'Body' => 'content',
@@ -871,16 +859,12 @@ class Flarum extends Target
         $filters = [
             'Body' => 'filterFlarumContent',
         ];
-        $query = $ex->dbImport()->table('PORT_ConversationMessage')->select(
-            $ex->dbImport()->raw('(MessageID + ' . $MaxCommentID . ') as id'),
-            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id'),
-            'Body',
-            'Format',
-            'InsertUserID',
-            'DateInserted',
-            $ex->dbImport()->raw('1 as is_private'),
-            $ex->dbImport()->raw('"comment" as type'),
-        );
+        $query = $ex->dbPorter()->table('ConversationMessage')
+            ->select(['Body', 'Format', 'InsertUserID', 'DateInserted'])
+            ->selectRaw('(MessageID + ' . $MaxCommentID . ') as id')
+            ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id')
+            ->selectRaw('1 as is_private')
+            ->selectRaw('"comment" as type');
 
         $ex->import('posts', $query, self::DB_STRUCTURE_POSTS, $map, $filters);
 
@@ -898,42 +882,10 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'DateConversationUpdated' => 'updated_at',
         ];
-        $query = $ex->dbImport()->table('PORT_UserConversation')->select(
-            $ex->dbImport()->raw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id'),
-            'UserID',
-            'DateConversationUpdated'
-        );
+        $query = $ex->dbPorter()->table('UserConversation')
+            ->select(['UserID', 'DateConversationUpdated'])
+            ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id');
 
         $ex->import('recipients', $query, $structure, $map);
-    }
-
-    /**
-     * Get current max id from `posts` table.
-     *
-     * Cannot use intermediary (PORT_) tables because we may have added posts elsewhere.
-     *
-     * @param ExportModel $ex
-     * @return int
-     */
-    protected function getMaxCommentID(ExportModel $ex)
-    {
-        $MaxComment = $ex->dbImport()->table($ex->tarPrefix . 'posts')
-            ->where('id', $ex->dbImport()->raw("(select max(`id`) from " . $ex->tarPrefix . 'posts' . ")"))
-            ->get()->pluck('id');
-        return $MaxComment[0] ?? 0;
-    }
-
-    /**
-     * Get current max id from `discussions` table.
-     *
-     * @param ExportModel $ex
-     * @return int
-     */
-    protected function getMaxDiscussionID(ExportModel $ex)
-    {
-        $MaxDiscussion = $ex->dbImport()->table($ex->tarPrefix . 'discussions')
-            ->where('id', $ex->dbImport()->raw("(select max(`id`) from " . $ex->tarPrefix . 'discussions' . ")"))
-            ->get()->pluck('id');
-        return $MaxDiscussion[0] ?? 0;
     }
 }

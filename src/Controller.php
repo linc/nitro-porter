@@ -56,13 +56,15 @@ class Controller
      *    -> "Cannot execute queries while other unbuffered queries are active."
      *
      * @param string $postscript
-     * @param string $output
      * @param ExportModel $exportModel
      */
-    protected function doPostscript(string $postscript, string $output, ExportModel $exportModel): void
+    protected function doPostscript(string $postscript, ExportModel $exportModel): void
     {
-        $postConnection = new ConnectionManager($output);
-        $postscript = postscriptFactory($postscript, $exportModel->getOutputStorage(), $postConnection);
+        $postscript = postscriptFactory(
+            $postscript,
+            $exportModel->getOutputStorage(),
+            $exportModel->getPostscriptStorage()
+        );
         if ($postscript) {
             $exportModel->comment("Postscript found and running...");
             $postscript->run($exportModel);
@@ -94,6 +96,7 @@ class Controller
      * Setup & run the requested migration process.
      *
      * Translates `Request` into action (i.e. `Request` object should not pass beyond here).
+     * @throws \Exception
      */
     public function run(Request $request): void
     {
@@ -107,23 +110,25 @@ class Controller
         $dataTypes = $request->getDatatypes();
 
         // Setup model.
-        $inputCM = new ConnectionManager($inputName); // @todo Delete after Sources are all moved to $inputStorage.
-        $inputDB = new \Porter\Database\DbFactory($inputCM->getAllInfo(), 'pdo');
-        $inputStorage = new Storage\Database(new ConnectionManager($inputName));
+        // @todo Delete $inputDB after Sources are all moved to $inputStorage.
+        $inputDB = new \Porter\Database\DbFactory((new ConnectionManager($inputName))->getAllInfo(), 'pdo');
+        $inputStorage = new Storage\Database(new ConnectionManager($inputName, $sourcePrefix));
         if (empty($target)) { // @todo storageFactory
             $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
             $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
+            $postscriptStorage = new Storage\File(); // @todo dead variable (halts at porter step)
         } else {
-            $porterStorage = new Storage\Database(new ConnectionManager($outputName));
-            $outputStorage = new Storage\Database(new ConnectionManager($outputName));
+            $porterStorage = new Storage\Database(new ConnectionManager($outputName, 'PORT_'));
+            $outputStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
+            $postscriptStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
         }
         $model = exportModelFactory(
             $inputDB, // @deprecated
             $inputStorage,
             $porterStorage,
             $outputStorage,
+            $postscriptStorage,
             $sourcePrefix,
-            $targetPrefix,
             $dataTypes,
             ($outputName === 'sql')
         );
@@ -134,7 +139,7 @@ class Controller
         // Log request.
         $model->comment("NITRO PORTER RUNNING...");
         $model->comment("Porting " . $source->getName() . " to " . ($target ? $target->getName() : 'file'));
-        $model->comment("Input: " . $inputCM->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
+        $model->comment("Input: " . $inputStorage->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
         $model->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
         $model->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
 
@@ -161,11 +166,11 @@ class Controller
         if ($target) {
             $this->doImport($target, $model);
             // Postscript names must match target names currently.
-            $this->doPostscript($target->getName(), $outputName, $model);
+            $this->doPostscript($target->getName(), $model);
         }
 
         // File transfer.
-        $fileTransfer->run();
+        //$fileTransfer->run();
 
         // Report.
         $model->comment("\n" . sprintf(
