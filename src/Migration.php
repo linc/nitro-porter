@@ -739,19 +739,6 @@ class Migration
     }
 
     /**
-     * Determine if a table exists
-     *
-     * @param string $tableName
-     * @return bool
-     * @deprecated
-     */
-    public function tableExists(string $tableName): bool
-    {
-        $result = $this->query("show tables like '$tableName'");
-        return !empty($result->nextResultRow());
-    }
-
-    /**
      * Determine if a column exists in a table
      *
      * @param string $tableName
