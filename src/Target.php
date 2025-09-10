@@ -91,10 +91,10 @@ abstract class Target
     }
 
     /** Do the main process for imports, table by table. */
-    abstract public function run(ExportModel $ex): void;
+    abstract public function run(Migration $port): void;
 
     /** Enforce data constraints required by the target platform. */
-    abstract public function validate(ExportModel $ex): void;
+    abstract public function validate(Migration $port): void;
 
     /**
      * Get current max value of a column on a table in output (target).
@@ -103,10 +103,10 @@ abstract class Target
      *
      * @param string $name
      * @param string $table
-     * @param ExportModel $ex
+     * @param Migration $ex
      * @return int
      */
-    protected function getMaxValue(string $name, string $table, ExportModel $ex): int
+    protected function getMaxValue(string $name, string $table, Migration $ex): int
     {
         $max = $ex->dbOutput()->table($table)
             ->selectRaw('max(`' . $name . '`) as id')

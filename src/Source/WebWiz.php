@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class WebWiz extends Source
 {
@@ -33,26 +33,26 @@ class WebWiz extends Source
 
     /**
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->usermeta($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->usermeta($port);
 
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->conversations($ex);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->conversations($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function conversations(ExportModel $ex)
+    public function conversations(Migration $port)
     {
-        $this->exportConversationTemps($ex);
+        $this->exportConversationTemps($port);
 
         // Conversation.
         $conversation_Map = array(
@@ -61,7 +61,7 @@ class WebWiz extends Source
             'Author_ID' => 'InsertUserID',
             'PM_Message_Date' => array('Column' => 'DateInserted')
         );
-        $ex->export(
+        $port->export(
             'Conversation',
             "select pm.*,
                     g.Title
@@ -76,7 +76,7 @@ class WebWiz extends Source
             'Group_ID' => 'ConversationID',
             'User_ID' => 'UserID'
         );
-        $ex->export(
+        $port->export(
             'UserConversation',
             "select
                     g.Group_ID,
@@ -96,7 +96,7 @@ class WebWiz extends Source
             'PM_Message_Date' => array('Column' => 'DateInserted'),
             'Author_ID' => 'InsertUserID'
         );
-        $ex->export(
+        $port->export(
             'ConversationMessage',
             "select pm.*,
                     pm2.Group_ID,
@@ -108,7 +108,10 @@ class WebWiz extends Source
         );
     }
 
-    protected function exportConversationTemps($ex)
+    /**
+     * @param Migration $port
+     */
+    protected function exportConversationTemps(Migration $port)
     {
         $sql = "
             drop table if exists z_pmto;
@@ -209,13 +212,13 @@ class WebWiz extends Source
                 on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
             set pm.Group_ID = g.Group_ID;";
 
-        $ex->queryN($sql);
+        $port->queryN($sql);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'Author_ID' => 'UserID',
@@ -233,7 +236,7 @@ class WebWiz extends Source
             'DOB' => 'DateOfBirth',
             'Show_email' => 'ShowEmail'
         );
-        $ex->export(
+        $port->export(
             'User',
             "select
                     concat(Salt, '$', Password) as Password2,
@@ -248,15 +251,15 @@ class WebWiz extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'Group_ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select * from :_Group",
             $role_Map
@@ -267,7 +270,7 @@ class WebWiz extends Source
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID'
         );
-        $ex->export(
+        $port->export(
             'UserRole',
             "select u.* from :_Author u",
             $userRole_Map
@@ -275,11 +278,11 @@ class WebWiz extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function usermeta(ExportModel $ex): void
+    protected function usermeta(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'UserMeta',
             "select
                 Author_ID as UserID,
@@ -291,9 +294,9 @@ class WebWiz extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'Forum_ID' => 'CategoryID',
@@ -302,7 +305,7 @@ class WebWiz extends Source
             'Parent_ID' => 'ParentCategoryID',
             'Forum_order' => 'Sort'
         );
-        $ex->export(
+        $port->export(
             'Category',
             "select
                     f.Forum_ID,
@@ -324,9 +327,9 @@ class WebWiz extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'Topic_ID' => 'DiscussionID',
@@ -341,7 +344,7 @@ class WebWiz extends Source
             'Locked' => 'Closed',
 
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select
                     th.Author_ID,
@@ -358,9 +361,9 @@ class WebWiz extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'Thread_ID' => 'CommentID',
@@ -371,7 +374,7 @@ class WebWiz extends Source
             'Format' => 'Format',
             'Message_date' => array('Column' => 'DateInserted')
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select th.*, 'Html' as Format
                 from :_Thread th

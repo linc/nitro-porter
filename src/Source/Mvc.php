@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Mvc extends Source
 {
@@ -54,97 +54,96 @@ class Mvc extends Source
     /**
      * Main export process.
      *
-     * @param ExportModel $ex
-     * @see   $_Structures in ExportModel for allowed destination tables & columns.
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
-        $this->createPrimaryKeys($ex);
-        $this->createIndexesIfNotExists($ex);
+        $this->createPrimaryKeys($port);
+        $this->createIndexesIfNotExists($port);
 
-        $this->users($ex);
-        $this->userMeta($ex);
-        $this->roles($ex);
-        $this->badges($ex);
+        $this->users($port);
+        $this->userMeta($port);
+        $this->roles($port);
+        $this->badges($port);
 
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->tags($ex);
-        $this->attachments($ex);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->tags($port);
+        $this->attachments($port);
     }
 
     /**
      * Create indexes on current tables to accelerate the export process. Initial ids are varchar, which can make the
      * queries hang when joining or using some columns in conditions. Ignore the creation if the index already exist.
      */
-    private function createIndexesIfNotExists($ex)
+    private function createIndexesIfNotExists(Migration $port): void
     {
-        if (!$ex->indexExists('mvc_users_id', ':_MembershipUser')) {
-            $ex->query("create INDEX mvc_users_id on :_MembershipUser(Id);");
+        if (!$port->indexExists('mvc_users_id', ':_MembershipUser')) {
+            $port->query("create INDEX mvc_users_id on :_MembershipUser(Id);");
         }
-        if (!$ex->indexExists('mvc_role_id', ':_MembershipRole')) {
-            $ex->query("create INDEX mvc_role_id on `:_MembershipRole` (Id);");
+        if (!$port->indexExists('mvc_role_id', ':_MembershipRole')) {
+            $port->query("create INDEX mvc_role_id on `:_MembershipRole` (Id);");
         }
-        if (!$ex->indexExists('mvc_badge_id', ':_Badge')) {
-            $ex->query("create INDEX mvc_badge_id on `:_Badge` (Id);");
+        if (!$port->indexExists('mvc_badge_id', ':_Badge')) {
+            $port->query("create INDEX mvc_badge_id on `:_Badge` (Id);");
         }
-        if (!$ex->indexExists('mvc_category_id', ':_Category')) {
-            $ex->query("create INDEX mvc_category_id on `:_Category` (Id);");
+        if (!$port->indexExists('mvc_category_id', ':_Category')) {
+            $port->query("create INDEX mvc_category_id on `:_Category` (Id);");
         }
-        if (!$ex->indexExists('mvc_tag_id', ':_TopicTag')) {
-            $ex->query("create INDEX mvc_tag_id on `:_TopicTag` (Id);");
+        if (!$port->indexExists('mvc_tag_id', ':_TopicTag')) {
+            $port->query("create INDEX mvc_tag_id on `:_TopicTag` (Id);");
         }
-        if (!$ex->indexExists('mvc_file_id', ':_UploadedFile')) {
-            $ex->query("create INDEX mvc_file_id on `:_UploadedFile` (Id);");
+        if (!$port->indexExists('mvc_file_id', ':_UploadedFile')) {
+            $port->query("create INDEX mvc_file_id on `:_UploadedFile` (Id);");
         }
 
         // Topic
-        if (!$ex->indexExists('mvc_topic_id', ':_Topic')) {
-            $ex->query("create INDEX mvc_topic_id on `:_Topic` (Id);");
+        if (!$port->indexExists('mvc_topic_id', ':_Topic')) {
+            $port->query("create INDEX mvc_topic_id on `:_Topic` (Id);");
         }
-        if (!$ex->indexExists('mvc_topic_id', ':_Topic')) {
-            $ex->query("create INDEX mvc_topic_membershipuser_id on `:_Topic` (MembershipUser_Id);");
+        if (!$port->indexExists('mvc_topic_id', ':_Topic')) {
+            $port->query("create INDEX mvc_topic_membershipuser_id on `:_Topic` (MembershipUser_Id);");
         }
-        if (!$ex->indexExists('mvc_topic_id', ':_Topic')) {
-            $ex->query("create INDEX mvc_topic_category_id on `:_Topic` (Category_Id);");
+        if (!$port->indexExists('mvc_topic_id', ':_Topic')) {
+            $port->query("create INDEX mvc_topic_category_id on `:_Topic` (Category_Id);");
         }
 
         // Post
-        if (!$ex->indexExists('mvc_post_id', ':_Post')) {
-            $ex->query("create INDEX mvc_post_id on `:_Post` (Id);");
+        if (!$port->indexExists('mvc_post_id', ':_Post')) {
+            $port->query("create INDEX mvc_post_id on `:_Post` (Id);");
         }
-        if (!$ex->indexExists('mvc_post_id', ':_Post')) {
-            $ex->query("create INDEX mvc_post_topic_id on `:_Post` (Topic_Id);");
+        if (!$port->indexExists('mvc_post_id', ':_Post')) {
+            $port->query("create INDEX mvc_post_topic_id on `:_Post` (Topic_Id);");
         }
-        if (!$ex->indexExists('mvc_post_id', ':_Post')) {
-            $ex->query("create INDEX mvc_post_membershipuser_id on `:_Post` (MembershipUser_Id);");
+        if (!$port->indexExists('mvc_post_id', ':_Post')) {
+            $port->query("create INDEX mvc_post_membershipuser_id on `:_Post` (MembershipUser_Id);");
         }
     }
 
     /**
      * For each table in the database, check if the primary key exists and create it if it doesn't.
      */
-    private function createPrimaryKeys($ex)
+    private function createPrimaryKeys(Migration $port): void
     {
-        $this->addMembershipUserPrimaryKeyIfNotExists($ex);
-        $this->addRolePrimaryKeyIfNotExists($ex);
-        $this->addBadgePrimaryKeyIfNotExists($ex);
-        $this->addCategoryPrimaryKeyIfNotExists($ex);
-        $this->addTopicPrimaryKeyIfNotExists($ex);
-        $this->addPostPrimaryKeyIfNotExists($ex);
-        $this->addTopicTagPrimaryKeyIfNotExists($ex);
-        $this->addUploadFilePrimaryKeyIfNotExists($ex);
+        $this->addMembershipUserPrimaryKeyIfNotExists($port);
+        $this->addRolePrimaryKeyIfNotExists($port);
+        $this->addBadgePrimaryKeyIfNotExists($port);
+        $this->addCategoryPrimaryKeyIfNotExists($port);
+        $this->addTopicPrimaryKeyIfNotExists($port);
+        $this->addPostPrimaryKeyIfNotExists($port);
+        $this->addTopicTagPrimaryKeyIfNotExists($port);
+        $this->addUploadFilePrimaryKeyIfNotExists($port);
     }
 
     /**
      * Add the UserID column to the `MembershipUser` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addMembershipUserPrimaryKeyIfNotExists($ex)
+    private function addMembershipUserPrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('MembershipUser', 'UserID')) {
-            $ex->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
+        if (!$port->columnExists('MembershipUser', 'UserID')) {
+            $port->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
         }
     }
 
@@ -152,10 +151,10 @@ class Mvc extends Source
      * Add the RoleID column to the `MembershipRole` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addRolePrimaryKeyIfNotExists($ex)
+    private function addRolePrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('MembershipRole', 'RoleID')) {
-            $ex->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
+        if (!$port->columnExists('MembershipRole', 'RoleID')) {
+            $port->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
         }
     }
 
@@ -163,10 +162,10 @@ class Mvc extends Source
      * Add the BadgeID column to the `Badge` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addBadgePrimaryKeyIfNotExists($ex)
+    private function addBadgePrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('Badge', 'BadgeID')) {
-            $ex->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
+        if (!$port->columnExists('Badge', 'BadgeID')) {
+            $port->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
         }
     }
 
@@ -174,10 +173,10 @@ class Mvc extends Source
      * Add the CategoryID column to the `Category` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addCategoryPrimaryKeyIfNotExists($ex)
+    private function addCategoryPrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('Category', 'CategoryID')) {
-            $ex->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
+        if (!$port->columnExists('Category', 'CategoryID')) {
+            $port->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
         }
     }
 
@@ -185,10 +184,10 @@ class Mvc extends Source
      * Add the DiscussionID column to the Topic` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addTopicPrimaryKeyIfNotExists($ex)
+    private function addTopicPrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('Topic', 'TopicID')) {
-            $ex->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
+        if (!$port->columnExists('Topic', 'TopicID')) {
+            $port->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
         }
     }
 
@@ -196,10 +195,10 @@ class Mvc extends Source
      * Add the CommentID column to the 'Post` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addPostPrimaryKeyIfNotExists($ex)
+    private function addPostPrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('Post', 'PostID')) {
-            $ex->query("alter table :_Post add column PostID int(11) primary key auto_increment");
+        if (!$port->columnExists('Post', 'PostID')) {
+            $port->query("alter table :_Post add column PostID int(11) primary key auto_increment");
         }
     }
 
@@ -207,10 +206,10 @@ class Mvc extends Source
      * Add the TagID column to the 'TopicTag` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addTopicTagPrimaryKeyIfNotExists($ex)
+    private function addTopicTagPrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('TopicTag', 'TagID')) {
-            $ex->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
+        if (!$port->columnExists('TopicTag', 'TagID')) {
+            $port->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
         }
     }
 
@@ -218,19 +217,19 @@ class Mvc extends Source
      * Add the MediaID column to the 'UploadedFile` table if it doesn't exist. Setting this column as the primary key
      * will generate a new unique id for each records.
      */
-    private function addUploadFilePrimaryKeyIfNotExists($ex)
+    private function addUploadFilePrimaryKeyIfNotExists(Migration $port): void
     {
-        if (!$ex->columnExists('UploadedFile', 'MediaID')) {
-            $ex->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
+        if (!$port->columnExists('UploadedFile', 'MediaID')) {
+            $port->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
         }
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'User',
             "select
                     UserID,
@@ -248,11 +247,11 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function userMeta(ExportModel $ex): void
+    protected function userMeta(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'UserMeta',
             "select
                     UserID,
@@ -271,17 +270,17 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Role',
             "select RoleID, RoleName as Name from :_MembershipRole"
         );
 
         // User Role.
-        $ex->export(
+        $port->export(
             'UserRole',
             "select
                     u.UserID as UserID,
@@ -292,11 +291,11 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function badges(ExportModel $ex): void
+    protected function badges(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Badge',
             "select
                     BadgeID,
@@ -308,7 +307,7 @@ class Mvc extends Source
                 from :_Badge"
         );
 
-        $ex->export(
+        $port->export(
             'UserBadge',
             "select
                     u.UserID,
@@ -321,11 +320,11 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Category',
             "select
                     m.CategoryID,
@@ -350,11 +349,11 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Discussion',
             "select
                     m.TopicID as DiscussionID,
@@ -371,11 +370,11 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Comment',
             "select
                     m.PostID as CommentID,
@@ -392,11 +391,11 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function tags(ExportModel $ex): void
+    protected function tags(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Tag',
             "select
                     TagID,
@@ -408,13 +407,13 @@ class Mvc extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function attachments(ExportModel $ex): void
+    protected function attachments(Migration $port): void
     {
         // Use of placeholder for Type and Size due to lack of data in db.
         // Will require external script to get the info.
-        $ex->export(
+        $port->export(
             'Attachment',
             "select
                     MediaID,

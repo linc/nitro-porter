@@ -8,7 +8,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Example extends Source
 {
@@ -59,19 +59,18 @@ class Example extends Source
     /**
      * Main export process.
      *
-     * @param ExportModel $ex
-     * @see $_Structures in ExportModel for allowed destination tables & columns.
+     * @param Migration $port
      */
-    public function run(ExportModel $ex)
+    public function run(Migration $port)
     {
         // It's usually a good idea to do the porting in the approximate order laid out here.
-        $this->users($ex); // Always pass $ex to these methods.
-        $this->roles($ex);
+        $this->users($port); // Always pass $port to these methods.
+        $this->roles($port);
 
-        $this->userMeta($ex);
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
+        $this->userMeta($port);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
 
         // UserDiscussion.
         // This is the table for assigning bookmarks/subscribed threads.
@@ -86,15 +85,15 @@ class Example extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         // Map as much as possible using the $x_Map array for clarity.
         // Key is always the source column name.
         // Value is either the destination column or an array of meta data, usually Column & Filter.
-        // If it's a meta array, 'Column' is the destination column name and 'Filter' is a method name to run it thru.
-        // Here, 'HTMLDecoder' is a method in ExportModel. Check there for available filters.
+        // If it's a meta array, 'Column' is the destination column name and 'Filter' is a function name to run it thru.
+        // Here, 'HTMLDecoder' is a function in `Functions/filter.php`. Check there for available filters.
         // Assume no filter is needed and only use one if you encounter issues.
         $user_Map = [
             'Author_ID' => 'UserID',
@@ -104,7 +103,7 @@ class Example extends Source
         // Therefore, our select statement must cover all the "source" columns.
         // It's frequently necessary to add joins, where clauses, and more to get the data we want.
         // The :_ before the table name is the placeholder for the prefix designated. It gets swapped on the fly.
-        $ex->export(
+        $port->export(
             'User',
             "select u.* from :_User u",
             $user_Map
@@ -112,9 +111,9 @@ class Example extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         // Role.
         // The Vanilla roles table will be wiped by any import. If your current platform doesn't have roles,
@@ -123,7 +122,7 @@ class Example extends Source
             'Group_ID' => 'RoleID',
             'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select * from :_tblGroup",
             $role_Map
@@ -135,7 +134,7 @@ class Example extends Source
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID',
         ];
-        $ex->export(
+        $port->export(
             'UserRole',
             "select u.* from :_tblAuthor u",
             $userRole_Map
@@ -143,16 +142,16 @@ class Example extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function userMeta(ExportModel $ex): void
+    protected function userMeta(Migration $port): void
     {
         // This is an example of pulling Signatures into Vanilla's UserMeta table.
         // This is often a good place for any extraneous data on the User table too.
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration.
         // Profiles will auto-populate with the migrated data.
-        $ex->export(
+        $port->export(
             'UserMeta',
             "select
                     Author_ID as UserID,
@@ -164,9 +163,9 @@ class Example extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         // Be careful to not import hundreds of categories. Try translating huge schemas to Tags instead.
         // Numeric category slugs aren't allowed in Vanilla, so be careful to sidestep those.
@@ -176,7 +175,7 @@ class Example extends Source
             'Forum_ID' => 'CategoryID',
             'Forum_name' => 'Name',
         ];
-        $ex->export(
+        $port->export(
             'Category',
             "select * from :_tblCategory c",
             $category_Map
@@ -184,9 +183,9 @@ class Example extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
         $discussion_Map = array(
@@ -196,7 +195,7 @@ class Example extends Source
             'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
         );
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $ex->export(
+        $port->export(
             'Discussion',
             "select *, FROM_UNIXTIME(Message_date) as Message_date
                 from :_tblTopic t
@@ -207,9 +206,9 @@ class Example extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
@@ -222,7 +221,7 @@ class Example extends Source
             'Format' => 'Format',
             'Message_date' => ['Column' => 'DateInserted']
         ];
-        $ex->export(
+        $port->export(
             'Comment',
             "select th.* from :_tblThread th",
             $comment_Map

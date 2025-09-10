@@ -15,23 +15,23 @@ class Controller
      * Export workflow.
      *
      * @param Source $source
-     * @param ExportModel $model
+     * @param Migration $port
      */
-    protected function doExport(Source $source, ExportModel $model): void
+    protected function doExport(Source $source, Migration $port): void
     {
-        $model->verifySource($source->sourceTables);
+        $port->verifySource($source->sourceTables);
 
         if ($source::getCharsetTable()) {
-            $model->setCharacterSet($source::getCharsetTable());
+            $port->setCharacterSet($source::getCharsetTable());
         }
 
-        $model->begin();
-        $source->run($model);
-        $model->end();
+        $port->begin();
+        $source->run($port);
+        $port->end();
 
-        if (\Porter\Config::getInstance()->debugEnabled() || $model->captureOnly) {
-            $queries = implode("\n\n", $model->queryRecord);
-            //$model->comment($queries, true);
+        if (\Porter\Config::getInstance()->debugEnabled() || $port->captureOnly) {
+            $queries = implode("\n\n", $port->queryRecord);
+            //$port->comment($queries, true);
         }
     }
 
@@ -39,14 +39,14 @@ class Controller
      * Import workflow.
      *
      * @param Target $target
-     * @param ExportModel $model
+     * @param Migration $port
      */
-    protected function doImport(Target $target, ExportModel $model): void
+    protected function doImport(Target $target, Migration $port): void
     {
-        $model->begin();
-        $target->validate($model);
-        $target->run($model);
-        $model->end();
+        $port->begin();
+        $target->validate($port);
+        $target->run($port);
+        $port->end();
     }
 
     /**
@@ -56,20 +56,20 @@ class Controller
      *    -> "Cannot execute queries while other unbuffered queries are active."
      *
      * @param string $postscript
-     * @param ExportModel $exportModel
+     * @param Migration $port
      */
-    protected function doPostscript(string $postscript, ExportModel $exportModel): void
+    protected function doPostscript(string $postscript, Migration $port): void
     {
         $postscript = postscriptFactory(
             $postscript,
-            $exportModel->getOutputStorage(),
-            $exportModel->getPostscriptStorage()
+            $port->getOutputStorage(),
+            $port->getPostscriptStorage()
         );
         if ($postscript) {
-            $exportModel->comment("Postscript found and running...");
-            $postscript->run($exportModel);
+            $port->comment("Postscript found and running...");
+            $postscript->run($port);
         } else {
-            $exportModel->comment("No Postscript found.");
+            $port->comment("No Postscript found.");
         }
     }
 
@@ -109,7 +109,7 @@ class Controller
         $targetPrefix = (empty($target)) ? '' : $request->getOutputTablePrefix(); // @todo Make 'file' explicit output.
         $dataTypes = $request->getDatatypes();
 
-        // Setup model.
+        // Setup migration.
         // @todo Delete $inputDB after Sources are all moved to $inputStorage.
         $inputDB = new \Porter\Database\DbFactory((new ConnectionManager($inputName))->getAllInfo(), 'pdo');
         $inputStorage = new Storage\Database(new ConnectionManager($inputName, $sourcePrefix));
@@ -122,7 +122,7 @@ class Controller
             $outputStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
             $postscriptStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
         }
-        $model = exportModelFactory(
+        $port = migrationFactory(
             $inputDB, // @deprecated
             $inputStorage,
             $porterStorage,
@@ -137,16 +137,16 @@ class Controller
         $fileTransfer = new FileTransfer($source, $target, $inputStorage);
 
         // Log request.
-        $model->comment("NITRO PORTER RUNNING...");
-        $model->comment("Porting " . $source->getName() . " to " . ($target ? $target->getName() : 'file'));
-        $model->comment("Input: " . $inputStorage->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
-        $model->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
-        $model->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
+        $port->comment("NITRO PORTER RUNNING...");
+        $port->comment("Porting " . $source->getName() . " to " . ($target ? $target->getName() : 'file'));
+        $port->comment("Input: " . $inputStorage->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
+        $port->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
+        $port->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
 
         // Setup & log flags.
         if ($target) {
             $this->setFlags($source, $target);
-            $model->comment("? 'Use Discussion Body' = " .
+            $port->comment("? 'Use Discussion Body' = " .
                 ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
 
@@ -154,31 +154,31 @@ class Controller
         set_time_limit(0);
         ini_set('memory_limit', '256M');
         $start = microtime(true);
-        $model->comment("\n" . sprintf(
+        $port->comment("\n" . sprintf(
             '[ STARTED at %s ]',
             date('H:i:s e')
         ) . "\n");
 
         // Export (Source -> `PORT_`).
-        $this->doExport($source, $model);
+        $this->doExport($source, $port);
 
         // Import (`PORT_` -> Target).
         if ($target) {
-            $this->doImport($target, $model);
+            $this->doImport($target, $port);
             // Postscript names must match target names currently.
-            $this->doPostscript($target->getName(), $model);
+            $this->doPostscript($target->getName(), $port);
         }
 
         // File transfer.
         //$fileTransfer->run();
 
         // Report.
-        $model->comment("\n" . sprintf(
+        $port->comment("\n" . sprintf(
             '[ FINISHED at %s after running for %s ]',
             date('H:i:s e'),
             formatElapsed(microtime(true) - $start)
         ));
-        $model->comment("[ After testing, you may delete any `PORT_` database tables. ]");
-        $model->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n\n");
+        $port->comment("[ After testing, you may delete any `PORT_` database tables. ]");
+        $port->comment('[ Porter never migrates user permissions! Reset user permissions afterward. ]' . "\n\n");
     }
 }

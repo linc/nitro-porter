@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class BbPress2 extends Source
 {
@@ -44,25 +44,25 @@ class BbPress2 extends Source
     /**
      * Forum-specific export format.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $ex->query("drop table if exists z_user;"); // Cleanup
+        $this->users($port);
+        $this->roles($port);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $port->query("drop table if exists z_user;"); // Cleanup
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
-        $ex->query("drop table if exists z_user;");
-        $ex->query(
+        $port->query("drop table if exists z_user;");
+        $port->query(
             "create table `z_user` (
                 `ID` bigint(20) unsigned not null AUTO_INCREMENT,
                 `user_login` varchar(60) NOT NULL DEFAULT '',
@@ -82,7 +82,7 @@ class BbPress2 extends Source
                 user_email,
                 user_registered
             from :_users";
-        $ex->query("insert into z_user $userQuery");
+        $port->query("insert into z_user $userQuery");
 
         $guestUserQuery = "select user_login,
                 'JL2AC3ORF2ZHDU00Z8V0Z1LFC58TY6NWA6IC5M1MIGGDCHNE7K' AS user_pass,
@@ -104,7 +104,7 @@ class BbPress2 extends Source
             where user_email not in (select user_email from z_user group by user_email)
             group by user_email";
 
-        $ex->query("insert into z_user(
+        $port->query("insert into z_user(
                 /* ID auto_increment yay! */
                 user_login,
                 user_pass,
@@ -121,15 +121,15 @@ class BbPress2 extends Source
             'user_email' => 'Email',
             'user_registered' => 'DateInserted',
         );
-        $ex->export('User', "select * from z_user;", $user_Map);
+        $port->export('User', "select * from z_user;", $user_Map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Role',
             "
                 select
@@ -145,7 +145,7 @@ class BbPress2 extends Source
         $userRole_Map = array(
             'user_id' => 'UserID'
         );
-        $ex->export(
+        $port->export(
             'UserRole',
             "select distinct(user_id) as user_id,
                     case
@@ -168,9 +168,9 @@ class BbPress2 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'ID' => 'CategoryID',
@@ -179,7 +179,7 @@ class BbPress2 extends Source
             'post_name' => 'UrlCode',
             'menu_order' => 'Sort',
         );
-        $ex->export(
+        $port->export(
             'Category',
             "select *,
                     lower(post_name) as forum_slug,
@@ -191,9 +191,9 @@ class BbPress2 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'ID' => 'DiscussionID',
@@ -204,7 +204,7 @@ class BbPress2 extends Source
             'post_date' => 'DateInserted',
             'menu_order' => 'Announce',
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select p.*,
                     /* override post_author value from p.* */
@@ -220,9 +220,9 @@ class BbPress2 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'ID' => 'CommentID',
@@ -232,7 +232,7 @@ class BbPress2 extends Source
             'post_author' => 'InsertUserID',
             'post_date' => 'DateInserted',
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select p.*,
                 /* override post_author value from p.* */

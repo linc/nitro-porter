@@ -8,7 +8,7 @@
 
 namespace Porter\Target;
 
-use Porter\ExportModel;
+use Porter\Migration;
 use Porter\Formatter;
 use Porter\Target;
 
@@ -81,19 +81,19 @@ class Waterhole extends Target
     /**
      * Check for issues that will break the import.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function validate(ExportModel $ex): void
+    public function validate(Migration $port): void
     {
-        $this->uniqueUserNames($ex);
-        $this->uniqueUserEmails($ex);
+        $this->uniqueUserNames($port);
+        $this->uniqueUserEmails($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @return string[]
      */
-    protected function getStructurePosts(ExportModel $ex): array
+    protected function getStructurePosts(Migration $port): array
     {
         return self::DB_STRUCTURE_POSTS;
     }
@@ -105,9 +105,9 @@ class Waterhole extends Target
      * You'd also need more data from findDuplicates, especially the IDs.
      * Folks are just gonna need to manually edit their existing forum data for now to rectify dupe issues.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function uniqueUserNames(ExportModel $ex): void
+    public function uniqueUserNames(Migration $port): void
     {
         $allowlist = [
             '[Deleted User]',
@@ -116,46 +116,46 @@ class Waterhole extends Target
             '[Slettet bruker]', // Norwegian
             '[Utilisateur supprimé]', // French
         ]; // @see fixDuplicateDeletedNames()
-        $dupes = array_diff($ex->findDuplicates('User', 'Name'), $allowlist);
+        $dupes = array_diff($port->findDuplicates('User', 'Name'), $allowlist);
         if (!empty($dupes)) {
-            $ex->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
+            $port->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
     }
 
     /**
      * Flarum must have unique emails. Report users skipped (because of `insert ignore`).
      *
-     * @see uniqueUserNames
+     * @param Migration $port
+     *@see uniqueUserNames
      *
-     * @param ExportModel $ex
      */
-    public function uniqueUserEmails(ExportModel $ex): void
+    public function uniqueUserEmails(Migration $port): void
     {
-        $dupes = $ex->findDuplicates('User', 'Email');
+        $dupes = $port->findDuplicates('User', 'Email');
         if (!empty($dupes)) {
-            $ex->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
+            $port->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
     }
 
     /**
      * Main import process.
      */
-    public function run(ExportModel $ex): void
+    public function run(Migration $port): void
     {
         // Ignore constraints on tables that block import.
-        $ex->ignoreDuplicates('users');
+        $port->ignoreDuplicates('users');
 
-        $this->users($ex);
-        $this->roles($ex); // 'Groups' in Waterhole
-        $this->categories($ex); // 'Channels' in Waterhole
-        $this->discussions($ex); // 'Posts' in Waterhole
-        $this->comments($ex);
+        $this->users($port);
+        $this->roles($port); // 'Groups' in Waterhole
+        $this->categories($port); // 'Channels' in Waterhole
+        $this->discussions($port); // 'Posts' in Waterhole
+        $this->comments($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $structure = [
             'id' => 'bigint',
@@ -181,9 +181,9 @@ class Waterhole extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $ex->dbPorter()->table('User')->select();
+        $query = $port->dbPorter()->table('User')->select();
 
-        $ex->import('users', $query, $structure, $map, $filters);
+        $port->import('users', $query, $structure, $map, $filters);
     }
 
     /**
@@ -191,9 +191,9 @@ class Waterhole extends Target
      *
      * This compensates by shifting all RoleIDs +4, rendering any old 'Member' or 'Guest' role useless & deprecated.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $structure = [
             'id' => 'bigint',
@@ -205,22 +205,22 @@ class Waterhole extends Target
         $map = [];
 
         // Verify support.
-        if (!$ex->targetExists('UserRole')) {
-            $ex->comment('Skipping import: Roles (Source lacks support)');
-            $ex->importEmpty('groups', $structure);
-            $ex->importEmpty('group_user', $structure);
+        if (!$port->targetExists('UserRole')) {
+            $port->comment('Skipping import: Roles (Source lacks support)');
+            $port->importEmpty('groups', $structure);
+            $port->importEmpty('group_user', $structure);
             return;
         }
 
         // Delete orphaned user role associations (deleted users).
-        $ex->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID');
+        $port->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID');
 
-        $query = $ex->dbPorter()->table('Role')
+        $query = $port->dbPorter()->table('Role')
             ->selectRaw("(RoleID + 4) as id") // Flarum reserves 1-3 & uses 4 for mods by default.
             ->selectRaw('Name as name')
             ->selectRaw('0 as is_public');
 
-        $ex->import('groups', $query, $structure, $map);
+        $port->import('groups', $query, $structure, $map);
 
         // User Role.
         $structure = [
@@ -231,17 +231,17 @@ class Waterhole extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $query = $ex->dbPorter()->table('UserRole')
+        $query = $port->dbPorter()->table('UserRole')
             ->select()
             ->selectRaw("(RoleID + 4) as RoleID"); // Match above offset
 
-        $ex->import('group_user', $query, $structure, $map);
+        $port->import('group_user', $query, $structure, $map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $structure = [
             'id' => 'bigint',
@@ -255,19 +255,19 @@ class Waterhole extends Target
             'UrlCode' => 'slug',
             'Description' => 'description',
         ];
-        $query = $ex->dbPorter()->table('Category')
+        $query = $port->dbPorter()->table('Category')
             ->select()
             ->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
-        $ex->import('channels', $query, $structure, $map);
+        $port->import('channels', $query, $structure, $map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
-        $structure = $this->getStructurePosts($ex);
+        $structure = $this->getStructurePosts($port);
         $map = [
             'DiscussionID' => 'id',
             'CategoryID' => 'channel_id',
@@ -283,17 +283,17 @@ class Waterhole extends Target
         ];
 
         // CountComments needs to be double-mapped so it's included as an alias also.
-        $query = $ex->dbPorter()->table('Discussion')
+        $query = $port->dbPorter()->table('Discussion')
             ->select()
             ->selectRaw('DiscussionID as slug');
 
-        $ex->import('posts', $query, $structure, $map, $filters);
+        $port->import('posts', $query, $structure, $map, $filters);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $map = [
             'CommentID' => 'id',
@@ -306,7 +306,7 @@ class Waterhole extends Target
         $filters = [
             // 'Body' => 'filterFlarumContent',
         ];
-        $query = $ex->dbPorter()->table('Comment')
+        $query = $port->dbPorter()->table('Comment')
             ->select(['CommentID',
                 'DiscussionID',
                 'InsertUserID',
@@ -315,6 +315,6 @@ class Waterhole extends Target
                 'Body',
                 'Format']);
 
-        $ex->import('comments', $query, self::DB_STRUCTURE_COMMENTS, $map, $filters);
+        $port->import('comments', $query, self::DB_STRUCTURE_COMMENTS, $map, $filters);
     }
 }

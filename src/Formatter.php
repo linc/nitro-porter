@@ -20,7 +20,7 @@ class Formatter
      *
      * @return self Formatter
      */
-    public static function instance(?ExportModel $ex = null): self
+    public static function instance(?Migration $ex = null): self
     {
         if (null === self::$instance) {
             self::$instance = new self();
@@ -32,7 +32,7 @@ class Formatter
     /**
      * @return void
      */
-    public function setup(ExportModel $ex)
+    public function setup(Migration $ex)
     {
         $this->userMap = $ex->buildUserMap();
     }

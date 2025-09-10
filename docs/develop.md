@@ -6,7 +6,7 @@ Nitro Porter works in this order:
 2. The **Target** package translates the data to the final platform format. These can be existing tables from an installation, or it will create them new using the information provided.
 3. If a **Postscript** file with the same name as the Target exists, it runs last. This is for doing calculations that require the data to have been fully transferred already, for example generating data that wasn't ever in the Source.
 
-The `ExportModel` is a utility class that gets passed between every step in the process. It's abbreviated as `$ex` throughout the code.
+The `Migration` is a process model that gets passed between every step in the process. It's instantiated as `$port` throughout the code.
 
 Use its `comment()` method for logging. Open `porter.log` in your favorite log reader for realtime feedback.
 
@@ -49,7 +49,7 @@ Use a `$map` array to directly translate a column name in one database to anothe
 
 ### Using export()
 
-The `ExportModel::export()` call is what does the data transfer. The `$query` parameter must at least select all the columns in the `$map` array for it to work. Use the table prefix `:_` for it to be dynamically replaced per the user's input.
+The `Migration::export()` call is what does the data transfer. The `$query` parameter must at least select all the columns in the `$map` array for it to work. Use the table prefix `:_` for it to be dynamically replaced per the user's input.
 
 ### Requiring tables and columns
 
@@ -63,7 +63,7 @@ You can use the `$sourceTables` property to require certain tables and columns i
 
 Target packages first have their `validate()` method called, then their `run()` method.
 
-To confirm an optional data type exists before importing it, use `targetExists()` on the `ExportModel`.
+To confirm an optional data type exists before importing it, use `targetExists()` on the `Migration`.
 
 ### Verify source support for each feature
 

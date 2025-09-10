@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Drupal7 extends Source
 {
@@ -44,14 +44,14 @@ class Drupal7 extends Source
         ]
     ];
 
-    protected $path;
+    protected string $path;
 
-    public $imageCount;
+    public int $imageCount;
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
         $this->path = '/uploads/'; //$this->param('attach-target', null) . '/uploads/';
         /*$origin = ''; //$this->param('attach-source', null);
@@ -59,13 +59,13 @@ class Drupal7 extends Source
             mkdir($origin);
         }*/
 
-        $this->users($ex);
-        $this->signatures($ex);
-        $this->roles($ex);
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->attachments($ex);
+        $this->users($port);
+        $this->signatures($port);
+        $this->roles($port);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->attachments($port);
     }
 
     public function convertBase64Attachments($value, $field, $row)
@@ -90,11 +90,11 @@ class Drupal7 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'User',
             "select
                     uid as UserID,
@@ -112,11 +112,11 @@ class Drupal7 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function signatures(ExportModel $ex): void
+    protected function signatures(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'UserMeta',
             "select
                     uid as UserID,
@@ -135,28 +135,28 @@ class Drupal7 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Role',
             "select rid as RoleID, name as Name from :_role"
         );
 
         // User Role.
-        $ex->export(
+        $port->export(
             'UserRole',
             "select uid as UserID, rid as RoleID from :_users_roles"
         );
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Category',
             "select
                     t.tid as CategoryID,
@@ -171,14 +171,14 @@ class Drupal7 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussionMap = array(
             'Body' => array('Column' => 'Body', 'Filter' => array($this, 'convertBase64Attachments')),
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select
                     n.nid as DiscussionID,
@@ -206,14 +206,14 @@ class Drupal7 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $commentMap = array(
             'Body' => array('Column' => 'Body', 'Filter' => array($this, 'convertBase64Attachments')),
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select
                     c.cid as CommentID,
@@ -241,11 +241,11 @@ class Drupal7 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function attachments(ExportModel $ex): void
+    protected function attachments(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Media',
             "select
                     fm.fid as MediaID,

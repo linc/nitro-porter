@@ -8,7 +8,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Flarum extends Source
 {
@@ -23,7 +23,6 @@ class Flarum extends Source
             'Categories' => 1,
             'Discussions' => 1,
             'Comments' => 1,
-            'Polls' => 0,
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 'fof/byobu',
@@ -50,32 +49,31 @@ class Flarum extends Source
     /**
      * Main export process.
      *
-     * @param ExportModel $ex
-     * @see $_Structures in ExportModel for allowed destination tables & columns.
+     * @param Migration $port
      */
-    public function run(ExportModel $ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex); // Groups
-        $this->categories($ex); // Tags
-        $this->discussions($ex);
-        if ($ex->exists('discussion_user', ['subscription'])) {
-            $this->bookmarks($ex); // flarum/subscriptions
+        $this->users($port);
+        $this->roles($port); // Groups
+        $this->categories($port); // Tags
+        $this->discussions($port);
+        if ($port->exists('discussion_user', ['subscription'])) {
+            $this->bookmarks($port); // flarum/subscriptions
         }
-        $this->comments($ex); // Posts
+        $this->comments($port); // Posts
 
-        if ($ex->exists('badges')) {
-            $this->badges($ex); // 17development/flarum-user-badges
+        if ($port->exists('badges')) {
+            $this->badges($port); // 17development/flarum-user-badges
         }
-        if ($ex->exists('recipients')) {
-            $this->privateMessages($ex); // fof/byobu
+        if ($port->exists('recipients')) {
+            $this->privateMessages($port); // fof/byobu
         }
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = [
             'id' => 'UserID',
@@ -88,7 +86,7 @@ class Flarum extends Source
             'discussion_count' => 'CountDiscussions',
             'comment_count' => 'CountComments',
         ];
-        $ex->export(
+        $port->export(
             'User',
             "select *, 'phpass' as HashMethod from :_users",
             $user_Map
@@ -96,15 +94,15 @@ class Flarum extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'id' => 'RoleID',
             'name_singular' => 'Name',
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select * from `:_groups`",
             $role_Map
@@ -115,7 +113,7 @@ class Flarum extends Source
             'user_id' => 'UserID',
             'group_id' => 'RoleID',
         ];
-        $ex->export(
+        $port->export(
             'UserRole',
             "select * from :_group_user",
             $userRole_Map
@@ -123,9 +121,9 @@ class Flarum extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = [
             'id' => 'CategoryID',
@@ -136,7 +134,7 @@ class Flarum extends Source
             'position' => 'Sort',
             'discussion_count' => 'CountDiscussions',
         ];
-        $ex->export(
+        $port->export(
             'Category',
             "select * from :_tags",
             $category_Map
@@ -144,9 +142,9 @@ class Flarum extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'id' => 'DiscussionID',
@@ -164,7 +162,7 @@ class Flarum extends Source
             $joinPosts = 'join :_posts p on p.id = d.first_post_id';
         }
 
-        $ex->export(
+        $port->export(
             'Discussion',
             "select d.*, $getBody min(dt.tag_id) as CategoryID
                  from :_discussions d
@@ -177,9 +175,9 @@ class Flarum extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function bookmarks(ExportModel $ex): void
+    protected function bookmarks(Migration $port): void
     {
         $map = [
             'discussion_id' => 'DiscussionID',
@@ -188,13 +186,13 @@ class Flarum extends Source
         ];
         $query = "select *, if (subscription = 'follow', 1, 0) as Bookmarked from :_discussion_user";
 
-        $ex->export('UserDiscussion', $query, $map);
+        $port->export('UserDiscussion', $query, $map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = [
             'id' => 'CommentID',
@@ -212,7 +210,7 @@ class Flarum extends Source
             $skipOP = 'and `number` > 1';
         }
 
-        $ex->export(
+        $port->export(
             'Comment',
             "select *, 'Html' as Format
                 from :_posts
@@ -223,9 +221,9 @@ class Flarum extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function badges(ExportModel $ex): void
+    protected function badges(Migration $port): void
     {
         // Badges
         $map = [
@@ -236,7 +234,7 @@ class Flarum extends Source
         ];
         $query = "select * from :_badges";
 
-        $ex->export('Badge', $query, $map);
+        $port->export('Badge', $query, $map);
 
         // User Badges
         $map = [
@@ -247,13 +245,13 @@ class Flarum extends Source
         ];
         $query = "select * from :_badge_user";
 
-        $ex->export('UserBadge', $query, $map);
+        $port->export('UserBadge', $query, $map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function privateMessages(ExportModel $ex)
+    protected function privateMessages(Migration $port)
     {
         // Messages
         $map = [
@@ -265,7 +263,7 @@ class Flarum extends Source
                 left join :_discussions d on d.id = p.discussion_id
             where d.is_private = 1";
 
-        $ex->export('ConversationMessage', $query, $map);
+        $port->export('ConversationMessage', $query, $map);
 
         // Conversations
         $map = [
@@ -275,7 +273,7 @@ class Flarum extends Source
         ];
         $query = "select * from :_discussions where is_private = 1";
 
-        $ex->export('Conversation', $query, $map);
+        $port->export('Conversation', $query, $map);
 
         // Recipients
         $map = [
@@ -284,6 +282,6 @@ class Flarum extends Source
         ];
         $query = "select * from :_recipients";
 
-        $ex->export('UserConversation', $query, $map);
+        $port->export('UserConversation', $query, $map);
     }
 }

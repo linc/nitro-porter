@@ -5,9 +5,9 @@
  */
 
 /**
- * Available filter for ExportModel.
+ * Available filter for Migration.
  *
- * @see ExportModel::filterData()
+ * @see Migration::filterData()
  * @see \Porter\Target\Flarum::comments()
  *
  * @param ?string $value

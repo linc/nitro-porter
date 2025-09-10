@@ -15,7 +15,7 @@ use Porter\Storage\Database;
 /**
  * Object for exporting other database structures into a format that can be imported.
  */
-class ExportModel
+class Migration
 {
     /**
      * @var bool Whether to capture SQL without executing.
@@ -39,7 +39,7 @@ class ExportModel
 
     /**
      * @var string DB prefix of source. Queries passed to export() will replace `:_` with this.
-     * @see ExportModel::export()
+     * @see Migration::export()
      */
     protected string $srcPrefix = '';
 
@@ -163,7 +163,7 @@ class ExportModel
      * 1. Get the comma-separated list of tables and turn it into an array
      * 2. Trim off the whitespace
      * 3. Normalize case to lower
-     * 4. Save to the ExportModel instance
+     * 4. Save to the Migration instance
      *
      * @param ?string $tables
      */
@@ -556,10 +556,10 @@ class ExportModel
     /**
      * Check if the output storage container exists for this data.
      *
-     * @see ExportModel::exists() — Equivalent for source.
      * @param string $table
      * @param array $columns
      * @return bool
+     *@see Migration::exists() — Equivalent for source.
      */
     public function targetExists(string $table, array $columns = []): bool
     {

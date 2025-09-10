@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class PunBb extends Source
 {
@@ -48,12 +48,12 @@ class PunBb extends Source
     /**
      * @var string Path to avatar images
      */
-    protected $avatarPath = '';
+    protected string $avatarPath = '';
 
     /**
      * @var string CDN path prefix
      */
-    protected $cdn = '';
+    protected string $cdn = '';
 
     /**
      * @var array Required tables => columns
@@ -63,11 +63,9 @@ class PunBb extends Source
     /**
      * Forum-specific export format
      *
-     * @param ExportModel $ex
-     *@todo Project file size / export time and possibly break into multiple files
-     *
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
         $this->cdn = ''; //$this->param('cdn', '');
         /*if ($avatarPath = $this->param('avatars-source', false)) {
@@ -78,15 +76,15 @@ class PunBb extends Source
             $this->avatarPath = $avatarPath;
         }*/
 
-        $this->users($ex);
-        $this->roles($ex);
-        $this->signatures($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->signatures($port);
 
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->tags($ex);
-        $this->attachments($ex);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->tags($port);
+        $this->attachments($port);
     }
 
     /**
@@ -95,10 +93,9 @@ class PunBb extends Source
      * @param mixed $value Row field value.
      * @param string $field Name of the current field.
      * @param array $row All of the current row values.
-     *
      * @return null|string
      */
-    public function getAvatarByID($value, $field, $row)
+    public function getAvatarByID($value, $field, $row): ?string
     {
         if (!$this->avatarPath) {
             return null;
@@ -132,15 +129,14 @@ class PunBb extends Source
     /**
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
-     * @access public
-     * @see    ExportModel::writeTableToFile
-     *
      * @param  string $value Current value
      * @param  string $field Current field
      * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     * @see    Migration::writeTableToFile
+     *
      */
-    public function filterThumbnailData($value, $field, $row)
+    public function filterThumbnailData($value, $field, $row): ?string
     {
         if (strpos(strtolower($row['file_mime_type']), 'image/') === 0) {
             return $value;
@@ -150,11 +146,11 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function attachments(ExportModel $ex): void
+    protected function attachments(Migration $port): void
     {
-        if ($ex->exists('attach_files')) {
+        if ($port->exists('attach_files')) {
             // Media.
             $media_Map = array(
                 'id' => 'MediaID',
@@ -165,7 +161,7 @@ class PunBb extends Source
                 'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),
                 'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
             );
-            $ex->export(
+            $port->export(
                 'Media',
                 "select f.*,
                         concat({$this->cdn}, 'FileUpload/', f.file_path) as Path,
@@ -181,29 +177,29 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function tags(ExportModel $ex): void
+    protected function tags(Migration $port): void
     {
-        if ($ex->exists('tags')) {
+        if ($port->exists('tags')) {
             $tag_Map = array(
                 'id' => 'TagID',
                 'tag' => 'Name'
             );
-            $ex->export('Tag', "SELECT * FROM :_tags", $tag_Map);
+            $port->export('Tag', "SELECT * FROM :_tags", $tag_Map);
 
             $tagDiscussionMap = array(
                 'topic_id' => 'DiscussionID',
                 'tag_id' => 'TagID'
             );
-            $ex->export('TagDiscussion', "SELECT * FROM :_topic_tags", $tagDiscussionMap);
+            $port->export('TagDiscussion', "SELECT * FROM :_topic_tags", $tagDiscussionMap);
         }
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'id' => 'CommentID',
@@ -212,7 +208,7 @@ class PunBb extends Source
             'poster_ip' => 'InsertIPAddress',
             'message' => 'Body'
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "SELECT p.*,
                     'BBCode' AS Format,
@@ -230,9 +226,9 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'id' => 'DiscussionID',
@@ -245,7 +241,7 @@ class PunBb extends Source
             'message' => 'Body'
 
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "SELECT t.*,
                     from_unixtime(p.posted) AS DateInserted,
@@ -265,9 +261,9 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'id' => 'CategoryID',
@@ -276,7 +272,7 @@ class PunBb extends Source
             'disp_position' => 'Sort',
             'parent_id' => 'ParentCategoryID'
         );
-        $ex->export(
+        $port->export(
             'Category',
             "SELECT
                 id,
@@ -298,11 +294,11 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function signatures(ExportModel $ex): void
+    protected function signatures(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'UserMeta',
             "select
                    u.id as UserID,
@@ -323,22 +319,22 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $ex->export('Role', "SELECT * FROM :_groups", $role_Map);
+        $port->export('Role', "SELECT * FROM :_groups", $role_Map);
 
         // UserRole.
         $userRole_Map = array(
             'id' => 'UserID',
             'group_id' => 'RoleID'
         );
-        $ex->export(
+        $port->export(
             'UserRole',
             "SELECT
                     CASE u.group_id WHEN 2 THEN 0 ELSE id END AS id,
@@ -349,9 +345,9 @@ class PunBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'AvatarID' => array('Column' => 'Photo', 'Filter' => array($this, 'getAvatarByID')),
@@ -362,7 +358,7 @@ class PunBb extends Source
             'registration_ip' => 'InsertIPAddress',
             'PasswordHash' => 'Password'
         );
-        $ex->export(
+        $port->export(
             'User',
             "SELECT
                      u.*, u.id AS AvatarID,

@@ -11,7 +11,7 @@ namespace Porter\Source;
 use Porter\ConnectionManager;
 use Porter\FileTransfer;
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Xenforo extends Source
 {
@@ -42,25 +42,25 @@ class Xenforo extends Source
     /**
      * Forum-specific export format.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run(ExportModel $ex): void
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->signatures($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->signatures($port);
 
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->conversations($ex);
-        $this->attachments($ex);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->conversations($port);
+        $this->attachments($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function signatures(ExportModel $ex): void
+    public function signatures(Migration $port): void
     {
         $sql = "select
                 user_id as UserID,
@@ -75,13 +75,13 @@ class Xenforo extends Source
                 'BBCode'
             from :_user_profile
             where nullif(signature, '') is not null";
-        $ex->export('UserMeta', $sql);
+        $port->export('UserMeta', $sql);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'user_id' => 'UserID',
@@ -96,7 +96,7 @@ class Xenforo extends Source
             'hash_method' => 'HashMethod',
             'avatar' => 'Photo'
         );
-        $ex->export(
+        $port->export(
             'User',
             "select u.*,
                     ua.data as password,
@@ -111,15 +111,15 @@ class Xenforo extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'user_group_id' => 'RoleID',
             'title' => 'Name'
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select * from :_user_group",
             $role_Map
@@ -131,7 +131,7 @@ class Xenforo extends Source
             'user_group_id' => 'RoleID'
         );
 
-        $ex->export(
+        $port->export(
             'UserRole',
             "select user_id, user_group_id
                 from :_user
@@ -145,9 +145,9 @@ class Xenforo extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'node_id' => 'CategoryID',
@@ -162,7 +162,7 @@ class Xenforo extends Source
             'display_order' => 'Sort',
             'display_in_list' => array('Column' => 'HideAllDiscussions', 'Filter' => 'NotFilter')
         );
-        $ex->export(
+        $port->export(
             'Category',
             "select n.* from :_node n",
             $category_Map
@@ -170,9 +170,9 @@ class Xenforo extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'thread_id' => 'DiscussionID',
@@ -188,7 +188,7 @@ class Xenforo extends Source
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select t.*,
                 p.message,
@@ -204,9 +204,9 @@ class Xenforo extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'post_id' => 'CommentID',
@@ -217,7 +217,7 @@ class Xenforo extends Source
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select p.*,
                 'BBCode' as format,
@@ -234,11 +234,11 @@ class Xenforo extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function attachments(ExportModel $ex): void
+    protected function attachments(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'Media',
             "select
                     a.attachment_id as MediaID,
@@ -267,9 +267,9 @@ class Xenforo extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function conversations(ExportModel $ex): void
+    protected function conversations(Migration $port): void
     {
         $conversation_Map = array(
             'conversation_id' => 'ConversationID',
@@ -277,7 +277,7 @@ class Xenforo extends Source
             'user_id' => 'InsertUserID',
             'start_date' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->export(
+        $port->export(
             'Conversation',
             "select *, substring(title, 1, 200) as title from :_conversation_master",
             $conversation_Map
@@ -292,7 +292,7 @@ class Xenforo extends Source
             'format' => 'Format',
             'ip' => array('Column' => 'InsertIPAddress', 'Filter' => 'long2ipf')
         );
-        $ex->export(
+        $port->export(
             'ConversationMessage',
             "select m.*,
                     'BBCode' as format,
@@ -308,7 +308,7 @@ class Xenforo extends Source
             'user_id' => 'UserID',
             'Deleted' => 'Deleted'
         );
-        $ex->export(
+        $port->export(
             'UserConversation',
             "select
                     r.conversation_id,

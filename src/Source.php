@@ -33,9 +33,9 @@ abstract class Source
 
     /**
      * @deprecated
-     * @var ?ExportModel
+     * @var ?Migration
      */
-    public ?ExportModel $exportModel = null;
+    public ?Migration $port = null;
 
     /**
      * @deprecated
@@ -46,7 +46,7 @@ abstract class Source
     /**
      * Forum-specific export routine
      */
-    abstract public function run(ExportModel $ex); // @phpstan-ignore missingType.return
+    abstract public function run(Migration $port); // @phpstan-ignore missingType.return
 
     /**
      * Get name of the source package.

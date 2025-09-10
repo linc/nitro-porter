@@ -6,7 +6,7 @@
 
 use Porter\ConnectionManager;
 use Porter\Database\DbFactory;
-use Porter\ExportModel;
+use Porter\Migration;
 use Porter\Postscript;
 use Porter\Request;
 use Porter\Source;
@@ -120,9 +120,9 @@ function postscriptFactory(string $target, Storage $outputStorage, Storage $post
  * @param string $sourcePrefix
  * @param string|null $limitTables
  * @param bool $captureOnly
- * @return ExportModel
+ * @return Migration
  */
-function exportModelFactory(
+function migrationFactory(
     DbFactory $inputDB, // @todo remove
     Storage $inputStorage,
     Storage $porterStorage,
@@ -131,8 +131,8 @@ function exportModelFactory(
     string $sourcePrefix = '',
     ?string $limitTables = '',
     bool $captureOnly = false
-): ExportModel {
-    return new ExportModel(
+): Migration {
+    return new Migration(
         $inputDB,
         $inputStorage,
         $porterStorage,

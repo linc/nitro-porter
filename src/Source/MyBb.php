@@ -11,7 +11,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class MyBb extends Source
 {
@@ -50,24 +50,23 @@ class MyBb extends Source
     /**
      * Main export process.
      *
-     * @param ExportModel $ex
-     * @see   $_Structures in ExportModel for allowed destination tables & columns.
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->attachments($ex);
-        $this->bookmarks($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->attachments($port);
+        $this->bookmarks($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'uid' => 'UserID',
@@ -77,7 +76,7 @@ class MyBb extends Source
             'regdate3' => 'DateFirstVisit',
             'email' => 'Email',
         );
-        $ex->export(
+        $port->export(
             'User',
             "select u.*,
                 FROM_UNIXTIME(regdate) as regdate2,
@@ -91,16 +90,16 @@ class MyBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'gid' => 'RoleID',
             'title' => 'Name',
             'description' => 'Description',
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select * from :_usergroups",
             $role_Map
@@ -111,7 +110,7 @@ class MyBb extends Source
             'uid' => 'UserID',
             'usergroup' => 'RoleID',
         );
-        $ex->export(
+        $port->export(
             'UserRole',
             "select u.uid, u.usergroup from :_users u",
             $userRole_Map
@@ -119,9 +118,9 @@ class MyBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'fid' => 'CategoryID',
@@ -130,7 +129,7 @@ class MyBb extends Source
             'name' => 'Name',
             'description' => 'Description',
         );
-        $ex->export(
+        $port->export(
             'Category',
             "select * from :_forums f",
             $category_Map
@@ -138,9 +137,9 @@ class MyBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'tid' => 'DiscussionID',
@@ -150,7 +149,7 @@ class MyBb extends Source
             'views' => 'CountViews',
             'replies' => 'CountComments',
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select *,
                     FROM_UNIXTIME(dateline) as DateInserted,
@@ -161,9 +160,9 @@ class MyBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'pid' => 'CommentID',
@@ -171,7 +170,7 @@ class MyBb extends Source
             'uid' => 'InsertUserID',
             'message' => array('Column' => 'Body'),
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select p.*,
                     FROM_UNIXTIME(dateline) as DateInserted,
@@ -182,9 +181,9 @@ class MyBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function attachments(ExportModel $ex): void
+    protected function attachments(Migration $port): void
     {
         $media_Map = array(
             'aid' => 'MediaID',
@@ -197,7 +196,7 @@ class MyBb extends Source
             'filetype' => 'Type',
             'thumb_width' => array('Column' => 'ThumbWidth', 'Filter' => array($this, 'filterThumbnailData')),
         );
-        $ex->export(
+        $port->export(
             'Media',
             "select a.*,
                     600 as thumb_width,
@@ -211,15 +210,15 @@ class MyBb extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function bookmarks(ExportModel $ex): void
+    protected function bookmarks(Migration $port): void
     {
         $userDiscussion_Map = array(
             'tid' => 'DiscussionID',
             'uid' => 'UserID',
         );
-        $ex->export(
+        $port->export(
             'UserDiscussion',
             "select *,
                     1 as Bookmarked

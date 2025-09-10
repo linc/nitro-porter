@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Yaf extends Source
 {
@@ -36,27 +36,27 @@ class Yaf extends Source
         ]
     ];
 
-    public static $passwordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
+    public static array $passwordFormats = array(0 => 'md5', 1 => 'sha1', 2 => 'sha256', 3 => 'sha384', 4 => 'sha512');
 
     /**
      * Main export method.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run(ExportModel $ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->ranks($ex);
-        $this->signatures($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->ranks($port);
+        $this->signatures($port);
 
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
-        $this->conversations($ex);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
+        $this->conversations($port);
     }
 
-    public function cleanDate($value)
+    public function cleanDate($value): mixed
     {
         if (!$value) {
             return null;
@@ -68,7 +68,7 @@ class Yaf extends Source
         return $value;
     }
 
-    public function convertPassword($hash, $columnName, &$row)
+    public function convertPassword($hash, $columnName, &$row): string
     {
         $salt = $row['PasswordSalt'];
         $hash = $row['Password2'];
@@ -84,9 +84,9 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function exportConversationTemps(ExportModel $ex)
+    protected function exportConversationTemps(Migration $port): void
     {
         $sql = "
          drop table if exists z_pmto;
@@ -192,13 +192,13 @@ class Yaf extends Source
                  on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
                set pm.Group_ID = g.Group_ID;";
 
-        $ex->queryN($sql);
+        $port->queryN($sql);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'UserID' => 'UserID',
@@ -214,7 +214,7 @@ class Yaf extends Source
             'Password2' => array('Column' => 'Password', 'Filter' => array($this, 'convertPassword')),
             'HashMethod' => 'HashMethod'
         );
-        $ex->export(
+        $port->export(
             'User',
             "select u.*,
                     m.Password as Password2,
@@ -230,15 +230,15 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'GroupID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select * from :_Group;",
             $role_Map
@@ -249,13 +249,13 @@ class Yaf extends Source
             'UserID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $ex->export('UserRole', 'select * from :_UserGroup', $userRole_Map);
+        $port->export('UserRole', 'select * from :_UserGroup', $userRole_Map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function ranks(ExportModel $ex): void
+    protected function ranks(Migration $port): void
     {
         $rank_Map = array(
             'RankID' => 'RankID',
@@ -263,7 +263,7 @@ class Yaf extends Source
             'Name' => 'Name',
             'Label' => 'Label'
         );
-        $ex->export(
+        $port->export(
             'Rank',
             "select r.*,
                     RankID as Level,
@@ -274,11 +274,11 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function signatures(ExportModel $ex): void
+    protected function signatures(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'UserMeta',
             "select
                     UserID,
@@ -297,9 +297,9 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'ForumID' => 'CategoryID',
@@ -309,7 +309,7 @@ class Yaf extends Source
             'SortOrder' => 'Sort'
         );
 
-        $ex->export(
+        $port->export(
             'Category',
             "select
                     f.ForumID,
@@ -331,9 +331,9 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'TopicID' => 'DiscussionID',
@@ -344,7 +344,7 @@ class Yaf extends Source
             'Views' => 'CountViews',
             'Announce' => 'Announce'
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select
                     case when t.Priority > 0 then 1 else 0 end as Announce,
@@ -357,9 +357,9 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'MessageID' => 'CommentID',
@@ -373,7 +373,7 @@ class Yaf extends Source
             'Edited' => array('Column' => 'DateUpdated', 'Filter' => array($this, 'cleanDate')),
             'EditedBy' => 'UpdateUserID'
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select m.*,
                     case when m.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format
@@ -384,11 +384,11 @@ class Yaf extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function conversations(ExportModel $ex): void
+    protected function conversations(Migration $port): void
     {
-        $this->exportConversationTemps($ex);
+        $this->exportConversationTemps($port);
 
         $conversation_Map = array(
             'PMessageID' => 'ConversationID',
@@ -396,7 +396,7 @@ class Yaf extends Source
             'Created' => 'DateInserted',
             'Title' => array('Column' => 'Subject', 'Type' => 'varchar(512)')
         );
-        $ex->export(
+        $port->export(
             'Conversation',
             "select pm.*, g.Title
                 from z_pmgroup g
@@ -411,7 +411,7 @@ class Yaf extends Source
             'User_ID' => 'UserID',
             'Deleted' => 'Deleted'
         );
-        $ex->export(
+        $port->export(
             'UserConversation',
             "select pto.*
                 from z_pmto pto
@@ -429,7 +429,7 @@ class Yaf extends Source
             'Body' => 'Body',
             'Format' => 'Format'
         );
-        $ex->export(
+        $port->export(
             'ConversationMessage',
             "select pm.*,
                     case when pm.Flags & 1 = 1 then 'Html' else 'BBCode' end as Format,

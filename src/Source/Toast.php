@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class Toast extends Source
 {
@@ -34,22 +34,22 @@ class Toast extends Source
     /**
      * Main export method.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->signatures($ex);
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->comments($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->signatures($port);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->comments($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'ID' => 'UserID',
@@ -58,7 +58,7 @@ class Toast extends Source
             'LastLoginDate' => array('Column' => 'DateLastActive', 'Type' => 'datetime'),
             'IP' => 'LastIPAddress'
         );
-        $ex->export(
+        $port->export(
             'User',
             "select *, NOW() as DateInserted from :_Member u",
             $user_Map
@@ -66,13 +66,13 @@ class Toast extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         // Determine safe RoleID to use for non-existant Member role
         $lastRoleID = 1001;
-        $lastRoleResult = $ex->query("select max(ID) as LastID from :_Group");
+        $lastRoleResult = $port->query("select max(ID) as LastID from :_Group");
         if ($lastRole = $lastRoleResult->nextResultRow()) {
             $lastRoleID = $lastRole['LastID'] + 1;
         }
@@ -82,7 +82,7 @@ class Toast extends Source
             'ID' => 'RoleID',
             'Name' => 'Name'
         );
-        $ex->export(
+        $port->export(
             'Role',
             " select ID, Name from :_Group
                 union all
@@ -96,7 +96,7 @@ class Toast extends Source
             'MemberID' => 'UserID',
             'GroupID' => 'RoleID'
         );
-        $ex->export(
+        $port->export(
             'UserRole',
             " select GroupID, MemberID from :_MemberGroupLink
                  union all
@@ -112,11 +112,11 @@ class Toast extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function signatures(ExportModel $ex): void
+    protected function signatures(Migration $port): void
     {
-        $ex->export(
+        $port->export(
             'UserMeta',
             " select
                     ID as UserID,
@@ -135,9 +135,9 @@ class Toast extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'ID' => 'CategoryID',
@@ -145,7 +145,7 @@ class Toast extends Source
             'ForumName' => 'Name',
             'Description' => 'Description'
         );
-        $ex->export(
+        $port->export(
             'Category',
             "select
                     f.ID,
@@ -165,9 +165,9 @@ class Toast extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'ID' => 'DiscussionID',
@@ -181,7 +181,7 @@ class Toast extends Source
             'Hits' => 'CountViews',
             'ReplyCount' => 'CountComments'
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select p.*,
             'Html' as Format
@@ -193,9 +193,9 @@ class Toast extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'ID' => 'CommentID',
@@ -205,7 +205,7 @@ class Toast extends Source
             'ModifyDate' => 'DateUpdated',
             'Message' => 'Body'
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select *,
                     'Html' as Format

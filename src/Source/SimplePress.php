@@ -9,7 +9,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class SimplePress extends Source
 {
@@ -30,7 +30,6 @@ class SimplePress extends Source
             'Roles' => 1,
             'Avatars' => 0,
             'PrivateMessages' => 1,
-            'Signatures' => 0,
             'Attachments' => 0,
             'Bookmarks' => 0,
         ]
@@ -49,23 +48,23 @@ class SimplePress extends Source
     /**
      * Forum-specific export format.
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
-        $this->users($ex);
-        $this->roles($ex);
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->tags($ex);
-        $this->comments($ex);
-        $this->conversations($ex);
+        $this->users($port);
+        $this->roles($port);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->tags($port);
+        $this->comments($port);
+        $this->conversations($port);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(ExportModel $ex): void
+    protected function users(Migration $port): void
     {
         $user_Map = array(
             'user_id' => 'UserID',
@@ -75,7 +74,7 @@ class SimplePress extends Source
             'user_registered' => 'DateInserted',
             'lastvisit' => 'DateLastActive'
         );
-        $ex->export(
+        $port->export(
             'User',
             "select m.*, u.user_pass, u.user_email, u.user_registered
                 from :_users u
@@ -86,16 +85,16 @@ class SimplePress extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function roles(ExportModel $ex): void
+    protected function roles(Migration $port): void
     {
         $role_Map = array(
             'usergroup_id' => 'RoleID',
             'usergroup_name' => 'Name',
             'usergroup_desc' => 'Description'
         );
-        $ex->export(
+        $port->export(
             'Role',
             "select
                 usergroup_id,
@@ -115,7 +114,7 @@ class SimplePress extends Source
             'user_id' => 'UserID',
             'usergroup_id' => 'RoleID'
         );
-        $ex->export(
+        $port->export(
             'UserRole',
             "select
                     m.user_id,
@@ -133,9 +132,9 @@ class SimplePress extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'forum_id' => 'CategoryID',
@@ -145,7 +144,7 @@ class SimplePress extends Source
             'form_slug' => 'UrlCode',
             'parent_id' => 'ParentCategoryID'
         );
-        $ex->export(
+        $port->export(
             'Category',
             "select
                     f.forum_id,
@@ -169,32 +168,32 @@ class SimplePress extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function tags(ExportModel $ex): void
+    protected function tags(Migration $port): void
     {
-        if ($ex->exists('sftags')) {
+        if ($port->exists('sftags')) {
             // Tags
             $tag_Map = array(
                 'tag_id' => 'TagID',
                 'tag_name' => 'Name'
             );
-            $ex->export('Tag', "select * from :_sftags", $tag_Map);
+            $port->export('Tag', "select * from :_sftags", $tag_Map);
 
-            if ($ex->exists('sftagmeta')) {
+            if ($port->exists('sftagmeta')) {
                 $tagDiscussion_Map = array(
                     'tag_id' => 'TagID',
                     'topic_id' => 'DiscussionID'
                 );
-                $ex->export('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
+                $port->export('TagDiscussion', "select * from :_sftagmeta", $tagDiscussion_Map);
             }
         }
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex): void
+    protected function discussions(Migration $port): void
     {
         $discussion_Map = array(
             'topic_id' => 'DiscussionID',
@@ -206,7 +205,7 @@ class SimplePress extends Source
             'topic_pinned' => 'Announce',
             'topic_slug' => array('Column' => 'Slug', 'Type' => 'varchar(200)')
         );
-        $ex->export(
+        $port->export(
             'Discussion',
             "select t.*, 'Html' as Format from :_sftopics t",
             $discussion_Map
@@ -214,9 +213,9 @@ class SimplePress extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex): void
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'post_id' => 'CommentID',
@@ -227,7 +226,7 @@ class SimplePress extends Source
             'post_date' => 'DateInserted',
             'poster_ip' => 'InsertIPAddress'
         );
-        $ex->export(
+        $port->export(
             'Comment',
             "select p.*, 'Html' as Format from :_sfposts p",
             $comment_Map
@@ -235,16 +234,16 @@ class SimplePress extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function conversations(ExportModel $ex): void
+    protected function conversations(Migration $port): void
     {
         $conv_Map = array(
             'message_id' => 'ConversationID',
             'from_id' => 'InsertUserID',
             'sent_date' => 'DateInserted'
         );
-        $ex->export(
+        $port->export(
             'Conversation',
             "select * from :_sfmessages where is_reply = 0",
             $conv_Map
@@ -256,7 +255,7 @@ class SimplePress extends Source
             'from_id' => 'InsertUserID',
             'message' => array('Column' => 'Body')
         );
-        $ex->export(
+        $port->export(
             'ConversationMessage',
             'select c.message_id as ConversationID, m.*
                 from :_sfmessages c
@@ -272,7 +271,7 @@ class SimplePress extends Source
             'message_id' => 'ConversationID',
             'from_id' => 'UserID'
         );
-        $ex->export(
+        $port->export(
             'UserConversation',
             'select message_id, from_id
                 from :_sfmessages

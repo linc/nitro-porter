@@ -7,7 +7,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Porter\ConnectionManager;
 use Porter\Database\ResultSet;
-use Porter\ExportModel;
+use Porter\Migration;
 use Porter\Postscript;
 use Porter\Storage;
 
@@ -81,7 +81,7 @@ class Database extends Storage
      * @param array $structure
      * @param ResultSet|Builder $data
      * @param array $filters
-     * @param ExportModel $exportModel
+     * @param Migration $port
      * @return array Information about the results.
      */
     public function store(
@@ -90,7 +90,7 @@ class Database extends Storage
         array $structure,
         $data,
         array $filters,
-        ExportModel $exportModel
+        Migration $port
     ): array {
         $info = [
             'rows' => 0,
@@ -104,7 +104,7 @@ class Database extends Storage
                 $info['rows']++;
                 $row = $this->normalizeRow($map, $structure, $row, $filters);
                 $bytes = $this->batchInsert($row);
-                $this->logBatchProgress($name, $info['rows'], $exportModel);
+                $this->logBatchProgress($name, $info['rows'], $port);
                 $info['memory'] = max($bytes, $info['memory']); // Highest memory usage.
             }
         } elseif (is_a($data, '\Illuminate\Database\Query\Builder')) {
@@ -113,7 +113,7 @@ class Database extends Storage
                 $info['rows']++;
                 $row = $this->normalizeRow($map, $structure, (array)$row, $filters);
                 $bytes = $this->batchInsert($row);
-                $this->logBatchProgress($name, $info['rows'], $exportModel);
+                $this->logBatchProgress($name, $info['rows'], $port);
                 $info['memory'] = max($bytes, $info['memory']); // Highest memory usage.
             }
         }
@@ -129,12 +129,12 @@ class Database extends Storage
      *
      * @param string $name
      * @param int $rows
-     * @param ExportModel $exportModel
+     * @param Migration $port
      */
-    public function logBatchProgress(string $name, int $rows, ExportModel $exportModel): void
+    public function logBatchProgress(string $name, int $rows, Migration $port): void
     {
         if ($rows >= self::LOG_THRESHOLD && ($rows % self::LOG_INCREMENT) === 0) {
-            $exportModel->comment("inserting '" . $name . "': " . number_format($rows) . ' done...', false);
+            $port->comment("inserting '" . $name . "': " . number_format($rows) . ' done...', false);
         }
     }
 
@@ -284,10 +284,10 @@ class Database extends Storage
     /**
      * Whether the requested table & columns exist.
      *
-     * @see ExportModel::exists()
      * @param string $tableName
      * @param array $columns
      * @return bool
+     *@see Migration::exists()
      */
     public function exists(string $tableName, array $columns = []): bool
     {

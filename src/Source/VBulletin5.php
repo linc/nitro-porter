@@ -12,7 +12,7 @@
 
 namespace Porter\Source;
 
-use Porter\ExportModel;
+use Porter\Migration;
 
 class VBulletin5 extends VBulletin
 {
@@ -78,9 +78,9 @@ class VBulletin5 extends VBulletin
 
     /**
      *
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run($ex)
+    public function run(Migration $port): void
     {
         /*$this->doFileExport(
             $this->param('db-files'),
@@ -94,13 +94,13 @@ class VBulletin5 extends VBulletin
         $cdn = ''; //$this->param('cdn', '');
 
         // Grab all of the ranks.
-        $ranks = $ex->get("select * from :_usertitle order by minposts desc", 'usertitleid');
+        $ranks = $port->get("select * from :_usertitle order by minposts desc", 'usertitleid');
 
-        $this->usersV5($ex, $ranks, $cdn);
-        $this->rolesV5($ex);
-        $this->ranksV5($ex);
+        $this->usersV5($port, $ranks, $cdn);
+        $this->rolesV5($port);
+        $this->ranksV5($port);
 
-        list($categoryIDs, $privateMessagesID) = $this->categoryV5($ex);
+        list($categoryIDs, $privateMessagesID) = $this->categoryV5($port);
 
         // Discussion.
         $discussion_Map = array(
@@ -141,14 +141,14 @@ class VBulletin5 extends VBulletin
                 and parentid in (" . implode(',', $categoryIDs) . ");";
 
         // Polls need to be wrapped in a discussion so we are gonna need to postpone discussion creations
-        if ($this->getPollsCount($ex)) {
+        if ($this->getPollsCount($port)) {
             // NOTE: Only polls that are directly under a channel (discussion) will be exported.
             // Vanilla poll plugin does not support polls as comments.
 
-            $ex->query("drop table if exists vBulletinDiscussionTable;");
+            $port->query("drop table if exists vBulletinDiscussionTable;");
 
             // Create a temporary table to hold old discussions and to create new discussions for polls
-            $ex->query(
+            $port->query(
                 "create table `vBulletinDiscussionTable` (
                     `nodeid` int(10) unsigned not null AUTO_INCREMENT,
                     `type` varchar(10) default null,
@@ -167,9 +167,9 @@ class VBulletin5 extends VBulletin
                     primary key (`nodeid`)
                 );"
             );
-            $ex->query("insert into vBulletinDiscussionTable $discussionQuery");
+            $port->query("insert into vBulletinDiscussionTable $discussionQuery");
 
-            $this->generatePollsDiscussion($ex);
+            $this->generatePollsDiscussion($port);
 
             // Export discussions
             $sql = "select
@@ -187,15 +187,15 @@ class VBulletin5 extends VBulletin
                     Closed,
                     Announce
                 from vBulletinDiscussionTable;";
-            $ex->export('Discussion', $sql, $discussion_Map);
+            $port->export('Discussion', $sql, $discussion_Map);
 
             // Export polls
-            $this->pollsV5($ex);
+            $this->pollsV5($port);
 
             // Cleanup tmp table
-            $ex->query("drop table vBulletinDiscussionTable;");
+            $port->query("drop table vBulletinDiscussionTable;");
         } else {
-            $ex->export('Discussion', $discussionQuery, $discussion_Map);
+            $port->export('Discussion', $discussionQuery, $discussion_Map);
         }
 
         // UserDiscussion
@@ -205,7 +205,7 @@ class VBulletin5 extends VBulletin
         );
         // Should be able to inner join `discussionread` for DateLastViewed
         // but it's blank in my sample data so I don't trust it.
-        $ex->export(
+        $port->export(
             'UserDiscussion',
             "select s.*,
                     1 as Bookmarked,
@@ -214,20 +214,20 @@ class VBulletin5 extends VBulletin
             $userDiscussion_Map
         );
 
-        $this->commentsV5($ex, $categoryIDs);
-        $this->attachmentsV5($ex, $categoryIDs);
-        $this->conversationsV5($ex, $privateMessagesID);
+        $this->commentsV5($port, $categoryIDs);
+        $this->attachmentsV5($port, $categoryIDs);
+        $this->conversationsV5($port, $privateMessagesID);
     }
 
     /**
      * @return int Number of poll that can be exported by the porter.
      */
-    protected function getPollsCount($ex)
+    protected function getPollsCount(Migration $port): int
     {
         $count = 0;
 
         $sql = "show tables like ':_poll';";
-        $result = $ex->query($sql, true);
+        $result = $port->query($sql, true);
 
         if ($result->nextResultRow()) {
             $sql = "select count(*) AS Count
@@ -237,7 +237,7 @@ class VBulletin5 extends VBulletin
                     inner join :_contenttype as ct on ct.contenttypeid = pn.contenttypeid
                 where ct.class = 'Channel';";
 
-            $result = $ex->query($sql);
+            $result = $port->query($sql);
             if ($row = $result->nextResultRow()) {
                 $count = $row['Count'];
             }
@@ -249,7 +249,7 @@ class VBulletin5 extends VBulletin
     /**
      * Generate discussions for polls.
      */
-    protected function generatePollsDiscussion($ex)
+    protected function generatePollsDiscussion(Migration $port): void
     {
         $pollsThatNeedWrappingQuery = "select
                 'poll' as type,
@@ -291,13 +291,13 @@ class VBulletin5 extends VBulletin
                 `PollID`
             ) $pollsThatNeedWrappingQuery";
 
-        $ex->query($sql);
+        $port->query($sql);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function pollsV5(ExportModel $ex)
+    protected function pollsV5(Migration $port): void
     {
         //$fp = $ex->file;
 
@@ -309,7 +309,7 @@ class VBulletin5 extends VBulletin
             'created' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
             'userid' => 'InsertUserId',
         );
-        $ex->export(
+        $port->export(
             'Poll',
             "select
                     p.nodeid,
@@ -348,14 +348,14 @@ class VBulletin5 extends VBulletin
                 left join :_node as n on n.nodeid = po.nodeid;";
 
         // We have to generate a sort order so let's do the exportation manually line by line....
-        list($revMappings, $legacyFilter) = $ex->normalizeDataMap($pollOption_Map);
+        list($revMappings, $legacyFilter) = $port->normalizeDataMap($pollOption_Map);
         //$exportStructure = $ex->porterStructure['PollOption'];
         //$exportStructure = getExportStructure($pollOption_Map, $ex->mapStructure['PollOption'], $pollOption_Map);
         //$revMappings = flipMappings($pollOption_Map);
 
         //$ex->writeBeginTable($fp, 'PollOption', $exportStructure);
 
-        $result = $ex->query($sql);
+        $result = $port->query($sql);
         $currentPollID = null;
         $currentSortID = 0;
         $pollCount = 0;
@@ -371,14 +371,14 @@ class VBulletin5 extends VBulletin
             $pollCount++;
         }
         //$ex->writeEndTable($fp);
-        $ex->comment("Exported Table: PollOption (" . $pollCount . " rows)");
+        $port->comment("Exported Table: PollOption (" . $pollCount . " rows)");
 
         $pollVote_Map = array(
             'userid' => 'UserID',
             'polloptionid' => 'PollOptionID',
             'votedate' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate')
         );
-        $ex->export(
+        $port->export(
             'PollVote',
             "select
                     pv.userid,
@@ -390,11 +390,11 @@ class VBulletin5 extends VBulletin
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @param array $ranks
      * @param string $cdn
      */
-    public function usersV5(ExportModel $ex, array $ranks, $cdn): void
+    public function usersV5(Migration $port, array $ranks, string $cdn): void
     {
         $user_Map = array(
             'userid' => 'UserID',
@@ -422,7 +422,7 @@ class VBulletin5 extends VBulletin
         );
 
         // Use file avatar or the result of our blob export?
-        if ($this->getConfig($ex, 'usefileavatar')) {
+        if ($this->getConfig($port, 'usefileavatar')) {
             $user_Map['filephoto'] = 'Photo';
         } else {
             $user_Map['customphoto'] = 'Photo';
@@ -431,7 +431,7 @@ class VBulletin5 extends VBulletin
         // vBulletin 5.1 changes the hash to crypt(md5(password), hash).
         // Switches from password & salt to token (and scheme & secret).
         // The scheme appears to be crypt()'s default and secret looks uselessly redundant.
-        if ($ex->exists('user', 'token') !== true) {
+        if ($port->exists('user', 'token') !== true) {
             $passwordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
         } else {
             // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.
@@ -439,7 +439,7 @@ class VBulletin5 extends VBulletin
                 case when scheme = 'legacy' then 'vbulletin' else 'vbulletin5' end as HashMethod,";
         }
 
-        $ex->export(
+        $port->export(
             'User',
             "select u.*,
                     ipaddress as ipaddress2,
@@ -468,34 +468,34 @@ class VBulletin5 extends VBulletin
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function rolesV5(ExportModel $ex)
+    public function rolesV5(Migration $port): void
     {
         $role_Map = array(
             'usergroupid' => 'RoleID',
             'title' => 'Name',
             'description' => 'Description'
         );
-        $ex->export('Role', 'select * from :_usergroup', $role_Map);
+        $port->export('Role', 'select * from :_usergroup', $role_Map);
 
         // UserRoles
         $userRole_Map = array(
             'userid' => 'UserID',
             'usergroupid' => 'RoleID'
         );
-        $ex->query("drop table if exists VbulletinRoles");
-        $ex->query("CREATE TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
+        $port->query("drop table if exists VbulletinRoles");
+        $port->query("CREATE TABLE VbulletinRoles (userid INT UNSIGNED not null, usergroupid INT UNSIGNED not null)");
         // Put primary groups into tmp table
-        $ex->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
+        $port->query("insert into VbulletinRoles (userid, usergroupid) select userid, usergroupid from :_user");
         // Put stupid CSV column into tmp table
-        $secondaryRoles = $ex->query("select userid, usergroupid, membergroupids from :_user");
+        $secondaryRoles = $port->query("select userid, usergroupid, membergroupids from :_user");
         if (is_object($secondaryRoles)) {
             while (($row = $secondaryRoles->nextResultRow()) !== false) {
                 if ($row['membergroupids'] != '') {
                     $groups = explode(',', $row['membergroupids']);
                     foreach ($groups as $groupID) {
-                        $ex->query(
+                        $port->query(
                             "insert into VbulletinRoles (userid, usergroupid) values({$row['userid']},{$groupID})"
                         );
                     }
@@ -503,15 +503,15 @@ class VBulletin5 extends VBulletin
             }
         }
         // Export from our tmp table and drop
-        $ex->export('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
-        $ex->query("DROP TABLE IF EXISTS VbulletinRoles");
+        $port->export('UserRole', 'select distinct userid, usergroupid from VbulletinRoles', $userRole_Map);
+        $port->query("DROP TABLE IF EXISTS VbulletinRoles");
     }
 
     /**
-     * @param ExportModel $ex
-     * @return array|void
+     * @param Migration $port
+     * @return void
      */
-    public function ranksV5(ExportModel $ex)
+    public function ranksV5(Migration $port): void
     {
         $rank_Map = array(
             'usertitleid' => 'RankID',
@@ -538,7 +538,7 @@ class VBulletin5 extends VBulletin
                 }
             )
         );
-        $ex->export(
+        $port->export(
             'Rank',
             "select ut.*,
                     ut.title as title2,
@@ -550,10 +550,10 @@ class VBulletin5 extends VBulletin
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @return array|void
      */
-    public function categoryV5(ExportModel $ex)
+    public function categoryV5(Migration $port)
     {
         $channels = array();
         $categoryIDs = array();
@@ -561,7 +561,7 @@ class VBulletin5 extends VBulletin
         $privateMessagesID = 0;
 
         // Filter Channels down to Forum tree
-        $channelResult = $ex->query(
+        $channelResult = $port->query(
             "select n.*
                 from :_node n
                     left join :_contenttype ct on n.contenttypeid = ct.contenttypeid
@@ -614,7 +614,7 @@ class VBulletin5 extends VBulletin
 
         // Categories are Channels that were found in the Forum tree
         // If parent was 'Forum' set the parent to Root instead (-1)
-        $ex->export(
+        $port->export(
             'Category',
             "select n.*,
                     FROM_UNIXTIME(publishdate) as DateInserted,
@@ -627,10 +627,10 @@ class VBulletin5 extends VBulletin
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @param mixed $categoryIDs
      */
-    public function commentsV5(ExportModel $ex, $categoryIDs): void
+    public function commentsV5(Migration $port, $categoryIDs): void
     {
         // Detect inner comments (Can happen if a plugin is used)
         $innerCommentQuery = "select
@@ -654,11 +654,11 @@ class VBulletin5 extends VBulletin
                     and ctPPP.class = 'Channel'/*Category*/
                 left join :_text t on t.nodeid = node.nodeid
             where node.showpublished = 1";
-        $result = $ex->query($innerCommentQuery . ' limit 1');
+        $result = $port->query($innerCommentQuery . ' limit 1');
 
         $innerCommentSQLFix = null;
         if ($result->nextResultRow()) {
-            $ex->query(
+            $port->query(
                 "create table `vBulletinInnerCommentTable` (
                     `nodeid` int(10) unsigned not null,
                     `parentid` int(11) not null,
@@ -669,7 +669,7 @@ class VBulletin5 extends VBulletin
                     primary key (`nodeid`)
                 );"
             );
-            $ex->query("insert into vBulletinInnerCommentTable $innerCommentQuery");
+            $port->query("insert into vBulletinInnerCommentTable $innerCommentQuery");
 
             $innerCommentSQLFix = "
                 and n.nodeid not in (select nodeid from vBulletinInnerCommentTable)
@@ -685,7 +685,7 @@ class VBulletin5 extends VBulletin
             'parentid' => 'DiscussionID',
         );
 
-        $ex->export(
+        $port->export(
             'Comment',
             "select
                     n.nodeid,
@@ -705,15 +705,15 @@ class VBulletin5 extends VBulletin
         );
 
         if ($innerCommentSQLFix !== null) {
-            $ex->query("drop table if exists vBulletinInnerCommentTable");
+            $port->query("drop table if exists vBulletinInnerCommentTable");
         }
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @param mixed $categoryIDs
      */
-    public function attachmentsV5(ExportModel $ex, $categoryIDs)
+    public function attachmentsV5(Migration $port, $categoryIDs)
     {
         $instance = $this;
         $media_Map = array(
@@ -738,7 +738,7 @@ class VBulletin5 extends VBulletin
             'height' => 'ImageHeight',
             'filesize' => 'Size',
         );
-        $ex->export(
+        $port->export(
             'Media',
             "select a.*,
                     filename as Path2,
@@ -764,10 +764,10 @@ class VBulletin5 extends VBulletin
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @param mixed $privateMessagesID
      */
-    public function conversationsV5(ExportModel $ex, $privateMessagesID): void
+    public function conversationsV5(Migration $port, $privateMessagesID): void
     {
         $conversation_Map = array(
             'nodeid' => 'ConversationID',
@@ -775,7 +775,7 @@ class VBulletin5 extends VBulletin
             'totalcount' => 'CountMessages',
             'title' => 'Subject',
         );
-        $ex->export(
+        $port->export(
             'Conversation',
             "select n.*,
                     n.nodeid as FirstMessageID,
@@ -793,7 +793,7 @@ class VBulletin5 extends VBulletin
             'rawtext' => 'Body',
             'userid' => 'InsertUserID'
         );
-        $ex->export(
+        $port->export(
             'ConversationMessage',
             "select n.*,
                     t.rawtext,
@@ -815,7 +815,7 @@ class VBulletin5 extends VBulletin
             'deleted' => 'Deleted'
         );
         // would be nicer to do an intermediary table to sum s.msgread for uc.CountReadMessages
-        $ex->export(
+        $port->export(
             'UserConversation',
             "select s.* from :_sentto s ;",
             $userConversation_Map

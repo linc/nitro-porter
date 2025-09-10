@@ -4,7 +4,7 @@ namespace Porter\Storage;
 
 use Illuminate\Database\Query\Builder;
 use Porter\Database\ResultSet;
-use Porter\ExportModel;
+use Porter\Migration;
 use Porter\Storage;
 
 class File extends Storage
@@ -181,7 +181,7 @@ class File extends Storage
      * @param array $structure
      * @param ResultSet|Builder $data
      * @param array $filters
-     * @param ExportModel $exportModel
+     * @param Migration $port
      * @return array Information about the results.
      */
     public function store(
@@ -190,7 +190,7 @@ class File extends Storage
         array $structure,
         $data,
         array $filters,
-        ExportModel $exportModel
+        Migration $port
     ): array {
         $info['rows'] = 0;
         while ($row = $data->nextResultRow()) {

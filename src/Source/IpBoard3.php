@@ -11,7 +11,7 @@
 namespace Porter\Source;
 
 use Porter\Source;
-use Porter\ExportModel;
+use Porter\Migration;
 
 class IpBoard3 extends Source
 {
@@ -54,7 +54,7 @@ class IpBoard3 extends Source
     /**
      * Export avatars into vanilla-compatibles names
      */
-    public function doAvatars($ex)
+    public function doAvatars(Migration $port)
     {
         // Source table
         $sourceTable = 'profile_portal'; //$this->param('users-source', 'profile_portal');
@@ -76,7 +76,7 @@ class IpBoard3 extends Source
 
         switch ($sourceTable) {
             case 'profile_portal':
-                $userList = $ex->query(
+                $userList = $port->query(
                     "select
                         pp_member_id as member_id,
                         pp_main_photo as main_photo,
@@ -90,7 +90,7 @@ class IpBoard3 extends Source
 
             case 'member_extra':
             default:
-                $userList = $ex->query(
+                $userList = $port->query(
                     "select
                         id as member_id,
                         avatar_location as photo
@@ -176,42 +176,42 @@ class IpBoard3 extends Source
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    public function run(ExportModel $ex)
+    public function run(Migration $port): void
     {
         // Export avatars
         //if ($this->param('avatars')) {
             //$this->doAvatars($ex);
         //}
 
-        if ($ex->exists('members', 'member_id') === true) {
+        if ($port->exists('members', 'member_id') === true) {
             $memberID = 'member_id';
         } else {
             $memberID = 'id';
         }
 
-        $this->users($memberID, $ex);
-        $this->roles($ex, $memberID);
-        $this->userMeta($ex);
+        $this->users($memberID, $port);
+        $this->roles($port, $memberID);
+        $this->userMeta($port);
 
-        $this->categories($ex);
-        $this->discussions($ex);
-        $this->tags($ex);
-        $this->comments($ex);
-        $this->attachments($ex);
+        $this->categories($port);
+        $this->discussions($port);
+        $this->tags($port);
+        $this->comments($port);
+        $this->attachments($port);
 
-        if ($ex->exists('message_topic_user_map')) {
-            $this->conversations($ex); // v3
+        if ($port->exists('message_topic_user_map')) {
+            $this->conversations($port); // v3
         } else {
-            $this->conversationsV2($ex); // v2
+            $this->conversationsV2($port); // v2
         }
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function conversationsV2(ExportModel $ex)
+    protected function conversationsV2(Migration $port): void
     {
         $sql = <<<EOT
             create table tmp_to (
@@ -342,7 +342,7 @@ class IpBoard3 extends Source
             set c.groupid = g.groupid;
 EOT;
 
-        $ex->queryN($sql);
+        $port->queryN($sql);
 
         // Conversations.
         $conversation_Map = array(
@@ -358,7 +358,7 @@ EOT;
             join tmp_conversation tc
                 on mt.mt_id = tc.id";
         $this->clearFilters('Conversation', $conversation_Map, $sql);
-        $ex->export('Conversation', $sql, $conversation_Map);
+        $port->export('Conversation', $sql, $conversation_Map);
 
         // Conversation Message.
         $conversationMessage_Map = array(
@@ -380,7 +380,7 @@ EOT;
             join tmp_conversation tc
                 on mt.mt_id = tc.id";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
-        $ex->export('ConversationMessage', $sql, $conversationMessage_Map);
+        $port->export('ConversationMessage', $sql, $conversationMessage_Map);
 
         // User Conversation.
         $userConversation_Map = array(
@@ -393,9 +393,9 @@ EOT;
             from tmp_to t
             join tmp_group g
                 on g.groupid = t.id";
-        $ex->export('UserConversation', $sql, $userConversation_Map);
+        $port->export('UserConversation', $sql, $userConversation_Map);
 
-        $ex->queryN(
+        $port->queryN(
             "drop table tmp_conversation;
             drop table tmp_to;
             drop table tmp_to2;
@@ -404,9 +404,9 @@ EOT;
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function conversations(ExportModel $ex)
+    protected function conversations(Migration $port): void
     {
         // Conversations.
         $conversation_Map = array(
@@ -417,7 +417,7 @@ EOT;
         );
         $sql = "select * from :_message_topics where mt_is_deleted = 0";
         $this->clearFilters('Conversation', $conversation_Map, $sql);
-        $ex->export('Conversation', $sql, $conversation_Map);
+        $port->export('Conversation', $sql, $conversation_Map);
 
         // Conversation Message.
         $conversationMessage_Map = array(
@@ -431,7 +431,7 @@ EOT;
         );
         $sql = "select m.*, 'IPB' as Format from :_message_posts m";
         $this->clearFilters('ConversationMessage', $conversationMessage_Map, $sql);
-        $ex->export('ConversationMessage', $sql, $conversationMessage_Map);
+        $port->export('ConversationMessage', $sql, $conversationMessage_Map);
 
         // User Conversation.
         $userConversation_Map = array(
@@ -442,7 +442,7 @@ EOT;
         $sql = "select t.*,
             !map_user_active as Deleted
             from :_message_topic_user_map t";
-        $ex->export('UserConversation', $sql, $userConversation_Map);
+        $port->export('UserConversation', $sql, $userConversation_Map);
     }
 
     /**
@@ -450,7 +450,7 @@ EOT;
      * @param array $map
      * @param string $sql
      */
-    public function clearFilters($table, &$map, &$sql)
+    public function clearFilters($table, &$map, &$sql): void
     {
         $PK = false;
         $selects = array();
@@ -497,14 +497,14 @@ EOT;
     /**
      * Filter used by $Media_Map to replace value for ThumbPath and ThumbWidth when the file is not an image.
      *
-     * @see    ExportModel::writeTableToFile
-     *
      * @param  string $value Current value
      * @param  string $field Current field
      * @param  array  $row   Contents of the current record.
      * @return string|null Return the supplied value if the record's file is an image. Return null otherwise
+     *@see    Migration::writeTableToFile
+     *
      */
-    public function filterThumbnailData($value, $field, $row)
+    public function filterThumbnailData($value, $field, $row): ?string
     {
         if (strpos(strtolower($row['atype_mimetype']), 'image/') === 0) {
             return $value;
@@ -515,9 +515,9 @@ EOT;
 
     /**
      * @param string $memberID
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function users(string $memberID, ExportModel $ex)
+    protected function users(string $memberID, Migration $port): void
     {
         $user_Map = array(
             $memberID => 'UserID',
@@ -539,7 +539,7 @@ EOT;
         );
 
         $from = '';
-        if ($ex->exists('members', 'members_pass_hash') === true) {
+        if ($port->exists('members', 'members_pass_hash') === true) {
             $select = ",concat(m.members_pass_hash, '$', m.members_pass_salt) as Password";
         } else {
             $select = ",concat(mc.converge_pass_hash, '$', mc.converge_pass_salt) as Password";
@@ -547,7 +547,7 @@ EOT;
             on m.$memberID = mc.converge_id";
         }
 
-        if ($ex->exists('members', 'hide_email') === true) {
+        if ($port->exists('members', 'hide_email') === true) {
             $showEmail = '!hide_email';
         } else {
             $showEmail = '0';
@@ -555,7 +555,7 @@ EOT;
 
         $cdn = ''; // @todo CDN support
 
-        if ($ex->exists('member_extra') === true) {
+        if ($port->exists('member_extra') === true) {
             $sql = "select m.*,
                 m.joined as firstvisit,
                 'ipb' as HashMethod,
@@ -590,23 +590,23 @@ EOT;
                 $from";
         }
         $this->clearFilters('members', $user_Map, $sql);
-        $ex->export('User', $sql, $user_Map);
+        $port->export('User', $sql, $user_Map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      * @param string $memberID
      */
-    protected function roles(ExportModel $ex, string $memberID)
+    protected function roles(Migration $port, string $memberID): void
     {
         $role_Map = array(
             'g_id' => 'RoleID',
             'g_title' => 'Name'
         );
-        $ex->export('Role', "select * from :_groups", $role_Map);
+        $port->export('Role', "select * from :_groups", $role_Map);
 
         // User Role.
-        if ($ex->exists('members', 'member_group_id') === true) {
+        if ($port->exists('members', 'member_group_id') === true) {
             $groupID = 'member_group_id';
         } else {
             $groupID = 'mgroup';
@@ -622,7 +622,7 @@ EOT;
             m.$memberID, m.$groupID
          from :_members m";
 
-        if ($ex->exists('members', 'mgroup_others')) {
+        if ($port->exists('members', 'mgroup_others')) {
             $sql .= "
             union all
             select m.$memberID, g.g_id
@@ -631,14 +631,13 @@ EOT;
                on find_in_set(g.g_id, m.mgroup_others)";
         }
 
-        $ex->export('UserRole', $sql, $userRole_Map);
+        $port->export('UserRole', $sql, $userRole_Map);
     }
 
     /**
-     * @param ExportModel $ex
-     * @return false|string
+     * @param Migration $port
      */
-    protected function userMeta(ExportModel $ex)
+    protected function userMeta(Migration $port): void
     {
         $userMeta_Map = array(
             'UserID' => 'UserID',
@@ -646,7 +645,7 @@ EOT;
             'Value' => 'Value'
         );
 
-        if ($ex->exists('profile_portal', 'signature') === true) {
+        if ($port->exists('profile_portal', 'signature') === true) {
             $sql = "
          select
             pp_member_id as UserID,
@@ -662,7 +661,7 @@ EOT;
          from :_profile_portal
          where length(signature) > 1
                ";
-        } elseif ($ex->exists('member_extra', array('id', 'signature')) === true) {
+        } elseif ($port->exists('member_extra', array('id', 'signature')) === true) {
             $sql = "
          select
             id as UserID,
@@ -681,15 +680,14 @@ EOT;
             $sql = false;
         }
         if ($sql) {
-            $ex->export('UserMeta', $sql, $userMeta_Map);
+            $port->export('UserMeta', $sql, $userMeta_Map);
         }
-        return $sql;
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function categories(ExportModel $ex): void
+    protected function categories(Migration $port): void
     {
         $category_Map = array(
             'id' => 'CategoryID',
@@ -699,17 +697,17 @@ EOT;
             'parent_id' => 'ParentCategoryID',
             'position' => 'Sort'
         );
-        $ex->export('Category', "select * from :_forums", $category_Map);
+        $port->export('Category', "select * from :_forums", $category_Map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function discussions(ExportModel $ex)
+    protected function discussions(Migration $port): void
     {
         $descriptionSQL = 'p.post';
-        $hasTopicDescription = ($ex->exists('topics', array('description')) === true);
-        if ($hasTopicDescription || $ex->exists('posts', array('description')) === true) {
+        $hasTopicDescription = ($port->exists('topics', array('description')) === true);
+        if ($hasTopicDescription || $port->exists('posts', array('description')) === true) {
             $description = ($hasTopicDescription) ? 't.description' : 'p.description';
             $descriptionSQL = "case
                 when $description <> '' and p.post is not null
@@ -745,17 +743,16 @@ EOT;
             on t.topic_firstpost = p.pid
         where t.tid between {from} and {to}";
         $this->clearFilters('topics', $discussion_Map, $sql);
-        $ex->export('Discussion', $sql, $discussion_Map);
+        $port->export('Discussion', $sql, $discussion_Map);
     }
 
     /**
-     * @param ExportModel $ex
-     * @return string
+     * @param Migration $port
      */
-    protected function tags(ExportModel $ex): string
+    protected function tags(Migration $port): void
     {
-        $ex->query("DROP TABLE IF EXISTS `z_tag` ");
-        $ex->query(
+        $port->query("DROP TABLE IF EXISTS `z_tag` ");
+        $port->query(
             "CREATE TABLE `z_tag` (
                 `TagID` int(11) unsigned NOT NULL AUTO_INCREMENT,
                 `FullName` varchar(50) DEFAULT NULL,
@@ -763,7 +760,7 @@ EOT;
                 UNIQUE KEY `FullName` (`FullName`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
         );
-        $ex->query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
+        $port->query("insert into z_tag (FullName) (select distinct t.tag_text as FullName from :_core_tags t)");
 
         $tagDiscussion_Map = array(
             'tag_added' => array('Column' => 'DateInserted', 'Filter' => 'timestampToDate'),
@@ -772,21 +769,20 @@ EOT;
             from :_core_tags t
             left join z_tag zt
                 on t.tag_text = zt.FullName";
-        $ex->export('TagDiscussion', $sql, $tagDiscussion_Map);
+        $port->export('TagDiscussion', $sql, $tagDiscussion_Map);
 
         $tag_Map = array(
             'FullName' => 'FullName',
             'FullNameToName' => array('Column' => 'Name', 'Filter' => 'formatUrl')
         );
         $sql = "select TagID, FullName, FullName as FullNameToName from z_tag zt";
-        $ex->export('Tag', $sql, $tag_Map);
-        return $sql;
+        $port->export('Tag', $sql, $tag_Map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function comments(ExportModel $ex)
+    protected function comments(Migration $port): void
     {
         $comment_Map = array(
             'pid' => 'CommentID',
@@ -805,13 +801,13 @@ EOT;
             where p.pid between {from} and {to}
                 and p.pid <> t.topic_firstpost";
         $this->clearFilters('Comment', $comment_Map, $sql);
-        $ex->export('Comment', $sql, $comment_Map);
+        $port->export('Comment', $sql, $comment_Map);
     }
 
     /**
-     * @param ExportModel $ex
+     * @param Migration $port
      */
-    protected function attachments(ExportModel $ex)
+    protected function attachments(Migration $port)
     {
         $media_Map = array(
             'attach_id' => 'MediaID',
@@ -845,6 +841,6 @@ EOT;
             left join :_attachments_type ty
                on a.attach_ext = ty.atype_extension";
         $this->clearFilters('Media', $media_Map, $sql);
-        $ex->export('Media', $sql, $media_Map);
+        $port->export('Media', $sql, $media_Map);
     }
 }
