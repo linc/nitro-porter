@@ -311,7 +311,13 @@ class Flarum extends Postscript
         }
 
         // Report.
-        $port->reportStorage('build', 'discussion_user.last_read_post_number', microtime(true) - $start, $rows, $memory);
+        $port->reportStorage(
+            'build',
+            'discussion_user.last_read_post_number',
+            microtime(true) - $start,
+            $rows,
+            $memory
+        );
     }
 
     /**
