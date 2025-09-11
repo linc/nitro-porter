@@ -211,7 +211,7 @@ class Migration
      * Export a collection of data, usually a table.
      *
      * @param string $tableName Name of table to export. This must correspond to one of the accepted map tables.
-     * @param string $query The SQL query that will fetch the data for the export.
+     * @param string|Builder $query The SQL query that will fetch the data for the export.
      * @param array $map Specifies mappings, if any, between source and export where keys represent source columns
      *   and values represent Vanilla columns.
      *   If you specify a Vanilla column then it must be in the export structure contained in this class.
@@ -221,7 +221,7 @@ class Migration
      *      Filter (the callable function name to process the data with)
      *      Type (the MySQL type)
      */
-    public function export(string $tableName, string $query, array $map = [], array $filters = []): void
+    public function export(string $tableName, string|Builder $query, array $map = [], array $filters = []): void
     {
         /*if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
@@ -237,11 +237,13 @@ class Migration
             return;
         }
 
-        // Do the export.
-        $data = $this->query($query); // @todo Use new db layer.
-        if (empty($data)) {
-            $this->comment("Error: No data found in $tableName.");
-            return;
+        // Run the export query only if we got raw SQL from a legacy Source.
+        if (is_string($query)) {
+            $data = $this->query($query);
+            if (empty($data)) {
+                $this->comment("Error: No data found in $tableName.");
+                return;
+            }
         }
 
         $structure = $this->porterStructure[$tableName];
@@ -254,7 +256,7 @@ class Migration
         $this->porterStorage->prepare($tableName, $structure);
 
         // Store the data.
-        $info = $this->porterStorage->store($tableName, $map, $structure, $data, $filters, $this);
+        $info = $this->porterStorage->store($tableName, $map, $structure, $data ?? $query, $filters, $this);
 
         // Report.
         $this->reportStorage('export', $tableName, microtime(true) - $start, $info['rows'], $info['memory']);
