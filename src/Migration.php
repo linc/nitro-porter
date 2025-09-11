@@ -739,24 +739,4 @@ class Migration
         $result = $this->query("show index from `$table` WHERE Key_name = '$indexName'");
         return $result->nextResultRow() !== false;
     }
-
-    /**
-     * Determine if a column exists in a table
-     *
-     * @param string $tableName
-     * @param string $columnName
-     * @return bool
-     * @deprecated
-     */
-    public function columnExists(string $tableName, string $columnName): bool
-    {
-        $result = $this->query(
-            " select column_name
-                from information_schema.columns
-                where table_schema = database()
-                    and table_name = '$tableName'
-                    and column_name = '$columnName'"
-        );
-        return $result->nextResultRow() !== false;
-    }
 }
