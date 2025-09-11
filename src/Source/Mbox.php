@@ -191,7 +191,7 @@ class Mbox extends Source
         foreach ($users as $email => $name) {
             $port->query(
                 'insert into :_mbox_user (Name, Email)
-                values ("' . $port->escape($name) . '", "' . $port->escape($email) . '")'
+                values ("' . $port->dbInput()->escape($name) . '", "' . $port->dbInput()->escape($email) . '")'
             );
             $userID = 0;
             $maxRes = $port->query("select max(UserID) as id from :_mbox_user");
@@ -213,7 +213,7 @@ class Mbox extends Source
         while ($row = $result->nextResultRow()) {
             $port->query(
                 'insert into :_mbox_category (Name)
-                values ("' . $port->escape($row["Folder"]) . '")'
+                values ("' . $port->dbInput()->escape($row["Folder"]) . '")'
             );
             $categoryID = 0;
             $maxRes = $port->query("select max(CategoryID) as id from :_mbox_category");
@@ -240,11 +240,11 @@ class Mbox extends Source
             $userID = (isset($users[$email])) ? $users[$email] : 0;
             $port->query(
                 'insert into :_mbox_post (Name, InsertUserID, CategoryID, DateInserted, Body)
-                values ("' . $port->escape($name) . '",
+                values ("' . $port->dbInput()->escape($name) . '",
                ' . $userID . ',
                ' . $categories[$row['Folder']] . ',
                from_unixtime(' . strtotime($row['Date']) . '),
-               "' . $port->escape($this->parseBody($row['Body'])) . '")'
+               "' . $port->dbInput()->escape($this->parseBody($row['Body'])) . '")'
             );
         }
 

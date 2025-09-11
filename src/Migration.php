@@ -573,20 +573,6 @@ class Migration
     }
 
     /**
-     * Escaping string using the db resource
-     *
-     * @param string $string
-     * @return string escaped string
-     * @deprecated Removing query() will also solve this.
-     * @see mbox
-     */
-    public function escape(string $string): string
-    {
-        $dbResource = $this->database->getInstance();
-        return $dbResource->escape($string);
-    }
-
-    /**
      * Determine if an index exists in a table
      *
      * @param string $indexName
