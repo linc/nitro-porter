@@ -89,12 +89,12 @@ class PhpBb2 extends Source
         $this->attachments($port);
     }
 
-    public static function entityDecode($value): string
+    public static function entityDecode(mixed $value): string
     {
         return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
     }
 
-    public function removeBBCodeUIDs($value, $field, $row): array|string
+    public function removeBBCodeUIDs(string $value, string $field, array $row): array|string
     {
         $UID = $row['bbcode_uid'];
 

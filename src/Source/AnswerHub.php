@@ -82,7 +82,13 @@ class AnswerHub extends Source
         return $email;
     }
 
-    public function getFileName($value, $field, $row)
+    /**
+     * @param string $value
+     * @param string $field
+     * @param array $row
+     * @return mixed
+     */
+    public function getFileName(string $value, string $field, array $row): mixed
     {
         $arr = explode('/', $value);
         return end($arr);

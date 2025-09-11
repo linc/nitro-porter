@@ -100,7 +100,7 @@ class Vanilla extends Source
      *
      * @param Migration $port
      */
-    public function badges(Migration $port)
+    public function badges(Migration $port): void
     {
         if ($port->hasInputSchema('Badge')) {
             // Vanilla Cloud
@@ -133,7 +133,7 @@ class Vanilla extends Source
      *
      * @param Migration $port
      */
-    public function ranks(Migration $port)
+    public function ranks(Migration $port): void
     {
         if ($port->hasInputSchema('Rank')) {
             // Vanilla Cloud
@@ -154,7 +154,7 @@ class Vanilla extends Source
      *
      * @param Migration $port
      */
-    public function reactions(Migration $port)
+    public function reactions(Migration $port): void
     {
         if ($port->hasInputSchema('ReactionType')) {
             // Vanilla Cloud & later open source
@@ -188,7 +188,7 @@ class Vanilla extends Source
      *
      * @param Migration $port
      */
-    public function polls(Migration $port)
+    public function polls(Migration $port): void
     {
         if ($port->hasInputSchema('Poll')) {
             // SaaS

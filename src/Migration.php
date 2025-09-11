@@ -555,7 +555,7 @@ class Migration
      * @param string $table
      * @return bool
      */
-    public function indexExists($indexName, $table)
+    public function indexExists($indexName, $table): bool
     {
         $result = $this->query("show index from `$table` WHERE Key_name = '$indexName'");
         return $result->nextResultRow() !== false;

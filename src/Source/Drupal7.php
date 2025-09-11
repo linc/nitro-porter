@@ -68,7 +68,13 @@ class Drupal7 extends Source
         $this->attachments($port);
     }
 
-    public function convertBase64Attachments($value, $field, $row)
+    /**
+     * @param string $value
+     * @param string $field
+     * @param array $row
+     * @return mixed
+     */
+    public function convertBase64Attachments($value, $field, $row): mixed
     {
         $this->imageCount = 1;
         $postId = $row['CommentID'] ?? $row['DiscussionID'];

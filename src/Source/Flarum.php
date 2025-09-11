@@ -251,7 +251,7 @@ class Flarum extends Source
     /**
      * @param Migration $port
      */
-    protected function privateMessages(Migration $port)
+    protected function privateMessages(Migration $port): void
     {
         // Messages
         $map = [

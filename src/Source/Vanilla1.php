@@ -72,7 +72,6 @@ class Vanilla1 extends Source
      */
     public function run(Migration $port): void
     {
-        $this->port = $port; // @todo
         $this->users($port);
         $this->roles($port);
         $this->categories($port);

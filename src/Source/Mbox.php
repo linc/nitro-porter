@@ -63,7 +63,7 @@ class Mbox extends Source
     /**
      * Grab the email from the User field.
      */
-    public function parseEmail($email): string
+    public function parseEmail(string $email): string
     {
         $emailBits = explode('<', $email);
         if (!isset($emailBits[1])) {
@@ -78,7 +78,7 @@ class Mbox extends Source
     /**
      * Body: strip headers, signatures, fwds.
      */
-    public function parseBody($body): string
+    public function parseBody(string $body): string
     {
         $body = preg_replace(
             '#Subject:\s*(.*)\s*From:\s*(.*)\s*Date:\s*(.*)\s*To:\s*(.*)\s*(CC:\s*(.*)\s*)?#',

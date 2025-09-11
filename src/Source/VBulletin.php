@@ -96,11 +96,11 @@ class VBulletin extends Source
     ];
 
     /* @var string SQL fragment to build new path to attachments. */
-    public $attachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/',
+    public string $attachSelect = "concat('/vbulletin/', left(f.filehash, 2), '/',
         f.filehash, '_', a.attachmentid,'.', f.extension) as Path";
 
     /* @var string SQL fragment to build new path to user photo. */
-    public $avatarSelect = "
+    public string $avatarSelect = "
         case
             when a.userid is not null then concat('customavatars/',
                 a.userid % 100,'/avatar_', a.userid, right(a.filename, instr(reverse(a.filename), '.')))
@@ -273,7 +273,7 @@ class VBulletin extends Source
      * @param bool $attachments   Whether to move attachments.
      * @param bool $customAvatars Whether to move avatars.
      */
-    public function doFileExport(Migration $port, $attachments = true, $customAvatars = true)
+    public function doFileExport(Migration $port, $attachments = true, $customAvatars = true): void
     {
         if ($attachments) {
             $identity = 'f.attachmentid';
@@ -415,7 +415,7 @@ class VBulletin extends Source
      *
      * In vBulletin 4.x, the filedata table was introduced.
      */
-    public function attachments(Migration $port, $minDiscussionID = false): void
+    public function attachments(Migration $port, false|int $minDiscussionID = false): void
     {
         $instance = $this;
 
@@ -590,7 +590,7 @@ class VBulletin extends Source
         }*/
     }
 
-    protected function polls(Migration $port)
+    protected function polls(Migration $port): void
     {
         $poll_Map = array(
             'pollid' => 'PollID',
@@ -691,9 +691,9 @@ class VBulletin extends Source
      * @param Migration $port
      * @return array
      */
-    public function ranks(Migration $port): array
+    public function ranks(Migration $port): iterable
     {
-        $hasRanks = $port->dbInput()->table('ranks')->select()->get();
+        $hasRanks = $port->dbInput()->table('ranks')->select()->get()->count();
         if ($hasRanks) {
             $ranks = $port->dbInput()->table('ranks')
                 ->select(['minposts'])

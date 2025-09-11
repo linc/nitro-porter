@@ -89,7 +89,6 @@ class UserVoice extends Source
 
             $photoPath = $path . '/pavatar' . $row['UserID'] . '.jpg';
             file_put_contents($photoPath, hex2bin($row['Content']));
-            $port->status('.');
 
             if ($thumbnail === true) {
                 $thumbnail = 50;
@@ -100,7 +99,7 @@ class UserVoice extends Source
             generateThumbnail($photoPath, $thumbPath, $thumbnail, $thumbnail);
             $count++;
         }
-        $port->status("$count Hex Encoded.\n");
+        //$port->status("$count Hex Encoded.\n");
         $port->comment("$count Hex Encoded.", false);
     }
 
@@ -132,7 +131,7 @@ class UserVoice extends Source
             file_put_contents($path . '/' . $row['FileName'], hex2bin($row['Content']));
             $count++;
         }
-        $port->status("$count Hex Encoded.\n");
+        //$port->status("$count Hex Encoded.\n");
         $port->comment("$count Hex Encoded.", false);
     }
 

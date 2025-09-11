@@ -70,7 +70,7 @@ class Smf1 extends Source
         $this->conversations($port);
     }
 
-    public function decodeNumericEntity($text): array|false|string|null
+    public function decodeNumericEntity(string $text): array|false|string|null
     {
         if (function_exists('mb_decode_numericentity')) {
             $convmap = array(0x0, 0x2FFFF, 0, 0xFFFF);

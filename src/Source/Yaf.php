@@ -56,7 +56,7 @@ class Yaf extends Source
         $this->conversations($port);
     }
 
-    public function cleanDate($value): mixed
+    public function cleanDate(?string $value): ?string
     {
         if (!$value) {
             return null;
@@ -68,7 +68,7 @@ class Yaf extends Source
         return $value;
     }
 
-    public function convertPassword($hash, $columnName, &$row): string
+    public function convertPassword(string $hash, string $columnName, array &$row): string
     {
         $salt = $row['PasswordSalt'];
         $hash = $row['Password2'];

@@ -220,7 +220,7 @@ class VBulletin5 extends VBulletin
         $count = 0;
 
         $sql = "show tables like ':_poll';";
-        $result = $port->query($sql, true);
+        $result = $port->query($sql);
 
         if ($result->nextResultRow()) {
             $sql = "select count(*) AS Count
@@ -705,7 +705,7 @@ class VBulletin5 extends VBulletin
      * @param Migration $port
      * @param mixed $categoryIDs
      */
-    public function attachmentsV5(Migration $port, $categoryIDs)
+    public function attachmentsV5(Migration $port, $categoryIDs): void
     {
         $instance = $this;
         $media_Map = array(

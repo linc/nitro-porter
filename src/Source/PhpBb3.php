@@ -160,7 +160,7 @@ class PhpBb3 extends Source
         }
     }
 
-    public static function entityDecode($value): string
+    public static function entityDecode(string $value): string
     {
         return html_entity_decode($value, ENT_QUOTES, 'UTF-8');
     }

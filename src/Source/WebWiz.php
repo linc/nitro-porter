@@ -50,7 +50,7 @@ class WebWiz extends Source
     /**
      * @param Migration $port
      */
-    public function conversations(Migration $port)
+    public function conversations(Migration $port): void
     {
         $this->exportConversationTemps($port);
 
@@ -111,7 +111,7 @@ class WebWiz extends Source
     /**
      * @param Migration $port
      */
-    protected function exportConversationTemps(Migration $port)
+    protected function exportConversationTemps(Migration $port): void
     {
         $sql = "
             drop table if exists z_pmto;

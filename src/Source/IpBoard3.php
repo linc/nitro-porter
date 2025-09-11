@@ -54,7 +54,7 @@ class IpBoard3 extends Source
     /**
      * Export avatars into vanilla-compatibles names
      */
-    public function doAvatars(Migration $port)
+    public function doAvatars(Migration $port): void
     {
         // Source table
         $sourceTable = 'profile_portal'; //$this->param('users-source', 'profile_portal');
@@ -806,7 +806,7 @@ EOT;
     /**
      * @param Migration $port
      */
-    protected function attachments(Migration $port)
+    protected function attachments(Migration $port): void
     {
         $media_Map = array(
             'attach_id' => 'MediaID',
