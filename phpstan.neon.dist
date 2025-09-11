@@ -7,6 +7,5 @@ parameters:
         - tests
     excludePaths:
         - src/Command
-        - src/Database
     bootstrapFiles:
         - bootstrap.php

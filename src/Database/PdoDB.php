@@ -5,21 +5,15 @@ namespace Porter\Database;
 use PDO;
 
 /**
- * Class MysqlDB
- *
  * @deprecated
  */
 class PdoDB implements DbResource
 {
-    /**
-     * @var ?PDO
-     */
+    /** @var ?PDO */
     private ?PDO $link = null;
 
-    /**
-     * @var \PDOStatement|false|null query result
-     */
-    private $result = null;
+    /** @var \PDOStatement|false|null query result */
+    private \PDOStatement|null|false $result = null;
 
     /**
      * {@inheritdoc}
@@ -33,7 +27,7 @@ class PdoDB implements DbResource
     /**
      * {@inheritdoc}
      */
-    public function query($sql)
+    public function query(string $sql): bool|ResultSet
     {
         if (isset($this->result)) {
             $this->result->closeCursor();
@@ -50,21 +44,17 @@ class PdoDB implements DbResource
     /**
      * {@inheritdoc}
      */
-    public function error($sql)
+    public function error(string $sql): void
     {
-        echo '<pre>',
-        htmlspecialchars($sql);
         print_r($this->link->errorInfo());
-        echo '</pre>';
     }
 
     /**
      * {@inheritdoc}
      */
-    public function nextRow($assoc)
+    public function nextRow(bool $assoc): bool|array
     {
         $row = $this->result->fetch($assoc ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM);
-
         if (isset($row)) {
             return $row;
         }

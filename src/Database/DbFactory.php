@@ -5,19 +5,14 @@ namespace Porter\Database;
 use PDO;
 
 /**
- * Creating desired db instances on the go
  * @deprecated
  */
 class DbFactory
 {
-    /**
-     * @var PDO
-     */
+    /** @var PDO */
     private PDO $pdo;
 
     /**
-     * DbFactory constructor.
-     *
      * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
@@ -26,11 +21,9 @@ class DbFactory
     }
 
     /**
-     * Returns a db instance
-     *
-     * @return object db instance
+     * @return PdoDB
      */
-    public function getInstance()
+    public function getInstance(): PdoDB
     {
         $className = '\Porter\Database\\PdoDB';
         return new $className($this->pdo);
