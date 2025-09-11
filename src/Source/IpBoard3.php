@@ -740,8 +740,7 @@ EOT;
             p.edit_time
         from :_topics t
         left join :_posts p
-            on t.topic_firstpost = p.pid
-        where t.tid between {from} and {to}";
+            on t.topic_firstpost = p.pid";
         $this->clearFilters('topics', $discussion_Map, $sql);
         $port->export('Discussion', $sql, $discussion_Map);
     }
