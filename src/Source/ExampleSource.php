@@ -1,8 +1,9 @@
 <?php
 
 /**
+ * @author YOUR NAME email_optional
  *
- * @author YOUR NAME
+ * @see https://api.laravel.com/docs/11.x/Illuminate/Database.html
  */
 
 namespace Porter\Source;
@@ -10,11 +11,11 @@ namespace Porter\Source;
 use Porter\Source;
 use Porter\Migration;
 
-class Example extends Source
+class ExampleSource extends Source // You MUST extend Source for this to work.
 {
     public const SUPPORTED = [
-        'name' => '_Example',
-        'prefix' => '',
+        'name' => '_Example', // The package name users will see.
+        'prefix' => '', // The default table prefix this software uses, if you know it.
         'charset_table' => 'comments',  // Usually put the comments table name here. Used to derive charset.
         'options' => [
         ],
@@ -32,7 +33,7 @@ class Example extends Source
             'Attachments' => 0,
             'Bookmarks' => 0,
             'Badges' => 0,
-            'UserNotes' => 0,
+            'UserNotes' => 0, // You can just deleted all the '0' rows if you're never going to add them.
             'Ranks' => 0,
             'Groups' => 0,
             'Tags' => 0,
@@ -42,46 +43,25 @@ class Example extends Source
     ];
 
     /**
-     * You can use this to require certain tables and columns be present.
-     *
-     * This can be useful for verifying data integrity. Don't specify more columns
-     * than your porter actually requires to avoid forwards-compatibility issues.
-     *
-     * @var array Required tables => columns
-     */
-    public array $sourceTables = [
-        'forums' => [], // This just requires the 'forum' table without caring about columns.
-        'posts' => [],
-        'topics' => [],
-        'users' => ['ID', 'user_login', 'user_pass', 'user_email'], // Require specific cols on 'users'
-    ];
-
-    /**
      * Main export process.
      *
      * @param Migration $port
      */
-    public function run(Migration $port)
+    public function run(Migration $port): void
     {
         // It's usually a good idea to do the porting in the approximate order laid out here.
+        // Users
         $this->users($port); // Always pass $port to these methods.
         $this->roles($port);
-
         $this->userMeta($port);
+
+        // Content
         $this->categories($port);
         $this->discussions($port);
         $this->comments($port);
 
-        // UserDiscussion.
-        // This is the table for assigning bookmarks/subscribed threads.
-
-        // Media.
-        // Attachment data goes here. Vanilla attachments are files under the /uploads folder.
-        // This is usually the trickiest step because you need to translate file paths.
-        // If you need to export blobs from the database, see the vBulletin porter.
-
-        // Conversations.
-        // Private messages often involve the most data manipulation.
+        // Everything else
+        // $this->attachments($port); // Doesn't exist yet!
     }
 
     /**
@@ -89,24 +69,28 @@ class Example extends Source
      */
     protected function users(Migration $port): void
     {
-        // Map as much as possible using the $x_Map array for clarity.
+        // Map as much as possible using the $xMap array for clarity.
         // Key is always the source column name.
-        // Value is either the destination column or an array of meta data, usually Column & Filter.
-        // If it's a meta array, 'Column' is the destination column name and 'Filter' is a function name to run it thru.
+        // Value is either the destination column.
+        $map = [
+            'Author_ID' => 'UserID',
+            'Username' => 'Name',
+        ];
+        // You can filter values with a function: $sourceColumnName => $filterFunctionName
         // Here, 'HTMLDecoder' is a function in `Functions/filter.php`. Check there for available filters.
         // Assume no filter is needed and only use one if you encounter issues.
-        $user_Map = [
-            'Author_ID' => 'UserID',
-            'Username' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+        $filters = [
+            'Name' => 'HTMLDecoder',
         ];
-        // This is the query that the x_Map array above will be mapped against.
+        // This is the query that the $map array above will be mapped against.
         // Therefore, our select statement must cover all the "source" columns.
         // It's frequently necessary to add joins, where clauses, and more to get the data we want.
-        // The :_ before the table name is the placeholder for the prefix designated. It gets swapped on the fly.
+        // @see https://api.laravel.com/docs/11.x/Illuminate/Database.html
         $port->export(
             'User',
-            "select u.* from :_User u",
-            $user_Map
+            $port->dbInput()->table('Users')->select(), // default select() = *
+            $map,
+            $filters
         );
     }
 
@@ -118,26 +102,27 @@ class Example extends Source
         // Role.
         // The Vanilla roles table will be wiped by any import. If your current platform doesn't have roles,
         // you can hard code new ones into the select statement. See Vanilla's defaults for a good example.
-        $role_Map = array(
+        $map = array(
             'Group_ID' => 'RoleID',
             'Name' => 'Name', // We let these arrays end with a comma to prevent typos later as we add.
         );
         $port->export(
             'Role',
-            "select * from :_tblGroup",
-            $role_Map
-        );
+            // @see https://api.laravel.com/docs/9.x/Illuminate/Database.html
+            $port->dbInput()->table('tblGroup')->select(),
+            $map
+        ); // We can omit $filters when there are none.
 
         // User Role.
-        // Really simple matchup.
-        $userRole_Map = [
+        // There's usually a secondary table for associating roles to users.
+        $map = [
             'Author_ID' => 'UserID',
             'Group_ID' => 'RoleID',
         ];
         $port->export(
             'UserRole',
-            "select u.* from :_tblAuthor u",
-            $userRole_Map
+            $port->dbInput()->table('tblAuthor')->select(),
+            $map
         );
     }
 
@@ -151,15 +136,18 @@ class Example extends Source
         // The Profile Extender addon uses the namespace "Profile.[FieldName]"
         // You can add the appropriately-named fields after the migration.
         // Profiles will auto-populate with the migrated data.
+
+        // When the query is longer, it's clearer to set it up THEN pass it to export().
+        $query = $port->dbInput()->table('tblAuthor')
+            ->selectSub('Author_ID', 'UserID') // Use selectSub() to alias within the query.
+            ->selectSub('Signature', 'Value')
+            ->selectRaw("'Plugin.Signatures.Sig' as Name") // Use selectRaw() for more elaborate SQL.
+            ->whereRaw("Signature <> ''");
+
         $port->export(
             'UserMeta',
-            "select
-                    Author_ID as UserID,
-                    'Plugin.Signatures.Sig' as `Name`,
-                    Signature as `Value`
-                from :_tblAuthor
-                where Signature <> ''"
-        );
+            $query
+        ); // No $map needed in this case.
     }
 
     /**
@@ -168,17 +156,14 @@ class Example extends Source
     protected function categories(Migration $port): void
     {
         // Be careful to not import hundreds of categories. Try translating huge schemas to Tags instead.
-        // Numeric category slugs aren't allowed in Vanilla, so be careful to sidestep those.
-        // Don't worry about rebuilding the TreeLeft & TreeRight properties. Vanilla can fix this afterward
-        // if you just get the Sort and ParentIDs correct.
-        $category_Map = [
+        $map = [
             'Forum_ID' => 'CategoryID',
             'Forum_name' => 'Name',
         ];
         $port->export(
             'Category',
-            "select * from :_tblCategory c",
-            $category_Map
+            $port->dbInput()->table('tblCategory')->select(),
+            $map
         );
     }
 
@@ -188,12 +173,15 @@ class Example extends Source
     protected function discussions(Migration $port): void
     {
         // A frequent issue is for the OPs content to be on the comment/post table, so you may need to join it.
-        $discussion_Map = array(
+        $map = array(
             'Topic_ID' => 'DiscussionID',
             'Forum_ID' => 'CategoryID',
             'Author_ID' => 'InsertUserID',
-            'Subject' => array('Column' => 'Name', 'Filter' => 'HTMLDecoder'),
+            'Subject' => 'Name'
         );
+        $filters = [
+            'Subject' => 'HTMLDecoder', // Use the INPUT column name, not the Porter name.
+        ];
         // It's easier to convert between Unix time and MySQL datestamps during the db query.
         $port->export(
             'Discussion',
@@ -201,7 +189,8 @@ class Example extends Source
                 from :_tblTopic t
                 join :_tblThread th
                     on t.Start_Thread_ID = th.Thread_ID",
-            $discussion_Map
+            $map,
+            $filters
         );
     }
 
@@ -212,19 +201,19 @@ class Example extends Source
     {
         // This is where big migrations are going to get bogged down.
         // Be sure you have indexes created for any columns you are joining on.
-        $comment_Map = [
+        $map = [
             'Thread_ID' => 'CommentID',
             'Topic_ID' => 'DiscussionID',
             'Author_ID' => 'InsertUserID',
             'IP_addr' => 'InsertIPAddress',
-            'Message' => ['Column' => 'Body'],
+            'Message' => 'Body',
             'Format' => 'Format',
-            'Message_date' => ['Column' => 'DateInserted']
+            'Message_date' => 'DateInserted',
         ];
         $port->export(
             'Comment',
-            "select th.* from :_tblThread th",
-            $comment_Map
+            $port->dbInput()->table('tblThread')->select(),
+            $map
         );
     }
 }
