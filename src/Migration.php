@@ -524,6 +524,7 @@ class Migration
      * @param string $query The sql to execute.
      * @return ResultSet|false The query cursor.
      * @deprecated
+     * @see self::dbInput()::unprepared()
      */
     public function query(string $query): ResultSet|false
     {
@@ -538,6 +539,7 @@ class Migration
      *
      * @param string|array $sqlList An array of single query strings or a string of queries terminated with semi-colons.
      * @deprecated
+     * @see self::dbInput()::unprepared()
      */
     public function queryN(string|array $sqlList): void
     {
