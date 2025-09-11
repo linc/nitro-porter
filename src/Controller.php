@@ -106,7 +106,7 @@ class Controller
 
         // Setup migration.
         // @todo Delete $inputDB after Sources are all moved to $inputStorage.
-        $inputDB = new \Porter\Database\DbFactory((new ConnectionManager($inputName))->getAllInfo(), 'pdo');
+        $inputDB = new \Porter\Database\DbFactory((new ConnectionManager($inputName))->connection()->getPDO());
         $inputStorage = new Storage\Database(new ConnectionManager($inputName, $sourcePrefix));
         if (empty($target)) { // @todo storageFactory
             $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.

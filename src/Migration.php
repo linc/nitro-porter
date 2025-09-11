@@ -8,6 +8,7 @@ namespace Porter;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
+use PDOStatement;
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
 use Porter\Storage\Database;
@@ -464,22 +465,18 @@ class Migration
     }
 
     /**
-     * Execute a SQL query on the current connection.
-     *
-     * Wrapper for _Query().
+     * Execute query on inputDB() connection for backwards compatibility with Source packages.
      *
      * @param string $query The sql to execute.
      * @return ResultSet|false The query cursor.
-     * @deprecated
+     * @deprecated Need to remove ResultSet() from the Source packages.
      * @see self::dbInput()::unprepared()
      */
     public function query(string $query): ResultSet|false
     {
         $query = str_replace(':_', $this->srcPrefix, $query); // replace prefix.
         $query = rtrim($query, ';') . ';'; // guarantee semicolon.
-
-        //$dbResource = $this->database->getInstance();
-        return $this->dbInput()->getPdo()->query($query); //$dbResource->query($query);
+        return $this->database->getInstance()->query($query);
     }
 
     /**
@@ -519,56 +516,33 @@ class Migration
     }
 
     /**
-     * Checks all required source tables are present.
+     * Throws error if required source tables & columns are not present.
      *
-     * @param array $requiredTables
+     * @param array $requiredSchema Table => Columns
      * @deprecated
+     * @see hasInputSchema() for a better way to detect this in Source packages.
      */
-    public function verifySource(array $requiredTables): void
+    public function verifySource(array $requiredSchema): void
     {
-        $missingTables = false;
-        $countMissingTables = 0;
-        $missingColumns = array();
+        $missingTables = [];
+        $missingColumns = [];
 
-        foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->query('describe `:_' . $reqTable . '`');
-            if ($tableDescriptions === false) { // Table doesn't exist
-                $countMissingTables++;
-                if ($missingTables !== false) {
-                    $missingTables .= ', ' . $reqTable;
-                } else {
-                    $missingTables = $reqTable;
-                }
+        foreach ($requiredSchema as $table => $columns) {
+            if (!$this->hasInputSchema($table)) { // Table is missing.
+                $missingTables[] = $table;
             } else {
-                // Build array of columns in this table
-                $presentColumns = array();
-                while (($TD = $tableDescriptions->nextResultRow()) !== false) {
-                    $presentColumns[] = $TD['Field'];
-                }
-                // Compare with required columns
-                foreach ($reqColumns as $reqCol) {
-                    if (!in_array($reqCol, $presentColumns)) {
-                        $missingColumns[$reqTable][] = $reqCol;
+                foreach ($columns as $col) {
+                    if (!$this->hasInputSchema($table, $col)) { // Column is missing.
+                        $missingColumns[] = $table . '.' . $col;
                     }
                 }
             }
         }
-        // Return results
-        if ($missingTables === false) {
-            if (count($missingColumns) > 0) {
-                $error = [];
-                // Build a string of missing columns.
-                foreach ($missingColumns as $table => $columns) {
-                    $error[] = "The $table table is missing the following column(s): " . implode(', ', $columns);
-                }
-                trigger_error(implode("<br />\n", $error));
-            }
-        } elseif ($countMissingTables == count($requiredTables)) {
-            $error = 'The required tables are not present in the database.
-                Make sure you entered the correct database name and prefix and try again.';
-            trigger_error($error);
-        } else {
-            trigger_error('Missing required database tables: ' . $missingTables);
+        if (!empty($missingTables)) {
+            trigger_error('Missing required tables: ' . implode(', ', $missingTables));
+        }
+        if (!empty($missingColumns)) {
+            trigger_error("Missing required columns: " . implode(', ', $missingColumns));
         }
     }
 

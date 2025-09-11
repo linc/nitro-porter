@@ -2,6 +2,8 @@
 
 namespace Porter\Database;
 
+use PDO;
+
 /**
  * Class MysqlDB
  *
@@ -10,9 +12,9 @@ namespace Porter\Database;
 class PdoDB implements DbResource
 {
     /**
-     * @var \PDO|null resource
+     * @var ?PDO
      */
-    private $link = null;
+    private ?PDO $link = null;
 
     /**
      * @var \PDOStatement|false|null query result
@@ -22,20 +24,10 @@ class PdoDB implements DbResource
     /**
      * {@inheritdoc}
      */
-    public function __construct(array $args)
+    public function __construct(PDO $pdo)
     {
-        if (!defined('PDO::ATTR_DRIVER_NAME')) {
-            die('PDO extension not found. See config.php and make sure the necessary extensions are installed.');
-        }
-        try {
-            $this->link = new \PDO('mysql:host=' . $args['host'] . ';dbname='
-                 . $args['name'] . ';charset=utf8mb4', $args['user'], $args['pass']);
-            $this->link->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
-        } catch (\Throwable $t) {
-            // Executed only in PHP 7, will not match in PHP 5
-            echo $t . PHP_EOL;
-            die();
-        }
+        // Mind if I cut in? Bridge to removing this entirely.
+        $this->link = $pdo;
     }
 
     /**
@@ -79,22 +71,5 @@ class PdoDB implements DbResource
 
         $this->result->closeCursor();
         return false;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function escape($sql)
-    {
-        return $this->link->quote($sql);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function close()
-    {
-        $this->result->closeCursor();
-        $this->link = null;
     }
 }

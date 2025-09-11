@@ -2,6 +2,8 @@
 
 namespace Porter\Database;
 
+use PDO;
+
 /**
  * @deprecated
  */
@@ -10,9 +12,9 @@ interface DbResource
     /**
      * MysqlDB constructor.
      *
-     * @param array $args
+     * @param PDO $pdo
      */
-    public function __construct(array $args);
+    public function __construct(PDO $pdo);
 
     /**
      * Query method.
@@ -36,17 +38,4 @@ interface DbResource
      * @return array|bool returns the next row if possible false if we've reached the end of the result set.
      */
     public function nextRow($assoc);
-
-    /**
-     * Escape string
-     *
-     * @param string $sql
-     * @return string
-     */
-    public function escape($sql);
-
-    /**
-     * Free the result and close the db resource
-     */
-    public function close();
 }
