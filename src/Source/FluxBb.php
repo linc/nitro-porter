@@ -275,7 +275,7 @@ class FluxBb extends Source
      */
     protected function tags(Migration $port): void
     {
-        if ($port->exists('tags')) {
+        if ($port->hasInputSchema('tags')) {
             $port->export(
                 'Tag',
                 "select id as TagID, tag as Name from :_tags"
@@ -292,7 +292,7 @@ class FluxBb extends Source
      */
     protected function attachments(Migration $port): void
     {
-        if ($port->exists('attach_files')) {
+        if ($port->hasInputSchema('attach_files')) {
             $media_Map = array(
                 'owner_id' => 'InsertUserID',
                 'thumb_path' => array('Column' => 'ThumbPath', 'Filter' => array($this, 'filterThumbnailData')),

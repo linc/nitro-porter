@@ -227,12 +227,12 @@ class PhpBb3 extends Source
     protected function users(Migration $port): void
     {
         // Grab the avatar salt.
-        $px = '';
-        $data = $port->get("select config_value from :_config where config_name = 'avatar_salt'");
-        if (count($data) > 0) {
-            $data = array_shift($data); // first row
-            $px = array_shift($data); // first column
-        }
+        //$data = $port->get("select config_value from :_config where config_name = 'avatar_salt'");
+        $data = $port->dbInput()->table('config')
+            ->select(['config_value'])
+            ->where('config_name', '=', 'avatar_salt')
+            ->first();
+        $px = $data->config_value ?? '';
 
         $cdn = ''; //$this->param('cdn', '');
 

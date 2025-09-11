@@ -62,7 +62,7 @@ class JForum extends Source
         $this->userMeta($port);
 
         $this->categories($port);
-        if ($port->exists(':_posts_text')) {
+        if ($port->hasInputSchema(':_posts_text')) {
             $postTextColumm = 't.post_text as Body';
             $postTextSource = 'left join :_posts_text t on p.post_id = t.post_id';
         } else {

@@ -75,7 +75,7 @@ class Mvc extends Source
      */
     protected function users(Migration $port): void
     {
-        if (!$port->exists('MembershipUser', 'UserID')) {
+        if (!$port->hasInputSchema('MembershipUser', 'UserID')) {
             $port->query("alter table :_MembershipUser add column UserID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_users_id', ':_MembershipUser')) {
@@ -126,7 +126,7 @@ class Mvc extends Source
      */
     protected function roles(Migration $port): void
     {
-        if (!$port->exists('MembershipRole', 'RoleID')) {
+        if (!$port->hasInputSchema('MembershipRole', 'RoleID')) {
             $port->query("alter table :_MembershipRole add column RoleID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_role_id', ':_MembershipRole')) {
@@ -153,7 +153,7 @@ class Mvc extends Source
      */
     protected function badges(Migration $port): void
     {
-        if (!$port->exists('Badge', 'BadgeID')) {
+        if (!$port->hasInputSchema('Badge', 'BadgeID')) {
             $port->query("alter table :_Badge add column BadgeID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_badge_id', ':_Badge')) {
@@ -188,7 +188,7 @@ class Mvc extends Source
      */
     protected function categories(Migration $port): void
     {
-        if (!$port->exists('Category', 'CategoryID')) {
+        if (!$port->hasInputSchema('Category', 'CategoryID')) {
             $port->query("alter table :_Category add column CategoryID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_category_id', ':_Category')) {
@@ -223,7 +223,7 @@ class Mvc extends Source
      */
     protected function discussions(Migration $port): void
     {
-        if (!$port->exists('Topic', 'TopicID')) {
+        if (!$port->hasInputSchema('Topic', 'TopicID')) {
             $port->query("alter table :_Topic add column TopicID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_topic_id', ':_Topic')) {
@@ -256,7 +256,7 @@ class Mvc extends Source
      */
     protected function comments(Migration $port): void
     {
-        if (!$port->exists('Post', 'PostID')) {
+        if (!$port->hasInputSchema('Post', 'PostID')) {
             $port->query("alter table :_Post add column PostID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_post_id', ':_Post')) {
@@ -289,7 +289,7 @@ class Mvc extends Source
      */
     protected function tags(Migration $port): void
     {
-        if (!$port->exists('TopicTag', 'TagID')) {
+        if (!$port->hasInputSchema('TopicTag', 'TagID')) {
             $port->query("alter table :_TopicTag add column TagID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_tag_id', ':_TopicTag')) {
@@ -311,7 +311,7 @@ class Mvc extends Source
      */
     protected function attachments(Migration $port): void
     {
-        if (!$port->exists('UploadedFile', 'MediaID')) {
+        if (!$port->hasInputSchema('UploadedFile', 'MediaID')) {
             $port->query("alter table :_UploadedFile add column MediaID int(11) primary key auto_increment");
         }
         if (!$port->indexExists('mvc_file_id', ':_UploadedFile')) {

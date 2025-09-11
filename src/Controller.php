@@ -28,11 +28,6 @@ class Controller
         $port->begin();
         $source->run($port);
         $port->end();
-
-        if (\Porter\Config::getInstance()->debugEnabled() || $port->captureOnly) {
-            $queries = implode("\n\n", $port->queryRecord);
-            //$port->comment($queries, true);
-        }
     }
 
     /**

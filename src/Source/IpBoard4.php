@@ -163,8 +163,8 @@ class IpBoard4 extends Source
     protected function discussions(Migration $port): void
     {
         $descriptionSQL = 'p.post';
-        $hasTopicDescription = ($port->exists('forums_topics', array('description')) === true);
-        if ($hasTopicDescription || $port->exists('forums_posts', array('description')) === true) {
+        $hasTopicDescription = ($port->hasInputSchema('forums_topics', array('description')) === true);
+        if ($hasTopicDescription || $port->hasInputSchema('forums_posts', array('description')) === true) {
             $description = ($hasTopicDescription) ? 't.description' : 'p.description';
             $descriptionSQL = "case
                 when $description <> '' and p.post is not null

@@ -185,7 +185,7 @@ class IpBoard3 extends Source
             //$this->doAvatars($ex);
         //}
 
-        if ($port->exists('members', 'member_id') === true) {
+        if ($port->hasInputSchema('members', 'member_id') === true) {
             $memberID = 'member_id';
         } else {
             $memberID = 'id';
@@ -201,7 +201,7 @@ class IpBoard3 extends Source
         $this->comments($port);
         $this->attachments($port);
 
-        if ($port->exists('message_topic_user_map')) {
+        if ($port->hasInputSchema('message_topic_user_map')) {
             $this->conversations($port); // v3
         } else {
             $this->conversationsV2($port); // v2
@@ -342,7 +342,7 @@ class IpBoard3 extends Source
             set c.groupid = g.groupid;
 EOT;
 
-        $port->queryN($sql);
+        $port->dbInput()->unprepared($sql);
 
         // Conversations.
         $conversation_Map = array(
@@ -395,7 +395,7 @@ EOT;
                 on g.groupid = t.id";
         $port->export('UserConversation', $sql, $userConversation_Map);
 
-        $port->queryN(
+        $port->dbInput()->unprepared(
             "drop table tmp_conversation;
             drop table tmp_to;
             drop table tmp_to2;
@@ -539,7 +539,7 @@ EOT;
         );
 
         $from = '';
-        if ($port->exists('members', 'members_pass_hash') === true) {
+        if ($port->hasInputSchema('members', 'members_pass_hash') === true) {
             $select = ",concat(m.members_pass_hash, '$', m.members_pass_salt) as Password";
         } else {
             $select = ",concat(mc.converge_pass_hash, '$', mc.converge_pass_salt) as Password";
@@ -547,7 +547,7 @@ EOT;
             on m.$memberID = mc.converge_id";
         }
 
-        if ($port->exists('members', 'hide_email') === true) {
+        if ($port->hasInputSchema('members', 'hide_email') === true) {
             $showEmail = '!hide_email';
         } else {
             $showEmail = '0';
@@ -555,7 +555,7 @@ EOT;
 
         $cdn = ''; // @todo CDN support
 
-        if ($port->exists('member_extra') === true) {
+        if ($port->hasInputSchema('member_extra') === true) {
             $sql = "select m.*,
                 m.joined as firstvisit,
                 'ipb' as HashMethod,
@@ -606,7 +606,7 @@ EOT;
         $port->export('Role', "select * from :_groups", $role_Map);
 
         // User Role.
-        if ($port->exists('members', 'member_group_id') === true) {
+        if ($port->hasInputSchema('members', 'member_group_id') === true) {
             $groupID = 'member_group_id';
         } else {
             $groupID = 'mgroup';
@@ -622,7 +622,7 @@ EOT;
             m.$memberID, m.$groupID
          from :_members m";
 
-        if ($port->exists('members', 'mgroup_others')) {
+        if ($port->hasInputSchema('members', 'mgroup_others')) {
             $sql .= "
             union all
             select m.$memberID, g.g_id
@@ -645,7 +645,7 @@ EOT;
             'Value' => 'Value'
         );
 
-        if ($port->exists('profile_portal', 'signature') === true) {
+        if ($port->hasInputSchema('profile_portal', 'signature') === true) {
             $sql = "
          select
             pp_member_id as UserID,
@@ -661,7 +661,7 @@ EOT;
          from :_profile_portal
          where length(signature) > 1
                ";
-        } elseif ($port->exists('member_extra', array('id', 'signature')) === true) {
+        } elseif ($port->hasInputSchema('member_extra', array('id', 'signature')) === true) {
             $sql = "
          select
             id as UserID,
@@ -706,8 +706,8 @@ EOT;
     protected function discussions(Migration $port): void
     {
         $descriptionSQL = 'p.post';
-        $hasTopicDescription = ($port->exists('topics', array('description')) === true);
-        if ($hasTopicDescription || $port->exists('posts', array('description')) === true) {
+        $hasTopicDescription = ($port->hasInputSchema('topics', array('description')) === true);
+        if ($hasTopicDescription || $port->hasInputSchema('posts', array('description')) === true) {
             $description = ($hasTopicDescription) ? 't.description' : 'p.description';
             $descriptionSQL = "case
                 when $description <> '' and p.post is not null

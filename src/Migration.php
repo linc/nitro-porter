@@ -44,11 +44,6 @@ class Migration
     protected string $srcPrefix = '';
 
     /**
-     * @var array Log of all queries done in this run for debugging / test mode.
-     */
-    public array $queryRecord = [];
-
-    /**
      * @var array Table names to limit the export to. Full export is an empty array.
      */
     public array $limitedTables = [];
@@ -78,9 +73,9 @@ class Migration
      * @var Storage Where the target data is sent.
      */
     protected Storage $outputStorage;
-    protected Storage $postscriptStorage;
 
-    protected Connection $dbInput;
+    /** @var Storage Copy of where target data is sent for post-processing. */
+    protected Storage $postscriptStorage;
 
     /**
      * Setup.
@@ -242,8 +237,7 @@ class Migration
         }
 
         // Do the export.
-        $query = $this->processQuery($query);
-        $data = $this->executeQuery($query); // @todo Use new db layer.
+        $data = $this->query($query); // @todo Use new db layer.
         if (empty($data)) {
             $this->comment("Error: No data found in $tableName.");
             return;
@@ -324,9 +318,9 @@ class Migration
     /**
      * Shim for storage method access.
      *
-     * @deprecated
      * @param mixed[] $dataMap
      * @return mixed[]
+     * @deprecated Awaits separating Source filters from $map
      */
     public function normalizeDataMap(array $dataMap): array
     {
@@ -420,29 +414,6 @@ class Migration
     }
 
     /**
-     * Do preprocessing on the database query.
-     *
-     * @param string $query
-     * @return string
-     * @deprecated
-     */
-    protected function processQuery(string $query): string
-    {
-        // Check for a chunked query.
-        $query = str_replace('{from}', '-2000000000', $query);
-        $query = str_replace('{to}', '2000000000', $query);
-
-        // If we are in test mode then limit the query.
-        if (\Porter\Config::getInstance()->debugEnabled() && $this->testLimit) {
-            $query = rtrim($query, ';');
-            if (stripos($query, 'select') !== false && stripos($query, 'limit') === false) {
-                $query .= " limit {$this->testLimit}";
-            }
-        }
-        return $query;
-    }
-
-    /**
      * Ignore duplicates for a SQL storage target table. Adds prefix for you.
      *
      * @param string $tableName
@@ -452,30 +423,6 @@ class Migration
         if (method_exists($this->outputStorage, 'ignoreTable')) {
             $this->outputStorage->ignoreTable($tableName);
         }
-    }
-
-    /**
-     * Execute an sql statement and return the entire result as an associative array.
-     *
-     * @param string $sql
-     * @param bool|string $indexColumn
-     * @return array
-     * @deprecated
-     */
-    public function get(string $sql, bool|string $indexColumn = false): array
-    {
-        $r = $this->executeQuery($sql);
-        $result = [];
-
-        while ($row = ($r->nextResultRow())) {
-            if ($indexColumn) {
-                $result[$row[$indexColumn]] = $row;
-            } else {
-                $result[] = $row;
-            }
-        }
-
-        return $result;
     }
 
     /**
@@ -528,127 +475,54 @@ class Migration
      */
     public function query(string $query): ResultSet|false
     {
-        if (!preg_match('`limit 1;$`', $query)) {
-            $this->queryRecord[] = $query;
-        }
-        return $this->executeQuery($query);
+        $query = str_replace(':_', $this->srcPrefix, $query); // replace prefix.
+        $query = rtrim($query, ';') . ';'; // guarantee semicolon.
+
+        //$dbResource = $this->database->getInstance();
+        return $this->dbInput()->getPdo()->query($query); //$dbResource->query($query);
     }
 
     /**
-     * Send multiple SQL queries.
-     *
-     * @param string|array $sqlList An array of single query strings or a string of queries terminated with semi-colons.
-     * @deprecated
-     * @see self::dbInput()::unprepared()
-     */
-    public function queryN(string|array $sqlList): void
-    {
-        if (!is_array($sqlList)) {
-            $sqlList = explode(';', $sqlList);
-        }
-
-        foreach ($sqlList as $sql) {
-            $sql = trim($sql);
-            if ($sql) {
-                $this->query($sql);
-            }
-        }
-    }
-
-    /**
-     * Check if the output storage container exists for this data.
+     * Check if the output storage schema exists.
      *
      * @param string $table
      * @param array $columns
      * @return bool
-     *@see Migration::exists() — Equivalent for source.
      */
-    public function targetExists(string $table, array $columns = []): bool
+    public function hasOutputSchema(string $table, array $columns = []): bool
     {
         return $this->outputStorage->exists($table, $columns);
     }
 
     /**
-     * Check if the porter storage container exists for this data.
+     * Check if the porter storage schema exists.
      *
      * @param string $table
      * @param array $columns
      * @return bool
-     *
-     * USE THIS INSTEAD HERE:
-     * PREFIX=FLA_UserRole
-     * Skipping import: Roles (Source lacks support)
-     * import: tags — 24 rows, 00.00s (7.8mb)
-     * Mentions map memory usage at 10.6mb
-     * PREFIX=FLA_discussions
-     * PREFIX=FLA_discussions
-     * PREFIX=FLA_discussions
-     * import: discussions — 2259 rows, 00.15s (9.3mb)
-     * import: discussion_tag — 2259 rows, 00.02s (8.8mb)
-     * PREFIX=FLA_UserDiscussion
-     * Skipping import: Bookmarks (Source lacks support)
      */
-    public function portExists(string $table, array $columns = []): bool
+    public function hasPortSchema(string $table, array $columns = []): bool
     {
         return $this->porterStorage->exists($table, $columns);
     }
 
     /**
-     * Checks whether or not a table and columns exist in the database.
+     * Check if the input storage schema exists.
      *
      * @param string $table The name of the table to check.
-     * @param array|string $columns An array of column names to check.
+     * @param array|string $columns Column names to check.
      * @return bool Whether the table and all columns exist.
-     * @deprecated
      */
-    public function exists(string $table, array|string $columns = []): bool
+    public function hasInputSchema(string $table, array|string $columns = []): bool
     {
-        static $_exists = array();
-
-        if (!isset($_exists[$table])) {
-            $result = $this->query("show table status like ':_$table'");
-            if (!$result) {
-                $_exists[$table] = false;
-            } elseif (!$result->nextResultRow()) {
-                $_exists[$table] = false;
-            } else {
-                $desc = $this->query('describe :_' . $table);
-                if ($desc === false) {
-                    $_exists[$table] = false;
-                } else {
-                    $cols = array();
-                    while (($TD = $desc->nextResultRow()) !== false) {
-                        $cols[$TD['Field']] = $TD;
-                    }
-                    $_exists[$table] = $cols;
-                }
-            }
-        }
-
-        if ($_exists[$table] == false) {
-            return false;
-        }
-
-        $columns = (array)$columns;
-        if (count($columns) == 0) {
-            return true;
-        }
-
-        $missing = array();
-        $cols = array_keys($_exists[$table]);
-        foreach ($columns as $column) {
-            if (!in_array($column, $cols)) {
-                $missing[] = $column;
-            }
-        }
-
-        return count($missing) == 0;
+        return $this->inputStorage->exists($table, $columns);
     }
 
     /**
      * Checks all required source tables are present.
      *
      * @param array $requiredTables
+     * @deprecated
      */
     public function verifySource(array $requiredTables): void
     {
@@ -657,7 +531,7 @@ class Migration
         $missingColumns = array();
 
         foreach ($requiredTables as $reqTable => $reqColumns) {
-            $tableDescriptions = $this->executeQuery('describe `:_' . $reqTable . '`');
+            $tableDescriptions = $this->query('describe `:_' . $reqTable . '`');
             if ($tableDescriptions === false) { // Table doesn't exist
                 $countMissingTables++;
                 if ($missingTables !== false) {
@@ -699,27 +573,12 @@ class Migration
     }
 
     /**
-     * Execute a SQL query on the current connection.
-     *
-     * @param string $sql
-     * @return ResultSet|false instance of ResultSet of success false on failure
-     * @deprecated
-     */
-    private function executeQuery(string $sql): ResultSet|false
-    {
-        $sql = str_replace(':_', $this->srcPrefix, $sql); // replace prefix.
-        $sql = rtrim($sql, ';') . ';'; // guarantee semicolon.
-
-        $dbResource = $this->database->getInstance();
-        return $dbResource->query($sql);
-    }
-
-    /**
      * Escaping string using the db resource
      *
      * @param string $string
      * @return string escaped string
-     * @deprecated
+     * @deprecated Removing query() will also solve this.
+     * @see mbox
      */
     public function escape(string $string): string
     {

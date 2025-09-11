@@ -72,7 +72,7 @@ class Vanilla extends Source
             'UserRole',
         ];
         foreach ($tables as $tableName) {
-            if ($port->exists($tableName)) {
+            if ($port->hasInputSchema($tableName)) {
                 $port->export($tableName, "select * from :_{$tableName}");
             }
         }
@@ -102,11 +102,11 @@ class Vanilla extends Source
      */
     public function badges(Migration $port)
     {
-        if ($port->exists('Badge')) {
+        if ($port->hasInputSchema('Badge')) {
             // Vanilla Cloud
             $port->export('Badge', "select * from :_Badge");
             $port->export('UserBadge', "select * from :_UserBadge");
-        } elseif ($port->exists('YagaBadge')) {
+        } elseif ($port->hasInputSchema('YagaBadge')) {
             // https://github.com/bleistivt/yaga
             $map = [
                 'Description' => 'Body',
@@ -135,10 +135,10 @@ class Vanilla extends Source
      */
     public function ranks(Migration $port)
     {
-        if ($port->exists('Rank')) {
+        if ($port->hasInputSchema('Rank')) {
             // Vanilla Cloud
             $port->export('Rank', "select * from :_Rank");
-        } elseif ($port->exists('YagaRank')) {
+        } elseif ($port->hasInputSchema('YagaRank')) {
             // https://github.com/bleistivt/yaga
             $map = [
                 'Description' => 'Body',
@@ -156,12 +156,12 @@ class Vanilla extends Source
      */
     public function reactions(Migration $port)
     {
-        if ($port->exists('ReactionType')) {
+        if ($port->hasInputSchema('ReactionType')) {
             // Vanilla Cloud & later open source
             $port->export('ReactionType', "select * from :_ReactionType");
             //$ex->export('Reaction', "select * from :_Tag where Type='Reaction'");
             $port->export('UserTag', "select * from :_UserTag");
-        } elseif ($port->exists('YagaReaction')) {
+        } elseif ($port->hasInputSchema('YagaReaction')) {
             // https://github.com/bleistivt/yaga
             // Shortcut use of Tag table by setting ActionID = TagID.
             // This wouldn't work for exporting a Yaga-based Vanilla install to a "standard" reactions Vanilla install,
@@ -190,12 +190,12 @@ class Vanilla extends Source
      */
     public function polls(Migration $port)
     {
-        if ($port->exists('Poll')) {
+        if ($port->hasInputSchema('Poll')) {
             // SaaS
             $port->export('Poll', "select * from :_Poll");
             $port->export('PollOption', "select * from :_PollOption");
             $port->export('PollVote', "select * from :_PollVote");
-        } elseif ($port->exists('DiscussionPolls')) {
+        } elseif ($port->hasInputSchema('DiscussionPolls')) {
             // @todo https://github.com/hgtonight/Plugin-DiscussionPolls
             //$ex->export('Poll', "select * from :_DiscussionPollQuestions");
             //$ex->export('PollOption', "select * from :_DiscussionPollQuestionOptions");

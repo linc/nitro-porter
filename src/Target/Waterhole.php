@@ -205,7 +205,7 @@ class Waterhole extends Target
         $map = [];
 
         // Verify support.
-        if (!$port->targetExists('UserRole')) {
+        if (!$port->hasOutputSchema('UserRole')) {
             $port->comment('Skipping import: Roles (Source lacks support)');
             $port->importEmpty('groups', $structure);
             $port->importEmpty('group_user', $structure);

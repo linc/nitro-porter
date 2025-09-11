@@ -57,15 +57,15 @@ class Flarum extends Source
         $this->roles($port); // Groups
         $this->categories($port); // Tags
         $this->discussions($port);
-        if ($port->exists('discussion_user', ['subscription'])) {
+        if ($port->hasInputSchema('discussion_user', ['subscription'])) {
             $this->bookmarks($port); // flarum/subscriptions
         }
         $this->comments($port); // Posts
 
-        if ($port->exists('badges')) {
+        if ($port->hasInputSchema('badges')) {
             $this->badges($port); // 17development/flarum-user-badges
         }
-        if ($port->exists('recipients')) {
+        if ($port->hasInputSchema('recipients')) {
             $this->privateMessages($port); // fof/byobu
         }
     }

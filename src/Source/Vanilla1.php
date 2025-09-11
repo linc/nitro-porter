@@ -443,7 +443,7 @@ class Vanilla1 extends Source
      */
     protected function attachments(Migration $port): void
     {
-        if ($port->exists('Attachment')) {
+        if ($port->hasInputSchema('Attachment')) {
             $media_Map = array(
                 'AttachmentID' => 'MediaID',
                 'Name' => 'Name',

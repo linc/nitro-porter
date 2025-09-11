@@ -192,7 +192,7 @@ class Yaf extends Source
                  on pm.Title2 = g.Title and pm.UserIDs = g.UserIDs
                set pm.Group_ID = g.Group_ID;";
 
-        $port->queryN($sql);
+        $port->dbInput()->unprepared($sql);
     }
 
     /**

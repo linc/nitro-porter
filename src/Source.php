@@ -33,12 +33,6 @@ abstract class Source
 
     /**
      * @deprecated
-     * @var ?Migration
-     */
-    public ?Migration $port = null;
-
-    /**
-     * @deprecated
      * @var array Required tables, columns set per exporter
      */
     public array $sourceTables = [];

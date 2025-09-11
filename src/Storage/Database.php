@@ -287,7 +287,7 @@ class Database extends Storage
      * @param string $tableName
      * @param array $columns
      * @return bool
-     *@see Migration::exists()
+     * @see Migration::hasInputSchema()
      */
     public function exists(string $tableName, array $columns = []): bool
     {

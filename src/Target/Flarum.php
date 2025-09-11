@@ -131,11 +131,11 @@ class Flarum extends Target
     {
         $structure = self::DB_STRUCTURE_DISCUSSIONS;
         // fof/gamification — no data, just prevent failure (no default values are set)
-        if ($port->targetExists('discussions', ['votes'])) {
+        if ($port->hasOutputSchema('discussions', ['votes'])) {
             $structure['votes'] = 'int';
             $structure['hotness'] = 'double';
         }
-        if ($port->targetExists('discussions', ['view_count'])) {
+        if ($port->hasOutputSchema('discussions', ['view_count'])) {
             $structure['view_count'] = 'int'; // flarumite/simple-discussion-views
         }
         return $structure;
@@ -272,7 +272,7 @@ class Flarum extends Target
         $map = [];
 
         // Verify support.
-        if (!$port->portExists('UserRole')) {
+        if (!$port->hasPortSchema('UserRole')) {
             $port->comment('Skipping import: Roles (Source lacks support)');
             $port->importEmpty('groups', $structure);
             $port->importEmpty('group_user', $structure);
@@ -377,7 +377,7 @@ class Flarum extends Target
         ];
 
         // flarumite/simple-discussion-views
-        if ($port->targetExists('discussions', ['view_count'])) {
+        if ($port->hasOutputSchema('discussions', ['view_count'])) {
             $structure['view_count'] = 'int';
             $map['CountViews'] = 'view_count';
             $filters['CountViews'] = 'emptyToZero';
@@ -416,7 +416,7 @@ class Flarum extends Target
     protected function bookmarks(Migration $port): void
     {
         // Verify support.
-        if (!$port->portExists('UserDiscussion')) {
+        if (!$port->hasPortSchema('UserDiscussion')) {
             $port->comment('Skipping import: Bookmarks (Source lacks support)');
             return;
         }
@@ -522,7 +522,7 @@ class Flarum extends Target
     protected function attachments(Migration $port): void
     {
         // Verify support.
-        if (!$port->portExists('Media')) {
+        if (!$port->hasPortSchema('Media')) {
             $port->comment('Skipping import: Attachments (Source lacks support)');
             return;
         }
@@ -581,7 +581,7 @@ class Flarum extends Target
     protected function badges(Migration $port): void
     {
         // Verify support.
-        if (!$port->portExists('Badge')) {
+        if (!$port->hasPortSchema('Badge')) {
             $port->comment('Skipping import: Badges (Source lacks support)');
             return;
         }
@@ -641,7 +641,7 @@ class Flarum extends Target
     protected function polls(Migration $port): void
     {
         // Verify support.
-        if (!$port->portExists('Poll')) {
+        if (!$port->hasPortSchema('Poll')) {
             $port->comment('Skipping import: Polls (Source lacks support)');
             return;
         }
@@ -725,7 +725,7 @@ class Flarum extends Target
     public function reactions(Migration $port): void
     {
         // Verify support.
-        if (!$port->portExists('ReactionType')) {
+        if (!$port->hasPortSchema('ReactionType')) {
             $port->comment('Skipping import: Reactions (Source lacks support)');
             return;
         }
@@ -805,13 +805,13 @@ class Flarum extends Target
     protected function privateMessages(Migration $port): void
     {
         // Verify source support.
-        if (!$port->portExists('Conversation')) {
+        if (!$port->hasPortSchema('Conversation')) {
             $port->comment('Skipping import: Private messages (Source lacks support)');
             return;
         }
 
         // Verify target support.
-        if (!$port->targetExists('recipients')) {
+        if (!$port->hasOutputSchema('recipients')) {
             $port->comment('Skipping import: Private messages (Target lacks support - Enable the plugin first)');
             return;
         }
@@ -829,7 +829,7 @@ class Flarum extends Target
         ];
 
         // fof/gamification — no data, just prevent failure (no default value is set)
-        if ($port->targetExists('discussions', ['votes'])) {
+        if ($port->hasOutputSchema('discussions', ['votes'])) {
             $structure['votes'] = 'int';
         }
 

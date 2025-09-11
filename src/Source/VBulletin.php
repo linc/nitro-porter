@@ -169,6 +169,12 @@ class VBulletin extends Source
     );
 
     /**
+     * @deprecated
+     * @var ?Migration
+     */
+    public ?Migration $port = null;
+
+    /**
      * Export each table one at a time.
      *
      * @param Migration $port
@@ -199,19 +205,17 @@ class VBulletin extends Source
         $minDiscussionID = 0;
         $minDiscussionWhere = 0;
 
-        $cdn = ''; //$this->param('cdn', '');
-
         // Ranks
         $ranks = $this->ranks($port);
 
-        $this->users($port, $ranks, $cdn);
+        $this->users($port, $ranks);
         $this->roles($port);
         $this->userMeta($port, '');
 
         $this->discussions($port, $minDiscussionID, '');
         $this->comments($port, $minDiscussionID, '');
 
-        if ($port->exists('threadread', array('readtime')) === true) {
+        if ($port->hasInputSchema('threadread', array('readtime')) === true) {
             $threadReadTime = 'from_unixtime(tr.readtime)';
             $threadReadJoin = 'left join :_threadread as tr on tr.userid = st.userid and tr.threadid = st.threadid';
         } else {
@@ -238,14 +242,14 @@ class VBulletin extends Source
         $this->polls($port);
 
         // Media
-        if ($port->exists('attachment') === true) {
+        if ($port->hasInputSchema('attachment') === true) {
             $this->attachments($port, $minDiscussionID);
         }
 
         $this->tags($port);
 
         // Reactions
-        if ($port->exists('post_thanks') === true) {
+        if ($port->hasInputSchema('post_thanks') === true) {
             $this->reactions($port);
         }
     }
@@ -275,10 +279,10 @@ class VBulletin extends Source
             $identity = 'f.attachmentid';
             $extension = '';
 
-            if ($port->exists('attachment', array('contenttypeid', 'contentid')) === true) {
+            if ($port->hasInputSchema('attachment', array('contenttypeid', 'contentid')) === true) {
                 $extension = self::fileExtension('a.filename');
                 $identity = 'f.filedataid';
-            } elseif ($port->exists('attach') === true) {
+            } elseif ($port->hasInputSchema('attach') === true) {
                 $identity = 'f.filedataid';
             } else {
                 $extension = self::fileExtension('filename');
@@ -291,9 +295,9 @@ class VBulletin extends Source
                from ";
 
             // Table is dependent on vBulletin version (v4+ is filedata, v3 is attachment)
-            if ($port->exists('attachment', array('contenttypeid', 'contentid')) === true) {
+            if ($port->hasInputSchema('attachment', array('contenttypeid', 'contentid')) === true) {
                 $sql .= ":_filedata f left join :_attachment a on a.filedataid = f.filedataid";
-            } elseif ($port->exists('attach') === true) {
+            } elseif ($port->hasInputSchema('attach') === true) {
                 $sql .= ":_filedata f left join :_attach a on a.filedataid = f.filedataid";
             } else {
                 $sql .= ":_attachment f";
@@ -303,7 +307,7 @@ class VBulletin extends Source
         }
 
         if ($customAvatars) {
-            if ($port->exists('customavatar', array('avatardata')) === true) {
+            if ($port->hasInputSchema('customavatar', array('avatardata')) === true) {
                 $avatarDataColumn = 'avatardata';
             } else {
                 $avatarDataColumn = 'filedata';
@@ -322,7 +326,7 @@ class VBulletin extends Source
         }
 
         // Export the group icons no matter what.
-        if ($port->exists('socialgroupicon', 'thumbnail_filedata') === true && ($attachments || $customAvatars)) {
+        if ($port->hasInputSchema('socialgroupicon', 'thumbnail_filedata') === true && ($attachments || $customAvatars)) {
             $this->exportBlobs(
                 $port,
                 "select
@@ -443,7 +447,7 @@ class VBulletin extends Source
 
         // Add hash fields if they exist (from 2.x)
         $attachColumns = array('hash', 'filehash');
-        $hasColumns = $port->exists('attachment', $attachColumns);
+        $hasColumns = $port->hasInputSchema('attachment', $attachColumns);
         $attachColumnsString = '';
         foreach ($attachColumns as $columnName) {
             if (!$hasColumns) {
@@ -453,7 +457,7 @@ class VBulletin extends Source
             }
         }
         // Do the export
-        if ($port->exists('attachment', array('contenttypeid', 'contentid')) === true) {
+        if ($port->hasInputSchema('attachment', array('contenttypeid', 'contentid')) === true) {
             // Exporting 4.x with 'filedata' table.
             // Build an index to join on.
             if (!$port->indexExists('ix_thread_firstpostid', ':_thread')) {
@@ -686,15 +690,13 @@ class VBulletin extends Source
      */
     public function ranks(Migration $port): array
     {
-        $rank = $port->query("select count(*) from :_ranks");
-
-        if ($rank->nextResultRow()) {
-            $ranks = $port->get(
-                "select rankid as RankID, minposts
-                   from :_ranks
-                   where minposts > 0
-                   order by minposts desc"
-            );
+        $hasRanks = $port->dbInput()->table('ranks')->select()->get();
+        if ($hasRanks) {
+            $ranks = $port->dbInput()->table('ranks')
+                ->select(['minposts'])
+                ->where('minposts', '>', 0)
+                ->orderBy('minposts', 'desc')
+                ->get();
 
             $port->export(
                 'Rank',
@@ -708,7 +710,11 @@ class VBulletin extends Source
                     where minposts > 0"
             );
         } else {
-            $ranks = $port->get("select * from :_usertitle order by minposts desc", 'usertitleid');
+            $ranks = $port->dbInput()->table('usertitle')
+                ->select()
+                ->selectRaw('usertitleid as RankID')
+                ->orderBy('minposts', 'desc')
+                ->get();
 
             $rank_Map = array(
                 'usertitleid' => 'RankID',
@@ -722,7 +728,6 @@ class VBulletin extends Source
                                 'CountPosts' => $value
                             )
                         );
-
                         return serialize($result);
                     }
                 ),
@@ -730,7 +735,6 @@ class VBulletin extends Source
                     'Column' => 'Level',
                     'Filter' => function ($value) {
                         static $level = 1;
-
                         return $level++;
                     }
                 )
@@ -807,7 +811,7 @@ class VBulletin extends Source
     public function buildMediaDimension($value, $field, $row): mixed
     {
         // Non-images get no height/width
-        if ($this->port->exists('attachment', array('extension')) === true) {
+        if ($this->port->hasInputSchema('attachment', array('extension')) === true) {
             $extension = $row['extension'];
         } else {
             $extension = pathinfo($row['filename'], PATHINFO_EXTENSION);
@@ -1088,11 +1092,11 @@ class VBulletin extends Source
 
     /**
      * @param Migration $port
-     * @param array $ranks
-     * @param string $cdn
+     * @param mixed $ranks
      */
-    protected function users(Migration $port, array $ranks, $cdn): void
+    protected function users(Migration $port, mixed $ranks): void
     {
+        $cdn = '';
         $user_Map = array(
             'usertitle' => array(
                 'Column' => 'Title',
@@ -1104,12 +1108,11 @@ class VBulletin extends Source
                 'Column' => 'RankID',
                 'Filter' => function ($value) use ($ranks) {
                     // Look  up the posts in the ranks table.
-                    foreach ($ranks as $rankID => $row) {
-                        if ($value >= $row['minposts']) {
-                            return $rankID;
+                    foreach ($ranks as $row) {
+                        if ($value >= $row->minposts) {
+                            return $row->rankID;
                         }
                     }
-
                     return null;
                 }
             )
@@ -1164,15 +1167,12 @@ class VBulletin extends Source
     protected function userMeta(Migration $port, string $forumWhere): void
     {
         $port->query("drop table if exists VbulletinUserMeta");
-        $port->query(
-            "
+        $port->query("
             create table VbulletinUserMeta(
                 `UserID` int not null,
                 `Name` varchar(255) not null,
                 `Value` text not null
-            );
-        "
-        );
+            );");
         // Standard vB user data
         $userFields = array(
             'usertitle' => 'Title',
@@ -1180,7 +1180,7 @@ class VBulletin extends Source
             'styleid' => 'StyleID'
         );
 
-        if ($port->exists('user', array('skype')) === true) {
+        if ($port->hasInputSchema('user', array('skype')) === true) {
             $userFields['skype'] = 'Skype';
         }
 
@@ -1208,7 +1208,7 @@ class VBulletin extends Source
             );
         }
 
-        if ($port->exists('phrase', array('product', 'fieldname')) === true) {
+        if ($port->hasInputSchema('phrase', array('product', 'fieldname')) === true) {
             // Dynamic vB user data (userfield)
             $profileFields = $port->query(
                 "select distinct
@@ -1319,7 +1319,7 @@ class VBulletin extends Source
     {
         // Activity (from visitor messages in vBulletin 3.8+)
         $minDiscussionWhere = '';
-        if ($port->exists('visitormessage') === true) {
+        if ($port->hasInputSchema('visitormessage') === true) {
             if ($minDiscussionID) {
                 $minDiscussionWhere = "and dateline > $minDiscussionID";
             }

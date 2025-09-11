@@ -172,7 +172,7 @@ class SimplePress extends Source
      */
     protected function tags(Migration $port): void
     {
-        if ($port->exists('sftags')) {
+        if ($port->hasInputSchema('sftags')) {
             // Tags
             $tag_Map = array(
                 'tag_id' => 'TagID',
@@ -180,7 +180,7 @@ class SimplePress extends Source
             );
             $port->export('Tag', "select * from :_sftags", $tag_Map);
 
-            if ($port->exists('sftagmeta')) {
+            if ($port->hasInputSchema('sftagmeta')) {
                 $tagDiscussion_Map = array(
                     'tag_id' => 'TagID',
                     'topic_id' => 'DiscussionID'

@@ -150,7 +150,7 @@ class PunBb extends Source
      */
     protected function attachments(Migration $port): void
     {
-        if ($port->exists('attach_files')) {
+        if ($port->hasInputSchema('attach_files')) {
             // Media.
             $media_Map = array(
                 'id' => 'MediaID',
@@ -181,7 +181,7 @@ class PunBb extends Source
      */
     protected function tags(Migration $port): void
     {
-        if ($port->exists('tags')) {
+        if ($port->hasInputSchema('tags')) {
             $tag_Map = array(
                 'id' => 'TagID',
                 'tag' => 'Name'

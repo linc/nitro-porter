@@ -82,21 +82,14 @@ class VBulletin5 extends VBulletin
      */
     public function run(Migration $port): void
     {
-        /*$this->doFileExport(
-            $this->param('db-files'),
-            $this->param('db-avatars')
-        );
-        if ($this->param('noexport')) {
-            $ex->comment('Skipping the export.');
-            return;
-        }*/
-
-        $cdn = ''; //$this->param('cdn', '');
-
         // Grab all of the ranks.
-        $ranks = $port->get("select * from :_usertitle order by minposts desc", 'usertitleid');
+        $ranks = $port->dbInput()->table('usertitle')
+            ->select()
+            ->selectRaw('usertitleid as RankID')
+            ->orderBy('minposts', 'desc')
+            ->get();
 
-        $this->usersV5($port, $ranks, $cdn);
+        $this->usersV5($port, $ranks);
         $this->rolesV5($port);
         $this->ranksV5($port);
 
@@ -391,11 +384,11 @@ class VBulletin5 extends VBulletin
 
     /**
      * @param Migration $port
-     * @param array $ranks
-     * @param string $cdn
+     * @param mixed $ranks
      */
-    public function usersV5(Migration $port, array $ranks, string $cdn): void
+    public function usersV5(Migration $port, mixed $ranks): void
     {
+        $cdn = '';
         $user_Map = array(
             'userid' => 'UserID',
             'username' => 'Name',
@@ -410,12 +403,11 @@ class VBulletin5 extends VBulletin
                 'Column' => 'RankID',
                 'Filter' => function ($value) use ($ranks) {
                     // Look  up the posts in the ranks table.
-                    foreach ($ranks as $rankID => $row) {
-                        if ($value >= $row['minposts']) {
-                            return $rankID;
+                    foreach ($ranks as $row) {
+                        if ($value >= $row->minposts) {
+                            return $row->rankID;
                         }
                     }
-
                     return null;
                 }
             )
@@ -431,7 +423,7 @@ class VBulletin5 extends VBulletin
         // vBulletin 5.1 changes the hash to crypt(md5(password), hash).
         // Switches from password & salt to token (and scheme & secret).
         // The scheme appears to be crypt()'s default and secret looks uselessly redundant.
-        if ($port->exists('user', 'token') !== true) {
+        if ($port->hasInputSchema('user', 'token') !== true) {
             $passwordSQL = "concat(`password`, salt) as password2, 'vbulletin' as HashMethod,";
         } else {
             // vB 5.1 already concats the salt to the password as token, BUT ADDS A SPACE OF COURSE.

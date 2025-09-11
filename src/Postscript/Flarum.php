@@ -278,7 +278,7 @@ class Flarum extends Postscript
     protected function setLastRead(Migration $port): void
     {
         // Verify table exists.
-        if (! $port->targetExists('discussion_user')) {
+        if (! $port->hasOutputSchema('discussion_user')) {
             return;
         }
 
@@ -346,7 +346,7 @@ class Flarum extends Postscript
      */
     protected function addDefaultBadgeCategory(Migration $port): void
     {
-        if ($port->targetExists('badge_category')) {
+        if ($port->hasOutputSchema('badge_category')) {
             $port->dbOutput()
                 ->table('badge_category')
                 ->insertOrIgnore(['id' => 1, 'name' => 'Imported Badges', 'created_at' => date('Y-m-d h:m:s')]);
