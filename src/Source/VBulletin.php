@@ -326,7 +326,10 @@ class VBulletin extends Source
         }
 
         // Export the group icons no matter what.
-        if ($port->hasInputSchema('socialgroupicon', 'thumbnail_filedata') === true && ($attachments || $customAvatars)) {
+        if (
+            $port->hasInputSchema('socialgroupicon', 'thumbnail_filedata') === true
+            && ($attachments || $customAvatars)
+        ) {
             $this->exportBlobs(
                 $port,
                 "select

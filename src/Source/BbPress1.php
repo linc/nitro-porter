@@ -183,7 +183,7 @@ class BbPress1 extends Source
     protected function conversations(Migration $port): void
     {
         // The export is different depending on the table layout.
-        $PM = $port->hasInputSchema('bbpm', array('ID', 'pm_title', 'pm_from', 'pm_to', 'pm_text', 'sent_on', 'pm_thread'));
+        $PM = $port->hasInputSchema('bbpm', ['ID', 'pm_title', 'pm_from', 'pm_to', 'pm_text', 'sent_on', 'pm_thread']);
         $conversationVersion = '';
 
         if ($PM === true) {
