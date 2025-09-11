@@ -8,10 +8,8 @@ namespace Porter;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder;
-use PDOStatement;
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
-use Porter\Storage\Database;
 
 /**
  * Object for exporting other database structures into a format that can be imported.
@@ -22,11 +20,6 @@ class Migration
      * @var bool Whether to capture SQL without executing.
      */
     public bool $captureOnly = false;
-
-    /**
-     * @var int How many records to limit when debugMode is enabled.
-     */
-    public int $testLimit = 10;
 
     /**
      * @var array Any comments that have been written during the export.
@@ -223,10 +216,10 @@ class Migration
      */
     public function export(string $tableName, string|Builder $query, array $map = [], array $filters = []): void
     {
-        /*if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
+        if (!empty($this->limitedTables) && !in_array(strtolower($tableName), $this->limitedTables)) {
             $this->comment("Skipping table: $tableName");
             return;
-        }*/
+        }
 
         // Start timer.
         $start = microtime(true);
