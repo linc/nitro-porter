@@ -32,9 +32,37 @@ class Formatter
     /**
      * @return void
      */
-    public function setup(Migration $ex)
+    public function setup(Migration $port)
     {
-        $this->userMap = $ex->buildUserMap();
+        $this->userMap = $this->buildUserMap($port);
+    }
+
+    /**
+     * Create an array of `strtolower(name)` => ID for doing lookups later.
+     *
+     * @todo This strategy likely won't scale past 100K users. 18K users @ +8mb memory use.
+     *
+     * @param Migration $port
+     * @return array
+     */
+    public function buildUserMap(Migration $port): array
+    {
+        $userMap = $port->dbOutput()
+            ->table('users')
+            ->get(['id', 'username']);
+
+        $users = [];
+        foreach ($userMap as $user) {
+            // Use the first found ID for each name in case of duplicates.
+            if (!isset($users[strtolower($user->username)])) {
+                $users[strtolower($user->username)] = $user->id;
+            }
+        }
+
+        // Record memory usage from user map.
+        $port->comment('Mentions map memory usage at ' . formatBytes(memory_get_usage()));
+
+        return $users;
     }
 
     /**

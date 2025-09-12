@@ -116,7 +116,7 @@ class Waterhole extends Target
             '[Slettet bruker]', // Norwegian
             '[Utilisateur supprimé]', // French
         ]; // @see fixDuplicateDeletedNames()
-        $dupes = array_diff($port->findDuplicates('User', 'Name'), $allowlist);
+        $dupes = array_diff($this->findDuplicates('User', 'Name', $port), $allowlist);
         if (!empty($dupes)) {
             $port->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
@@ -131,7 +131,7 @@ class Waterhole extends Target
      */
     public function uniqueUserEmails(Migration $port): void
     {
-        $dupes = $port->findDuplicates('User', 'Email');
+        $dupes = $this->findDuplicates('User', 'Email', $port);
         if (!empty($dupes)) {
             $port->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
@@ -143,7 +143,7 @@ class Waterhole extends Target
     public function run(Migration $port): void
     {
         // Ignore constraints on tables that block import.
-        $port->ignoreDuplicates('users');
+        $port->ignoreOutputDuplicates('users');
 
         $this->users($port);
         $this->roles($port); // 'Groups' in Waterhole
@@ -213,7 +213,7 @@ class Waterhole extends Target
         }
 
         // Delete orphaned user role associations (deleted users).
-        $port->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID');
+        $this->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID', $port);
 
         $query = $port->dbPorter()->table('Role')
             ->selectRaw("(RoleID + 4) as id") // Flarum reserves 1-3 & uses 4 for mods by default.

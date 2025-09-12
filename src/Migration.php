@@ -340,81 +340,11 @@ class Migration
     }
 
     /**
-     * Create an array of `strtolower(name)` => ID for doing lookups later.
-     *
-     * @todo This strategy likely won't scale past 100K users. 18K users @ +8mb memory use.
-     *
-     * @return array
-     * @throws \Exception
-     */
-    public function buildUserMap(): array
-    {
-        $userMap = $this->dbOutput()
-            ->table('users')
-            ->get(['id', 'username']);
-
-        $users = [];
-        foreach ($userMap as $user) {
-            // Use the first found ID for each name in case of duplicates.
-            if (!isset($users[strtolower($user->username)])) {
-                $users[strtolower($user->username)] = $user->id;
-            }
-        }
-
-        // Record memory usage from user map.
-        $this->comment('Mentions map memory usage at ' . formatBytes(memory_get_usage()));
-
-        return $users;
-    }
-
-    /**
-     * Find duplicate records on the given table + column.
-     *
-     * @param string $table
-     * @param string $column
-     * @return mixed[]
-     */
-    public function findDuplicates(string $table, string $column): array
-    {
-        $results = [];
-        $db = $this->dbPorter();
-        $duplicates = $db->table($table)
-            ->select($column, $db->raw('count(' . $column . ') as found_count'))
-            ->groupBy($column)
-            ->having('found_count', '>', '1')
-            ->get();
-        foreach ($duplicates as $dupe) {
-            $results[] = $dupe->$column;
-        }
-        return $results;
-    }
-
-    /**
-     * Prune records where a foreign key doesn't exist for them.
-     *
-     * This happens in the Porter format / intermediary step.
-     * It must be complete BEFORE records are inserted into the Target due to FK constraints.
-     *
-     * @param string $table Table to prune.
-     * @param string $column Column (likely a key) to be compared to the foreign key for its existence.
-     * @param string $fnTable Foreign table to check for corresponding key.
-     * @param string $fnColumn Foreign key to select.
-     */
-    public function pruneOrphanedRecords(string $table, string $column, string $fnTable, string $fnColumn): void
-    {
-        // `DELETE FROM $table WHERE $column NOT IN (SELECT $fnColumn FROM $fnTable)`
-        $db = $this->dbPorter();
-        $duplicates = $db->table($table)
-            ->whereNotIn($column, $db->table($fnTable)->pluck($fnColumn))
-            ->delete();
-    }
-
-    /**
      * Ignore duplicates for a SQL storage target table. Adds prefix for you.
      *
      * @param string $tableName
      */
-    public function ignoreDuplicates(string $tableName): void
+    public function ignoreOutputDuplicates(string $tableName): void
     {
         if (method_exists($this->outputStorage, 'ignoreTable')) {
             $this->outputStorage->ignoreTable($tableName);

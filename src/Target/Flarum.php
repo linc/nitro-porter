@@ -160,7 +160,7 @@ class Flarum extends Target
             '[Slettet bruker]', // Norwegian
             '[Utilisateur supprimé]', // French
         ]; // @see fixDuplicateDeletedNames()
-        $dupes = array_diff($port->findDuplicates('User', 'Name'), $allowlist);
+        $dupes = array_diff($this->findDuplicates('User', 'Name', $port), $allowlist);
         if (!empty($dupes)) {
             $port->comment('DATA LOSS! Users skipped for duplicate user.name: ' . implode(', ', $dupes));
         }
@@ -176,7 +176,7 @@ class Flarum extends Target
      */
     public function uniqueUserEmails(Migration $port): void
     {
-        $dupes = $port->findDuplicates('User', 'Email');
+        $dupes = $this->findDuplicates('User', 'Email', $port);
         if (!empty($dupes)) {
             $port->comment('DATA LOSS! Users skipped for duplicate user.email: ' . implode(', ', $dupes));
         }
@@ -188,7 +188,7 @@ class Flarum extends Target
     public function run(Migration $port): void
     {
         // Ignore constraints on tables that block import.
-        $port->ignoreDuplicates('users');
+        $port->ignoreOutputDuplicates('users');
 
         $this->users($port);
         $this->roles($port); // 'Groups' in Flarum
@@ -280,7 +280,7 @@ class Flarum extends Target
         }
 
         // Delete orphaned user role associations (deleted users).
-        $port->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID');
+        $this->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID', $port);
 
         $query = $port->dbPorter()
             ->table('Role')

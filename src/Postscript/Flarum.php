@@ -51,7 +51,7 @@ class Flarum extends Postscript
 
         // Prepare mentions table.
         $this->outputStorage->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
-        $port->ignoreDuplicates('post_mentions_user'); // Primary key forbids more than 1 record per user/post.
+        $port->ignoreOutputDuplicates('post_mentions_user'); // Primary key forbids more than 1 record per user/post.
 
         // Get post data.
         $posts = $port->dbOutput()
@@ -141,7 +141,7 @@ class Flarum extends Postscript
 
         // Prepare mentions table.
         $this->outputStorage->prepare('post_mentions_post', self::DB_STRUCTURE_POST_MENTIONS_POST);
-        $port->ignoreDuplicates('post_mentions_post'); // Primary key forbids more than 1 record per user/post.
+        $port->ignoreOutputDuplicates('post_mentions_post'); // Primary key forbids more than 1 record per user/post.
 
         // Create an OP lookup array.
         // @todo This may fall down around 200K discussions.
