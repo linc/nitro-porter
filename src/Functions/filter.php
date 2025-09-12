@@ -27,10 +27,10 @@ function filterFlarumContent(?string $value, string $column, array $row): string
  * Check for '[Deleted User]' (and variants) as username and replace.
  * Violates a unique key constraint on the target db's username field.
  *
- * @param string $value
+ * @param string|null $value
  * @param string $column
  * @param array $row
- * @return string
+ * @return string|null
  */
 function fixDuplicateDeletedNames(?string $value, string $column, array $row): ?string
 {
@@ -54,7 +54,7 @@ function fixDuplicateDeletedNames(?string $value, string $column, array $row): ?
  * @param array $row
  * @return string
  */
-function fixNullEmails($value, string $column, array $row): string
+function fixNullEmails(mixed $value, string $column, array $row): string
 {
     if (empty($value)) {
         $value = 'blank_email_' . $row['UserID'];
@@ -68,7 +68,7 @@ function fixNullEmails($value, string $column, array $row): string
  * @param array $row
  * @return string
  */
-function createDiscussionSlugs($value, string $column, array $row): string
+function createDiscussionSlugs(mixed $value, string $column, array $row): string
 {
     return $value; // @todo Create a slug
 }
@@ -108,10 +108,10 @@ function forceIP4(string $ip): ?string
  * Creates URL codes containing only lowercase Roman letters, digits, and hyphens.
  * Converted from Gdn_Format::Url
  *
- * @param  string $str A string to be formatted.
+ * @param string $str A string to be formatted.
  * @return string
  */
-function formatUrl($str)
+function formatUrl(string $str): string
 {
     $urlTranslations = array(
         '–' => '-',
@@ -420,7 +420,7 @@ function HTMLDecoder(string $value): string
  * @param mixed $value
  * @return int
  */
-function notFilter($value)
+function notFilter(mixed $value): int
 {
     return (int)(!$value);
 }
@@ -433,7 +433,7 @@ function notFilter($value)
  * @param mixed $value
  * @return mixed Original $value or zero if empty.
  */
-function emptyToZero($value)
+function emptyToZero(mixed $value): mixed
 {
     return empty($value) ? 0 : $value;
 }
@@ -444,9 +444,9 @@ function emptyToZero($value)
  * Do this in MySQL with FROM_UNIXTIME() instead whenever possible.
  *
  * @param mixed $value
- * @return null|string
+ * @return ?string
  */
-function timestampToDate($value)
+function timestampToDate(mixed $value): ?string
 {
     if ($value == null) {
         return null;
@@ -459,9 +459,9 @@ function timestampToDate($value)
  * Wrapper for long2ip that nulls 'non-digit' values.
  *
  * @param mixed $value
- * @return null|string
+ * @return ?string
  */
-function long2ipf($value)
+function long2ipf(mixed $value): ?string
 {
     return (!empty($value) && ctype_digit($value)) ? long2ip($value) : null;
 }
@@ -472,7 +472,7 @@ function long2ipf($value)
  * @param mixed $value
  * @return int
  */
-function YNBool($value)
+function YNBool(mixed $value): int
 {
     if ($value == 'y') {
         return 1;
@@ -487,11 +487,11 @@ function YNBool($value)
  * @param mixed $value
  * @return string
  */
-function guessFormat($value)
+function guessFormat(mixed $value): string
 {
     if (strpos($value, '[') !== false) {
         return 'BBCode';
-    } elseif (strpos($value, '<') !== false) {
+    } elseif (str_contains($value, '<')) {
         return 'Html';
     } else {
         return 'BBCode';
@@ -504,7 +504,7 @@ function guessFormat($value)
  * @param string $value
  * @return string
  */
-function mimeTypeFromExtension($value)
+function mimeTypeFromExtension(string $value): string
 {
 
     if (strpos($value, '.') === 0) {
@@ -542,7 +542,7 @@ function mimeTypeFromExtension($value)
  * @param mixed $value
  * @return mixed
  */
-function cleanBodyBrackets($value)
+function cleanBodyBrackets(mixed $value): mixed
 {
     if (strpos($value, '[') !== false) {
         $result = str_replace(array('<', '>'), array('[', ']'), $value);
@@ -555,7 +555,7 @@ function cleanBodyBrackets($value)
  * @param string $text
  * @return string
  */
-function bbPressTrim($text)
+function bbPressTrim(string $text): string
 {
     return rtrim(bb_Code_Trick_Reverse($text));
 }
@@ -564,7 +564,7 @@ function bbPressTrim($text)
  * @param string $text
  * @return string
  */
-function bb_Code_Trick_Reverse($text)
+function bb_Code_Trick_Reverse(string $text): string
 {
     $text = preg_replace_callback("!(<pre><code>|<code>)(.*?)(</code></pre>|</code>)!s", 'bb_decodeit', $text);
     $text = str_replace(array('<p>', '<br />'), '', $text);
@@ -580,7 +580,7 @@ function bb_Code_Trick_Reverse($text)
  * @param array $matches
  * @return string
  */
-function bb_Decodeit($matches)
+function bb_Decodeit(array $matches): string
 {
     $text = $matches[2];
     $trans_table = array_flip(get_html_translation_table(HTML_ENTITIES));
@@ -614,7 +614,7 @@ function bb_Decodeit($matches)
  * @param string $path
  * @return string
  */
-function vanillaPhoto($path)
+function vanillaPhoto(string $path): string
 {
     // Skip processing for blank entries.
     if (empty($path)) {

@@ -4,7 +4,6 @@
  *
  */
 
-use Porter\ConnectionManager;
 use Porter\Database\DbFactory;
 use Porter\Migration;
 use Porter\Postscript;
@@ -23,7 +22,6 @@ function loadConfig(): array
     if (file_exists(ROOT_DIR . '/config.php')) {
         return require(ROOT_DIR . '/config.php');
     } else {
-        //trigger_error('Missing config.php — Make a copy of config-sample.php!');
         return require(ROOT_DIR . '/config-sample.php');
     }
 }
@@ -117,6 +115,7 @@ function postscriptFactory(string $target, Storage $outputStorage, Storage $post
  * @param Storage $inputStorage
  * @param Storage $porterStorage
  * @param Storage $outputStorage
+ * @param Storage $postscriptStorage
  * @param string $sourcePrefix
  * @param string|null $limitTables
  * @param bool $captureOnly
@@ -146,13 +145,13 @@ function migrationFactory(
 }
 
 /**
+ * Build a valid path from multiple pieces.
  *
- *
- * @param  array|string $paths
+ * @param array|string $paths
  * @param  string $delimiter
  * @return string
  */
-function combinePaths($paths, string $delimiter = '/'): string
+function combinePaths(array|string $paths, string $delimiter = '/'): string
 {
     if (is_array($paths)) {
         $mungedPath = implode($delimiter, $paths);
@@ -182,6 +181,8 @@ function formatElapsed(float $elapsed): string
 }
 
 /**
+ * Human-readable filesize output.
+ *
  * @param int $size
  * @return string
  */
@@ -201,14 +202,13 @@ function formatBytes(int $size): string
  * @param string $thumbPath
  * @param  int $height
  * @param  int $width
- * @return void
  */
-function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
+function generateThumbnail($path, $thumbPath, $height = 50, $width = 50): void
 {
     list($widthSource, $heightSource, $type) = getimagesize($path);
 
-    $XCoord = 0;
-    $YCoord = 0;
+    $xCoordinate = 0;
+    $yCoordinate = 0;
     $heightDiff = $heightSource - $height;
     $widthDiff = $widthSource - $width;
     if ($widthDiff > $heightDiff) {
@@ -216,14 +216,14 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
         $newWidthSource = round(($width * $heightSource) / $height);
 
         // And set the original x position to the cropped start point.
-        $XCoord = round(($widthSource - $newWidthSource) / 2);
+        $xCoordinate = round(($widthSource - $newWidthSource) / 2);
         $widthSource = $newWidthSource;
     } else {
         // Crop the original height down
         $newHeightSource = round(($height * $widthSource) / $width);
 
         // And set the original y position to the cropped start point.
-        $YCoord = round(($heightSource - $newHeightSource) / 2);
+        $yCoordinate = round(($heightSource - $newHeightSource) / 2);
         $heightSource = $newHeightSource;
     }
 
@@ -252,8 +252,8 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
             $sourceImage,
             0,
             0,
-            $XCoord,
-            $YCoord,
+            $xCoordinate,
+            $yCoordinate,
             $width,
             $height,
             $widthSource,
@@ -278,6 +278,6 @@ function generateThumbnail($path, $thumbPath, $height = 50, $width = 50)
             imagedestroy($targetImage);
         }
     } catch (\Exception $e) {
-        echo "Could not generate a thumnail for " . $targetImage;
+        echo "Could not generate a thumbnail for " . $targetImage;
     }
 }
