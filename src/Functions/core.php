@@ -4,7 +4,8 @@
  *
  */
 
-use Porter\Database\DbFactory;
+use Porter\ConnectionManager;
+use Porter\FileTransfer;
 use Porter\Migration;
 use Porter\Postscript;
 use Porter\Request;
@@ -111,26 +112,36 @@ function postscriptFactory(string $target, Storage $outputStorage, Storage $post
 }
 
 /**
- * @param DbFactory $inputDB
- * @param Storage $inputStorage
- * @param Storage $porterStorage
- * @param Storage $outputStorage
- * @param Storage $postscriptStorage
+ * Setup a new migration.
+ *
+ * @param string $inputName
+ * @param string $outputName
  * @param string $sourcePrefix
+ * @param string $targetPrefix
  * @param string|null $limitTables
- * @param bool $captureOnly
  * @return Migration
+ * @throws Exception
  */
 function migrationFactory(
-    DbFactory $inputDB, // @todo remove
-    Storage $inputStorage,
-    Storage $porterStorage,
-    Storage $outputStorage,
-    Storage $postscriptStorage,
+    string $inputName,
+    string $outputName,
     string $sourcePrefix = '',
-    ?string $limitTables = '',
-    bool $captureOnly = false
+    string $targetPrefix = '',
+    ?string $limitTables = ''
 ): Migration {
+    // @todo Delete $inputDB after Sources are all moved to $inputStorage.
+    $inputDB = new \Porter\Database\DbFactory((new ConnectionManager($inputName))->connection()->getPDO());
+    $inputStorage = new Storage\Database(new ConnectionManager($inputName, $sourcePrefix));
+    if ($outputName === 'file') { // @todo storageFactory
+        $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
+        $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
+        $postscriptStorage = new Storage\File(); // @todo dead variable (halts at porter step)
+    } else {
+        $porterStorage = new Storage\Database(new ConnectionManager($outputName, 'PORT_'));
+        $outputStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
+        $postscriptStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
+    }
+    $captureOnly = ($outputName === 'sql');
     return new Migration(
         $inputDB,
         $inputStorage,
@@ -138,11 +149,25 @@ function migrationFactory(
         $outputStorage,
         $postscriptStorage,
         loadStructure(),
-        $sourcePrefix,
         $limitTables,
         $captureOnly
     );
 }
+
+/**
+ * @param Source $source
+ * @param Target $target
+ * @param string $inputName
+ * @param string $sourcePrefix
+ * @return FileTransfer
+ * @throws Exception
+ */
+function fileTransferFactory(Source $source, Target $target, string $inputName, string $sourcePrefix = ''): FileTransfer
+{
+    $inputStorage = new Storage\Database(new ConnectionManager($inputName, $sourcePrefix));
+    return new FileTransfer($source, $target, $inputStorage);
+}
+
 
 /**
  * Build a valid path from multiple pieces.

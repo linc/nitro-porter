@@ -14,10 +14,10 @@ class RunCommand extends Command
     {
         parent::__construct('run', 'Run a migration.');
         $this
-            ->option('-s --source', 'Source package alias (or "port")')
-            ->option('-t --target', 'Target package alias (or "sql" or "file")')
+            ->option('-s --source', 'Source package alias')
+            ->option('-t --target', 'Target package alias')
             ->option('-i --input', 'Source connection alias (defined in config)')
-            ->option('-o --output', 'Target connection alias (defined in config)')
+            ->option('-o --output', 'Target connection alias (defined in config), "file", or "sql"')
             ->option('--sp', 'Source table prefix (override package default)')
             ->option('--tp', 'Target table prefix (override package default)')
             ->option('--cdn', 'CDN prefix')

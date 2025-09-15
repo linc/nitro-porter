@@ -95,47 +95,26 @@ class Controller
     public function run(Request $request): void
     {
         // Break down the Request.
-        $source = sourceFactory($request->getSource());
-        $target = targetFactory($request->getTarget());
+        $sourceName = $request->getSource();
+        $targetName = $request->getTarget();
         $inputName = $request->getInput();
         $outputName = $request->getOutput();
         $sourcePrefix = $request->getInputTablePrefix();
-        $targetPrefix = (empty($target)) ? '' : $request->getOutputTablePrefix(); // @todo Make 'file' explicit output.
+        $targetPrefix = $request->getOutputTablePrefix();
         $dataTypes = $request->getDatatypes();
 
-        // Setup migration.
-        // @todo Delete $inputDB after Sources are all moved to $inputStorage.
-        $inputDB = new \Porter\Database\DbFactory((new ConnectionManager($inputName))->connection()->getPDO());
-        $inputStorage = new Storage\Database(new ConnectionManager($inputName, $sourcePrefix));
-        if (empty($target)) { // @todo storageFactory
-            $porterStorage = new Storage\File(); // Only 1 valid 'file' type currently.
-            $outputStorage = new Storage\File(); // @todo dead variable (halts at porter step)
-            $postscriptStorage = new Storage\File(); // @todo dead variable (halts at porter step)
-        } else {
-            $porterStorage = new Storage\Database(new ConnectionManager($outputName, 'PORT_'));
-            $outputStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
-            $postscriptStorage = new Storage\Database(new ConnectionManager($outputName, $targetPrefix));
-        }
-        $port = migrationFactory(
-            $inputDB, // @deprecated
-            $inputStorage,
-            $porterStorage,
-            $outputStorage,
-            $postscriptStorage,
-            $sourcePrefix,
-            $dataTypes,
-            ($outputName === 'sql')
-        );
+        // Create new migration artifacts.
+        $port = migrationFactory($inputName, $outputName, $sourcePrefix, $targetPrefix, $dataTypes);
+        $source = sourceFactory($sourceName);
+        $target = targetFactory($targetName);
+        $fileTransfer = fileTransferFactory($source, $target, $inputName, $sourcePrefix);
 
-        // Setup file transfer.
-        $fileTransfer = new FileTransfer($source, $target, $inputStorage);
-
-        // Log request.
+        // Report on request.
         $port->comment("NITRO PORTER RUNNING...");
-        $port->comment("Porting " . $source->getName() . " to " . ($target ? $target->getName() : 'file'));
-        $port->comment("Input: " . $inputStorage->getAlias() . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
-        $port->comment("Porter: " . $porterStorage->getAlias() . ' (PORT_)');
-        $port->comment("Output: " . $outputStorage->getAlias() . ' (' . ($targetPrefix ?? 'no prefix') . ')');
+        $port->comment("Porting " . $sourceName . " to " . $targetName);
+        $port->comment("Input: " . $inputName . ' (' . ($sourcePrefix ?? 'no prefix') . ')');
+        $port->comment("Porter: " . $outputName . ' (PORT_)');
+        $port->comment("Output: " . $outputName . ' (' . ($targetPrefix ?? 'no prefix') . ')');
 
         // Setup & log flags.
         if ($target) {
@@ -143,10 +122,10 @@ class Controller
             $port->comment("? 'Use Discussion Body' = " .
                 ($target->getDiscussionBodyMode() ? 'Enabled' : 'Disabled'));
         }
-
-        // Remove limits & start timer.
         set_time_limit(0);
         ini_set('memory_limit', '256M');
+
+        // Report start.
         $start = microtime(true);
         $port->comment("\n" . sprintf(
             '[ STARTED at %s ]',
@@ -166,7 +145,7 @@ class Controller
         // File transfer.
         //$fileTransfer->run();
 
-        // Report.
+        // Report finished.
         $port->comment("\n" . sprintf(
             '[ FINISHED at %s after running for %s ]',
             date('H:i:s e'),
