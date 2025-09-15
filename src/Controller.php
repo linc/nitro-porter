@@ -20,9 +20,8 @@ class Controller
     protected function doExport(Source $source, Migration $port): void
     {
         $port->verifySource($source->sourceTables);
-
-        if ($source::getCharsetTable()) {
-            $port->setCharacterSet($source::getCharsetTable());
+        if (!defined('PORTER_INPUT_ENCODING')) {
+            define('PORTER_INPUT_ENCODING', $port->getInputEncoding($source::getCharsetTable()));
         }
 
         $port->begin();

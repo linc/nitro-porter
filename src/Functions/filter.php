@@ -396,22 +396,9 @@ function formatUrl(string $str): string
  */
 function HTMLDecoder(string $value): string
 {
-    $characterSet = (defined('PORTER_CHARACTER_SET')) ? PORTER_CHARACTER_SET : 'UTF-8';
-
-    switch ($characterSet) {
-        case 'latin1':
-            $characterSet = 'ISO-8859-1';
-            break;
-        case 'latin9':
-            $characterSet = 'ISO-8859-15';
-            break;
-        case 'utf8':
-        case 'utf8mb4':
-            $characterSet = 'UTF-8';
-            break;
-    }
-
-    return html_entity_decode($value, ENT_QUOTES, $characterSet);
+    // Uses default flags as of PHP 8.1.
+    $encoding = defined('PORTER_INPUT_ENCODING') ? PORTER_INPUT_ENCODING : 'UTF-8';
+    return html_entity_decode($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, $encoding);
 }
 
 /**

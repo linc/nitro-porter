@@ -27,11 +27,6 @@ class Migration
     public array $comments = [];
 
     /**
-     * @var string The charcter set to set as the connection anytime the database connects.
-     */
-    public string $characterSet = 'utf8mb4';
-
-    /**
      * @var string DB prefix of source. Queries passed to export() will replace `:_` with this.
      * @see Migration::export()
      */
@@ -352,41 +347,38 @@ class Migration
     }
 
     /**
-     * Determine the character set of the origin database.
+     * Determine encoding of the input MySQL database & define a constant for filters.
      *
-     * @param string $table Table to derive charset from.
-     * @todo Use $inputStorage
+     * There's few quicker ways to corrupt your content than to pass your content through
+     * PHP's HTML entity decoder (a common requirement for UGC) using the wrong encoding.
+     *
+     * Alt strategy: `SHOW CREATE TABLE $table;` then regex out: ` CHARSET={charset} `.
+     * Or: Possibly just get collation + drop everything after first underscore.
+     *
+     * @param string $table Name of the database table to derive the encoding from.
+     * @return string Encoding found.
+     * @see HTMLDecoder()
+     * @todo integration test
      */
-    public function setCharacterSet(string $table): void
+    public function getInputEncoding(string $table): string
     {
-        $characterSet = 'utf8mb4'; // Default.
+        // Manually add table prefix.
+        $table = $this->dbInput()->getTablePrefix() . $table;
 
-        // First get the collation for the database.
-        $data = $this->query("show table status like ':_{$table}';");
-        if (!$data) {
-            return;
-        }
-        if ($statusRow = $data->nextResultRow()) {
-            $collation = $statusRow['Collation'];
-        } else {
-            return;
-        }
-        unset($data);
+        // Derive the charset from the specified MySQL database table.
+        $collation = $this->dbInput()
+            ->select("show table status like '{$table}'")[0]->Collation;
+        $this->comment('? Found collation: ' . $collation);
+        $charset = $this->dbInput()
+            ->select("show collation like '{$collation}'")[0]->Charset ?? 'utf8mb4';
+        $this->comment('? Found charset: ' . $charset);
 
-        // Grab the character set from the database.
-        $data = $this->query("show collation like '$collation'");
-        if (!$data) {
-            return;
-        }
-        if ($collationRow = $data->nextResultRow()) {
-            $characterSet = $collationRow['Charset'];
-            if (!defined('PORTER_CHARACTER_SET')) {
-                define('PORTER_CHARACTER_SET', $characterSet);
-            }
-            return;
-        }
-
-        $this->characterSet = $characterSet;
+        return match ($charset) {
+            'latin1' => 'ISO-8859-1', // Western European
+            'latin9' => 'ISO-8859-15', // Western European (adds Euro etc; not support by MySQL)
+            'cp1250' => 'cp1250', // Windows, Western Europe
+            default => 'UTF-8', // utf8mb4, utf8mb3, utf8
+        };
     }
 
     /**
