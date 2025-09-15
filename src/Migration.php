@@ -75,7 +75,6 @@ class Migration
      * @param Storage $outputStorage
      * @param Storage $postscriptStorage
      * @param array $porterStructure
-     * @param string $sourcePrefix
      * @param string|null $limitTables
      * @param bool $captureOnly
      */
@@ -86,7 +85,6 @@ class Migration
         Storage $outputStorage,
         Storage $postscriptStorage,
         array $porterStructure,
-        string $sourcePrefix = '',
         ?string $limitTables = '',
         bool $captureOnly = false
     ) {
@@ -96,7 +94,6 @@ class Migration
         $this->outputStorage = $outputStorage;
         $this->postscriptStorage = $postscriptStorage;
         $this->porterStructure = $porterStructure;
-        $this->srcPrefix = $sourcePrefix;
         $this->limitTables($limitTables);
         $this->captureOnly = $captureOnly;
     }
@@ -391,7 +388,7 @@ class Migration
      */
     public function query(string $query): ResultSet|false
     {
-        $query = str_replace(':_', $this->srcPrefix, $query); // replace prefix.
+        $query = str_replace(':_', $this->dbInput()->getTablePrefix(), $query); // replace prefix.
         $query = rtrim($query, ';') . ';'; // guarantee semicolon.
         return $this->database->getInstance()->query($query);
     }
