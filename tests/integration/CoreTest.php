@@ -25,7 +25,6 @@ class CoreTest extends TestCase
         $config = new Config($configArray);
         $manager = new Manager($config, new StringInput(' '), new NullOutput());
         $manager->migrate(self::ENV_ALIAS);
-        Log::comment('configured Phinx: ' . $configArray['paths']['migrations']);
     }
 
     /**
