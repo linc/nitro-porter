@@ -360,15 +360,21 @@ class Migration
     public function getInputEncoding(string $table): string
     {
         // Manually add table prefix.
+        if (!$this->hasInputSchema($table)) {
+            $this->comment('ERROR: Missing collation table ' . $this->dbInput()->getDatabaseName() .
+                '.' . $this->dbInput()->getTablePrefix() . $table);
+            return 'UTF-8';
+        }
         $table = $this->dbInput()->getTablePrefix() . $table;
 
         // Derive the charset from the specified MySQL database table.
         $collation = $this->dbInput()
             ->select("show table status like '{$table}'")[0]->Collation;
-        $this->comment('? Found collation: ' . $collation);
         $charset = $this->dbInput()
             ->select("show collation like '{$collation}'")[0]->Charset ?? 'utf8mb4';
-        $this->comment('? Found charset: ' . $charset);
+        if (\Porter\Config::getInstance()->debugEnabled()) {
+            $this->comment('? Found charset: ' . $charset);
+        }
 
         return match ($charset) {
             'latin1' => 'ISO-8859-1', // Western European
