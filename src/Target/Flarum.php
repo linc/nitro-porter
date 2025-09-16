@@ -405,7 +405,18 @@ class Flarum extends Target
             'DiscussionID' => 'discussion_id',
             'CategoryID' => 'tag_id',
         ];
-        $query = $port->dbPorter()->table('Discussion')->select(['DiscussionID', 'CategoryID']);
+        $query = $port->dbPorter()
+            ->table('Discussion')
+            ->select(['DiscussionID', 'CategoryID'])
+            ->union(
+                // Also tag discussion with the parent category.
+                $port->dbPorter()
+                    ->table('Discussion')
+                    ->select(['DiscussionID'])
+                    ->selectRaw('ParentCategoryID as CategoryID')
+                    ->leftJoin('Category', 'Discussion.CategoryID', '=', 'Category.CategoryID')
+                    ->whereNotNull('ParentCategoryID')
+            );
 
         $port->import('discussion_tag', $query, $structure, $map, $filters);
     }
