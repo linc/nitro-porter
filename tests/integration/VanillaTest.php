@@ -25,17 +25,4 @@ class VanillaTest extends TestCase
         $manager->migrate('test');
         $manager->seed('test');
     }
-
-    /**
-     * Fixture that runs once before EACH test in this class.
-     */
-    protected function setup(): void
-    {
-        //
-    }
-
-    public function testItSeedsDatabaseLol(): bool
-    {
-        $this->markTestIncomplete('Not written yet.');
-    }
 }
