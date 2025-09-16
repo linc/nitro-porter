@@ -37,9 +37,9 @@ class VanillaSeed extends AbstractSeed
         $data = [];
         for ($i = 0; $i < 20; $i++) {
             $data[] = [
-                'Name'      => $faker->userName,
-                'Password'      => sha1($faker->password),
-                'Email'         => $faker->email,
+                'Name' => $faker->userName,
+                'Password' => sha1($faker->password),
+                'Email' => $faker->email,
             ];
         }
         $this->table('GDN_User')->insert($data)->saveData();
