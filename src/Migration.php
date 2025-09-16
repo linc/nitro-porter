@@ -439,8 +439,6 @@ class Migration
      * Throws error if required source tables & columns are not present.
      *
      * @param array $requiredSchema Table => Columns
-     * @deprecated
-     * @see hasInputSchema() for a better way to detect this in Source packages.
      */
     public function verifySource(array $requiredSchema): void
     {
