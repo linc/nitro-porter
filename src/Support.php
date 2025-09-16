@@ -77,7 +77,9 @@ class Support
     {
         foreach ($sources as $name) {
             $classname = '\Porter\Source\\' . $name;
-            $this->sources[$name] = $classname::getSupport();
+            if (is_a($classname, Source::class, true)) {
+                $this->sources[$name] = $classname::getSupport();
+            }
         }
     }
 
@@ -100,7 +102,9 @@ class Support
         // Load the rest of the target support automatically.
         foreach ($targets as $name) {
             $classname = '\Porter\Target\\' . $name;
-            $this->targets[$name] = $classname::getSupport();
+            if (is_a($classname, Target::class, true)) {
+                $this->targets[$name] = $classname::getSupport();
+            }
         }
     }
 
@@ -110,6 +114,7 @@ class Support
      * @param array $supported
      * @param string $package
      * @param string $feature
+     * @param bool $notes
      * @return string HTML-wrapped Yes or No symbols.
      */
     public function getFeatureStatusHtml(array $supported, string $package, string $feature, bool $notes = true): string
