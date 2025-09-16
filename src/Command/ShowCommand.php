@@ -2,10 +2,9 @@
 
 namespace Porter\Command;
 
-use Porter;
 use Ahc\Cli\Input\Command;
-use Ahc\Cli\IO\Interactor;
 use Ahc\Cli\Output\Writer;
+use Porter\Support;
 
 class ShowCommand extends Command
 {
@@ -26,46 +25,36 @@ class ShowCommand extends Command
     /**
      * Command execution.
      */
-    public function execute()
+    public function execute(): void
     {
-        // @todo validate
-        self::viewFeatureList($this->type, $this->name);
+        // Validate type.
+        if (!in_array($this->type, ['source', 'target'])) {
+            (new Writer())->bold->yellow->write('Invalid value for <type>');
+            return;
+        }
+
+        // Validate name.
+        $info = ($this->type === 'source') ?  Support::getInstance()->getSources() :
+            Support::getInstance()->getTargets();
+        if (!array_key_exists($this->name, $info)) {
+            (new Writer())->bold->yellow->write('Unknown package "' . $this->name . '" (case-sensitive).');
+            return;
+        }
+
+        $this->showFeatures($this->type, $this->name, $info);
     }
 
     /**
-     * Output features for a single platform.
+     * Output feature table for a single platform.
      *
      * @param string $type
      * @param string $name
+     * @param array $info
      */
-    public static function viewFeatureList(string $type, string $name)
+    public function showFeatures(string $type, string $name, array $info): void
     {
-        // Build list of features.
-        if ($type === 'source') {
-            $supported = \Porter\Support::getInstance()->getSources();
-        } elseif ($type === 'target') {
-            $supported = \Porter\Support::getInstance()->getTargets();
-        }
-        $features = \Porter\Support::getInstance()->getAllFeatures();
-        foreach ($features as $feature => $trash) {
-            $list[] = [
-                'feature' => preg_replace('/[A-Z]/', ' $0', $feature),
-                'support' =>  \Porter\Support::getInstance()->getFeatureStatusHtml($supported, $name, $feature)
-            ];
-        }
-
-        // Output.
         $writer = new Writer();
-        if ($type === 'target' && strtolower($name) === 'vanilla') {
-            // Vanilla is the intermediary format, so all features are supported by necessity.
-            $writer->bold->green->write("\n" . 'All features are supported for target Vanilla.' . "\n");
-        } elseif (!array_key_exists($name, $supported)) {
-            // Error message for invalid package names.
-            $writer->bold->yellow->write("\n" . 'Unknown package "' . $name . '". Package is case-sensitive.' . "\n");
-        } else {
-            // Support table.
-            $writer->bold->green->write("\n" . 'Support for ' . $type . ' ' . $supported[$name]['name'] . "\n");
-            $writer->table($list, ['head' => 'bold']);
-        }
+        $writer->bold->green->write("\n" . 'Support for ' . $type . ' ' . $info[$name]['name'] . "\n");
+        $writer->table(Support::getInstance()->getFeatureTable($name, $info), ['head' => 'bold']);
     }
 }

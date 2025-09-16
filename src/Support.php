@@ -118,9 +118,9 @@ class Support
      * @param string $package
      * @param string $feature
      * @param bool $notes
-     * @return string HTML-wrapped Yes or No symbols.
+     * @return string Yes or No.
      */
-    public function getFeatureStatusHtml(array $supported, string $package, string $feature, bool $notes = true): string
+    public function getFeatureStatus(array $supported, string $package, string $feature, bool $notes = true): string
     {
         if (!isset($supported[$package]['features'])) {
             return 'No';
@@ -144,6 +144,25 @@ class Support
         }
 
         return $status;
+    }
+
+    /**
+     * @param string $name
+     * @param array $info
+     * @return array
+     */
+    public function getFeatureTable(string $name, array $info): array
+    {
+        // Build feature list.
+        $features = array_keys($this->getAllFeatures());
+        $list = [];
+        foreach ($features as $feature) {
+            $list[] = [
+                'feature' => preg_replace('/[A-Z]/', ' $0', $feature),
+                'support' =>  $this->getFeatureStatus($info, $name, $feature)
+            ];
+        }
+        return $list;
     }
 
     /**
