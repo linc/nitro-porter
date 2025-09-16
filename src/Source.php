@@ -108,7 +108,7 @@ abstract class Source
     public static function getCharsetTable(): string
     {
         $charset = '';
-        if (isset(static::SUPPORTED['charset_table'])) { // @phpstan-ignore isset.offset
+        if (isset(static::SUPPORTED['charset_table'])) {
             $charset = static::SUPPORTED['charset_table'];
         }
         return $charset;
