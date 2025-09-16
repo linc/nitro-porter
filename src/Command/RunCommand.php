@@ -70,45 +70,4 @@ class RunCommand extends Command
 
         runPorter($request);
     }
-
-    /**
-     * @param bool $sections
-     * @return array
-     */
-    public function getAllOptions(bool $sections = false): array
-    {
-        $options['package']['Values'] = array_keys(Support::getInstance()->getSources());
-        $globalOptions = $options;
-        $supported = Support::getInstance()->getSources();
-        $result = [];
-
-        if ($sections) {
-            $result['Run Options'] = $globalOptions;
-        } else {
-            $result = $globalOptions;
-        }
-
-        foreach ($supported as $type => $options) {
-            $commandLine = $options['options'] ?? '';
-            if (!$commandLine) {
-                continue;
-            }
-
-            if ($sections) {
-                $result[$options['name']] = $commandLine;
-            } else {
-                // We need to add the types to each command line option for validation purposes.
-                foreach ($commandLine as $longCode => $row) {
-                    if (isset($result[$longCode])) {
-                        $result[$longCode]['Packages'][] = $type;
-                    } else {
-                        $row['Packages'] = array($type);
-                        $result[$longCode] = $row;
-                    }
-                }
-            }
-        }
-
-        return $result;
-    }
 }
