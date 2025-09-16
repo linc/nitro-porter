@@ -32,7 +32,6 @@ abstract class Source
     protected bool $useDiscussionBody = true;
 
     /**
-     * @deprecated
      * @var array Required tables, columns set per exporter
      */
     public array $sourceTables = [];
@@ -40,7 +39,7 @@ abstract class Source
     /**
      * Forum-specific export routine
      */
-    abstract public function run(Migration $port); // @phpstan-ignore missingType.return
+    abstract public function run(Migration $port): void;
 
     /**
      * Get name of the source package.
