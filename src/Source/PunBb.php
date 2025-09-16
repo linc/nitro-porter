@@ -18,12 +18,6 @@ class PunBb extends Source
         'defaultTablePrefix' => 'punbb_',
         'charsetTable' => 'posts',
         'passwordHashMethod' => 'punbb',
-        'options' => [
-            'avatars-source' => [
-                'Full path of forum avatars.',
-                'Sx' => '::'
-            ],
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

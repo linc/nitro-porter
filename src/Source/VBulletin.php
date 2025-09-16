@@ -40,7 +40,7 @@ class VBulletin extends Source
         'name' => 'vBulletin 3 & 4',
         'defaultTablePrefix' => 'vb_',
         'charsetTable' => 'post',
-        'options' => [
+        /*'options' => [
             'db-avatars' => [
                 'Enables exporting avatars from the database.',
                 'Sx' => '::',
@@ -69,7 +69,7 @@ class VBulletin extends Source
                 'Character used to split the hash of attachments. ("" or "/")',
                 'Sx' => '::'
             ],
-        ],
+        ],*/
         'features' => [
             'Comments' => 1,
             'Discussions' => 1,

@@ -17,8 +17,6 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         'name' => '_Example', // The package name users will see.
         'defaultTablePrefix' => '', // The default table prefix this software uses, if you know it.
         'charsetTable' => 'comments',  // Usually put the comments table name here. Used to derive charset.
-        'options' => [
-        ],
         'features' => [  // Set features you support to 1 or a string (for support notes).
             'Users' => 1,
             'Passwords' => 0,

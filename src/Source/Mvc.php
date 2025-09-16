@@ -21,7 +21,6 @@ class Mvc extends Source
         'name' => 'MVC',
         'defaultTablePrefix' => '',
         'charsetTable' => 'Post',
-        'options' => [],
         'features' => [
             'Users' => 1,
             'Passwords' => 0,

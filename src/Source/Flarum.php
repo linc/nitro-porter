@@ -16,7 +16,6 @@ class Flarum extends Source
         'name' => 'Flarum',
         'defaultTablePrefix' => 'FLA_',
         'charsetTable' => 'posts',
-        'options' => [],
         'features' => [  // Set features you support to 1 or a string (for support notes).
             'Users' => 1,
             'Passwords' => 1,

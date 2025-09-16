@@ -18,8 +18,6 @@ class EsoTalk extends Source
         'name' => 'esoTalk',
         'defaultTablePrefix' => 'et_',
         'charsetTable' => 'post',
-        'options' => [
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

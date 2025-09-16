@@ -20,18 +20,6 @@ class VBulletin5 extends VBulletin
         'name' => 'vBulletin 5 Connect',
         'defaultTablePrefix' => 'vb_',
         'charsetTable' => 'node',
-        'options' => [
-            'db-avatars' => [
-                'Enables exporting avatars from the database.',
-                'Sx' => '::',
-                'Default' => false,
-            ],
-            'db-files' => [
-                'Enables exporting attachments from database.',
-                'Sx' => '::',
-                'Default' => false,
-            ],
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

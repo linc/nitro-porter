@@ -17,12 +17,6 @@ class AdvancedForum extends Source
         'name' => 'Advanced Forum 7.x-2.*',
         'defaultTablePrefix' => '',
         'charsetTable' => 'Comment',
-        'options' => [
-            'avatars-prefix' => [
-                'Path to be prefixed to avatar filenames.',
-                'Sx' => '::'
-            ],
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

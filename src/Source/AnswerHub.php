@@ -18,14 +18,6 @@ class AnswerHub extends Source
         'name' => 'answerhub',
         'defaultTablePrefix' => '',
         'charsetTable' => 'nodes',
-        'options' => [
-            'noemaildomain' => [
-                'Domain to use when generating email addresses for users that does not have one.',
-                'Field' => 'noemaildomain',
-                'Sx' => '::',
-                'Default' => 'answerhub.com',
-            ],
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 0,

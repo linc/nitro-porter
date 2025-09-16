@@ -17,8 +17,6 @@ class JForum extends Source
         'name' => 'jforum',
         'defaultTablePrefix' => 'jforum_',
         'charsetTable' => 'posts',
-        'options' => [
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 0,

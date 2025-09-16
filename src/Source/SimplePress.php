@@ -18,8 +18,6 @@ class SimplePress extends Source
         'defaultTablePrefix' => 'wp_',
         'charsetTable' => 'posts',
         'passwordHashMethod' => 'Vanilla',
-        'options' => [
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

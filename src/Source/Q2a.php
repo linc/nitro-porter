@@ -17,8 +17,6 @@ class Q2a extends Source
         'name' => 'Questions2Answers',
         'defaultTablePrefix' => 'qa_',
         'charsetTable' => 'posts',
-        'options' => [
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 0,

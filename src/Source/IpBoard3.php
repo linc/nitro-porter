@@ -20,16 +20,6 @@ class IpBoard3 extends Source
         'defaultTablePrefix' => 'ibf_',
         'charsetTable' => 'posts',
         'passwordHashMethod' => 'ipb',
-        'options' => [
-            'avatars-source' => [
-                'Full path of source avatars to process.',
-                'Sx' => ':',
-            ],
-            'users-source' => [
-                'Source user table: profile_portal (default) or member_extra.',
-                'Sx' => ':',
-            ],
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

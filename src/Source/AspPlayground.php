@@ -17,8 +17,6 @@ class AspPlayground extends Source
         'name' => 'ASP Playground',
         'defaultTablePrefix' => 'pgd_',
         'charsetTable' => 'Threads',
-        'options' => [
-        ],
         'features' => [
             'Users' => 1,
             'Categories' => 1,

@@ -18,12 +18,6 @@ class FluxBb extends Source
         'defaultTablePrefix' => '',
         'charsetTable' => 'posts',
         'passwordHashMethod' => 'punbb', // FluxBB is a fork of punbb and the password works.
-        'options' => [
-            'avatars-source' => array(
-                'Full path of forum avatars.',
-                'Sx' => '::',
-            )
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

@@ -18,8 +18,6 @@ class PhpBb2 extends Source
         'defaultTablePrefix' => 'phpbb_',
         'charsetTable' => 'posts',
         'passwordHashMethod' => 'phpBB',
-        'options' => [
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

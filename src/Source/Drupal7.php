@@ -19,16 +19,6 @@ class Drupal7 extends Source
         'name' => 'Drupal 7',
         'defaultTablePrefix' => '',
         'charsetTable' => 'comment',
-        'options' => [
-            'attach-source' => [
-                'URL or folder destination for the uploads folder, no trailing slash.',
-                'Sx' => '::'
-            ],
-            'attach-target' => [
-                'URL or folder destination for the uploads folder, no trailing slash.',
-                'Sx' => '::'
-            ],
-        ],
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
