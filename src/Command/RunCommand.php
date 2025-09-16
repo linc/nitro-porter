@@ -2,11 +2,10 @@
 
 namespace Porter\Command;
 
-use Porter;
 use Ahc\Cli\Input\Command;
 use Ahc\Cli\IO\Interactor;
 use Porter\Config;
-use Porter\Support;
+use Porter\Request;
 
 class RunCommand extends Command
 {
@@ -57,7 +56,7 @@ class RunCommand extends Command
      */
     public function execute(): void
     {
-        $request = new \Porter\Request(
+        $request = new Request(
             $this->source,
             $this->target,
             $this->input,
