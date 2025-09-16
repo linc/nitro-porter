@@ -14,8 +14,8 @@ class Flarum extends Source
 {
     public const SUPPORTED = [
         'name' => 'Flarum',
-        'prefix' => 'FLA_',
-        'charset_table' => 'posts',
+        'defaultTablePrefix' => 'FLA_',
+        'charsetTable' => 'posts',
         'options' => [],
         'features' => [  // Set features you support to 1 or a string (for support notes).
             'Users' => 1,

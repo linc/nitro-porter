@@ -18,8 +18,8 @@ class VBulletin5 extends VBulletin
 {
     public const SUPPORTED = [
         'name' => 'vBulletin 5 Connect',
-        'prefix' => 'vb_',
-        'charset_table' => 'node',
+        'defaultTablePrefix' => 'vb_',
+        'charsetTable' => 'node',
         'options' => [
             'db-avatars' => [
                 'Enables exporting avatars from the database.',

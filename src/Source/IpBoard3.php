@@ -17,9 +17,9 @@ class IpBoard3 extends Source
 {
     public const SUPPORTED = [
         'name' => 'IP.Board 3',
-        'prefix' => 'ibf_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'ipb',
+        'defaultTablePrefix' => 'ibf_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'ipb',
         'options' => [
             'avatars-source' => [
                 'Full path of source avatars to process.',

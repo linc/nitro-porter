@@ -16,8 +16,8 @@ class EsoTalk extends Source
 {
     public const SUPPORTED = [
         'name' => 'esoTalk',
-        'prefix' => 'et_',
-        'charset_table' => 'post',
+        'defaultTablePrefix' => 'et_',
+        'charsetTable' => 'post',
         'options' => [
         ],
         'features' => [

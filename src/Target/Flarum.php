@@ -21,7 +21,7 @@ class Flarum extends Target
 {
     public const SUPPORTED = [
         'name' => 'Flarum',
-        'prefix' => 'FLA_',
+        'defaultTablePrefix' => 'FLA_',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

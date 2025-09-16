@@ -15,8 +15,8 @@ class BbPress1 extends Source
 {
     public const SUPPORTED = [
         'name' => 'bbPress 1',
-        'prefix' => 'bb_',
-        'charset_table' => 'posts',
+        'defaultTablePrefix' => 'bb_',
+        'charsetTable' => 'posts',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

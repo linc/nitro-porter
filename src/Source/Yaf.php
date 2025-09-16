@@ -15,8 +15,8 @@ class Yaf extends Source
 {
     public const SUPPORTED = [
         'name' => 'YAF.NET',
-        'prefix' => 'yaf_',
-        'charset_table' => 'Topic',
+        'defaultTablePrefix' => 'yaf_',
+        'charsetTable' => 'Topic',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

@@ -15,9 +15,9 @@ class NodeBb extends Source
 {
     public const SUPPORTED = [
         'name' => 'NodeBB 0.*',
-        'prefix' => 'gdn_',
-        'charset_table' => 'post',
-        'hashmethod' => 'Vanilla',
+        'defaultTablePrefix' => 'gdn_',
+        'charsetTable' => 'post',
+        'passwordHashMethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

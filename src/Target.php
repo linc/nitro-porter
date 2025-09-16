@@ -6,8 +6,8 @@ abstract class Target
 {
     public const SUPPORTED = [
         'name' => '',
-        'prefix' => '',
-        'charset_table' => '',
+        'defaultTablePrefix' => '',
+        'passwordHashMethod' => '',
         'avatarsPrefix' => '',
         'avatarThumbnailsPrefix' => '',
         'features' => [],
@@ -31,7 +31,7 @@ abstract class Target
     public ConnectionManager $connection;
 
     /**
-     * Get name of the source package.
+     * Get support info of the target package.
      *
      * @return array
      * @see Target::setSources()
@@ -58,7 +58,7 @@ abstract class Target
      */
     public static function getPrefix(): string
     {
-        return static::SUPPORTED['prefix'];
+        return static::SUPPORTED['defaultTablePrefix'];
     }
 
     /**

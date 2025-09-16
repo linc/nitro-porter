@@ -15,9 +15,9 @@ class ModxDiscuss extends Source
 {
     public const SUPPORTED = [
         'name' => 'MODX Discuss Extension',
-        'prefix' => 'modx_discuss_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'Vanilla',
+        'defaultTablePrefix' => 'modx_discuss_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

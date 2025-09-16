@@ -15,8 +15,8 @@ class Q2a extends Source
 {
     public const SUPPORTED = [
         'name' => 'Questions2Answers',
-        'prefix' => 'qa_',
-        'charset_table' => 'posts',
+        'defaultTablePrefix' => 'qa_',
+        'charsetTable' => 'posts',
         'options' => [
         ],
         'features' => [

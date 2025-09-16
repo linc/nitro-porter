@@ -19,8 +19,8 @@ class Mvc extends Source
 {
     public const SUPPORTED = [
         'name' => 'MVC',
-        'prefix' => '',
-        'charset_table' => 'Post',
+        'defaultTablePrefix' => '',
+        'charsetTable' => 'Post',
         'options' => [],
         'features' => [
             'Users' => 1,

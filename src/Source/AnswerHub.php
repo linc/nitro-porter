@@ -16,8 +16,8 @@ class AnswerHub extends Source
 {
     public const SUPPORTED = [
         'name' => 'answerhub',
-        'prefix' => '',
-        'charset_table' => 'nodes',
+        'defaultTablePrefix' => '',
+        'charsetTable' => 'nodes',
         'options' => [
             'noemaildomain' => [
                 'Domain to use when generating email addresses for users that does not have one.',

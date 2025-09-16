@@ -15,8 +15,8 @@ class JForum extends Source
 {
     public const SUPPORTED = [
         'name' => 'jforum',
-        'prefix' => 'jforum_',
-        'charset_table' => 'posts',
+        'defaultTablePrefix' => 'jforum_',
+        'charsetTable' => 'posts',
         'options' => [
         ],
         'features' => [

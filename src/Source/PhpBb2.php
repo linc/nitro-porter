@@ -15,9 +15,9 @@ class PhpBb2 extends Source
 {
     public const SUPPORTED = [
         'name' => 'phpBB 2',
-        'prefix' => 'phpbb_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'phpBB',
+        'defaultTablePrefix' => 'phpbb_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'phpBB',
         'options' => [
         ],
         'features' => [

@@ -20,8 +20,8 @@ class FuseTalk extends Source
 {
     public const SUPPORTED = [
         'name' => 'FuseTalk',
-        'prefix' => 'ftdb_',
-        'charset_table' => 'messages',
+        'defaultTablePrefix' => 'ftdb_',
+        'charsetTable' => 'messages',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

@@ -17,9 +17,9 @@ class Xenforo extends Source
 {
     public const SUPPORTED = [
         'name' => 'Xenforo',
-        'prefix' => 'xf_',
-        'charset_table' => 'post',
-        'hashmethod' => 'xenforo',
+        'defaultTablePrefix' => 'xf_',
+        'charsetTable' => 'post',
+        'passwordHashMethod' => 'xenforo',
         'avatarsPrefix' => '1',
         'avatarThumbnailsPrefix' => 'm',
         'features' => [

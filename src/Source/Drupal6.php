@@ -15,8 +15,8 @@ class Drupal6 extends Source
 {
     public const SUPPORTED = [
         'name' => 'Drupal 6',
-        'prefix' => '',
-        'charset_table' => 'comment',
+        'defaultTablePrefix' => '',
+        'charsetTable' => 'comment',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

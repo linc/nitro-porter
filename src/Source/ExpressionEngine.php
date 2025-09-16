@@ -15,8 +15,8 @@ class ExpressionEngine extends Source
 {
     public const SUPPORTED = [
         'name' => 'Expression Engine Discussion Forum',
-        'prefix' => 'forum_',
-        'charset_table' => 'topics',
+        'defaultTablePrefix' => 'forum_',
+        'charsetTable' => 'topics',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

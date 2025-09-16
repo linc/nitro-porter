@@ -15,8 +15,8 @@ class UserVoice extends Source
 {
     public const SUPPORTED = [
         'name' => 'User Voice',
-        'prefix' => 'cs_',
-        'charset_table' => 'Threads',
+        'defaultTablePrefix' => 'cs_',
+        'charsetTable' => 'Threads',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

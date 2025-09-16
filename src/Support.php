@@ -4,11 +4,14 @@ namespace Porter;
 
 class Support
 {
-    public const SUPPORTED_META = [
+    public const SUPPORTED_INFO = [
         'name',
-        'prefix',
+        'defaultTablePrefix',
+        'passwordHashMethod',
+        'charsetTable',
+        'avatarsPrefix',
+        'avatarThumbnailsPrefix',
         'features',
-        'options',
     ];
 
     public const SUPPORTED_FEATURES = [

@@ -16,7 +16,7 @@ class Waterhole extends Target
 {
     public const SUPPORTED = [
         'name' => 'Waterhole',
-        'prefix' => '',
+        'defaultTablePrefix' => '',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

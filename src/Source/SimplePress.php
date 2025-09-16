@@ -15,9 +15,9 @@ class SimplePress extends Source
 {
     public const SUPPORTED = [
         'name' => 'SimplePress 1',
-        'prefix' => 'wp_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'Vanilla',
+        'defaultTablePrefix' => 'wp_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'Vanilla',
         'options' => [
         ],
         'features' => [

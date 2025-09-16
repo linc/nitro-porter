@@ -17,8 +17,8 @@ class MyBb extends Source
 {
     public const SUPPORTED = [
         'name' => 'MyBB',
-        'prefix' => 'mybb_',
-        'charset_table' => 'posts',
+        'defaultTablePrefix' => 'mybb_',
+        'charsetTable' => 'posts',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

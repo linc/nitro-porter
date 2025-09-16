@@ -15,8 +15,8 @@ class WebWiz extends Source
 {
     public const SUPPORTED = [
         'name' => 'Web Wiz Forums',
-        'prefix' => 'tbl',
-        'charset_table' => 'Topic',
+        'defaultTablePrefix' => 'tbl',
+        'charsetTable' => 'Topic',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

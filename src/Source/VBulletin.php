@@ -38,8 +38,8 @@ class VBulletin extends Source
 {
     public const SUPPORTED = [
         'name' => 'vBulletin 3 & 4',
-        'prefix' => 'vb_',
-        'charset_table' => 'post',
+        'defaultTablePrefix' => 'vb_',
+        'charsetTable' => 'post',
         'options' => [
             'db-avatars' => [
                 'Enables exporting avatars from the database.',

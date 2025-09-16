@@ -15,9 +15,9 @@ class PhpBb3 extends Source
 {
     public const SUPPORTED = [
         'name' => 'phpBB 3',
-        'prefix' => 'phpbb_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'phpBB',
+        'defaultTablePrefix' => 'phpbb_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'phpBB',
         'options' => [
         ],
         'features' => [

@@ -9,10 +9,11 @@ abstract class Source
 {
     public const SUPPORTED = [
         'name' => '',
-        'prefix' => '',
-        'charset_table' => '',
-        'hashmethod' => '',
-        'options' => [],
+        'defaultTablePrefix' => '',
+        'charsetTable' => '',
+        'passwordHashMethod' => '',
+        'avatarsPrefix' => '',
+        'avatarThumbnailsPrefix' => '',
         'features' => [],
     ];
 
@@ -69,7 +70,7 @@ abstract class Source
      */
     public static function getPrefix(): string
     {
-        return static::SUPPORTED['prefix'];
+        return static::SUPPORTED['defaultTablePrefix'];
     }
 
     /**
@@ -107,8 +108,8 @@ abstract class Source
     public static function getCharsetTable(): string
     {
         $charset = '';
-        if (isset(static::SUPPORTED['charset_table'])) {
-            $charset = static::SUPPORTED['charset_table'];
+        if (isset(static::SUPPORTED['charsetTable'])) {
+            $charset = static::SUPPORTED['charsetTable'];
         }
         return $charset;
     }

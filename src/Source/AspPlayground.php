@@ -15,8 +15,8 @@ class AspPlayground extends Source
 {
     public const SUPPORTED = [
         'name' => 'ASP Playground',
-        'prefix' => 'pgd_',
-        'charset_table' => 'Threads',
+        'defaultTablePrefix' => 'pgd_',
+        'charsetTable' => 'Threads',
         'options' => [
         ],
         'features' => [

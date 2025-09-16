@@ -15,8 +15,8 @@ class CodoForum extends Source
 {
     public const SUPPORTED = [
         'name' => 'CodoForum',
-        'prefix' => 'codo_',
-        'charset_table' => 'posts',
+        'defaultTablePrefix' => 'codo_',
+        'charsetTable' => 'posts',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

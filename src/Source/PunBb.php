@@ -15,9 +15,9 @@ class PunBb extends Source
 {
     public const SUPPORTED = [
         'name' => 'PunBB 1',
-        'prefix' => 'punbb_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'punbb',
+        'defaultTablePrefix' => 'punbb_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'punbb',
         'options' => [
             'avatars-source' => [
                 'Full path of forum avatars.',

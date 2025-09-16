@@ -15,9 +15,9 @@ class IpBoard4 extends Source
 {
     public const SUPPORTED = [
         'name' => 'IP.Board 4',
-        'prefix' => 'ibf_',
-        'charset_table' => 'forums_posts',
-        'hashmethod' => 'ipb',
+        'defaultTablePrefix' => 'ibf_',
+        'charsetTable' => 'forums_posts',
+        'passwordHashMethod' => 'ipb',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

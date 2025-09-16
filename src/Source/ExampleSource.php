@@ -15,8 +15,8 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
 {
     public const SUPPORTED = [
         'name' => '_Example', // The package name users will see.
-        'prefix' => '', // The default table prefix this software uses, if you know it.
-        'charset_table' => 'comments',  // Usually put the comments table name here. Used to derive charset.
+        'defaultTablePrefix' => '', // The default table prefix this software uses, if you know it.
+        'charsetTable' => 'comments',  // Usually put the comments table name here. Used to derive charset.
         'options' => [
         ],
         'features' => [  // Set features you support to 1 or a string (for support notes).

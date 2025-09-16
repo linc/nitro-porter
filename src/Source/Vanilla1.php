@@ -15,8 +15,8 @@ class Vanilla1 extends Source
 {
     public const SUPPORTED = [
         'name' => 'Vanilla 1',
-        'prefix' => 'LUM_',
-        'charset_table' => 'Comment',
+        'defaultTablePrefix' => 'LUM_',
+        'charsetTable' => 'Comment',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

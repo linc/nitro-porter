@@ -15,9 +15,9 @@ class Kunena extends Source
 {
     public const SUPPORTED = [
         'name' => 'Joomla Kunena',
-        'prefix' => 'jos_',
-        'charset_table' => 'kunena_messages',
-        'hashmethod' => 'joomla',
+        'defaultTablePrefix' => 'jos_',
+        'charsetTable' => 'kunena_messages',
+        'passwordHashMethod' => 'joomla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

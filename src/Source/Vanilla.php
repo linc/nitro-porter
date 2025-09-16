@@ -15,9 +15,9 @@ class Vanilla extends Source
 {
     public const SUPPORTED = [
         'name' => 'Vanilla 2+',
-        'prefix' => 'GDN_',
-        'charset_table' => 'Comment',
-        'hashmethod' => 'Vanilla',
+        'defaultTablePrefix' => 'GDN_',
+        'charsetTable' => 'Comment',
+        'passwordHashMethod' => 'Vanilla',
         'avatarsPrefix' => 'p',
         'avatarThumbnailsPrefix' => 'n',
         'features' => [

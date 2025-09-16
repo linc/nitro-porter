@@ -15,9 +15,9 @@ class BbPress2 extends Source
 {
     public const SUPPORTED = [
         'name' => 'bbPress 2',
-        'prefix' => 'wp_',
-        'charset_table' => 'posts',
-        'hashmethod' => 'Vanilla',
+        'defaultTablePrefix' => 'wp_',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'Vanilla',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

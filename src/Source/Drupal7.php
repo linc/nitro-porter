@@ -17,8 +17,8 @@ class Drupal7 extends Source
 
     public const SUPPORTED = [
         'name' => 'Drupal 7',
-        'prefix' => '',
-        'charset_table' => 'comment',
+        'defaultTablePrefix' => '',
+        'charsetTable' => 'comment',
         'options' => [
             'attach-source' => [
                 'URL or folder destination for the uploads folder, no trailing slash.',

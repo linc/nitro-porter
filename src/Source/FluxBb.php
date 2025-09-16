@@ -15,9 +15,9 @@ class FluxBb extends Source
 {
     public const SUPPORTED = [
         'name' => 'FluxBB 1',
-        'prefix' => '',
-        'charset_table' => 'posts',
-        'hashmethod' => 'punbb', // FluxBB is a fork of punbb and the password works.
+        'defaultTablePrefix' => '',
+        'charsetTable' => 'posts',
+        'passwordHashMethod' => 'punbb', // FluxBB is a fork of punbb and the password works.
         'options' => [
             'avatars-source' => array(
                 'Full path of forum avatars.',

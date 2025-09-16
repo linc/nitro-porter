@@ -29,7 +29,7 @@ class Mbox extends Source
 {
     public const SUPPORTED = [
         'name' => '.mbox files',
-        'prefix' => '',
+        'defaultTablePrefix' => '',
         'features' => [
             'Users' => 1,
             'Passwords' => 0,

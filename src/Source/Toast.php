@@ -15,8 +15,8 @@ class Toast extends Source
 {
     public const SUPPORTED = [
         'name' => 'Toast',
-        'prefix' => 'tstdb_',
-        'charset_table' => 'Post',
+        'defaultTablePrefix' => 'tstdb_',
+        'charsetTable' => 'Post',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,

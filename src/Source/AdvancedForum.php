@@ -15,8 +15,8 @@ class AdvancedForum extends Source
 {
     public const SUPPORTED = [
         'name' => 'Advanced Forum 7.x-2.*',
-        'prefix' => '',
-        'charset_table' => 'Comment',
+        'defaultTablePrefix' => '',
+        'charsetTable' => 'Comment',
         'options' => [
             'avatars-prefix' => [
                 'Path to be prefixed to avatar filenames.',

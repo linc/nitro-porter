@@ -15,9 +15,9 @@ class Smf2 extends Source
 {
     public const SUPPORTED = [
         'name' => 'Simple Machines 2',
-        'prefix' => 'smf_',
-        'charset_table' => 'messages',
-        'hashmethod' => 'Django',
+        'defaultTablePrefix' => 'smf_',
+        'charsetTable' => 'messages',
+        'passwordHashMethod' => 'Django',
         'features' => [
             'Users' => 1,
             'Passwords' => 1,
