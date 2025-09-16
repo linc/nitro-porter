@@ -22,8 +22,10 @@ class RunCommand extends Command
             ->option('--cdn', 'CDN prefix')
             ->option('-d --data', 'Limit to specified data types (CSV)')
             ->usage(
-                '<bold>  run</end> <comment><source> <source-connection> <target> <target-connection></end>' .
-                ' ## Migrate data from source to target<eol/>'
+                '<bold>  run -s xenforo -t flarum -i xf25 -o test --sp xf_ </end><eol/>' .
+                    '<comment>  Migrate from Xenforo in database with alias `xf25` (in config.php) ' .
+                    'using table prefix `xf_`<eol/>  to Flarum in database with alias `test` ' .
+                    'using the default table prefix (because --tp is omitted).</end><eol/>'
             );
     }
 
