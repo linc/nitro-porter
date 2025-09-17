@@ -43,6 +43,8 @@ There is no consideration of when a user was added to a private message chain. I
 
 Source packages are invoked by their `run()` method. It must call any methods you add in the order you want.
 
+Typically, Sources do NOT reformat user generated content (UGC) and simply label how it is formatted on the relevant records (e.g. setting `Comment.Format` to 'BBCode' or 'HTML').
+
 ### Maps and filters
 
 Use a `$map` array to directly translate a column name in one database to another. Need the data transformed? You can use a function. Pass an array like `['Column' => 'Name', 'Filter' => 'HTMLDecoder']` and the `Name` column's value will be passed to the function `HTMLDecoder()` (along with the rest of the data in the row) for manipulation and the return value will be stored instead of the original. Use the `src/Functions/filter.php` for adding new filters.
@@ -64,6 +66,8 @@ You can use the `$sourceTables` property to require certain tables and columns i
 Target packages first have their `validate()` method called, then their `run()` method.
 
 To confirm an optional data type exists before importing it, use `targetExists()` on the `Migration`.
+
+It is often necessary to reformat user generated content (UGC), like comments, during the import. See the `Formatter` class.
 
 ### Verify source support for each feature
 
