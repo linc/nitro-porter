@@ -87,45 +87,6 @@ class AnswerHub extends Source
     }
 
     /**
-     * Set valid MIME type for images.
-     *
-     * @param  string $value Extension.
-     * @param  string $field Ignored.
-     * @param  array  $row   Ignored.
-     * @return string Extension or accurate MIME type.
-     * @see    Migration::writeTableToFile
-     */
-    public function buildMimeType($value, $field, $row)
-    {
-        if (preg_match('~.*\.(.*)~', $value, $matches) != false) {
-            switch (strtolower($matches[1])) {
-                case 'jpg':
-                case 'jpeg':
-                case 'gif':
-                case 'png':
-                    $value = 'image/' . $matches[1];
-                    break;
-                case 'pdf':
-                case 'zip':
-                    $value = 'application/' . $matches[1];
-                    break;
-                case 'doc':
-                    $value = 'application/msword';
-                    break;
-                case 'xls':
-                    $value = 'application/vnd.ms-excel';
-                    break;
-                case 'txt':
-                case 'log':
-                    $value = 'text/plain';
-                    break;
-            }
-        }
-
-        return $value;
-    }
-
-    /**
      * @param Migration $port
      */
     protected function users(Migration $port): void
@@ -339,8 +300,10 @@ class AnswerHub extends Source
     {
         $media_Map = array(
             'Name' => array('Column' => 'Name', 'Filter' => array($this, 'getFileName')),
-            'Type' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
         );
+        $filters = [
+            'Type' => 'mimeTypeFromExtension',
+        ];
         $port->export(
             'Media',
             "select
@@ -369,7 +332,8 @@ class AnswerHub extends Source
                     if(n.c_type = 'question', 'discussion', 'comment') as `ForeignTable`
                 from :_sources s
                 join :_nodes n on s.c_node = n.c_id",
-            $media_Map
+            $media_Map,
+            $filters
         );
     }
 }

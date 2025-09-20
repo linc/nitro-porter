@@ -699,7 +699,6 @@ class VBulletin5 extends VBulletin
         $media_Map = array(
             'nodeid' => 'MediaID',
             'filename' => 'Name',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
             'Path2' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
             'ThumbPath2' => array(
                 'Column' => 'ThumbPath',
@@ -718,6 +717,9 @@ class VBulletin5 extends VBulletin
             'height' => 'ImageHeight',
             'filesize' => 'Size',
         );
+        $filters = [
+            'extension' => 'mimeTypeFromExtension',
+        ];
         $port->export(
             'Media',
             "select a.*,
@@ -738,7 +740,8 @@ class VBulletin5 extends VBulletin
                     left join :_filedata f on f.filedataid = a.filedataid
                     left join :_node n2 on n.parentid = n2.nodeid
                 where a.visible = 1;",
-            $media_Map
+            $media_Map,
+            $filters
         );
         // left join :_contenttype c on n.contenttypeid = c.contenttypeid
     }

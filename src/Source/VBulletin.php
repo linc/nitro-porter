@@ -429,7 +429,6 @@ class VBulletin extends Source
             'filename' => 'Name',
             'filesize' => 'Size',
             'userid' => 'InsertUserID',
-            'extension' => array('Column' => 'Type', 'Filter' => array($this, 'buildMimeType')),
             'filehash' => array('Column' => 'Path', 'Filter' => array($this, 'buildMediaPath')),
             'filethumb' => array(
                 'Column' => 'ThumbPath',
@@ -447,6 +446,9 @@ class VBulletin extends Source
             'height' => array('Column' => 'ImageHeight', 'Filter' => array($this, 'buildMediaDimension')),
             'width' => array('Column' => 'ImageWidth', 'Filter' => array($this, 'buildMediaDimension')),
         );
+        $filters = [
+            'extension' => 'mimeTypeFromExtension',
+        ];
 
         // Add hash fields if they exist (from 2.x)
         $attachColumns = array('hash', 'filehash');
@@ -492,7 +494,7 @@ class VBulletin extends Source
                     left join :_thread t on t.firstpostid = a.contentid and a.contenttypeid = 1
                 where a.contentid > 0
                     $discussionWhere";
-            $port->export('Media', $mediaSql, $media_Map);
+            $port->export('Media', $mediaSql, $media_Map, $filters);
         } else {
             // Exporting 3.x without 'filedata' table.
             // Do NOT grab every field to avoid 'filedata' blob in 3.x.
@@ -533,7 +535,7 @@ class VBulletin extends Source
                     inner join :_thread t ON p.threadid = t.threadid
                     left join :_attachment a ON a.postid = p.postid
                 where p.postid <> t.firstpostid and a.attachmentid > 0";
-            $port->export('Media', $mediaSql, $media_Map);
+            $port->export('Media', $mediaSql, $media_Map, $filters);
         }
 
         // files named .attach need to be named properly.
@@ -821,43 +823,6 @@ class VBulletin extends Source
         }
         if (in_array(strtolower($extension), array('jpg', 'gif', 'png', 'jpeg'))) {
             return null;
-        }
-
-        return $value;
-    }
-
-    /**
-     * Set valid MIME type for images.
-     *
-     * @access public
-     * @param  string $value Extension from vBulletin.
-     * @param  string $field Ignored.
-     * @param  array  $row   Ignored.
-     * @return string Extension or accurate MIME type.
-     * @see    Migration::writeTableToFile
-     *
-     */
-    public function buildMimeType($value, $field, $row): string
-    {
-        switch (strtolower($value)) {
-            case 'jpg':
-            case 'gif':
-            case 'png':
-                $value = 'image/' . $value;
-                break;
-            case 'pdf':
-            case 'zip':
-                $value = 'application/' . $value;
-                break;
-            case 'doc':
-                $value = 'application/msword';
-                break;
-            case 'xls':
-                $value = 'application/vnd.ms-excel';
-                break;
-            case 'txt':
-                $value = 'text/plain';
-                break;
         }
 
         return $value;
