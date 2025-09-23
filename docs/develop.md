@@ -97,6 +97,21 @@ If a column isn't present in the structure passed to `import()`, it will be igno
 
 Simply add a new PHP class to the `src/Postscript` folder with the same name as the Target and a method named `run()`. It will automatically run after the import. Its `storage` property will get set with the database connection automatically.
 
+## Writing integration tests
+
+### Create a schema migration
+
+Refer to the [Phinx docs](https://book.cakephp.org/phinx/0/en/index.html) for creating schema migrations for integration tests.
+
+To create a schema migration from an existing database (rather than hand-coding it from scratch), you need to also use Cake.
+(This works because Phinx is a spin-off project from Cake, so the framework creates compatible migrations in this scenario.)
+
+1. Create a new Cake project: `composer create-project --prefer-dist cakephp/app:~4.0 some_folder`
+1. Add the database creds in: `path_to/some_folder/config/app_local.php`
+1. Run a Cake snapshot: `path_to/some_folder/bin/cake bake migration_snapshot SomeName`
+1. Copy the new file created in `path_to/some_folder/config/Migrations` to Porter's test folder structure in `tests/integration/migrations/{PackageName}`.
+
+From there, you can edit it and refer to it like other integration tests.
 
 ## Working with database connections
 
