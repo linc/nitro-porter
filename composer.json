@@ -45,6 +45,7 @@
         "ext-pdo": "*",
         "ext-zlib": "*",
         "illuminate/database": "^11",
+        "staudenmeir/laravel-cte": "^1",
         "monolog/monolog": "^3",
         "adhocore/cli": "^1",
         "s9e/text-formatter": "2.15.*",
