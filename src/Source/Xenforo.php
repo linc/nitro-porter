@@ -8,6 +8,7 @@
 
 namespace Porter\Source;
 
+use Porter\Config;
 use Porter\ConnectionManager;
 use Porter\FileTransfer;
 use Porter\Source;
@@ -234,36 +235,74 @@ class Xenforo extends Source
     }
 
     /**
+     * Export attachments.
+     *
+     * Real-world example set that consistently refers to the same upload (for real):
+     *  URL example: `/attachments/7590ax-webp.227/`
+     *  URL format: `'/attachments/' .
+     *   str_replace('.', '-', '{attachment_data.filename}') . '.{attachment.attachment_id}'`
+     *  Thumbnail path example: `/attachments/0/13-cbec5592e1d5cd9d2f783b4039c4ce6e.jpg`
+     *  Thumbnail path format: '/attachments/0/{attachment_data.data_id}-{attachment_data.file_key}.jpg'
+     *  Original path example: `/internal_data/attachments/0/13-cbec5592e1d5cd9d2f783b4039c4ce6e.data`
+     *  Original path format: `'/internal_data/attachments/0/{attachment_data.data_id}-{attachment_data.file_key}.data'`
+     *
+     * Captured in late 2025 from Xenforo v2.3.6.
+     *
+     * Schema magic values: `attachment.content_type`: `post` | `conversation_message`
+     *
+     * Xenforo faithfully reimplemented vBulletin's worst ideas here, probably a misguided security effort.
+     * Most other platforms don't jank filenames like this, so rebuild Path as {id}-{filename} to avoid conflicts.
+     * @see self::attachmentsData() for the `FileTransfer` data to complete the file renaming.
+     *
      * @param Migration $port
      */
     protected function attachments(Migration $port): void
     {
-        $port->export(
-            'Media',
-            "select
-                    a.attachment_id as MediaID,
-                    ad.filename as Name,
-                    concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as Path,
-                    ad.file_size as Size,
-                    ad.user_id as InsertUserID,
-                    from_unixtime(ad.upload_date) as DateInserted,
-                    p.ForeignID,
-                    p.ForeignTable,
-                    ad.width as ImageWidth,
-                    ad.height as ImageHeight,
-                    concat('xf_attachments/', a.data_id, '-', replace(ad.filename, ' ', '_')) as ThumbPath
-                from xf_attachment a
-                join (select
-                        p.post_id,
-                        if(p.post_id = t.first_post_id,t.thread_id, p.post_id)  as ForeignID,
-                        if(p.post_id = t.first_post_id, 'discussion', 'comment') as ForeignTable
-                    from xf_post p
-                    join xf_thread t on t.thread_id = p.thread_id
-                    where p.message_state <> 'deleted'
-                    ) p on p.post_id = a.content_id
-                join xf_attachment_data ad on ad.data_id = a.data_id
-                where a.content_type = 'post'"
-        );
+        $map = [
+            'attachment_id' => 'MediaID',
+            'filename' => 'Name',
+            'file_size' => 'Size',
+            'user_id' => 'InsertUserID',
+            'upload_date' => 'DateInserted',
+            'width' => 'ImageWidth',
+            'height' => 'ImageHeight',
+        ];
+        $filters = [];
+
+        $prx = $port->dbInput()->getTablePrefix();
+        $wrt = Config::getInstance()->get('option_attachments_webroot');
+        $builder = new \Staudenmeir\LaravelCte\Query\Builder($port->dbInput()); // @todo f.
+        $query = $builder
+            ->from('attachment', 'a')
+            ->select([
+                'a.attachment_id',
+                'ad.filename',
+                'ad.file_size',
+                'ad.user_id',
+                'ad.width',
+                'ad.height',
+                'ap.ForeignID',
+                'ap.ForeignTable',
+            ])
+            ->selectRaw("concat('($wrt}', {$prx}a.data_id, '-', replace({$prx}ad.filename, ' ', '_')) as Path")
+            ->selectRaw("concat('($wrt}', {$prx}a.data_id, '-', replace({$prx}ad.filename, ' ', '_')) as ThumbPath")
+            ->selectRaw("from_unixtime({$prx}ad.upload_date) as DateInserted")
+            ->join('attachment_data as ad', 'ad.data_id', '=', 'a.data_id')
+            // Build a CET of attached post data & join it.
+            ->withExpression('ap', function (\Staudenmeir\LaravelCte\Query\Builder $query) {
+                $prx = $query->connection->getTablePrefix();
+                $query->from('post', 'p')
+                    ->select(['post_id'])
+                    ->selectRaw("if({$prx}p.post_id = {$prx}t.first_post_id,
+                        {$prx}t.thread_id, {$prx}p.post_id) as ForeignID")
+                    ->selectRaw("if({$prx}p.post_id = {$prx}t.first_post_id, 'discussion', 'comment') as ForeignTable")
+                    ->join('thread as t', "t.thread_id", '=', "p.thread_id")
+                    ->where("p.message_state", '<>', "deleted");
+            })
+            ->join('ap', 'post_id', '=', 'a.content_id')
+            ->where('a.content_type', '=', "post");
+
+        $port->export('Media', $query, $map, $filters);
     }
 
     /**
