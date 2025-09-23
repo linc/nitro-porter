@@ -23,7 +23,7 @@ return array(
         'RecordID' => 'int',
         'InsertUserID' => 'int',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
         'DateUpdated' => 'datetime',
         'Notified' => 'tinyint',
         'Emailed' => 'tinyint',
@@ -36,7 +36,7 @@ return array(
         'Format' => 'varchar(20)',
         'InsertUserID' => 'int',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varchar(100)'
+        //'InsertIPAddress' => 'varchar(100)'
     ),
     'ActivityType' => array(
         'ActivityTypeID' => 'int',
@@ -49,11 +49,11 @@ return array(
         'Notify' => 'tinyint',
         'Public' => 'tinyint'
     ),
-    'AnalyticsLocal' => array(
+    /*'AnalyticsLocal' => array(
         'TimeSlot' => 'varchar(8)',
         'Views' => 'int',
         'EmbedViews' => 'int'
-    ),
+    ),*/
     /*'article' => array(
         'articleID' => 'int',
         'foreignID' => 'varchar(32)',
@@ -106,7 +106,7 @@ return array(
         'Attributes' => 'text',
         'DateInserted' => 'datetime',
         'InsertUserID' => 'int',
-        'InsertIPAddress' => 'varchar(100)',
+        //'InsertIPAddress' => 'varchar(100)',
         'DateUpdated' => 'datetime',
         'UpdateUserID' => 'int',
         'UpdateIPAddress' => 'varchar(100)'
@@ -133,7 +133,7 @@ return array(
         'Level' => 'smallint',
         'Attributes' => 'text'
     ),
-    'Ban' => array(
+    /*'Ban' => array(
         'BanID' => 'int',
         //'BanType' => array('IPAddress','Name','Email'),
         'BanValue' => 'varchar(50)',
@@ -146,7 +146,7 @@ return array(
         'UpdateUserID' => 'int',
         'DateUpdated' => 'datetime',
         'UpdateIPAddress' => 'varchar(100)'
-    ),
+    ),*/
     'Category' => array(
         'CategoryID' => 'int',
         'ParentCategoryID' => 'int',
@@ -195,8 +195,8 @@ return array(
         'DateInserted' => 'datetime',
         'DateDeleted' => 'datetime',
         'DateUpdated' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
-        'UpdateIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
+        //'UpdateIPAddress' => 'varbinary',
         'Flag' => 'tinyint',
         'Score' => 'float',
         'Attributes' => 'text',
@@ -211,7 +211,7 @@ return array(
         'FirstMessageID' => 'int',
         'InsertUserID' => 'int',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
         'UpdateUserID' => 'int',
         'DateUpdated' => 'datetime',
         'UpdateIPAddress' => 'varbinary',
@@ -227,7 +227,7 @@ return array(
         'Format' => 'varchar(20)',
         'InsertUserID' => 'int',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varbinary'
+        //'InsertIPAddress' => 'varbinary'
     ),
     'Discussion' => array(
         'DiscussionID' => 'int',
@@ -251,8 +251,8 @@ return array(
         'Sink' => 'tinyint',
         'DateInserted' => 'datetime',
         'DateUpdated' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
-        'UpdateIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
+        //'UpdateIPAddress' => 'varbinary',
         'DateLastComment' => 'datetime',
         'LastCommentUserID' => 'int',
         'Score' => 'float',
@@ -261,7 +261,7 @@ return array(
         'GroupID' => 'int',
         'QnA' => 'varchar(255)', // 'Accepted', 'Answered', 'Rejected', 'Unanswered',
     ),
-    'Draft' => array(
+    /*'Draft' => array(
         'DraftID' => 'int',
         'DiscussionID' => 'int',
         'CategoryID' => 'int',
@@ -276,7 +276,7 @@ return array(
         'Format' => 'varchar(20)',
         'DateInserted' => 'datetime',
         'DateUpdated' => 'datetime'
-    ),
+    ),*/
     'Event' => array(
         'EventID' => 'int',
         'Name' => 'varchar(255)',
@@ -398,10 +398,10 @@ return array(
         'RecordID' => 'int',
         'RecordUserID' => 'int',
         'RecordDate' => 'datetime',
-        'RecordIPAddress' => 'varbinary',
+        //'RecordIPAddress' => 'varbinary',
         'InsertUserID' => 'int',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
         'OtherUserIDs' => 'varchar(255)',
         'DateUpdated' => 'datetime',
         'ParentRecordID' => 'int',
@@ -425,7 +425,7 @@ return array(
         'ThumbHeight' => 'smallint',
         'ThumbPath' => 'text'
     ),
-    'Message' => array(
+    /*'Message' => array( // Static text boxes, not what you think.
         'MessageID' => 'int',
         'Content' => 'text',
         'Format' => 'varchar(20)',
@@ -439,7 +439,7 @@ return array(
         'AssetTarget' => 'varchar(20)',
         'CssClass' => 'varchar(20)',
         'Sort' => 'int'
-    ),
+    ),*/
     /*'Permission' => array(
         'PermissionID' => 'int',
         'RoleID' => 'int',
@@ -635,9 +635,9 @@ return array(
         'LastIPAddress' => 'varbinary',
         //'AllIPAddresses' => 'varchar(100)',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
         'DateUpdated' => 'datetime',
-        'UpdateIPAddress' => 'varbinary',
+        //'UpdateIPAddress' => 'varbinary',
         'HourOffset' => 'int',
         'Score' => 'float',
         'Admin' => 'tinyint',
@@ -770,10 +770,10 @@ return array(
         'RecordID' => 'int',
         'InsertUserID' => 'int',
         'DateInserted' => 'datetime',
-        'InsertIPAddress' => 'varbinary',
+        //'InsertIPAddress' => 'varbinary',
         'UpdateUserID' => 'int',
         'DateUpdated' => 'datetime',
-        'UpdateIPAddress' => 'varbinary',
+        //'UpdateIPAddress' => 'varbinary',
         'Attributes' => 'text'
     ),
     'UserPoints' => array(
