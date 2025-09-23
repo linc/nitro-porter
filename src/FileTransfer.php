@@ -116,6 +116,9 @@ class FileTransfer
      */
     public function avatars(): void
     {
+        if (empty($this->avatarsSourceFolder)) {
+            Log::comment('Skipping file transfer: No avatars source folder set.');
+        }
         $this->copyFiles(
             $this->avatarsSourceFolder . '/' . $this->avatarsSourcePrefix,
             $this->avatarsTargetFolder,
