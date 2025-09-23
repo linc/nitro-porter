@@ -54,7 +54,7 @@ class Config
         if (!in_array(substr($key, 0, 6), ['option', 'source', 'target', 'output', 'input_'])) {
             trigger_error('Config access must use allowed prefix.');
         }
-        return $this->config[$key];
+        return $this->config[$key] ?? '';
     }
 
     /**
