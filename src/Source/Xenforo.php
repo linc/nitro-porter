@@ -290,7 +290,7 @@ class Xenforo extends Source
             ->join('attachment_data as ad', 'ad.data_id', '=', 'a.data_id')
             // Build a CET of attached post data & join it.
             ->withExpression('ap', function (\Staudenmeir\LaravelCte\Query\Builder $query) {
-                $prx = $query->connection->getTablePrefix();
+                $prx = $query->connection->getTablePrefix(); // @phpstan-ignore method.notFound
                 $query->from('post', 'p')
                     ->select(['post_id'])
                     ->selectRaw("if({$prx}p.post_id = {$prx}t.first_post_id,
