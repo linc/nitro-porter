@@ -9,7 +9,6 @@
 namespace Porter\Target;
 
 use Porter\Migration;
-use Porter\Formatter;
 use Porter\Target;
 
 class Waterhole extends Target
@@ -75,9 +74,6 @@ class Waterhole extends Target
         'is_locked' => 'tinyint',
     ];
 
-    /** @var int Offset for inserting OP content into the comments table. */
-    protected int $postCommentOffset = 0;
-
     /**
      * Check for issues that will break the import.
      *
@@ -99,7 +95,7 @@ class Waterhole extends Target
     }
 
     /**
-     * Flarum must have unique usernames. Report users skipped (because of `insert ignore`).
+     * Enforce unique usernames. Report users skipped (because of `insert ignore`).
      *
      * Unsure this could get automated fix. You'd have to determine which has/have data attached and possibly merge.
      * You'd also need more data from findDuplicates, especially the IDs.
@@ -123,10 +119,10 @@ class Waterhole extends Target
     }
 
     /**
-     * Flarum must have unique emails. Report users skipped (because of `insert ignore`).
+     * Enforce unique emails. Report users skipped (because of `insert ignore`).
      *
      * @param Migration $port
-     *@see uniqueUserNames
+     * @see uniqueUserNames
      *
      */
     public function uniqueUserEmails(Migration $port): void
@@ -202,7 +198,10 @@ class Waterhole extends Target
             'icon' => 'varchar(255)',
             'is_public' => 'tinyint',
         ];
-        $map = [];
+        $map = [
+            'RoleID' => 'id',
+            'Name' => 'name',
+        ];
 
         // Verify support.
         if (!$port->hasOutputSchema('UserRole')) {
@@ -216,8 +215,7 @@ class Waterhole extends Target
         $this->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID', $port);
 
         $query = $port->targetQB()->from('Role')
-            ->selectRaw("(RoleID + 4) as id") // Flarum reserves 1-3 & uses 4 for mods by default.
-            ->selectRaw('Name as name')
+            ->select()
             ->selectRaw('0 as is_public');
 
         $port->import('groups', $query, $structure, $map);
@@ -232,8 +230,7 @@ class Waterhole extends Target
             'RoleID' => 'group_id',
         ];
         $query = $port->targetQB()->from('UserRole')
-            ->select()
-            ->selectRaw("(RoleID + 4) as RoleID"); // Match above offset
+            ->select();
 
         $port->import('group_user', $query, $structure, $map);
     }
@@ -303,9 +300,6 @@ class Waterhole extends Target
             'DateUpdated' => 'edited_at',
             'Body' => 'body'
         ];
-        $filters = [
-            // 'Body' => 'filterFlarumContent',
-        ];
         $query = $port->targetQB()->from('Comment')
             ->select(['CommentID',
                 'DiscussionID',
@@ -315,6 +309,6 @@ class Waterhole extends Target
                 'Body',
                 'Format']);
 
-        $port->import('comments', $query, self::DB_STRUCTURE_COMMENTS, $map, $filters);
+        $port->import('comments', $query, self::DB_STRUCTURE_COMMENTS, $map);
     }
 }
