@@ -8,11 +8,11 @@ We greatly appreciate donated data from existing forums to improve the migration
 
 ### Report a problem
 
-[Start a discussion](https://github.com/linc/nitro-porter/discussions/new) if you've hit a problem, including as much detail as possible and any error message or logs available. We don't currently maintain a formal issue tracker.
+[Start a discussion](https://github.com/prosembler/nitro-porter/discussions/new) if you've hit a problem, including as much detail as possible and any error message or logs available. We don't currently maintain a formal issue tracker.
 
 ### Report a _success_!
 
-Did you successfully use Nitro Porter? [Start a discussion](https://github.com/linc/nitro-porter/discussions/new) to tell us all about it! What platforms were you migrating between and how much data was involved? Was it confusing at all?
+Did you successfully use Nitro Porter? [Start a discussion](https://github.com/prosembler/nitro-porter/discussions/new) to tell us all about it! What platforms were you migrating between and how much data was involved? Was it confusing at all?
 
 ### Submit a fix or improvement
 
@@ -27,5 +27,5 @@ It's pretty straightforward! We'll help clean it up if you run into challenges, 
 
 Check the [maintainer guide](https://nitroporter.org/maintain) for doing advanced work on the core of this project.
 It currently needs integration tests setup and could use a number of additional database connectors configured.
-More aspirations are articulated in the [informal roadmap](https://github.com/users/linc/projects/2).
+More aspirations are articulated in the [informal roadmap](https://github.com/orgs/prosembler/projects/1/views/1).
 If you're taking on this level of work there are higher expectations, but Linc is happy to help guide.

@@ -10,13 +10,13 @@ Nitro Porter is the _only_ multi-platform community migration tool.
 * [**User Guide**](https://nitroporter.org/guide) for requirements & install steps.
 * [**Migration Guide**](https://nitroporter.org/migrations) to plan a community migration.
 * [**Sources**](https://nitroporter.org/sources) & [**Targets**](https://nitroporter.org/targets) detail what's supported.
-* [**Start a Discussion**](https://github.com/linc/nitro-porter/discussions) to share how it went.
+* [**Start a Discussion**](https://github.com/prosembler/nitro-porter/discussions) to share how it went.
 
 ### 🎟️ Get involved
 
 * [**Contribute**](docs/contribute.md) data, requests, fixes, or success stories.
 * [**Changelog**](CHANGELOG.md) has latest fixes & updates.
-* [**Roadmap**](https://github.com/users/linc/projects/2) contains informal goals, not ETAs.
+* [**Roadmap**](https://github.com/orgs/prosembler/projects/1) contains informal goals, not ETAs.
 * [**History**](docs/history.md) gives more context to the project.
 
 ### 🚀 Mission statement
@@ -84,7 +84,7 @@ You will **always** need to reassign permissions after a migration.
 
 ### 🔭 Future support
 
-Don't see your software? [Start a discussion](https://github.com/linc/nitro-porter/discussions/new) to request it and keep an eye on our [informal roadmap](https://github.com/users/linc/projects/2).
+Don't see your software? [Start a discussion](https://github.com/prosembler/nitro-porter/discussions/new) to request it and keep an eye on our [informal roadmap](https://github.com/users/linc/projects/2).
 We're happy to add a new **Source** for any software, provided it is not bespoke.
 For a new **Target**, we require support from the vendor if it is not free and open source software.
 

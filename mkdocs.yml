@@ -36,7 +36,7 @@ theme:
         name: Switch to system preference
 extra_css:
   - assets/porter.css
-repo_url: https://github.com/linc/nitro-porter
+repo_url: https://github.com/prosembler/nitro-porter
 plugins:
   - privacy
   - offline

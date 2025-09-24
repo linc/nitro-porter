@@ -18,9 +18,9 @@ A quick way to get all of the above would be installing MAMP or XAMPP on your la
 
 1. [Get Composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos).
 1. Make sure Composer is [in your PATH](https://www.uptimia.com/questions/how-to-add-composervendorbin-to-your-path).
-1. `composer global require "linc/nitro-porter"`.
-1. Go to `linc/nitro-porter` within your Composer directory.
-   1. To do this on MacOS: `cd ~/.composer/vendor/linc/nitro-porter`
+1. `composer global require "prosembler/nitro-porter"`.
+1. Go to `prosembler/nitro-porter` within your Composer directory.
+   1. To do this on MacOS: `cd ~/.composer/vendor/prosembler/nitro-porter`
 1. Copy `config-sample.php` as `config.php`. 
 1. Add connections for your source and output to `config.php`.
 1. See the options with `porter --help`.
@@ -79,7 +79,7 @@ Verify Composer is in your PATH with `echo $PATH`. On MacOS, you should see `/Us
 
 ### Follow the logs
 
-Nitro Porter logs to `porter.log` in its installation root (e.g. `~/.composer/vendor/linc/nitro-porter` on MacOS). Open it with your favorite log viewer to follow along with its progress.
+Nitro Porter logs to `porter.log` in its installation root (e.g. `~/.composer/vendor/prosembler/nitro-porter` on MacOS). Open it with your favorite log viewer to follow along with its progress.
 
 ### Database table prefixes
 
