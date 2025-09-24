@@ -46,15 +46,15 @@ class Config
 
     /**
      * @param string $key
-     * @return string
+     * @return ?string
      */
-    public function get(string $key): string
+    public function get(string $key): ?string
     {
         // Only allow prefixed keys to be accessed directly.
         if (!in_array(substr($key, 0, 6), ['option', 'source', 'target', 'output', 'input_'])) {
             trigger_error('Config access must use allowed prefix.');
         }
-        return $this->config[$key] ?? '';
+        return $this->config[$key] ?? null;
     }
 
     /**
