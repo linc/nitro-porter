@@ -49,22 +49,12 @@ class Controller
      * Use a separate database connection since re-querying data may be necessary.
      *    -> "Cannot execute queries while other unbuffered queries are active."
      *
-     * @param string $postscript
+     * @param Postscript $postscript
      * @param Migration $port
      */
-    protected function doPostscript(string $postscript, Migration $port): void
+    protected function doPostscript(Postscript $postscript, Migration $port): void
     {
-        $postscript = postscriptFactory(
-            $postscript,
-            $port->getOutputStorage(),
-            $port->getPostscriptStorage()
-        );
-        if ($postscript) {
-            $port->comment("Postscript found and running...");
-            $postscript->run($port);
-        } else {
-            $port->comment("No Postscript found.");
-        }
+        $postscript->run($port);
     }
 
     /**
@@ -107,6 +97,7 @@ class Controller
         $port = migrationFactory($inputName, $outputName, $sourcePrefix, $targetPrefix, $dataTypes);
         $source = sourceFactory($sourceName);
         $target = targetFactory($targetName);
+        $postscript = postscriptFactory($targetName);
         $fileTransfer = fileTransferFactory($source, $target, $inputName, $sourcePrefix);
 
         // Report on request.
@@ -139,7 +130,9 @@ class Controller
         if ($target) {
             $this->doImport($target, $port);
             // Postscript names must match target names currently.
-            $this->doPostscript($target->getName(), $port);
+            if ($postscript) {
+                $this->doPostscript($postscript, $port);
+            }
         }
 
         // File transfer.

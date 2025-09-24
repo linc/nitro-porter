@@ -50,7 +50,7 @@ class Flarum extends Postscript
         $rows = 0;
 
         // Prepare mentions table.
-        $this->outputStorage->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
+        $port->outputStorage()->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
         $port->ignoreOutputDuplicates('post_mentions_user'); // Primary key forbids more than 1 record per user/post.
 
         // Get post data.
@@ -70,7 +70,7 @@ class Flarum extends Postscript
             );
             // There can be multiple userids per post.
             foreach ($mentions['userids'] as $userid) {
-                $this->outputStorage->stream([
+                $port->outputStorage()->stream([
                     'post_id' => $post->id,
                     'mentions_user_id' => (int)$userid
                 ], self::DB_STRUCTURE_POST_MENTIONS_USER);
@@ -79,7 +79,7 @@ class Flarum extends Postscript
         }
 
         // Insert remaining mentions.
-        $this->outputStorage->endStream();
+        $port->outputStorage()->endStream();
 
         // Report.
         $port->reportStorage('build', 'mentions_user', microtime(true) - $start, $rows, $memory);
@@ -140,7 +140,7 @@ class Flarum extends Postscript
         $failures = 0;
 
         // Prepare mentions table.
-        $this->outputStorage->prepare('post_mentions_post', self::DB_STRUCTURE_POST_MENTIONS_POST);
+        $port->outputStorage()->prepare('post_mentions_post', self::DB_STRUCTURE_POST_MENTIONS_POST);
         $port->ignoreOutputDuplicates('post_mentions_post'); // Primary key forbids more than 1 record per user/post.
 
         // Create an OP lookup array.
@@ -176,7 +176,7 @@ class Flarum extends Postscript
                 }
 
                 // Record post mentions.
-                $this->outputStorage->stream([
+                $port->outputStorage()->stream([
                     'post_id' => $post->id,
                     'mentions_post_id' => (int)$postid
                 ], self::DB_STRUCTURE_POST_MENTIONS_POST);
@@ -191,7 +191,7 @@ class Flarum extends Postscript
                 }
 
                 // Record post mentions.
-                $this->outputStorage->stream([
+                $port->outputStorage()->stream([
                     'post_id' => $post->id,
                     'mentions_post_id' => (int)$discussions[$discussionid] // Use the OP lookup
                 ], self::DB_STRUCTURE_POST_MENTIONS_POST);
@@ -200,7 +200,7 @@ class Flarum extends Postscript
         }
 
         // Insert remaining mentions.
-        $this->outputStorage->endStream();
+        $port->outputStorage()->endStream();
 
         // Log failures.
         if ($failures) {

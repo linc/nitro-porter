@@ -6,6 +6,7 @@
 
 use Porter\ConnectionManager;
 use Porter\FileTransfer;
+use Porter\Log;
 use Porter\Migration;
 use Porter\Postscript;
 use Porter\Source;
@@ -27,23 +28,23 @@ function fileTransferFactory(Source $source, Target $target, string $inputName, 
 }
 
 /**
- * Get valid source class. Exit app if invalid name is given.
+ * Get valid source class.
  *
  * @param string $source
- * @return Source
+ * @return ?Source
  */
-function sourceFactory(string $source): Source
+function sourceFactory(string $source): ?Source
 {
     $class = '\Porter\Source\\' . ucwords($source);
     if (!class_exists($class)) {
-        exit('Unsupported source: ' . $source);
+        Log::comment("No Source found for {$source}");
     }
 
-    return new $class();
+    return (class_exists($class)) ? new $class() : null;
 }
 
 /**
- * Get valid target class. Exit app if invalid name is given.
+ * Get valid target class.
  *
  * @param string $target
  * @return ?Target
@@ -56,29 +57,26 @@ function targetFactory(string $target): ?Target
 
     $class = '\Porter\Target\\' . ucwords($target);
     if (!class_exists($class)) {
-        exit('Unsupported target: ' . $target);
+        Log::comment("No Target found for {$target}");
     }
 
-    return new $class();
+    return (class_exists($class)) ? new $class() : null;
 }
 
 /**
  * Get postscript class if it exists.
  *
- * @param string $target
- * @param Storage $outputStorage
- * @param Storage $postscriptStorage
- * @return Postscript|null
+ * @param string $postscript
+ * @return ?Postscript
  */
-function postscriptFactory(string $target, Storage $outputStorage, Storage $postscriptStorage): ?Postscript
+function postscriptFactory(string $postscript): ?Postscript
 {
-    $postscript = null;
-    $class = '\Porter\Postscript\\' . ucwords($target);
-    if (class_exists($class)) {
-        $postscript = new $class($outputStorage, $postscriptStorage);
+    $class = '\Porter\Postscript\\' . ucwords($postscript);
+    if (!class_exists($class)) {
+        Log::comment("No Postscript found for {$postscript}.");
     }
 
-    return $postscript;
+    return (class_exists($class)) ? new $class() : null;
 }
 
 /**

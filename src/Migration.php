@@ -316,19 +316,13 @@ class Migration
     }
 
     /**
+     * Postscripts may need to access Storage directly (read).
+     *
      * @return Storage
      */
-    public function getOutputStorage(): Storage
+    public function outputStorage(): Storage
     {
         return $this->outputStorage;
-    }
-
-    /**
-     * @return Storage
-     */
-    public function getPostscriptStorage(): Storage
-    {
-        return $this->postscriptStorage;
     }
 
     /**
