@@ -4,7 +4,7 @@
 
 You need:
 
-* PHP 8.0+
+* PHP 8.3+
 * MariaDB (or whichever databases your platforms require)
 * PHP's PDO driver for your data sources (probably MySQL or PostgreSQL).
 * 256MB of memory allocated to PHP
