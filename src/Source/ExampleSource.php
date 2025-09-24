@@ -86,7 +86,7 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         // @see https://api.laravel.com/docs/11.x/Illuminate/Database.html
         $port->export(
             'User',
-            $port->dbInput()->table('Users')->select(), // default select() = *
+            $port->sourceQB()->from('Users')->select(), // default select() = *
             $map,
             $filters
         );
@@ -107,7 +107,7 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         $port->export(
             'Role',
             // @see https://api.laravel.com/docs/9.x/Illuminate/Database.html
-            $port->dbInput()->table('tblGroup')->select(),
+            $port->sourceQB()->from('tblGroup')->select(),
             $map
         ); // We can omit $filters when there are none.
 
@@ -119,7 +119,7 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         ];
         $port->export(
             'UserRole',
-            $port->dbInput()->table('tblAuthor')->select(),
+            $port->sourceQB()->from('tblAuthor')->select(),
             $map
         );
     }
@@ -136,16 +136,13 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         // Profiles will auto-populate with the migrated data.
 
         // When the query is longer, it's clearer to set it up THEN pass it to export().
-        $query = $port->dbInput()->table('tblAuthor')
+        $query = $port->sourceQB()->from('tblAuthor')
             ->selectSub('Author_ID', 'UserID') // Use selectSub() to alias within the query.
             ->selectSub('Signature', 'Value')
             ->selectRaw("'Plugin.Signatures.Sig' as Name") // Use selectRaw() for more elaborate SQL.
             ->whereRaw("Signature <> ''");
 
-        $port->export(
-            'UserMeta',
-            $query
-        ); // No $map needed in this case.
+        $port->export('UserMeta', $query); // No $map needed in this case.
     }
 
     /**
@@ -160,7 +157,7 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         ];
         $port->export(
             'Category',
-            $port->dbInput()->table('tblCategory')->select(),
+            $port->sourceQB()->from('tblCategory')->select(),
             $map
         );
     }
@@ -180,16 +177,13 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         $filters = [
             'Subject' => 'HTMLDecoder', // Use the INPUT column name, not the Porter name.
         ];
-        // It's easier to convert between Unix time and MySQL datestamps during the db query.
-        $port->export(
-            'Discussion',
-            "select *, FROM_UNIXTIME(Message_date) as Message_date
-                from :_tblTopic t
-                join :_tblThread th
-                    on t.Start_Thread_ID = th.Thread_ID",
-            $map,
-            $filters
-        );
+        $query = $port->sourceQB()->from('tblTopic')
+            ->select()
+            // It's easier to convert between Unix time and MySQL datestamps during the db query.
+            ->selectRaw("FROM_UNIXTIME(Message_date) as Message_date")
+            ->join('tblThread', 'tblTopic.Start_Thread_ID', '=', 'tblThread.Thread_ID');
+
+        $port->export('Discussion', $query, $map, $filters);
     }
 
     /**
@@ -210,7 +204,7 @@ class ExampleSource extends Source // You MUST extend Source for this to work.
         ];
         $port->export(
             'Comment',
-            $port->dbInput()->table('tblThread')->select(),
+            $port->sourceQB()->from('tblThread')->select(),
             $map
         );
     }

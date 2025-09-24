@@ -53,9 +53,9 @@ class Flarum extends Postscript
         $port->outputStorage()->prepare('post_mentions_user', self::DB_STRUCTURE_POST_MENTIONS_USER);
         $port->ignoreOutputDuplicates('post_mentions_user'); // Primary key forbids more than 1 record per user/post.
 
-        // Get post data.
-        $posts = $port->dbOutput()
-            ->table('posts')
+        // Get output post data.
+        $posts = $port->postQB()
+            ->from('posts')
             ->select(['id', 'discussion_id', 'content']);
         $memory = memory_get_usage();
 
@@ -102,8 +102,8 @@ class Flarum extends Postscript
         $rows = 0;
         $port->comment("Building 'post number' info for discussions...");
 
-        // Get discussion id list (avoiding empty discussions).
-        $posts = $port->dbOutput()->table('posts')
+        // Get discussion id list (avoiding empty discussions) from output.
+        $posts = $port->postQB()->from('posts')
             ->distinct()
             ->get('discussion_id');
         $memory = memory_get_usage();
@@ -145,16 +145,16 @@ class Flarum extends Postscript
 
         // Create an OP lookup array.
         // @todo This may fall down around 200K discussions.
-        $posts = $port->dbOutput()
-            ->table('posts')
+        $posts = $port->postQB()
+            ->from('posts')
             ->where('number', '=', 1)
             ->get(['id', 'discussion_id'])
             ->toArray();
         $discussions = array_combine(array_column($posts, 'discussion_id'), array_column($posts, 'id'));
 
         // Get post data.
-        $posts = $port->dbOutput()
-            ->table('posts')
+        $posts = $port->postQB()
+            ->from('posts')
             ->select(['id', 'discussion_id', 'content']);
         $memory = memory_get_usage();
 
@@ -288,8 +288,8 @@ class Flarum extends Postscript
         $port->comment("Building 'last read' info for user bookmarks...");
 
         // Calculate & set discussion_user.last_read_post_number.
-        $bookmarks = $port->dbOutput()
-            ->table('discussion_user', 'du')
+        $bookmarks = $port->postQB()
+            ->from('discussion_user', 'du')
             ->select(['du.user_id', 'du.discussion_id'])
             ->selectRaw('max(number) as last_number')
             ->join(
@@ -347,7 +347,7 @@ class Flarum extends Postscript
     protected function addDefaultBadgeCategory(Migration $port): void
     {
         if ($port->hasOutputSchema('badge_category')) {
-            $port->dbOutput()
+            $port->dbPostscript()
                 ->table('badge_category')
                 ->insertOrIgnore(['id' => 1, 'name' => 'Imported Badges', 'created_at' => date('Y-m-d h:m:s')]);
             $port->comment('Added  badge category "Imported Badges".');
@@ -361,9 +361,9 @@ class Flarum extends Postscript
      */
     protected function promoteAdmin(Migration $port): void
     {
-        // Find the Vanlla superadmin (User.Admin = 1) and make them an Admin.
-        $result = $port->dbPorter()
-            ->table('User')
+        // Find the Vanilla superadmin (User.Admin = 1) and make them an Admin.
+        $result = $port->targetQB()
+            ->from('User')
             ->where('Admin', '>', 0)
             ->first();
 

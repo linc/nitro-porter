@@ -7,7 +7,7 @@
 namespace Porter;
 
 use Illuminate\Database\Connection;
-use Illuminate\Database\Query\Builder;
+use Staudenmeir\LaravelCte\Query\Builder; // Only file that generates Query Builders.
 use Porter\Database\DbFactory;
 use Porter\Database\ResultSet;
 
@@ -136,6 +136,42 @@ class Migration
     public function dbPostscript(): Connection
     {
         return $this->postscriptStorage->getConnection();
+    }
+
+    /**
+     * Provide a query builder for the input database.
+     *
+     * Named for where it should be used (Source packages).
+     *
+     * @return Builder
+     */
+    public function sourceQB(): Builder
+    {
+        return new Builder($this->dbInput());
+    }
+
+    /**
+     * Provide a query builder for the porter database.
+     *
+     * Named for where it should be used (Target packages).
+     *
+     * @return Builder
+     */
+    public function targetQB(): Builder
+    {
+        return new Builder($this->dbPorter());
+    }
+
+    /**
+     * Provide a query builder for the input database.
+     *
+     * Named for where it should be used (Postscript packages).
+     *
+     * @return Builder
+     */
+    public function postQB(): Builder
+    {
+        return new Builder($this->dbOutput());
     }
 
     /**

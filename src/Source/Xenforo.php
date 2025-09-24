@@ -268,21 +268,14 @@ class Xenforo extends Source
             'height' => 'ImageHeight',
         ];
         $filters = [];
-
         $prx = $port->dbInput()->getTablePrefix();
         $wrt = Config::getInstance()->get('option_attachments_webroot') ?? '';
-        $builder = new \Staudenmeir\LaravelCte\Query\Builder($port->dbInput()); // @todo f.
-        $query = $builder
+
+        $query = $port->sourceQB()
             ->from('attachment', 'a')
-            ->select([
-                'a.attachment_id',
-                'ad.filename',
-                'ad.file_size',
-                'ad.user_id',
-                'ad.width',
-                'ad.height',
-                'ap.ForeignID',
-                'ap.ForeignTable',
+            ->select(['a.attachment_id',
+                'ad.filename', 'ad.file_size', 'ad.user_id', 'ad.width', 'ad.height',
+                'ap.ForeignID', 'ap.ForeignTable',
             ])
             ->selectRaw("concat('($wrt}', {$prx}a.data_id, '-', replace({$prx}ad.filename, ' ', '_')) as Path")
             ->selectRaw("concat('($wrt}', {$prx}a.data_id, '-', replace({$prx}ad.filename, ' ', '_')) as ThumbPath")

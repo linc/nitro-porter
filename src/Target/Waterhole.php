@@ -181,7 +181,7 @@ class Waterhole extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $port->dbPorter()->table('User')->select();
+        $query = $port->targetQB()->from('User')->select();
 
         $port->import('users', $query, $structure, $map, $filters);
     }
@@ -215,7 +215,7 @@ class Waterhole extends Target
         // Delete orphaned user role associations (deleted users).
         $this->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID', $port);
 
-        $query = $port->dbPorter()->table('Role')
+        $query = $port->targetQB()->from('Role')
             ->selectRaw("(RoleID + 4) as id") // Flarum reserves 1-3 & uses 4 for mods by default.
             ->selectRaw('Name as name')
             ->selectRaw('0 as is_public');
@@ -231,7 +231,7 @@ class Waterhole extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $query = $port->dbPorter()->table('UserRole')
+        $query = $port->targetQB()->from('UserRole')
             ->select()
             ->selectRaw("(RoleID + 4) as RoleID"); // Match above offset
 
@@ -255,7 +255,7 @@ class Waterhole extends Target
             'UrlCode' => 'slug',
             'Description' => 'description',
         ];
-        $query = $port->dbPorter()->table('Category')
+        $query = $port->targetQB()->from('Category')
             ->select()
             ->where('CategoryID', '!=', -1); // Ignore Vanilla's root category.
 
@@ -283,7 +283,7 @@ class Waterhole extends Target
         ];
 
         // CountComments needs to be double-mapped so it's included as an alias also.
-        $query = $port->dbPorter()->table('Discussion')
+        $query = $port->targetQB()->from('Discussion')
             ->select()
             ->selectRaw('DiscussionID as slug');
 
@@ -306,7 +306,7 @@ class Waterhole extends Target
         $filters = [
             // 'Body' => 'filterFlarumContent',
         ];
-        $query = $port->dbPorter()->table('Comment')
+        $query = $port->targetQB()->from('Comment')
             ->select(['CommentID',
                 'DiscussionID',
                 'InsertUserID',

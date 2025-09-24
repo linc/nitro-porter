@@ -243,8 +243,8 @@ class Flarum extends Target
             'Name' => 'fixDuplicateDeletedNames',
             'Email' => 'fixNullEmails',
         ];
-        $query = $port->dbPorter()
-            ->table('User')
+        $query = $port->targetQB()
+            ->from('User')
             ->select()
             ->selectRaw('COALESCE(Confirmed, 0) as is_email_confirmed'); // Cannot be null.
 
@@ -282,8 +282,8 @@ class Flarum extends Target
         // Delete orphaned user role associations (deleted users).
         $this->pruneOrphanedRecords('UserRole', 'UserID', 'User', 'UserID', $port);
 
-        $query = $port->dbPorter()
-            ->table('Role')
+        $query = $port->targetQB()
+            ->from('Role')
             // Flarum reserves 1-3 & uses 4 for mods by default.
             ->selectRaw("(RoleID + 4) as id")
             // Singular vs plural is an uncommon feature; don't guess at it, just duplicate the Name.
@@ -303,8 +303,8 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'RoleID' => 'group_id',
         ];
-        $query = $port->dbPorter()
-            ->table('UserRole')
+        $query = $port->targetQB()
+            ->from('UserRole')
             ->select()
             ->selectRaw("(RoleID + 4) as RoleID"); // Match above offset
 
@@ -338,8 +338,8 @@ class Flarum extends Target
         $filters = [
             'CountDiscussions' => 'emptyToZero',
         ];
-        $query = $port->dbPorter()
-            ->table('Category')
+        $query = $port->targetQB()
+            ->from('Category')
             ->select()
             ->selectRaw('COALESCE(Name, CONCAT("category", CategoryID)) as name') // Cannot be null.
             ->selectRaw('COALESCE(UrlCode, CategoryID) as slug') // Cannot be null.
@@ -384,8 +384,8 @@ class Flarum extends Target
         }
 
         // CountComments needs to be double-mapped so it's included as an alias also.
-        $query = $port->dbPorter()
-            ->table('Discussion')
+        $query = $port->targetQB()
+            ->from('Discussion')
             ->select()
             ->selectRaw('COALESCE(CountComments, 0) as post_number_index')
             ->selectRaw('DiscussionID as slug')
@@ -405,8 +405,8 @@ class Flarum extends Target
             'DiscussionID' => 'discussion_id',
             'CategoryID' => 'tag_id',
         ];
-        $query = $port->dbPorter()
-            ->table('Discussion')
+        $query = $port->targetQB()
+            ->from('Discussion')
             ->select(['DiscussionID', 'CategoryID'])
             ->union(
                 // Also tag discussion with the parent category.
@@ -450,8 +450,8 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'DateLastViewed' => 'last_read_at',
         ];
-        $query = $port->dbPorter()
-            ->table('UserDiscussion')
+        $query = $port->targetQB()
+            ->from('UserDiscussion')
             ->select()
             ->selectRaw("if (Bookmarked > 0, 'follow', null) as subscription")
             ->where('UserID', '>', 0); // Vanilla can have zeroes here, can't remember why.
@@ -476,8 +476,8 @@ class Flarum extends Target
         $filters = [
             'Body' => 'filterFlarumContent',
         ];
-        $query = $port->dbPorter()
-            ->table('Comment')
+        $query = $port->targetQB()
+            ->from('Comment')
             // SELECT ORDER IS SENSITIVE DUE TO THE UNION() BELOW.
             ->select([
                 'DiscussionID',
@@ -494,8 +494,8 @@ class Flarum extends Target
         // Extract OP from the discussion.
         if ($this->getDiscussionBodyMode()) {
             // Get highest CommentID.
-            $result = $port->dbPorter()
-                ->table('Comment')
+            $result = $port->targetQB()
+                ->from('Comment')
                 ->selectRaw('max(CommentID) as LastCommentID')
                 ->first();
 
@@ -503,7 +503,7 @@ class Flarum extends Target
             $this->discussionPostOffset = $result->LastCommentID ?? 0;
 
             // Use DiscussionID but fast-forward it past highest CommentID to insure it's unique.
-            $discussions = $port->dbPorter()->table('Discussion')
+            $discussions = $port->targetQB()->from('Discussion')
                 ->select([
                     'DiscussionID',
                     'InsertUserID',
@@ -559,7 +559,7 @@ class Flarum extends Target
             'DateInserted' => 'created_at',
             'Size' => 'size',
         ];
-        $query = $port->dbPorter()->table('Media')
+        $query = $port->targetQB()->from('Media')
             ->select()
             ->selectRaw('0 as discussion_id')
             ->selectRaw('trim(leading "/" from Path) as path')
@@ -622,7 +622,7 @@ class Flarum extends Target
             'DateLastViewed' => 'last_read_at',
             'Visible' => 'is_visible',
         ];
-        $query = $port->dbPorter()->table('Badge')
+        $query = $port->targetQB()->from('Badge')
             ->select()
             ->selectRaw('1 as badge_category_id');
 
@@ -641,7 +641,7 @@ class Flarum extends Target
             'Reason' => 'description',
             'DateCompleted' => 'assigned_at',
         ];
-        $query = $port->dbPorter()->table('UserBadge')->select('*');
+        $query = $port->targetQB()->from('UserBadge')->select('*');
 
         $port->import('badge_user', $query, $structure, $map);
     }
@@ -678,7 +678,7 @@ class Flarum extends Target
             'DateUpdated' => 'updated_at',
             'CountVotes' => 'vote_count',
         ];
-        $query = $port->dbPorter()->table('Poll')
+        $query = $port->targetQB()->from('Poll')
             ->select('*')
             ->select('DateInserted as end_date')
                 // Whether its public or anonymous are inverse conditions, so flip the value.
@@ -703,7 +703,7 @@ class Flarum extends Target
             'DateUpdated' => 'updated_at',
             'CountVotes' => 'vote_count',
         ];
-        $query = $port->dbPorter()->table('PollOption')->select('*');
+        $query = $port->targetQB()->from('PollOption')->select('*');
 
         $port->import('poll_options', $query, $structure, $map);
 
@@ -720,7 +720,7 @@ class Flarum extends Target
             'PollOptionID' => 'option_id',
             'UserID' => 'user_id',
         ];
-        $query = $port->dbPorter()->table('PollVote')
+        $query = $port->targetQB()->from('PollVote')
             ->leftJoin('PollOption', 'PollVote.PollOptionID', '=', 'PollOption.PollOptionID')
             ->select(['PollVote.*',
                 'PollOption.PollID as poll_id',
@@ -754,7 +754,7 @@ class Flarum extends Target
             'Name' => 'identifier',
             'Active' => 'enabled',
         ];
-        $query = $port->dbPorter()->table('ReactionType')
+        $query = $port->targetQB()->from('ReactionType')
             // @todo Setting type='emoji' is a kludge since it won't render Vanilla defaults that way.
             ->select('*')
             ->selectRaw('"emoji" as type');
@@ -777,7 +777,7 @@ class Flarum extends Target
             'DateInserted' => 'created_at',
         ];
         // SELECT ORDER IS SENSITIVE DUE TO THE UNION() BELOW.
-        $query = $port->dbPorter()->table('UserTag')
+        $query = $port->targetQB()->from('UserTag')
             ->select(['UserID', 'TagID'])
             ->selectRaw('RecordID as RecordID')
             ->selectRaw('TIMESTAMP(DateInserted) as DateInserted')
@@ -787,14 +787,14 @@ class Flarum extends Target
         // Get reactions for discussions (OPs).
         if ($this->getDiscussionBodyMode()) {
             // Get highest CommentID.
-            $result = $port->dbPorter()
-                ->table('Comment')
+            $result = $port->targetQB()
+                ->from('Comment')
                 ->selectRaw('max(CommentID) as LastCommentID')
                 ->first();
             $lastCommentID = $result->LastCommentID ?? 0;
 
             /* @see Target\Flarum::comments() —  replicate our math in the post split */
-            $discussionReactions = $port->dbPorter()->table('UserTag')
+            $discussionReactions = $port->targetQB()->from('UserTag')
                 ->select(['UserID', 'TagID'])
                 ->selectRaw('(RecordID + ' . $lastCommentID . ') as RecordID')
                 ->selectRaw('TIMESTAMP(DateInserted) as DateInserted')
@@ -844,7 +844,7 @@ class Flarum extends Target
             $structure['votes'] = 'int';
         }
 
-        $query = $port->dbPorter()->table('Conversation')
+        $query = $port->targetQB()->from('Conversation')
             ->select(['InsertUserID', 'DateInserted'])
             ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as id')
             ->selectRaw('DateInserted as last_posted_at') // @todo Orders old PMs by OP instead of last comment.
@@ -870,7 +870,7 @@ class Flarum extends Target
         $filters = [
             'Body' => 'filterFlarumContent',
         ];
-        $query = $port->dbPorter()->table('ConversationMessage')
+        $query = $port->targetQB()->from('ConversationMessage')
             ->select(['Body', 'Format', 'InsertUserID', 'DateInserted'])
             ->selectRaw('(MessageID + ' . $MaxCommentID . ') as id')
             ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id')
@@ -893,7 +893,7 @@ class Flarum extends Target
             'UserID' => 'user_id',
             'DateConversationUpdated' => 'updated_at',
         ];
-        $query = $port->dbPorter()->table('UserConversation')
+        $query = $port->targetQB()->from('UserConversation')
             ->select(['UserID', 'DateConversationUpdated'])
             ->selectRaw('(ConversationID + ' . $MaxDiscussionID . ') as discussion_id');
 
