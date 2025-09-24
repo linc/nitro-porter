@@ -270,7 +270,7 @@ class Xenforo extends Source
         $filters = [];
 
         $prx = $port->dbInput()->getTablePrefix();
-        $wrt = Config::getInstance()->get('option_attachments_webroot');
+        $wrt = Config::getInstance()->get('option_attachments_webroot') ?? '';
         $builder = new \Staudenmeir\LaravelCte\Query\Builder($port->dbInput()); // @todo f.
         $query = $builder
             ->from('attachment', 'a')
